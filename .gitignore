@@ -1,0 +1,19 @@
+*/target
+node_modules
+.npmrc
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+pre-plainte-rest/src/main/resources/static
+
+### Cypress ###
+pre-plainte-cypress/node_modules
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+
+### VS Code ###
+.vscode/

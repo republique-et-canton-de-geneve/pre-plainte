@@ -1,0 +1,3 @@
+registry=https://registry.example.org/ctinexus/repository/npmjs
+@ael:registry=https://registry.example.org/ctinexus/content/repositories/npm_release
+strict-ssl=false

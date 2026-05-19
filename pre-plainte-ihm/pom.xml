@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+<modelVersion>4.0.0</modelVersion>
+<groupId>ch.ge.police</groupId>
+<artifactId>pre-plainte-ihm</artifactId>
+<version>0.0.1-SNAPSHOT</version>
+
+<build>
+<plugins>
+    <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>exec-maven-plugin</artifactId>
+        <version>3.1.0</version>
+        <executions>
+            <execution>
+                <id>npm install</id>
+                <phase>generate-resources</phase>
+                <goals>
+                    <goal>exec</goal>
+                </goals>
+                <configuration>
+                    <skip>${skipIhmNpm}</skip>
+                    <executable>npm</executable>
+                    <environmentVariables>
+                        <NPM_CONFIG_CACHE>${project.build.directory}/npm-cache</NPM_CONFIG_CACHE>
+                        <NPM_CONFIG_AUDIT>false</NPM_CONFIG_AUDIT>
+                        <NPM_CONFIG_FUND>false</NPM_CONFIG_FUND>
+                        <NPM_CONFIG_LEGACY_PEER_DEPS>true</NPM_CONFIG_LEGACY_PEER_DEPS>
+                        <NPM_CONFIG_PROGRESS>false</NPM_CONFIG_PROGRESS>
+                    </environmentVariables>
+                    <arguments>
+                        <argument>install</argument>
+                        <argument>--no-audit</argument>
+                        <argument>--no-fund</argument>
+                        <argument>--legacy-peer-deps</argument>
+                    </arguments>
+                </configuration>
+            </execution>
+
+            <execution>
+                <id>npm run build</id>
+                <phase>prepare-package</phase>
+                <goals>
+                    <goal>exec</goal>
+                </goals>
+                <configuration>
+                    <skip>${skipIhmNpm}</skip>
+                    <executable>npm</executable>
+                    <environmentVariables>
+                        <NPM_CONFIG_CACHE>${project.build.directory}/npm-cache</NPM_CONFIG_CACHE>
+                        <NPM_CONFIG_AUDIT>false</NPM_CONFIG_AUDIT>
+                        <NPM_CONFIG_FUND>false</NPM_CONFIG_FUND>
+                        <NPM_CONFIG_LEGACY_PEER_DEPS>true</NPM_CONFIG_LEGACY_PEER_DEPS>
+                        <NPM_CONFIG_PROGRESS>false</NPM_CONFIG_PROGRESS>
+                    </environmentVariables>
+                    <arguments>
+                        <argument>run</argument>
+                        <argument>build-only</argument>
+                    </arguments>
+                </configuration>
+            </execution>
+        </executions>
+    </plugin>
+    <plugin>
+        <artifactId>maven-resources-plugin</artifactId>
+        <version>3.3.1</version>
+        <executions>
+            <execution>
+                <id>copy-build-to-backend</id>
+                <phase>prepare-package</phase>
+                <goals>
+                    <goal>copy-resources</goal>
+                </goals>
+                <configuration>
+                    <outputDirectory>${project.basedir}/../pre-plainte-rest/src/main/resources/static</outputDirectory>
+                    <resources>
+                        <resource>
+                            <directory>${project.basedir}/dist</directory>
+                        </resource>
+                    </resources>
+                </configuration>
+            </execution>
+        </executions>
+    </plugin>
+    <plugin>
+      <groupId>org.jacoco</groupId>
+      <artifactId>jacoco-maven-plugin</artifactId>
+      <version>0.8.12</version>
+      <configuration>
+        <skip>true</skip>
+      </configuration>
+    </plugin>
+    <plugin>
+      <groupId>org.apache.maven.plugins</groupId>
+      <artifactId>maven-surefire-plugin</artifactId>
+      <version>3.2.5</version>
+      <configuration>
+        <skipTests>true</skipTests>
+      </configuration>
+    </plugin>
+</plugins>
+</build>
+</project>

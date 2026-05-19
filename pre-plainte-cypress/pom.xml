@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>ch.ge.police</groupId>
+    <artifactId>pre-plainte</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+  </parent>
+
+  <artifactId>pre-plainte-cypress</artifactId>
+  <packaging>pom</packaging>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>exec-maven-plugin</artifactId>
+        <version>3.1.0</version>
+
+        <executions>
+          <!-- Installer dépendances Cypress -->
+          <execution>
+            <id>npm-install</id>
+            <goals>
+              <goal>exec</goal>
+            </goals>
+            <phase>generate-resources</phase>
+            <configuration>
+              <executable>npm</executable>
+              <environmentVariables>
+                <NPM_CONFIG_CACHE>${project.build.directory}/npm-cache</NPM_CONFIG_CACHE>
+                <NPM_CONFIG_AUDIT>false</NPM_CONFIG_AUDIT>
+                <NPM_CONFIG_FUND>false</NPM_CONFIG_FUND>
+                <NPM_CONFIG_LEGACY_PEER_DEPS>true</NPM_CONFIG_LEGACY_PEER_DEPS>
+                <NPM_CONFIG_PROGRESS>false</NPM_CONFIG_PROGRESS>
+              </environmentVariables>
+              <arguments>
+                <argument>install</argument>
+                <argument>--no-audit</argument>
+                <argument>--no-fund</argument>
+                <argument>--legacy-peer-deps</argument>
+              </arguments>
+              <skip>${skipCypress}</skip>
+            </configuration>
+          </execution>
+          <!-- Lancer Cypress -->
+          <execution>
+            <id>npm-cypress-run</id>
+            <goals>
+              <goal>exec</goal>
+            </goals>
+            <phase>integration-test</phase>
+            <configuration>
+              <executable>npm</executable>
+              <environmentVariables>
+                <NPM_CONFIG_CACHE>${project.build.directory}/npm-cache</NPM_CONFIG_CACHE>
+                <NPM_CONFIG_AUDIT>false</NPM_CONFIG_AUDIT>
+                <NPM_CONFIG_FUND>false</NPM_CONFIG_FUND>
+                <NPM_CONFIG_LEGACY_PEER_DEPS>true</NPM_CONFIG_LEGACY_PEER_DEPS>
+                <NPM_CONFIG_PROGRESS>false</NPM_CONFIG_PROGRESS>
+              </environmentVariables>
+              <arguments>
+                <argument>run</argument>
+                <argument>cy:run</argument>
+              </arguments>
+              <skip>${skipCypress}</skip>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>stop-backend</id>
+            <phase>post-integration-test</phase>
+            <goals>
+              <goal>stop</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.jacoco</groupId>
+        <artifactId>jacoco-maven-plugin</artifactId>
+        <version>0.8.12</version>
+        <configuration>
+          <skip>true</skip>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>3.2.5</version>
+        <configuration>
+          <skipTests>true</skipTests>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+</project>

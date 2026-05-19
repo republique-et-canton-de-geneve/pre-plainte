@@ -1,0 +1,284 @@
+stages:
+  - prepare
+  - build
+  - quality
+  - deploy
+
+variables:
+  SECURITY_MONITORING:
+    value: "false"
+    description: Security monitoring enablement
+  IMAGE_NAME: ch/ge/police/11729-pre-plainte
+  NO_PROXY: localhost,127.0.0.1,$REGISTRY,$OPENSHIFT_URL_SUFFIX,$S3_ENDPOINT
+  IMAGE_MAVEN: $DOCKER_URL/ch/ge/cti/build/alpine-maven-git-node:21
+  IMAGE_CYPRESS: $DOCKER_URL/cypress/included:14.5.4
+  IMAGE_OPENSHIFT: $NEXUS_DOCKER_RELEASE_URL/ch/ge/integration/11259-oci-tools/app-oci-tools:1.0.2-2
+  OPENSHIFT_URL: https://api.soca$OPENSHIFT_URL_SUFFIX:6443
+  HELMFILE_FILE_PATH: "./ci"
+  APP_NAME: "preplainte"
+
+default:
+  tags:
+    - for:container-image
+    - host:privileged-container
+    - net:gold-dev
+
+workflow:
+  rules:
+    # toujours si lancé volontairement depuis l'interface
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+      when: always
+    # pour éviter le doublon lors d'un tag
+    - if: '$CI_COMMIT_BRANCH == "main" && $CI_COMMIT_MESSAGE =~ /^Release /'
+      when: never
+    # toujours pour merge request
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      when: always
+    # jamais sur les branches s'il y a des MR ouvertes
+    - if: '$CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS'
+      when: never
+    - if: $CI_COMMIT_TAG || $CI_COMMIT_BRANCH
+      when: always
+    - when: never
+
+cache:
+  untracked: false
+  key: $CI_PROJECT_ID
+  paths:
+    - .m2/repository
+
+build_ihm:
+  stage: prepare
+  image:
+    name: $IMAGE_CYPRESS
+    entrypoint: [""]
+  variables:
+    NO_PROXY: "localhost,127.0.0.1,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16"
+    NPM_CONFIG_AUDIT: "false"
+    NPM_CONFIG_CACHE: "$CI_PROJECT_DIR/.npm-cache"
+    NPM_CONFIG_FUND: "false"
+    NPM_CONFIG_LEGACY_PEER_DEPS: "true"
+    NPM_CONFIG_MAXSOCKETS: "1"
+    NPM_CONFIG_NOPROXY: "localhost,127.0.0.1,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16"
+    NPM_CONFIG_PROGRESS: "false"
+  script:
+    - cd pre-plainte-ihm
+    - test -n "$REGISTRY"
+    - NPM_REGISTRY_HOST="${REGISTRY#http://}"
+    - NPM_REGISTRY_HOST="${NPM_REGISTRY_HOST#https://}"
+    - NPM_REGISTRY_HOST="${NPM_REGISTRY_HOST%%/*}"
+    - test -n "$NPM_REGISTRY_HOST"
+    - printf "registry=https://%s/ctinexus/repository/npmjs\n@ael:registry=https://%s/ctinexus/content/repositories/npm_release\nstrict-ssl=false\n" "$NPM_REGISTRY_HOST" "$NPM_REGISTRY_HOST" > .npmrc
+    - npm config get registry | sed -E 's#https?://[^/]+#https://***#'
+    - if [ -n "$NPM_PROXY_URL" ]; then printf "proxy=%s\nhttps-proxy=%s\n" "$NPM_PROXY_URL" "$NPM_PROXY_URL" >> .npmrc; fi
+    - if [ -n "$NPM_NO_PROXY" ]; then printf "noproxy=%s\n" "$NPM_NO_PROXY" >> .npmrc; fi
+    - npm install --no-audit --no-fund --legacy-peer-deps
+    - npm run build-only
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_REF_SLUG"
+    paths:
+      - pre-plainte-ihm/dist
+    expire_in: 1 days
+  rules:
+    - if: $CI_COMMIT_TAG
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH
+    - if: $SECURITY_MONITORING == "true"
+
+build_app:
+  stage: build
+  image: $IMAGE_MAVEN
+  variables:
+    BUILD_MAVEN_PHASE: "clean install"
+    MAVEN_CLI_OPTS: "--settings .m2-settings.xml --batch-mode --errors --fail-at-end --show-version -DinstallAtEnd=true -DdeployAtEnd=true -DskipCypress=true -DskipIhmNpm=true"
+  script:
+    - echo "---------- Starting Maven build ----------"
+    - test -n "$REGISTRY"
+    - MAVEN_REGISTRY_HOST="${REGISTRY#http://}"
+    - MAVEN_REGISTRY_HOST="${MAVEN_REGISTRY_HOST#https://}"
+    - MAVEN_REGISTRY_HOST="${MAVEN_REGISTRY_HOST%%/*}"
+    - test -n "$MAVEN_REGISTRY_HOST"
+    - MAVEN_PUBLIC_URL="${NEXUS_MAVEN_PUBLIC_URL:-https://${MAVEN_REGISTRY_HOST}/ctinexus/repository/maven-public}"
+    - mvn -Dnexus.maven.public.url="$MAVEN_PUBLIC_URL" $MAVEN_CLI_OPTS $BUILD_MAVEN_PHASE
+    - echo "---------- End of Maven build ----------"
+  needs:
+    - job: build_ihm
+      artifacts: true
+  dependencies:
+    - build_ihm
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_REF_SLUG"
+    paths:
+      - "**/target"
+    expire_in: 1 days
+  rules:
+    - if: $CI_COMMIT_TAG
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH
+    - if: $SECURITY_MONITORING == "true"
+
+cypress_tests:
+  image:
+    name: $IMAGE_CYPRESS
+    entrypoint: [""]
+  stage: quality
+  services:
+    - name: $OCI_SNAPSHOT/ch/ge/police/11729-pre-plainte:latest
+      alias: backend
+  variables:
+    CYPRESS_BASE_URL: "http://backend:8080"
+  script:
+    - cd pre-plainte-cypress
+    - test -n "$REGISTRY"
+    - NPM_REGISTRY_HOST="${REGISTRY#http://}"
+    - NPM_REGISTRY_HOST="${NPM_REGISTRY_HOST#https://}"
+    - NPM_REGISTRY_HOST="${NPM_REGISTRY_HOST%%/*}"
+    - test -n "$NPM_REGISTRY_HOST"
+    - printf "registry=https://%s/ctinexus/repository/npmjs\n@ael:registry=https://%s/ctinexus/content/repositories/npm_release\nstrict-ssl=false\n" "$NPM_REGISTRY_HOST" "$NPM_REGISTRY_HOST" > .npmrc
+    - npm config get registry | sed -E 's#https?://[^/]+#https://***#'
+    - if [ -n "$NPM_PROXY_URL" ]; then printf "proxy=%s\nhttps-proxy=%s\n" "$NPM_PROXY_URL" "$NPM_PROXY_URL" >> .npmrc; fi
+    - if [ -n "$NPM_NO_PROXY" ]; then printf "noproxy=%s\n" "$NPM_NO_PROXY" >> .npmrc; fi
+    - npm install --no-audit --no-fund --legacy-peer-deps
+    - npm run cy:run
+  needs:
+    - build_image_snapshot_or_release
+  dependencies:
+    - build_image_snapshot_or_release
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+
+build_image_snapshot_or_release:
+  extends:
+    - .build_image_snapshot_or_release
+  stage: build
+  needs:
+    - build_app
+  dependencies:
+    - build_app
+  rules:
+    - if: $CI_COMMIT_TAG
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH && $CI_COMMIT_BRANCH != "main"
+
+deploy_to_openshift_lab:
+  stage: deploy
+  image:
+    name: $IMAGE_OPENSHIFT
+    entrypoint: [""]
+  environment:
+    name: lab/$CI_COMMIT_REF_SLUG
+  resource_group: lab-$CI_COMMIT_REF_SLUG
+  script:
+    - echo "Clonage du repo configuration..."
+    - git clone https://${DEPLOY_USER}:${DEPLOY_PASSWORD}@${INTEGRATION_IMAGE}
+    - cd app-11729-preplaintes
+    - oc login --token=${OPENSHIFT_GOCD_TOKEN} --server=$OPENSHIFT_URL --insecure-skip-tls-verify=true
+    - helmfile -f "$HELMFILE_FILE_PATH/helmfile.yaml"  --environment lab sync
+    - oc rollout restart deployment/preplainte
+    - oc logout
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_SOURCE_BRANCH_NAME != "develop" && $CI_MERGE_REQUEST_SOURCE_BRANCH_NAME != "main"
+    - if: $CI_COMMIT_BRANCH && $CI_COMMIT_BRANCH != "develop" && $CI_COMMIT_BRANCH != "main" && $CI_PIPELINE_SOURCE == "push"
+
+deploy_to_openshift_dev:
+  stage: deploy
+  image:
+    name: $IMAGE_OPENSHIFT
+    entrypoint: [""]
+  environment:
+    name: dev
+  resource_group: dev
+  script:
+    - echo "Clonage du repo configuration..."
+    - git clone https://${DEPLOY_USER}:${DEPLOY_PASSWORD}@${INTEGRATION_IMAGE}
+    - cd app-11729-preplaintes
+    - oc login --token=${OPENSHIFT_GOCD_TOKEN_DEV} --server=$OPENSHIFT_URL --insecure-skip-tls-verify=true
+    - helmfile -f "$HELMFILE_FILE_PATH/helmfile.yaml"  --environment dev sync
+    - oc rollout restart deployment/preplainte
+    - oc logout
+  rules:
+    - if: $CI_COMMIT_BRANCH == "develop" && $CI_PIPELINE_SOURCE == "push"
+
+prepare_release_on_main:
+  stage: deploy
+  image: $IMAGE_MAVEN
+  resource_group: release-main
+  before_script:
+    - apk add --no-cache git
+  script:
+    - |
+      git fetch --tags --force
+
+      EXISTING_TAG=$(git tag --points-at "$CI_COMMIT_SHA" | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -n 1 || true)
+
+      if [ -n "$EXISTING_TAG" ]; then
+        echo "TAG=$EXISTING_TAG" >> variables.env
+        echo "RELEASE_DESCRIPTION=Release automatique pour ${EXISTING_TAG}" >> variables.env
+        exit 0
+      fi
+
+      LAST_TAG=$(git tag -l 'v*.*.*' | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -n 1 || true)
+
+      if [ -z "$LAST_TAG" ]; then
+        LAST_TAG="v0.0.0"
+      fi
+
+      VERSION="${LAST_TAG#v}"
+      IFS='.' read -r MAJOR MINOR PATCH <<EOF
+      $VERSION
+      EOF
+
+      NEXT_PATCH=$((PATCH + 1))
+      NEXT_TAG="v${MAJOR}.${MINOR}.${NEXT_PATCH}"
+
+      echo "TAG=$NEXT_TAG" >> variables.env
+      echo "RELEASE_DESCRIPTION=Release automatique pour ${NEXT_TAG}" >> variables.env
+  artifacts:
+    reports:
+      dotenv: variables.env
+  rules:
+    - if: $CI_COMMIT_TAG
+      when: never
+    - if: $CI_COMMIT_BRANCH == "main" && $CI_PIPELINE_SOURCE == "push"
+
+
+include:
+  # Sonar - Backend
+  - component: $CI_SERVER_FQDN/DEVELOPPEUR-EDG/gitlab-components/sonar/analyze-with-maven-and-build-dependency@1.1.6
+    inputs:
+      project_key: ch.ge.police:11729-PRE-PLAINTE-backend
+      exclusions: "**/test/**"
+      job_build_job_name: build_app
+      job_name: sonar_backend
+  # Sonar - Frontend
+  - component: $CI_SERVER_FQDN/DEVELOPPEUR-EDG/gitlab-components/sonar/analyze-with-sonar-scanner@1.1.6
+    inputs:
+      project_key: ch.ge.police:11729-PRE-PLAINTE-frontend
+      exclusions: "**/src/main/java/**,**/test/**,**/resources/mail/**"
+      job_name: sonar_frontend
+      extra_args: >-
+        -Dsonar.issue.ignore.multicriteria=e1,e2,e3
+        -Dsonar.issue.ignore.multicriteria.e1.ruleKey=docker:S6471
+        -Dsonar.issue.ignore.multicriteria.e1.resourceKey=**/Dockerfile
+        -Dsonar.issue.ignore.multicriteria.e2.ruleKey=typescript:S4328
+        -Dsonar.issue.ignore.multicriteria.e2.resourceKey=pre-plainte-ihm/**/*.ts
+        -Dsonar.issue.ignore.multicriteria.e3.ruleKey=typescript:S4328
+        -Dsonar.issue.ignore.multicriteria.e3.resourceKey=pre-plainte-ihm/**/*.vue
+  # Nexus - Backend
+  - component: $CI_SERVER_FQDN/DEVELOPPEUR-EDG/gitlab-components/nexus-iq/analyze-with-maven@1.1.4
+    inputs:
+      app_id: 11729-PRE-PLAINTE-backend
+      job_name: nexus_iq_backend
+      job_dependencies: [ build_app ]
+  # Nexus IQ - Frontend
+  - component: $CI_SERVER_FQDN/DEVELOPPEUR-EDG/gitlab-components/nexus-iq/analyze-with-evaluate@1.1.4
+    inputs:
+      app_id: 11729-PRE-PLAINTE-frontend
+      job_name: nexus_iq_frontend
+  # Kics
+  - component: $CI_SERVER_FQDN/DEVELOPPEUR-EDG/gitlab-components/kics/scan@1.0.4
+  # Container
+  - project: $PROJECT_TEMPLATES_GITLABCI_PATH
+    ref: "2.18"
+    file:
+      - "container/.gitlab-ci-container.yml"
