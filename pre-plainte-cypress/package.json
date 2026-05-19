@@ -1,0 +1,15 @@
+{
+  "type": "module",
+  "devDependencies": {
+    "cypress": "^14.5.4",
+    "@badeball/cypress-cucumber-preprocessor": "^22.2.0",
+    "@cucumber/cucumber": "^12.1.0",
+    "@bahmutov/cypress-esbuild-preprocessor": "^2.2.5",
+    "esbuild": "^0.25.9"
+  },
+  "scripts": {
+    "cy:open": "cypress open",
+    "cy:run": "cypress run --headless --e2e --spec cypress/e2e/*.feature",
+    "cy:verify": "cypress verify"
+  }
+}
