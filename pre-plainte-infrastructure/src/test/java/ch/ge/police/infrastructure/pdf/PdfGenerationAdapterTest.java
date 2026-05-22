@@ -103,10 +103,11 @@ class PdfGenerationAdapterTest {
 
   private String extractPdfText(byte[] pdf) throws Exception {
     try (PdfReader reader = new PdfReader(pdf)) {
+      PdfTextExtractor extractor = new PdfTextExtractor(reader);
       return IntStream.rangeClosed(1, reader.getNumberOfPages())
         .mapToObj(page -> {
           try {
-            return PdfTextExtractor.getTextFromPage(reader, page);
+            return extractor.getTextFromPage(page);
           } catch (Exception e) {
             throw new IllegalStateException(e);
           }
