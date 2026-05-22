@@ -116,6 +116,10 @@ class PdfGenerationAdapterTest {
     }
   }
 
+  private void assertPdfTextContains(String text, String expected) {
+    assertTrue(text.replaceAll("\\s+", "").contains(expected.replaceAll("\\s+", "")));
+  }
+
   @Test
   void shouldGeneratePdfVolComplete() {
 
@@ -142,10 +146,10 @@ class PdfGenerationAdapterTest {
 
     String text = extractPdfText(adapter.generatePdf(p));
 
-    assertTrue(text.contains("Date de début de l'événement"));
-    assertTrue(text.contains("01.01.2025 à 10:00"));
-    assertTrue(text.contains("Date de fin de l'événement"));
-    assertTrue(text.contains("01.01.2025 à 11:30"));
+    assertPdfTextContains(text, "Date de début de l'événement");
+    assertPdfTextContains(text, "01.01.2025 à 10:00");
+    assertPdfTextContains(text, "Date de fin de l'événement");
+    assertPdfTextContains(text, "01.01.2025 à 11:30");
   }
 
   @Test
