@@ -8,6 +8,7 @@ import { isUrlWebAvecDomaine } from "@/utils/validations/field-validation.utils"
 const MIN_ADRESSE_EVENEMENT_TAILLE = 5;
 const VALIDATION_FORMAT_DATE_INVALIDE = "validation.formatDateInvalide";
 const VALIDATION_FORMAT_HEURE_INVALIDE = "validation.formatHeureInvalide";
+const NUMERO_IMEI_REGEX = /^\d{15}$/;
 
 const optionalStringFromForm = z.preprocess(
   v => (v === null || v === undefined ? "" : String(v)),
@@ -26,12 +27,10 @@ const createIncidentRequirements = (t: ComposerTranslation): Record<string, { fi
   vol: [
     { field: "volDansVehicule", message: t("validation.volDansVehiculeRequis") },
     { field: "typeObjet", message: t("validation.typeObjetRequis") },
-    { field: "descriptionObjet", message: t("validation.descriptionObjetRequise") },
     { field: "avezVousDegradation", message: t("validation.degradationsRequis") },
   ],
   "degat-delit": [
     { field: "typeDommage", message: t("validation.typeDommageRequis") },
-    { field: "montantEstime", message: t("validation.montantDommageRequis") },
     { field: "devise", message: t("validation.deviseRequise") },
     { field: "naturesDommage", message: t("validation.natureDommageRequis") },
     { field: "description", message: t("validation.descriptionDommageRequise") },
@@ -119,7 +118,7 @@ const validateIncidentRequirements = (data: Record<string, any>, ctx: z.Refineme
     data.typeIncident === "vol" &&
     (hasObjetsVolesEnregistres(data) || data.categorieObjet === "plaque")
   ) {
-    rules = rules.filter(r => r.field !== "typeObjet" && r.field !== "descriptionObjet");
+    rules = rules.filter(r => r.field !== "typeObjet");
   }
 
   rules.forEach(({ field, message }) => {
@@ -157,6 +156,10 @@ const validateVolSpecificRules = (data: Record<string, any>, ctx: z.RefinementCt
 
   if (data.typeObjet?.code === RIPOL.CODE_TELEPHONE_MOBILE && !data.numeroIMEIInconnu && !data.numeroIMEI?.trim()) {
     addCustomIssue(ctx, "numeroIMEI", t("validation.numeroIMEIRequis"));
+  }
+
+  if (!data.numeroIMEIInconnu && data.numeroIMEI?.trim() && !NUMERO_IMEI_REGEX.test(data.numeroIMEI.trim())) {
+    addCustomIssue(ctx, "numeroIMEI", t("validation.numeroIMEIFormat"));
   }
 };
 

@@ -5,6 +5,7 @@
     <BaseRadioGroup
       v-model="adresseLesee"
       :label="t('adresseEvent.adresseCorrespond')"
+      required
       :options="[
         { label: t('adresseEvent.adresseTiers'), value: true },
         { label: t('adresseEvent.adresseAutre'), value: false }
@@ -16,6 +17,7 @@
       <RipolAutocomplete
         v-model="typeLieu"
         :label="t('adresseEvent.typeLieu')"
+        required
         :fetch-fn="RipolService.searchLocationTypes"
         :error-messages="typeLieuError"
         :hint="t('adresseEvent.hintTypeLieu')"
@@ -27,6 +29,7 @@
       <BaseRadioGroup
         v-model="adresseConnue"
         :label="t('adresseEvent.adresseConnue')"
+        required
         :options="[
         { label: t('common.oui'), value: true },
         { label: t('common.non'), value: false }
@@ -38,6 +41,7 @@
         <BaseRadioGroup
           v-model="isTrajet"
           :label="t('adresseEvent.adresseTrajet')"
+          required
           :options="[
         { label: t('common.oui'), value: true },
         { label: t('common.non'), value: false }

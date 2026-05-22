@@ -44,10 +44,7 @@ export const useEsiriusStore = defineStore("esirius", {
       }
     },
 
-    /**
-     * 🔹 Charge toutes les disponibilités sur les 30 prochains jours à partir d'aujourd'hui.
-     */
-    async loadAllAvailabilitiesForPPEL(begin?: string, period = 35) {
+    async loadAllAvailabilitiesForPPEL(begin?: string, period = 15) {
       this.startLoading();
       this.allAvailabilities = [];
 

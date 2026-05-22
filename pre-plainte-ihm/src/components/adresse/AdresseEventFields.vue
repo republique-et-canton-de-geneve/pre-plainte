@@ -20,7 +20,7 @@
     />
 
     <v-text-field
-      :label="t('informationsPersonnelles.adresse')"
+      :label="formatLabel(t('informationsPersonnelles.adresse'))"
       v-model="adresse"
       :error-messages="adresseError"
       :disabled="!!selectedAddress"
@@ -41,11 +41,10 @@
       variant="outlined"
       :hint="adressePostaleHint"
       persistent-hint
-      :required="markRequired"
     />
 
     <v-text-field
-      :label="t('informationsPersonnelles.npa')"
+      :label="formatLabel(t('informationsPersonnelles.npa'))"
       v-model="npa"
       :error-messages="npaError"
       :disabled="!!selectedAddress"
@@ -58,7 +57,7 @@
     />
 
     <v-text-field
-      :label="t('informationsPersonnelles.localite')"
+      :label="formatLabel(t('informationsPersonnelles.localite'))"
       v-model="localite"
       :error-messages="localiteError"
       :disabled="!!selectedAddress"
@@ -80,10 +79,11 @@ import { RIPOL } from "@/constants/constant";
 import type { AddressResult } from "@/types/adresse.interface";
 import type { CountrySelection } from "@/types/country.types";
 import { createHintAdresse } from "@/utils/helpers/adresseHelpers.ts";
+import { requiredLabel } from "@/utils/helpers/labelHelpers";
 
 const { t } = useI18n();
 
-withDefaults(
+const props = withDefaults(
   defineProps<{
     title?: string;
     instanceId: string;
@@ -100,6 +100,8 @@ withDefaults(
     fieldClass: "mb-3",
   },
 );
+
+const formatLabel = (label: string) => (props.markRequired ? requiredLabel(label) : label);
 
 const adresse = defineModel<string>("adresse", { required: true });
 const adressePostale = defineModel<string>("adressePostale", { required: true });

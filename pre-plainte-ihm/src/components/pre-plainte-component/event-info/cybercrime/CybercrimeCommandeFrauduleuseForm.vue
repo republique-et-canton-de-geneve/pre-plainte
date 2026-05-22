@@ -1,7 +1,7 @@
 <template>
   <div class="inputs-fields">
     <v-text-field
-      :label="t('cybercrime.prestataire')"
+      :label="requiredLabel(t('cybercrime.prestataire'))"
       v-model="prestataire"
       :error-messages="prestataireError"
       class="mb-8"
@@ -10,7 +10,7 @@
       persistent-hint
     />
     <v-text-field
-      :label="t('cybercrime.dateDecouverte')"
+      :label="requiredLabel(t('cybercrime.dateDecouverte'))"
       type="text"
       placeholder="JJ.MM.AAAA"
       v-model="dateDecouverte"
@@ -24,7 +24,7 @@
     />
 
     <v-text-field
-      :label="t('cybercrime.montantDelit')"
+      :label="requiredLabel(t('cybercrime.montantDelit'))"
       type="number"
       v-model="montant"
       :error-messages="montantError"
@@ -37,6 +37,7 @@
     <BaseRadioGroup
       v-model="assurance"
       :label="t('cybercrime.assuranceDisponible')"
+      required
       :options="[
         { label: t('common.oui'), value: true },
         { label: t('common.non'), value: false }
@@ -46,7 +47,7 @@
     />
 
     <v-text-field
-      :label="t('cybercrime.emailCommande')"
+      :label="emailCommandeInconnu ? t('cybercrime.emailCommande') : requiredLabel(t('cybercrime.emailCommande'))"
       v-model="emailCommande"
       :error-messages="emailCommandeError"
       class="mb-2"
@@ -71,6 +72,7 @@
       input-class="mb-2"
       default-country-code="CH"
       :disabled="telephoneCommandeInconnu"
+      :required="!telephoneCommandeInconnu"
     />
 
     <v-checkbox
@@ -83,6 +85,7 @@
     <BaseRadioGroup
       v-model="livraisonAdresseLesee"
       :label="t('cybercrime.livraisonAdresseLesee')"
+      required
       :options="[
         { label: t('common.oui'), value: true },
         { label: t('common.non'), value: false }
@@ -122,6 +125,7 @@ import BaseRadioGroup from "@/components/radio/BaseRadioGroup.vue";
 import PhoneInput from "@/components/phone/PhoneInput.vue";
 import AdresseEventFields from "@/components/adresse/AdresseEventFields.vue";
 import { resetFieldsOnCondition } from "@/utils/helpers/formHelpers.ts";
+import { requiredLabel } from "@/utils/helpers/labelHelpers";
 
 const { t } = useI18n();
 

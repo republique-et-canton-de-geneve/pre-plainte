@@ -52,4 +52,24 @@ class ObjetIncidentTest {
 
     assertThrows(ValidationMetierException.class, objet::champsObligatoire);
   }
+
+  @Test
+  void shouldAcceptObjectWithoutDescription() {
+    ObjetIncident objet = ObjetIncident.builder()
+        .type(new RipolCode("713103", "Telephone mobile"))
+        .numeroIMEIInconnu(true)
+        .build();
+
+    assertDoesNotThrow(objet::champsObligatoire);
+  }
+
+  @Test
+  void shouldRejectInvalidImeiFormat() {
+    ObjetIncident objet = ObjetIncident.builder()
+        .type(new RipolCode("713103", "Telephone mobile"))
+        .numeroIMEI("IMEI123")
+        .build();
+
+    assertThrows(ValidationMetierException.class, objet::champsObligatoire);
+  }
 }

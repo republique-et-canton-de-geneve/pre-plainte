@@ -10,6 +10,8 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 
+import java.util.regex.Pattern;
+
 /**
  * Représente un objet volé ou un véhicule volé.
  * Certains champs sont spécifiques à un type d'objet (ex: IMEI pour téléphone).
@@ -27,6 +29,7 @@ public class ObjetIncident {
   private static final String CODE_PREFIX_CYCLOMOTEUR = "07";
   private static final String CODE_PREFIX_VELO = "20";
   private static final String CATEGORIE_PLAQUE = "plaque";
+  private static final Pattern NUMERO_IMEI_PATTERN = Pattern.compile("\\d{15}");
 
   private String categorieObjet;
   private String sousCategorie;
@@ -154,12 +157,12 @@ public class ObjetIncident {
       throw new ValidationMetierException("Le type d'objet volé est obligatoire.");
     }
 
-    if (description == null || description.isBlank()) {
-      throw new ValidationMetierException("La description de l'objet est obligatoire.");
-    }
-
     if (isTelephoneMobile() && !numeroIMEIInconnu && (numeroIMEI == null || numeroIMEI.isBlank())) {
       throw new ValidationMetierException("Le numéro IMEI est obligatoire pour un téléphone volé.");
+    }
+
+    if (numeroIMEI != null && !numeroIMEI.isBlank() && !NUMERO_IMEI_PATTERN.matcher(numeroIMEI).matches()) {
+      throw new ValidationMetierException("Le numéro IMEI doit contenir exactement 15 chiffres.");
     }
   }
 }

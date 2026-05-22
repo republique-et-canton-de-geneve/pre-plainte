@@ -1,7 +1,7 @@
 <template>
   <VPhoneInput
     :model-value="modelValue"
-    :label="label"
+    :label="displayLabel"
     :error-messages="errorMessages"
     :hint="hint"
     :persistent-hint="persistentHint"
@@ -18,7 +18,9 @@
 
 <script setup lang="ts">
 import { VPhoneInput } from "v-phone-input";
+import { computed } from "vue";
 import { useI18n } from "vue-i18n";
+import { requiredLabel } from "@/utils/helpers/labelHelpers";
 
 const { t } = useI18n();
 
@@ -33,7 +35,7 @@ interface Props {
   required?: boolean;
 }
 
-withDefaults(defineProps<Props>(), {
+const props = withDefaults(defineProps<Props>(), {
   persistentHint: true,
   defaultCountryCode: "CH",
 });
@@ -45,6 +47,11 @@ const emit = defineEmits<{
 function onUpdate(value: string) {
   emit("update:modelValue", value);
 }
+
+const displayLabel = computed(() => {
+  const label = props.label ?? "";
+  return props.required ? requiredLabel(label) : label;
+});
 
 function invalidMessageFn({ example }: { label?: string; example?: string }) {
   return t("validation.telephoneInvalid", { example: example || "078 123 45 67" });

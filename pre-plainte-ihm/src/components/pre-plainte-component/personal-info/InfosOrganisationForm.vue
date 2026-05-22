@@ -5,7 +5,7 @@
     </h3>
 
     <v-text-field
-      :label="t('informationsPersonnelles.nomOrganisation')"
+      :label="requiredLabel(t('informationsPersonnelles.nomOrganisation'))"
       v-model="organisationNom"
       :error-messages="organisationNomError"
       class="mb-8"
@@ -26,7 +26,7 @@
     />
 
     <v-text-field
-      :label="t('informationsPersonnelles.adresse')"
+      :label="requiredLabel(t('informationsPersonnelles.adresse'))"
       v-model="organisationAdresse"
       :error-messages="organisationAdresseError"
       :readonly="!!selectedAddress"
@@ -51,7 +51,7 @@
     />
 
     <v-text-field
-      :label="t('informationsPersonnelles.npa')"
+      :label="requiredLabel(t('informationsPersonnelles.npa'))"
       v-model="organisationNpa"
       :error-messages="organisationNpaError"
       :readonly="!!selectedAddress"
@@ -64,7 +64,7 @@
     />
 
     <v-text-field
-      :label="t('informationsPersonnelles.localite')"
+      :label="requiredLabel(t('informationsPersonnelles.localite'))"
       v-model="organisationLocalite"
       :error-messages="organisationLocaliteError"
       :readonly="!!selectedAddress"
@@ -91,7 +91,7 @@
     />
 
     <v-text-field
-      :label="t('informationsPersonnelles.email')"
+      :label="requiredLabel(t('informationsPersonnelles.email'))"
       v-model="organisationEmail"
       type="email"
       :error-messages="organisationEmailError"
@@ -103,7 +103,7 @@
     />
 
     <v-text-field
-      :label="t('informationsPersonnelles.confirmationEmail')"
+      :label="requiredLabel(t('informationsPersonnelles.confirmationEmail'))"
       v-model="organisationConfirmationEmail"
       type="email"
       :error-messages="organisationConfirmationEmailError"
@@ -128,6 +128,7 @@ import PhoneInput from "@/components/phone/PhoneInput.vue";
 import type { AddressResult } from "@/types/adresse.interface";
 import type { CountrySelection } from "@/types/country.types";
 import { createHintAdresse } from "@/utils/helpers/adresseHelpers.ts";
+import { requiredLabel } from "@/utils/helpers/labelHelpers";
 
 const { t } = useI18n();
 
