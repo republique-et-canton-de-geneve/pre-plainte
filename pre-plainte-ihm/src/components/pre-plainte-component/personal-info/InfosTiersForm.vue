@@ -4,7 +4,7 @@
       {{ t("informationsPersonnelles.identiteTiersConcerne") }}
     </h3>
     <v-text-field
-      :label="t('informationsPersonnelles.nom')"
+      :label="requiredLabel(t('informationsPersonnelles.nom'))"
       v-model="tiersNom"
       :error-messages="tiersNomError"
       class="mb-8"
@@ -14,7 +14,7 @@
       required
     />
     <v-text-field
-      :label="t('informationsPersonnelles.prenom')"
+      :label="requiredLabel(t('informationsPersonnelles.prenom'))"
       v-model="tiersPrenom"
       :error-messages="tiersPrenomError"
       class="mb-8"
@@ -27,6 +27,7 @@
     <RipolAutocomplete
       v-model="tiersGenre"
       :label="t('informationsPersonnelles.genre')"
+      required
       :fetch-fn="fetchGenresSorted"
       :display-label="displayGenreLabel"
       :error-messages="tiersGenreError"
@@ -39,6 +40,7 @@
     <RipolAutocomplete
       v-model="tiersNationalite"
       :label="t('informationsPersonnelles.nationalite')"
+      required
       :fetch-fn="fetchNationalitiesForPersonForm"
       :error-messages="tiersNationaliteError"
       :hint="t('informationsPersonnelles.hintNationaliteTiers')"
@@ -47,7 +49,7 @@
       class="mb-4"
     />
     <v-text-field
-      :label="t('informationsPersonnelles.dateNaissance')"
+      :label="requiredLabel(t('informationsPersonnelles.dateNaissance'))"
       v-model="tiersDateNaissance"
       type="text"
       placeholder="JJ.MM.AAAA"
@@ -71,7 +73,7 @@
     />
 
     <v-text-field
-      :label="t('informationsPersonnelles.adresse')"
+      :label="requiredLabel(t('informationsPersonnelles.adresse'))"
       v-model="tiersAdresse"
       :error-messages="tiersAdresseError"
       :readonly="!!selectedAddress"
@@ -96,7 +98,7 @@
       required
     />
     <v-text-field
-      :label="t('informationsPersonnelles.npa')"
+      :label="requiredLabel(t('informationsPersonnelles.npa'))"
       v-model="tiersNpa"
       :error-messages="tiersNpaError"
       :readonly="!!selectedAddress"
@@ -108,7 +110,7 @@
       required
     />
     <v-text-field
-      :label="t('informationsPersonnelles.localite')"
+      :label="requiredLabel(t('informationsPersonnelles.localite'))"
       v-model="tiersLocalite"
       :error-messages="tiersLocaliteError"
       :readonly="!!selectedAddress"
@@ -126,6 +128,7 @@
     <AccessibleVSelect
       v-model="tiersTypeDocumentIdentite"
       :label="t('informationsPersonnelles.typeDocumentIdentite')"
+      required
       :items="typesDocumentIdentite"
       item-title="label"
       item-value="value"
@@ -138,7 +141,7 @@
 
     <v-text-field
       v-if="showDocumentNumberFieldTiers"
-      :label="documentNumberLabelTiers"
+      :label="requiredLabel(documentNumberLabelTiers)"
       v-model="tiersNumeroDocumentIdentite"
       :error-messages="tiersNumeroDocumentIdentiteError"
       class="mb-8"
@@ -164,7 +167,7 @@
       :required="true"
     />
     <v-text-field
-      :label="t('informationsPersonnelles.email')"
+      :label="requiredLabel(t('informationsPersonnelles.email'))"
       v-model="tiersEmail"
       type="email"
       :error-messages="tiersEmailError"
@@ -175,7 +178,7 @@
       required
     />
     <v-text-field
-      :label="t('informationsPersonnelles.confirmationEmail')"
+      :label="requiredLabel(t('informationsPersonnelles.confirmationEmail'))"
       v-model="tiersConfirmationEmail"
       type="email"
       :error-messages="tiersConfirmationEmailError"
@@ -207,6 +210,7 @@ import { fetchGenresSorted, fetchNationalitiesForPersonForm } from "@/utils/help
 import AccessibleVSelect from "@/components/accessibility/AccessibleVSelect.vue";
 import { applyDateMask } from "@/utils/helpers/dateHelpers.ts";
 import { createHintAdresse } from "@/utils/helpers/adresseHelpers.ts";
+import { requiredLabel } from "@/utils/helpers/labelHelpers";
 
 const { t } = useI18n();
 

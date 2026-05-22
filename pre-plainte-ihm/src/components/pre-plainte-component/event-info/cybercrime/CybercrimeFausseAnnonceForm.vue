@@ -1,7 +1,7 @@
 <template>
   <div class="inputs-fields">
     <v-text-field
-      :label="t('cybercrime.urlComplete')"
+      :label="requiredLabel(t('cybercrime.urlComplete'))"
       v-model="urlComplete"
       :error-messages="urlCompleteError"
       class="mb-8"
@@ -10,7 +10,7 @@
       persistent-hint
     />
     <v-text-field
-      :label="t('cybercrime.titreAnnonce')"
+      :label="requiredLabel(t('cybercrime.titreAnnonce'))"
       v-model="titreAnnonce"
       :error-messages="titreAnnonceError"
       class="mb-8 mt-4"
@@ -20,7 +20,7 @@
     />
 
     <v-text-field
-      :label="t('cybercrime.nomBailleur')"
+      :label="requiredLabel(t('cybercrime.nomBailleur'))"
       v-model="nomBailleur"
       :error-messages="nomBailleurError"
       class="mb-8"
@@ -30,7 +30,7 @@
     />
 
     <v-text-field
-      :label="t('cybercrime.emailBailleur')"
+      :label="emailBailleurInconnu ? t('cybercrime.emailBailleur') : requiredLabel(t('cybercrime.emailBailleur'))"
       v-model="emailBailleur"
       :error-messages="emailBailleurError"
       class="mb-2"
@@ -55,6 +55,7 @@
       input-class="mb-2"
       default-country-code="CH"
       :disabled="telephoneBailleurInconnu"
+      :required="!telephoneBailleurInconnu"
     />
 
     <v-checkbox
@@ -65,7 +66,7 @@
     />
 
     <v-text-field
-      :label="t('cybercrime.adresseBienImmobilier')"
+      :label="requiredLabel(t('cybercrime.adresseBienImmobilier'))"
       v-model="adresseBienImmobilier"
       :error-messages="adresseBienImmobilierError"
       class="mb-8"
@@ -75,7 +76,7 @@
     />
 
     <v-text-field
-      :label="t('cybercrime.montantDemande')"
+      :label="requiredLabel(t('cybercrime.montantDemande'))"
       v-model="montantDemande"
       :error-messages="montantDemandeError"
       class="mb-8"
@@ -85,7 +86,7 @@
     />
 
     <v-text-field
-      :label="t('cybercrime.modePaiementDemande')"
+      :label="requiredLabel(t('cybercrime.modePaiementDemande'))"
       v-model="modePaiementDemande"
       :error-messages="modePaiementDemandeError"
       class="mb-8"
@@ -101,6 +102,7 @@ import { useField } from "vee-validate";
 import { useI18n } from "vue-i18n";
 import PhoneInput from "@/components/phone/PhoneInput.vue";
 import { resetFieldsOnCondition } from "@/utils/helpers/formHelpers.ts";
+import { requiredLabel } from "@/utils/helpers/labelHelpers";
 
 const { t } = useI18n();
 

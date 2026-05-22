@@ -1,7 +1,7 @@
 <template>
   <fieldset class="mb-4">
     <legend class="text-subtitle-1 mb-2">
-      {{ label }}
+      {{ displayLabel }}
     </legend>
 
     <v-radio-group
@@ -24,6 +24,8 @@
   </fieldset>
 </template>
 <script setup lang="ts">
+import { computed } from "vue";
+import { requiredLabel } from "@/utils/helpers/labelHelpers";
 interface Option<T = any> {
   label: string
   value: T
@@ -35,6 +37,7 @@ const props = defineProps<{
   options: Option[]
   errorMessages?: string | string[]
   hint?: string
+  required?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -45,6 +48,8 @@ const emit = defineEmits<{
 const updateValue = (value: any) => {
   emit("update:modelValue", value)
 }
+
+const displayLabel = computed(() => (props.required ? requiredLabel(props.label) : props.label));
 </script>
 <style scoped>
 fieldset {

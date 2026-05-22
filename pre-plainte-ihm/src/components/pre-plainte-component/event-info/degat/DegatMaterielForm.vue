@@ -2,6 +2,7 @@
   <div class="inputs-fields">
     <AccessibleVSelect
       :label="t('dommages.typeDommage')"
+      required
       v-model="typeDommage"
       :items="typeDommageOptions"
       :error-messages="typeDommageError"
@@ -57,6 +58,7 @@
     />
     <AccessibleVSelect
       :label="t('incidentTypes.devise')"
+      required
       v-model="devise"
       :items="deviseOptions"
       :error-messages="deviseError"
@@ -69,6 +71,7 @@
     />
     <AccessibleVSelect
       :label="t('dommages.natureDommage')"
+      required
       v-model="naturesDommage"
       :items="natureDommageOptions"
       :error-messages="naturesDommageError"
@@ -83,7 +86,7 @@
       :placeholder="t('dommages.selectionnerNatureDommage')"
     />
     <v-textarea
-      :label="t('dommages.descriptionDommage')"
+      :label="requiredLabel(t('dommages.descriptionDommage'))"
       v-model="description"
       :error-messages="descriptionError"
       class="mb-8"
@@ -105,6 +108,7 @@
     <BaseRadioGroup
       v-model="constatPresent"
       :label="t('dommages.constat')"
+      required
       :options="[
         { label: t('common.oui'), value: true },
         { label: t('common.non'), value: false },
@@ -114,7 +118,7 @@
     <v-text-field
       v-if="constatPresent"
       v-model="dateConstat"
-      :label="t('dommages.constatDate')"
+      :label="requiredLabel(t('dommages.constatDate'))"
       type="text"
       placeholder="JJ.MM.AAAA"
       :error-messages="dateConstatError"
@@ -167,6 +171,7 @@ import BaseRadioGroup from "@/components/radio/BaseRadioGroup.vue";
 import DegatVehiculeEndommageDraftPanel from "./DegatVehiculeEndommageDraftPanel.vue";
 import DegatVehiculeEndommageResumeSheet from "./DegatVehiculeEndommageResumeSheet.vue";
 import { toTranslatedOptions } from "@/utils/helpers/traductionHelper";
+import { requiredLabel } from "@/utils/helpers/labelHelpers";
 
 const TEXTE_VIDE = "";
 

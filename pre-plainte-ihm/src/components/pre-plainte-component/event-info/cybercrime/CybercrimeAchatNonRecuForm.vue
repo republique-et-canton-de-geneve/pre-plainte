@@ -1,7 +1,7 @@
 <template>
   <div class="inputs-fields">
     <v-text-field
-      :label="t('cybercrime.montantDelitAchatLigne')"
+      :label="requiredLabel(t('cybercrime.montantDelitAchatLigne'))"
       v-model="montantDelitAchatLigne"
       type="number"
       min="0"
@@ -12,7 +12,7 @@
       persistent-hint
     />
     <v-textarea
-      :label="t('cybercrime.descriptionCybercrime')"
+      :label="requiredLabel(t('cybercrime.descriptionCybercrime'))"
       v-model="descriptionCybercrime"
       :error-messages="descriptionCybercrimeError"
       class="mb-8"
@@ -21,7 +21,7 @@
       persistent-hint
     />
     <v-textarea
-      :label="t('cybercrime.articleNonLivreDescription')"
+      :label="requiredLabel(t('cybercrime.articleNonLivreDescription'))"
       v-model="articleNonLivreDescription"
       :error-messages="articleNonLivreDescriptionError"
       class="mb-8"
@@ -30,7 +30,7 @@
       persistent-hint
     />
     <v-text-field
-      :label="t('cybercrime.prenomVendeur')"
+      :label="requiredLabel(t('cybercrime.prenomVendeur'))"
       v-model="prenomVendeur"
       :error-messages="prenomVendeurError"
       class="mb-8"
@@ -39,7 +39,7 @@
       persistent-hint
     />
     <v-text-field
-      :label="t('cybercrime.nomVendeur')"
+      :label="requiredLabel(t('cybercrime.nomVendeur'))"
       v-model="nomVendeur"
       :error-messages="nomVendeurError"
       class="mb-8"
@@ -55,6 +55,7 @@
       input-class="mb-2"
       default-country-code="CH"
       :disabled="telephoneVendeurInconnu"
+      :required="!telephoneVendeurInconnu"
     />
     <v-checkbox
       v-model="telephoneVendeurInconnu"
@@ -63,7 +64,7 @@
       hide-details
     />
     <v-text-field
-      :label="t('cybercrime.emailVendeur')"
+      :label="emailVendeurInconnu ? t('cybercrime.emailVendeur') : requiredLabel(t('cybercrime.emailVendeur'))"
       v-model="emailVendeur"
       :error-messages="emailVendeurError"
       class="mb-2"
@@ -114,6 +115,7 @@
     <BaseRadioGroup
       v-model="achatViaPlaceMarche"
       :label="t('cybercrime.titrePlaceMarche')"
+      required
       :options="[
         { label: t('common.oui'), value: true },
         { label: t('common.non'), value: false }
@@ -124,6 +126,7 @@
     <AccessibleVSelect
       v-if="achatViaPlaceMarche"
       :label="t('cybercrime.plateformeUtilisee')"
+      required
       v-model="plateforme"
       :items="plateformeOptions"
       item-title="label"
@@ -136,7 +139,7 @@
     />
     <v-text-field
       v-if="achatViaPlaceMarche && plateforme === 'autre'"
-      :label="t('cybercrime.plateformeUtiliseeAutre')"
+      :label="requiredLabel(t('cybercrime.plateformeUtiliseeAutre'))"
       v-model="plateformeAutre"
       :error-messages="plateformeAutreError"
       class="mb-8"
@@ -146,7 +149,7 @@
     />
     <v-text-field
       v-if="achatViaPlaceMarche"
-      :label="t('cybercrime.plateformeId')"
+      :label="requiredLabel(t('cybercrime.plateformeId'))"
       v-model="plateformeId"
       :error-messages="plateformeIdError"
       class="mb-8"
@@ -156,7 +159,7 @@
     />
     <v-text-field
       v-if="!achatViaPlaceMarche"
-      :label="t('cybercrime.nomEntrepriseVendeur')"
+      :label="requiredLabel(t('cybercrime.nomEntrepriseVendeur'))"
       v-model="nomEntrepriseVendeur"
       :error-messages="nomEntrepriseVendeurError"
       class="mb-8"
@@ -166,7 +169,7 @@
     />
     <v-text-field
       v-if="!achatViaPlaceMarche"
-      :label="t('cybercrime.siteWebEntrepriseVendeur')"
+      :label="requiredLabel(t('cybercrime.siteWebEntrepriseVendeur'))"
       v-model="siteWebEntrepriseVendeur"
       :error-messages="siteWebEntrepriseVendeurError"
       class="mb-8"
@@ -181,6 +184,7 @@
         :label="t('cybercrime.telechargerAnnonceTitre')"
         :multiple="false"
         :show-title="false"
+        :required="!annonceDocumentIndisponible"
       />
       <v-checkbox
         v-model="annonceDocumentIndisponible"
@@ -190,7 +194,7 @@
       />
       <v-textarea
         v-if="annonceDocumentIndisponible"
-        :label="t('cybercrime.raisonAbsenceAnnonce')"
+        :label="requiredLabel(t('cybercrime.raisonAbsenceAnnonce'))"
         v-model="raisonAbsenceAnnonce"
         :error-messages="raisonAbsenceAnnonceError"
         class="mt-2"
@@ -201,6 +205,7 @@
     </div>
     <AccessibleVSelect
       :label="t('cybercrime.moyenPaiement')"
+      required
       v-model="moyenPaiement"
       :items="moyenPaiementOptions"
       item-title="label"
@@ -219,7 +224,7 @@
     </v-alert>
     <v-text-field
       v-if="moyenPaiement === 'autre'"
-      :label="t('cybercrime.moyenPaiementAutre')"
+      :label="requiredLabel(t('cybercrime.moyenPaiementAutre'))"
       v-model="moyenPaiementAutre"
       :error-messages="moyenPaiementAutreError"
       class="mb-8"
@@ -229,7 +234,7 @@
     />
     <v-text-field
       v-if="moyenPaiement === 'iban'"
-      :label="t('cybercrime.ibanBeneficiaire')"
+      :label="requiredLabel(t('cybercrime.ibanBeneficiaire'))"
       v-model="ibanBeneficiaire"
       :error-messages="ibanBeneficiaireError"
       class="mb-8"
@@ -239,7 +244,7 @@
     />
     <v-text-field
       v-if="moyenPaiement === 'paypal'"
-      :label="t('cybercrime.comptePaypalBeneficiaire')"
+      :label="requiredLabel(t('cybercrime.comptePaypalBeneficiaire'))"
       v-model="comptePaypalBeneficiaire"
       :error-messages="comptePaypalBeneficiaireError"
       class="mb-8"
@@ -249,7 +254,7 @@
     />
     <v-text-field
       v-if="moyenPaiement === 'twint'"
-      :label="t('cybercrime.numeroTwintBeneficiaire')"
+      :label="requiredLabel(t('cybercrime.numeroTwintBeneficiaire'))"
       v-model="numeroTwintBeneficiaire"
       :error-messages="numeroTwintBeneficiaireError"
       class="mb-8"
@@ -259,7 +264,7 @@
     />
     <v-text-field
       v-if="moyenPaiement === 'crypto'"
-      :label="t('cybercrime.adresseWalletCrypto')"
+      :label="requiredLabel(t('cybercrime.adresseWalletCrypto'))"
       v-model="adresseWalletCrypto"
       :error-messages="adresseWalletCryptoError"
       class="mb-8"
@@ -269,7 +274,7 @@
     />
     <v-text-field
       v-if="moyenPaiement === 'crypto'"
-      :label="t('cybercrime.hashTransactionCrypto')"
+      :label="requiredLabel(t('cybercrime.hashTransactionCrypto'))"
       v-model="hashTransactionCrypto"
       :error-messages="hashTransactionCryptoError"
       class="mb-8"
@@ -305,7 +310,7 @@
       persistent-hint
     />
     <v-text-field
-      :label="t('cybercrime.dateOperation')"
+      :label="requiredLabel(t('cybercrime.dateOperation'))"
       v-model="dateOperation"
       type="text"
       placeholder="JJ.MM.AAAA"
@@ -326,6 +331,7 @@
         :show-title="false"
         accept=".pdf"
         :max-file-size-bytes="maxPieceJointe5Mo"
+        :required="!preuvePaiementIndisponible"
       />
       <v-checkbox
         v-model="preuvePaiementIndisponible"
@@ -335,7 +341,7 @@
       />
       <v-textarea
         v-if="preuvePaiementIndisponible"
-        :label="t('cybercrime.raisonAbsencePreuvePaiement')"
+        :label="requiredLabel(t('cybercrime.raisonAbsencePreuvePaiement'))"
         v-model="raisonAbsencePreuvePaiement"
         :error-messages="raisonAbsencePreuvePaiementError"
         class="mt-2 mb-4"
@@ -347,6 +353,7 @@
     <BaseRadioGroup
       v-model="copieIdentiteTransmiseAuteur"
       :label="t('cybercrime.copieIdentiteTransmiseAuteur')"
+      required
       :options="[
         { label: t('common.oui'), value: true },
         { label: t('common.non'), value: false }
@@ -359,11 +366,13 @@
         v-model="copieIdentiteTransmiseAuteurDocument"
         :label="t('cybercrime.telechargerCopieIdentiteTransmiseAuteur')"
         :multiple="false"
+        required
       />
     </div>
     <BaseRadioGroup
       v-model="copieIdentiteAuteurTransmise"
       :label="t('cybercrime.copieIdentiteAuteurTransmise')"
+      required
       :options="[
         { label: t('common.oui'), value: true },
         { label: t('common.non'), value: false }
@@ -376,6 +385,7 @@
         v-model="copieIdentiteAuteurDocument"
         :label="t('cybercrime.telechargerCopieIdentiteAuteurTransmise')"
         :multiple="false"
+        required
       />
     </div>
   </div>
@@ -393,6 +403,7 @@ import { applyDateMask } from "@/utils/helpers/dateHelpers.ts";
 import { MAX_PIECE_JOINTE_SINGLE_5MO, MOYEN_PAIEMENT } from "@/constants/constant";
 import BaseRadioGroup from "@/components/radio/BaseRadioGroup.vue";
 import { resetFieldsOnCondition, resetFieldsOnToggle, resetFilesOnCondition } from "@/utils/helpers/formHelpers.ts";
+import { requiredLabel } from "@/utils/helpers/labelHelpers";
 
 const { t } = useI18n();
 

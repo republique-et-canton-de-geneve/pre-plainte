@@ -34,6 +34,7 @@ export const useCreatePrePlainteStore = defineStore("createPrePlainte", () => {
   const step = ref(loadCurrentStep());
   const isLoading = ref(false);
   const isRdvDataLoading = ref(false);
+  const isStoragePersistenceEnabled = ref(true);
 
   const keyChallenge = ref<string | null>(loadEmailChallengeKey());
 
@@ -41,7 +42,11 @@ export const useCreatePrePlainteStore = defineStore("createPrePlainte", () => {
     keyChallenge.value = key;
   }
 
-  watch(keyChallenge, k => saveEmailChallengeKey(k));
+  watch(keyChallenge, k => {
+    if (isStoragePersistenceEnabled.value) {
+      saveEmailChallengeKey(k);
+    }
+  });
 
   const setUserFormData = (data: PrePlainteFormFields) => {
     const normalizedData = data.nom ? normalizeFormNames(data) : data;
@@ -49,18 +54,27 @@ export const useCreatePrePlainteStore = defineStore("createPrePlainte", () => {
   };
 
   const resetForm = () => {
+    isStoragePersistenceEnabled.value = true;
     clearStorageData();
     Object.assign(userFormData, initialFormData);
     keyChallenge.value = null;
   };
 
   const clearAllData = (keepCurrentStep = false) => {
+    isStoragePersistenceEnabled.value = true;
     clearStorageData();
     Object.assign(userFormData, initialFormData);
     keyChallenge.value = null;
     if (!keepCurrentStep) {
       step.value = 1;
     }
+  };
+
+  const clearPersistedDataAfterSubmission = () => {
+    isStoragePersistenceEnabled.value = false;
+    clearStorageData();
+    keyChallenge.value = null;
+    resetCaptchaToken();
   };
 
   const nextStep = () => {
@@ -119,8 +133,20 @@ export const useCreatePrePlainteStore = defineStore("createPrePlainte", () => {
     demandeId.value = id;
   };
 
-  watch(step, saveCurrentStep);
-  watch(userFormData, saveFormData, { deep: true });
+  watch(step, currentStep => {
+    if (isStoragePersistenceEnabled.value) {
+      saveCurrentStep(currentStep);
+    }
+  });
+  watch(
+    userFormData,
+    formData => {
+      if (isStoragePersistenceEnabled.value) {
+        saveFormData(formData);
+      }
+    },
+    { deep: true },
+  );
 
   return {
     setUserFormData,
@@ -134,6 +160,7 @@ export const useCreatePrePlainteStore = defineStore("createPrePlainte", () => {
     setStep,
     resetForm,
     clearAllData,
+    clearPersistedDataAfterSubmission,
     captchaToken,
     setCaptchaToken,
     resetCaptchaToken,

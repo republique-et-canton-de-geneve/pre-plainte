@@ -8,6 +8,7 @@
         </h2>
         <AccessibleVSelect
           :label="t('informationsPersonnelles.lienAvecPersonne')"
+          required
           v-model="lienAvecPersonne"
           :items="liensAvecPersonneOptions"
           item-title="label"
