@@ -9,6 +9,7 @@
       <AccessibleVSelect
         v-model="brouillon.categorieObjet"
         :label="t('categoriesObjets.titre')"
+        required
         :items="brouillon.categorieOptions"
         item-title="label"
         item-value="value"
@@ -33,6 +34,7 @@
         <RipolAutocomplete
           v-model="brouillon.plaquePays"
           :label="t('incidentTypes.plaquePays')"
+          required
           :fetch-fn="brouillon.fetchFilteredNationalities"
           :error-messages="brouillon.plaquePaysError"
           :hint="t('incidentTypes.hintPlaquePays')"
@@ -42,7 +44,7 @@
         />
         <v-text-field
           v-model="brouillon.plaqueNumero"
-          :label="t('incidentTypes.plaqueNumero')"
+          :label="requiredLabel(t('incidentTypes.plaqueNumero'))"
           :error-messages="brouillon.plaqueNumeroError"
           :hint="t('incidentTypes.hintPlaqueNumero')"
           variant="outlined"
@@ -65,6 +67,7 @@
           "
           v-model="brouillon.sousCategorie"
           :label="t('sousCategories.titre')"
+          required
           :items="brouillon.subCategorieOptions"
           item-title="label"
           item-value="value"
@@ -78,6 +81,7 @@
           v-model="brouillon.typeObjet"
           :key="brouillon.objetTypeKey"
           :label="t('incidentTypes.typeObjet')"
+          required
           :fetch-fn="brouillon.fetchFilteredObjectTypes"
           :error-messages="brouillon.typeObjetError"
           :hint="t('incidentTypes.hintTypeObjet')"
@@ -183,7 +187,7 @@
         "
       >
         <v-text-field
-          :label="t('incidentTypes.numeroSerie')"
+          :label="brouillon.numeroSerieInconnu ? t('incidentTypes.numeroSerie') : requiredLabel(t('incidentTypes.numeroSerie'))"
           v-model="brouillon.numeroSerie"
           :disabled="brouillon.numeroSerieInconnu"
           class="my-4"
@@ -201,7 +205,7 @@
 
         <template v-if="brouillon.hasImei">
           <v-text-field
-            :label="t('incidentTypes.numeroImei')"
+            :label="brouillon.numeroIMEIInconnu ? t('incidentTypes.numeroImei') : requiredLabel(t('incidentTypes.numeroImei'))"
             v-model="brouillon.numeroIMEI"
             :disabled="brouillon.numeroIMEIInconnu"
             :error-messages="brouillon.numeroIMEIError"
@@ -210,6 +214,7 @@
             :hint="t('incidentTypes.hintNumeroImei')"
             persistent-hint
             maxlength="15"
+            inputmode="numeric"
           />
           <v-checkbox
             v-model="brouillon.numeroIMEIInconnu"
@@ -240,7 +245,7 @@
         v-if="brouillon.categorieObjet && brouillon.categorieObjet !== VOL_OBJET_CATEGORIE.PLAQUE"
         v-model="brouillon.descriptionObjet"
         clearable
-        :label="t('incidentTypes.descriptionObjet')"
+        :label="t('incidentTypes.descriptionComplementaireObjet')"
         :placeholder="t('incidentTypes.descriptionObjetPlaceholder')"
         :error-messages="brouillon.descriptionObjetError"
         class="my-4"
@@ -267,6 +272,7 @@ import AccessibleVSelect from "@/components/accessibility/AccessibleVSelect.vue"
 import RipolAutocomplete from "@/components/ripol/RipolAutocomplete.vue";
 import VehiculeDetailsField from "@/components/pre-plainte-component/event-info/VehiculeDetailsField.vue";
 import type { VolObjetVoleDraftBrouillon } from "@/types/volObjetVoleBrouillon.types";
+import { requiredLabel } from "@/utils/helpers/labelHelpers";
 
 defineProps<{
   brouillon: VolObjetVoleDraftBrouillon;

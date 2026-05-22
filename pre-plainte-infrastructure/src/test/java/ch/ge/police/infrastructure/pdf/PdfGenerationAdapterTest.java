@@ -23,6 +23,8 @@ import ch.ge.police.core.domain.model.informationspersonnelles.common.Organisati
 import ch.ge.police.core.domain.model.informationspersonnelles.common.Tiers;
 import ch.ge.police.core.domain.model.informationspersonnelles.common.TypeDocumentIdentite;
 import ch.ge.police.core.domain.model.rendezvous.CreneauRendezVous;
+import org.openpdf.text.pdf.PdfReader;
+import org.openpdf.text.pdf.parser.PdfTextExtractor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -30,6 +32,8 @@ import org.mockito.Mockito;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static ch.ge.police.infrastructure.pdf.PdfGenerationAdapter.RIPOL_AUTRE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -97,6 +101,20 @@ class PdfGenerationAdapterTest {
     assertTrue(pdf.length > 500);
   }
 
+  private String extractPdfText(byte[] pdf) throws Exception {
+    try (PdfReader reader = new PdfReader(pdf)) {
+      return IntStream.rangeClosed(1, reader.getNumberOfPages())
+        .mapToObj(page -> {
+          try {
+            return PdfTextExtractor.getTextFromPage(reader, page);
+          } catch (Exception e) {
+            throw new IllegalStateException(e);
+          }
+        })
+        .collect(Collectors.joining("\n"));
+    }
+  }
+
   @Test
   void shouldGeneratePdfVolComplete() {
 
@@ -110,6 +128,23 @@ class PdfGenerationAdapterTest {
     PrePlainte p = new PrePlainte("VOL-1", basePersonne(), Incident.of(vol));
 
     assertPdf(adapter.generatePdf(p));
+  }
+
+  @Test
+  void shouldRenderEventHoursInPdf() throws Exception {
+    Vol vol = new Vol();
+    vol.setDateDebutEvent("2025-01-01T10:00");
+    vol.setDateFinEvent("2025-01-01T11:30");
+    vol.setVolDansVehicule(false);
+
+    PrePlainte p = new PrePlainte("VOL-HOURS", basePersonne(), Incident.of(vol));
+
+    String text = extractPdfText(adapter.generatePdf(p));
+
+    assertTrue(text.contains("Date de début de l'événement"));
+    assertTrue(text.contains("01.01.2025 à 10:00"));
+    assertTrue(text.contains("Date de fin de l'événement"));
+    assertTrue(text.contains("01.01.2025 à 11:30"));
   }
 
   @Test
@@ -451,6 +486,7 @@ class PdfGenerationAdapterTest {
     Vol vol = new Vol();
     vol.setDateDebutEvent("2025-01-01T10:00");
     vol.setDateFinEvent("2025-01-01T11:00");
+    vol.setIsTrajet(true);
     vol.setAdresseIncident(new Adresse("SBB Bahnhof", null, "2494", "Basel", "405100", "Suisse", "8212"));
     vol.setAdresseIncidentSecondaire(new Adresse("Gare Cornavin", null, "1201", "Genève", "120000", "Suisse", "8212"));
 
@@ -459,6 +495,38 @@ class PdfGenerationAdapterTest {
     byte[] pdf = adapter.generatePdf(p);
 
     assertPdf(pdf);
+  }
+
+  @Test
+  void shouldRenderVolAddressLabelsWithoutTrajetSuffixWhenNotTrajet() throws Exception {
+    Vol vol = new Vol();
+    vol.setAdresseIncident(new Adresse("Rue du Vol 1", null, "1201", "Genève", "120000", "Suisse", "8212"));
+    vol.setIsTrajet(false);
+
+    List<String[]> rows = new ArrayList<>();
+    var handleVol = PdfGenerationAdapter.class.getDeclaredMethod("handleVol", List.class, Vol.class);
+    handleVol.setAccessible(true);
+    handleVol.invoke(adapter, rows, vol);
+
+    assertTrue(rows.stream().anyMatch(row -> "Adresse du vol".equals(row[0]) && "Rue du Vol 1".equals(row[1])));
+    assertTrue(rows.stream().anyMatch(row -> "Localité du vol".equals(row[0]) && "Genève".equals(row[1])));
+    assertFalse(rows.stream().anyMatch(row -> "Adresse de départ".equals(row[0])));
+  }
+
+  @Test
+  void shouldKeepDepartureAndArrivalLabelsWhenVolIsTrajet() throws Exception {
+    Vol vol = new Vol();
+    vol.setAdresseIncident(new Adresse("SBB Bahnhof", null, "2494", "Basel", "405100", "Suisse", "8212"));
+    vol.setAdresseIncidentSecondaire(new Adresse("Gare Cornavin", null, "1201", "Genève", "120000", "Suisse", "8212"));
+    vol.setIsTrajet(true);
+
+    List<String[]> rows = new ArrayList<>();
+    var handleVol = PdfGenerationAdapter.class.getDeclaredMethod("handleVol", List.class, Vol.class);
+    handleVol.setAccessible(true);
+    handleVol.invoke(adapter, rows, vol);
+
+    assertTrue(rows.stream().anyMatch(row -> "Adresse de départ".equals(row[0]) && "SBB Bahnhof".equals(row[1])));
+    assertTrue(rows.stream().anyMatch(row -> "Adresse d'arrivée".equals(row[0]) && "Gare Cornavin".equals(row[1])));
   }
 
   @Test

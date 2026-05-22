@@ -5,6 +5,7 @@
     </v-alert>
     <accessible-v-select
       :label="t('informationsPersonnelles.typeRepresentation')"
+      required
       :items="representationOptions"
       v-model="typeRepresentation"
       :error-messages="typeRepresentationError"

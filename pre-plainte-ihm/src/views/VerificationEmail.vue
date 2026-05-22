@@ -11,7 +11,7 @@
       </v-alert>
 
       <v-text-field
-        :label="t('informationsPersonnelles.email')"
+        :label="requiredLabel(t('informationsPersonnelles.email'))"
         v-model="email"
         type="email"
         :error-messages="emailError"
@@ -125,6 +125,7 @@ import {
 import { createVerificationEmailPageSchema } from "@/schemas/verification-email-page.schema.ts";
 import { isDevEmailChallengeBypassed } from "@/config/dev-flags";
 import { EMAIL_CHALLENGE_CODE_LENGTH } from "@/constants/constant";
+import { requiredLabel } from "@/utils/helpers/labelHelpers";
 
 const devBypassEmail = isDevEmailChallengeBypassed();
 const EMAIL_CHALLENGE_GENERIC_ERROR_KEY = "emailChallenge.erreurVerification";

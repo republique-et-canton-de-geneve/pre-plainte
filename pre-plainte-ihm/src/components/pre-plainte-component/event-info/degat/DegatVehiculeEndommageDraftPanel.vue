@@ -30,7 +30,7 @@
 
       <v-textarea
         clearable
-        :label="t('incidentTypes.descriptionObjet')"
+        :label="requiredLabel(t('incidentTypes.descriptionObjet'))"
         :placeholder="t('incidentTypes.descriptionObjetPlaceholder')"
         :model-value="descriptionObjet"
         @update:model-value="emit('update:descriptionObjet', $event)"
@@ -53,6 +53,7 @@
 <script setup lang="ts">
 import { useI18n } from "vue-i18n";
 import VehiculeDetailsField from "@/components/pre-plainte-component/event-info/VehiculeDetailsField.vue";
+import { requiredLabel } from "@/utils/helpers/labelHelpers";
 
 defineProps<{
   objetsCount: number;
@@ -76,4 +77,3 @@ const emit = defineEmits<{
 
 const { t } = useI18n();
 </script>
-

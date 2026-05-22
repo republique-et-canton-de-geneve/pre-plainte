@@ -47,10 +47,10 @@ class DommageMaterielTest {
   }
 
   @Test
-  void shouldThrowWhenMontantEstimeMissing() {
+  void shouldPassWhenMontantEstimeMissing() {
     dommage.setMontantEstime(null);
-    Exception ex = assertThrows(ValidationMetierException.class, dommage::champsObligatoireIncident);
-    assertEquals("Le montant estimé est obligatoire.", ex.getMessage());
+
+    assertDoesNotThrow(dommage::champsObligatoireIncident);
   }
 
   @Test

@@ -1,17 +1,18 @@
 <template>
   <v-row>
     <v-col cols="12" md="6">
-      <v-text-field
+      <AccessibleVSelect
         id="date-souhaitee"
-        v-model="dateSouhaitee"
+        v-model="dateSouhaiteeSelection"
         :error-messages="dateSouhaiteeError"
-        type="text"
+        :items="dateOptions"
+        item-title="label"
+        item-value="value"
         variant="outlined"
         prepend-inner-icon="mdi-calendar"
         :label="t('rendezVous.dateSouhaitee')"
-        placeholder="JJ.MM.AAAA"
-        :disabled="!datesDisponibles.length"
-        @input="onDateSouhaiteeInput"
+        :disabled="esiriusStore.loading || !datesDisponibles.length"
+        clearable
       />
     </v-col>
 
@@ -54,8 +55,9 @@ import { computed } from "vue";
 import { useI18n } from "vue-i18n";
 import { useEsiriusStore } from "@/stores/useEsiriusStore";
 import AccessibleVSelect from "../accessibility/AccessibleVSelect.vue";
-import { applyDateMask } from "@/utils/helpers/dateHelpers.ts";
 import { useField } from "vee-validate";
+
+const RENDEZ_VOUS_DATE_WINDOW_DAYS = 15;
 
 interface Props {
   poste: any;
@@ -71,12 +73,41 @@ interface Emits {
 const props = defineProps<Props>();
 const emit = defineEmits<Emits>();
 
-const { t } = useI18n();
+const { t, locale } = useI18n();
 const esiriusStore = useEsiriusStore();
 
 const traductionTousLesPostes = "rendezVous.tousLesPostes";
 
 const { value: dateSouhaitee, errorMessage: dateSouhaiteeError } = useField<string>("dateSouhaitee");
+
+const dateSouhaiteeSelection = computed({
+  get: () => dateSouhaitee.value || "",
+  set: (value: string | null) => {
+    const nextValue = value || "";
+    dateSouhaitee.value = nextValue;
+    emit("update:dateSouhaitee", nextValue);
+  },
+});
+
+const dateOptions = computed(() => {
+  const formatter = new Intl.DateTimeFormat(locale.value, {
+    weekday: "long",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  return Array.from({ length: RENDEZ_VOUS_DATE_WINDOW_DAYS }, (_, index) => {
+    const date = new Date(today);
+    date.setDate(today.getDate() + index);
+    return {
+      label: formatter.format(date),
+      value: formatIsoDate(date),
+    };
+  });
+});
 
 const servicesAvecTous = computed(() => {
   if (!props.servicesDisponibles?.length) {
@@ -108,9 +139,11 @@ const onPosteNativeChange = (e: Event) => {
   poste.value = selected ?? { key: null, name: t(traductionTousLesPostes) };
 };
 
-function onDateSouhaiteeInput(e: InputEvent) {
-  applyDateMask(e, dateSouhaitee);
-  emit("update:dateSouhaitee", dateSouhaitee.value);
+function formatIsoDate(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 </script>
 

@@ -7,6 +7,7 @@
       <AccessibleVSelect
         v-model="typeIncident"
         :label="t('informationsEvenement.typeIncident')"
+        required
         :items="[
           { label: t('incidentTypes.vol'), value: 'vol' },
           { label: t('dommages.titre'), value: 'degat-delit' },
@@ -28,6 +29,7 @@
           item-title="label"
           item-value="value"
           :label="t('cybercrime.type')"
+          required
           :error-messages="typeCybercrimeError"
           variant="outlined"
           class="mb-8"
@@ -38,7 +40,7 @@
         <v-textarea
           v-if="showCybercrimeUrlDescriptionAndPieces"
           clearable
-          :label="t('cybercrime.description')"
+          :label="requiredLabel(t('cybercrime.description'))"
           v-model="descriptionCybercrime"
           :error-messages="descriptionCybercrimeError"
           class="mb-8"
@@ -70,7 +72,7 @@
         <v-row class="mb-4" align="center" dense>
           <v-col cols="12" md="6">
             <v-text-field
-              :label="t('informationsEvenement.dateDebutEvenement')"
+              :label="requiredLabel(t('informationsEvenement.dateDebutEvenement'))"
               v-model="dateDebutEvenement"
               :error-messages="dateDebutEvenementError"
               type="text"
@@ -84,7 +86,7 @@
           </v-col>
           <v-col cols="12" md="6" class="mt-4 mt-md-0">
             <v-text-field
-              :label="t('informationsEvenement.heureDebutEvenement')"
+              :label="requiredLabel(t('informationsEvenement.heureDebutEvenement'))"
               v-model="heureDebutEvenement"
               :error-messages="heureDebutEvenementError"
               type="text"
@@ -100,7 +102,7 @@
         <v-row class="mb-4" align="center" dense>
           <v-col cols="12" md="6">
             <v-text-field
-              :label="t('informationsEvenement.dateFinEvenement')"
+              :label="requiredLabel(t('informationsEvenement.dateFinEvenement'))"
               v-model="dateFinEvenement"
               :error-messages="dateFinEvenementError"
               type="text"
@@ -114,7 +116,7 @@
           </v-col>
           <v-col cols="12" md="6" class="mt-4 mt-md-0">
             <v-text-field
-              :label="t('informationsEvenement.heureFinEvenement')"
+              :label="requiredLabel(t('informationsEvenement.heureFinEvenement'))"
               v-model="heureFinEvenement"
               :error-messages="heureFinEvenementError"
               type="text"
@@ -132,7 +134,7 @@
         <v-row class="mb-4 mt-4" align="center" dense>
           <v-col cols="12" md="6">
             <v-text-field
-              :label="t('cybercrime.datePremierContact')"
+              :label="requiredLabel(t('cybercrime.datePremierContact'))"
               v-model="datePremierContact"
               type="text"
               placeholder="JJ.MM.AAAA"
@@ -146,7 +148,7 @@
           </v-col>
           <v-col cols="12" md="6" class="mt-4 mt-md-0">
             <v-text-field
-              :label="t('cybercrime.heurePremierContact')"
+              :label="requiredLabel(t('cybercrime.heurePremierContact'))"
               v-model="heurePremierContact"
               :error-messages="heurePremierContactError"
               type="text"
@@ -161,7 +163,7 @@
         <v-row class="mb-4" align="center" dense>
           <v-col cols="12" md="6">
             <v-text-field
-              :label="t('cybercrime.dateDernierContact')"
+              :label="requiredLabel(t('cybercrime.dateDernierContact'))"
               v-model="dateDernierContact"
               type="text"
               placeholder="JJ.MM.AAAA"
@@ -175,7 +177,7 @@
           </v-col>
           <v-col cols="12" md="6" class="mt-4 mt-md-0">
             <v-text-field
-              :label="t('cybercrime.heureDernierContact')"
+              :label="requiredLabel(t('cybercrime.heureDernierContact'))"
               v-model="heureDernierContact"
               :error-messages="heureDernierContactError"
               type="text"
@@ -256,6 +258,7 @@ import AccessibleVSelect from "@/components/accessibility/AccessibleVSelect.vue"
 import { applyDateMask, applyTimeMask } from "@/utils/helpers/dateHelpers.ts";
 import ExitActionsForm from "@/components/actions/ExitActionsForm.vue";
 import { isCybercrimeTypeWithoutDetailFields } from "@/constants/constant";
+import { requiredLabel } from "@/utils/helpers/labelHelpers";
 
 const { t, locale } = useI18n();
 const { mobile } = useDisplay();
