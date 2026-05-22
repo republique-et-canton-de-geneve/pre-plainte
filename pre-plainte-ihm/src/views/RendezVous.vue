@@ -114,6 +114,7 @@ const DAY_START = 6;
 const DAY_END = 8;
 const HOUR_MINUTE_START = 9;
 const VEHICULE_PLAQUE_MAX_RENDEZ_VOUS_HOURS = 24;
+const RENDEZ_VOUS_DATE_WINDOW_DAYS = 15;
 
 const { t, locale } = useI18n();
 const { mobile } = useDisplay();
@@ -237,6 +238,10 @@ const creneauxCompatiblesIncident = computed(() => {
       return false;
     }
 
+    if (!isInRollingAppointmentWindow(dateCreneau)) {
+      return false;
+    }
+
     if (isVehiculeVoleAvecPlaque.value && dateCreneau > limiteVehiculeAvecPlaque) {
       return false;
     }
@@ -273,9 +278,9 @@ const datesDisponibles = computed(() => {
     .map(d => `${d.slice(YEAR_START, YEAR_END)}-${d.slice(MONTH_START, MONTH_END)}-${d.slice(DAY_START, DAY_END)}`);
 });
 
-const premiereDateDispo = computed(() => datesDisponibles.value[0] || undefined);
+const premiereDateDispo = computed(() => formatIsoDate(addDays(new Date(), 0)));
 
-const derniereDateDispo = computed(() => datesDisponibles.value[datesDisponibles.value.length - 1] || undefined);
+const derniereDateDispo = computed(() => formatIsoDate(addDays(new Date(), RENDEZ_VOUS_DATE_WINDOW_DAYS - 1)));
 
 const validationSchema = computed(() =>
   toTypedSchema(rendezvousInfoSchema(t, premiereDateDispo.value, derniereDateDispo.value)),
@@ -307,7 +312,31 @@ function isSameSelectedDate(beginDateTime: string, selectedDate?: string): boole
 
   const dateCreneauJour = `${beginDateTime.slice(YEAR_START, YEAR_END)}-${beginDateTime.slice(MONTH_START, MONTH_END)}-${beginDateTime.slice(DAY_START, DAY_END)}`;
 
-  return dateCreneauJour === toIsoDate(selectedDate);
+  return dateCreneauJour === (toIsoDate(selectedDate) ?? selectedDate);
+}
+
+function isInRollingAppointmentWindow(date: Date): boolean {
+  const start = new Date();
+  start.setHours(0, 0, 0, 0);
+  const end = new Date(start);
+  end.setDate(start.getDate() + RENDEZ_VOUS_DATE_WINDOW_DAYS - 1);
+  const dateOnly = new Date(date);
+  dateOnly.setHours(0, 0, 0, 0);
+  return dateOnly >= start && dateOnly <= end;
+}
+
+function addDays(date: Date, days: number): Date {
+  const next = new Date(date);
+  next.setHours(0, 0, 0, 0);
+  next.setDate(next.getDate() + days);
+  return next;
+}
+
+function formatIsoDate(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
 function matchIncidentWithService(incident: string, serviceName: string): boolean {
@@ -357,6 +386,11 @@ watch([() => store.userFormData.typeIncident, poste], () => {
 });
 
 watch(poste, () => {
+  page.value = 1;
+  creneauPrefere.value = null;
+});
+
+watch(dateSouhaitee, () => {
   page.value = 1;
   creneauPrefere.value = null;
 });

@@ -1,6 +1,6 @@
 <template>
   <div>
-    <h3 v-if="showTitle" class="text-h6 mb-3">{{ label }}</h3>
+    <h3 v-if="showTitle" class="text-h6 mb-3">{{ displayLabel }}</h3>
     <v-alert type="info" density="comfortable" variant="tonal" class="mb-4">
       {{ t("pieceJointe.contraintesUpload", { maxDocs: maxFilesAllowed, maxMo: maxFileSizeMo }) }}
     </v-alert>
@@ -8,7 +8,7 @@
     <v-file-input
       ref="fileInputRef"
       v-model="internalFiles"
-      :label="label"
+      :label="displayLabel"
       :accept="accept"
       :multiple="multiple"
       class="d-none"
@@ -127,6 +127,7 @@ import {
   VUETIFY_CARD_ELEVATION_DEFAULT,
   VUETIFY_CARD_ELEVATION_DRAG_ACTIVE,
 } from "@/constants/constant.ts";
+import { requiredLabel } from "@/utils/helpers/labelHelpers";
 const DEFAULT_ACCEPT_FILES = ".pdf,.jpg,.jpeg,.png,.tif";
 const EMIT_UPDATE_MODEL_VALUE = "update:modelValue" as const;
 
@@ -144,6 +145,7 @@ const props = withDefaults(
     maxTotalSize?: number;
     accept?: string;
     showTitle?: boolean;
+    required?: boolean;
   }>(),
   {
     modelValue: () => [],
@@ -153,6 +155,7 @@ const props = withDefaults(
     maxTotalSize: MAX_TOTAL_SIZE_70_MO,
     accept: DEFAULT_ACCEPT_FILES,
     showTitle: true,
+    required: false,
   },
 );
 
@@ -192,6 +195,7 @@ const acceptedExtensions = computed(() =>
 
 const maxFileSizeMo = computed(() => Math.round(props.maxFileSize / BYTES_PER_MEGABYTE));
 const maxFilesAllowed = computed(() => (props.multiple ? props.maxFiles : 1));
+const displayLabel = computed(() => (props.required ? requiredLabel(props.label) : props.label));
 
 watch(files, newValue => {
   emit(EMIT_UPDATE_MODEL_VALUE, newValue);

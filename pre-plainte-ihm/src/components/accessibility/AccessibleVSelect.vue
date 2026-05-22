@@ -3,7 +3,7 @@
     <v-select
       v-model="proxy"
       v-bind="{ ...vuetifyProps, ...$attrs }"
-      :label="label"
+      :label="displayLabel"
       :items="items"
       :item-title="itemTitle"
       :item-value="itemValue"
@@ -24,7 +24,7 @@
 
     <div v-if="!returnObject" class="css-fallback-native-select">
       <label :id="`${nativeId}-label`" :for="nativeId">
-        {{ label }}
+        {{ displayLabel }}
       </label>
 
       <select
@@ -51,6 +51,7 @@
 <script setup lang="ts">
 import { computed, useId } from "vue";
 import type { PropType } from "vue";
+import { requiredLabel } from "@/utils/helpers/labelHelpers";
 
 defineOptions({ inheritAttrs: false });
 
@@ -67,6 +68,7 @@ const props = defineProps({
   items: { type: Array as PropType<readonly any[]>, required: true },
 
   label: { type: String, required: true },
+  required: { type: Boolean, default: false },
 
   itemTitle: { type: [String, Function] as PropType<TitleValueAccessor<any>>, default: "label" },
   itemValue: { type: [String, Function] as PropType<TitleValueAccessor<any>>, default: "value" },
@@ -114,6 +116,7 @@ const proxy = computed({
 
 const uid = useId();
 const nativeId = computed(() => (props.id ? `${props.id}-native` : `native-${uid}`));
+const displayLabel = computed(() => (props.required ? requiredLabel(props.label) : props.label));
 
 const firstError = computed(() => {
   if (!props.errorMessages) {

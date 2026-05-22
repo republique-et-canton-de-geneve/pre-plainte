@@ -850,7 +850,7 @@
                         </template>
                         <v-col v-if="obj.descriptionObjet" cols="12">
                           <dt :id="`lbl-vo-desc-${vIdx}`">
-                            <v-label class="ge-field-label">{{ t("incidentTypes.descriptionObjet") }}</v-label>
+                            <v-label class="ge-field-label">{{ t("incidentTypes.descriptionComplementaireObjet") }}</v-label>
                           </dt>
                           <dd class="ge-field-value text-body-1" :aria-labelledby="`lbl-vo-desc-${vIdx}`">
                             {{ obj.descriptionObjet }}
@@ -1445,7 +1445,13 @@
                   cols="12"
                 >
                   <dt id="lbl-descriptionObjet">
-                    <v-label class="ge-field-label">{{ t("incidentTypes.descriptionObjet") }}</v-label>
+                    <v-label class="ge-field-label">
+                      {{
+                        t(data.typeIncident === "vol"
+                          ? "incidentTypes.descriptionComplementaireObjet"
+                          : "incidentTypes.descriptionObjet")
+                      }}
+                    </v-label>
                   </dt>
                   <dd class="ge-field-value text-body-1" aria-labelledby="lbl-descriptionObjet">
                     {{ data.descriptionObjet }}
@@ -1885,6 +1891,7 @@ const finalizeAppointmentSubmission = async (demandeId: string) => {
 
   if (esiriusSuccess) {
     store.setStep(TOTAL_STEPS);
+    store.clearPersistedDataAfterSubmission();
     showValidation.value = true;
     return;
   }

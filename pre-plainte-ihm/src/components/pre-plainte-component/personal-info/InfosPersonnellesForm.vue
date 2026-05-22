@@ -12,6 +12,7 @@
       input-class="mb-4"
       aria-label="Saisir le nom du pays "
       default-country-code="CH"
+      required
     />
 
     <h3 class="pre-plainte-main-card-title mb-4 mb-md-6 text-h4 text-md-h3">
@@ -19,7 +20,7 @@
     </h3>
 
     <v-text-field
-      :label="t('informationsPersonnelles.nom')"
+      :label="requiredLabel(t('informationsPersonnelles.nom'))"
       v-model="nom"
       :error-messages="nomError"
       class="mb-8"
@@ -38,7 +39,7 @@
       persistent-hint
     />
     <v-text-field
-      :label="t('informationsPersonnelles.prenom')"
+      :label="requiredLabel(t('informationsPersonnelles.prenom'))"
       v-model="prenom"
       :error-messages="prenomError"
       class="mb-8"
@@ -50,6 +51,7 @@
     <RipolAutocomplete
       v-model="genre"
       :label="t('informationsPersonnelles.genre')"
+      required
       :fetch-fn="fetchGenresSorted"
       :display-label="displayGenreLabel"
       :error-messages="genreError"
@@ -62,6 +64,7 @@
     <RipolAutocomplete
       v-model="nationalite"
       :label="t('informationsPersonnelles.nationalite')"
+      required
       :fetch-fn="fetchNationalitiesForPersonForm"
       :error-messages="nationaliteError"
       :hint="t('informationsPersonnelles.hintNationalite')"
@@ -85,6 +88,7 @@
     <AccessibleVSelect
       v-if="showTitreSejour"
       :label="t('informationsPersonnelles.titreSejour')"
+      required
       v-model="titreSejour"
       :items="titresSejour"
       item-title="label"
@@ -97,7 +101,7 @@
     />
 
     <v-text-field
-      :label="t('informationsPersonnelles.dateNaissance')"
+      :label="requiredLabel(t('informationsPersonnelles.dateNaissance'))"
       v-model="dateNaissance"
       type="text"
       placeholder="JJ.MM.AAAA"
@@ -121,7 +125,7 @@
     />
 
     <v-text-field
-      :label="t('informationsPersonnelles.adresse')"
+      :label="requiredLabel(t('informationsPersonnelles.adresse'))"
       v-model="adresse"
       :error-messages="adresseError"
       :readonly="!!selectedAddress"
@@ -143,7 +147,7 @@
       persistent-hint
     />
     <v-text-field
-      :label="t('informationsPersonnelles.npa')"
+      :label="requiredLabel(t('informationsPersonnelles.npa'))"
       v-model="npa"
       :error-messages="npaError"
       :readonly="!!selectedAddress"
@@ -154,7 +158,7 @@
       persistent-hint
     />
     <v-text-field
-      :label="t('informationsPersonnelles.localite')"
+      :label="requiredLabel(t('informationsPersonnelles.localite'))"
       v-model="localite"
       :error-messages="localiteError"
       :readonly="!!selectedAddress"
@@ -171,6 +175,7 @@
     <AccessibleVSelect
       v-model="typeDocumentIdentite"
       :label="t('informationsPersonnelles.typeDocumentIdentite')"
+      required
       :items="typesDocumentIdentite"
       item-title="label"
       item-value="value"
@@ -183,7 +188,7 @@
 
     <v-text-field
       v-if="showDocumentNumberField"
-      :label="documentNumberLabel"
+      :label="requiredLabel(documentNumberLabel)"
       v-model="numeroDocumentIdentite"
       :error-messages="numeroDocumentIdentiteError"
       class="mb-8"
@@ -221,6 +226,7 @@ import { fetchGenresSorted, fetchNationalitiesForPersonForm } from "@/utils/help
 import AccessibleVSelect from "@/components/accessibility/AccessibleVSelect.vue";
 import { applyDateMask } from "@/utils/helpers/dateHelpers.ts";
 import { createHintAdresse } from "@/utils/helpers/adresseHelpers.ts";
+import { requiredLabel } from "@/utils/helpers/labelHelpers";
 
 const { t } = useI18n();
 

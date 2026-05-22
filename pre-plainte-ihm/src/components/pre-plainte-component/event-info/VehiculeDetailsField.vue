@@ -16,6 +16,7 @@
   <AccessibleVSelect
     v-model="sousCategorie"
     :label="t('sousCategories.titre')"
+    required
     :items="computedSubCategorieOptions"
     item-title="label"
     item-value="value"
@@ -30,6 +31,7 @@
     v-model="typeObjet"
     :key="objetTypeKey"
     :label="t('incidentTypes.typeObjet')"
+    required
     :fetch-fn="fetchFilteredObjectTypes"
     :error-messages="typeObjetError"
     :hint="t('incidentTypes.hintTypeObjet')"
@@ -183,7 +185,7 @@
     />
 
     <v-text-field
-      :label="t('incidentTypes.plaqueNumero')"
+      :label="isPlaqueObligatoire ? requiredLabel(t('incidentTypes.plaqueNumero')) : t('incidentTypes.plaqueNumero')"
       v-model="plaqueNumero"
       :disabled="plaqueInconnu"
       class="mb-2"
@@ -211,6 +213,7 @@ import AccessibleVSelect from "@/components/accessibility/AccessibleVSelect.vue"
 import { CATEGORIES_OBJETS } from "@/constants/constant";
 import { applyDateMask } from "@/utils/helpers/dateHelpers.ts";
 import { filterNationalities } from "@/utils/helpers/ripolHelpers.ts";
+import { requiredLabel } from "@/utils/helpers/labelHelpers";
 
 const { t } = useI18n();
 

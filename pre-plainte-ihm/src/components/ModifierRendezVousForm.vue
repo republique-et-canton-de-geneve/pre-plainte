@@ -146,6 +146,8 @@ const props = defineProps<{
   currentStep: number;
 }>();
 
+const RENDEZ_VOUS_DATE_WINDOW_DAYS = 15;
+
 const emit = defineEmits<{
   "code-verified": [];
   "creneau-selected": [];
@@ -299,20 +301,15 @@ const servicesDisponibles = computed(() => {
 
 const datesDisponibles = computed(() => {
   const allAvail = esiriusStore.allAvailabilities.flatMap(s => s.availabilities || []);
-  const validDates = allAvail.filter(a => a?.beginDateTime).map(a => a.beginDateTime.slice(0, 8));
+  const validDates = allAvail
+    .filter(a => a?.beginDateTime && isInRollingAppointmentWindow(parseCreneauDate(a.beginDateTime)))
+    .map(a => a.beginDateTime.slice(0, 8));
   return Array.from(new Set(validDates)).map(d => `${d.slice(0, 4)}-${d.slice(4, 6)}-${d.slice(6, 8)}`);
 });
 
-const premiereDateDispo = computed(() => {
-  const now = new Date();
-  now.setHours(now.getHours() + 1);
-  const nowDate = now.toISOString().slice(0, 10);
+const premiereDateDispo = computed(() => formatIsoDate(addDays(new Date(), 0)));
 
-  const futureDates = datesDisponibles.value.filter(d => d >= nowDate);
-  return futureDates.length ? futureDates[0] : nowDate;
-});
-
-const derniereDateDispo = computed(() => datesDisponibles.value[datesDisponibles.value.length - 1] || "");
+const derniereDateDispo = computed(() => formatIsoDate(addDays(new Date(), RENDEZ_VOUS_DATE_WINDOW_DAYS - 1)));
 
 const availabilitiesByPoste = computed(() => {
   if (!poste.value) {
@@ -349,6 +346,10 @@ const creneauxFiltres = computed(() => {
       return false;
     }
 
+    if (!isInRollingAppointmentWindow(dateCreneau)) {
+      return false;
+    }
+
     const dateCreneauJour = `${c.beginDateTime.slice(0, 4)}-${c.beginDateTime.slice(4, 6)}-${c.beginDateTime.slice(6, 8)}`;
     if (dateSouhaitee.value && dateCreneauJour !== dateSouhaitee.value) {
       return false;
@@ -374,6 +375,11 @@ watch(poste, () => {
   creneauPrefere.value = null;
 });
 
+watch(dateSouhaitee, () => {
+  page.value = 1;
+  creneauPrefere.value = null;
+});
+
 watch(
   () => currentAppointment.value?.user?.personalIdentity,
   () => {
@@ -387,6 +393,44 @@ watch(
 const onSuggestNearest = (service: Service) => {
   poste.value = service;
 };
+
+function parseCreneauDate(beginDateTime?: string): Date | null {
+  if (!beginDateTime) {
+    return null;
+  }
+
+  const dateStr = `${beginDateTime.slice(0, 4)}-${beginDateTime.slice(4, 6)}-${beginDateTime.slice(6, 8)}T${beginDateTime.slice(9)}:00`;
+  const date = new Date(dateStr);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function isInRollingAppointmentWindow(date: Date | null): boolean {
+  if (!date) {
+    return false;
+  }
+
+  const start = new Date();
+  start.setHours(0, 0, 0, 0);
+  const end = new Date(start);
+  end.setDate(start.getDate() + RENDEZ_VOUS_DATE_WINDOW_DAYS - 1);
+  const dateOnly = new Date(date);
+  dateOnly.setHours(0, 0, 0, 0);
+  return dateOnly >= start && dateOnly <= end;
+}
+
+function addDays(date: Date, days: number): Date {
+  const next = new Date(date);
+  next.setHours(0, 0, 0, 0);
+  next.setDate(next.getDate() + days);
+  return next;
+}
+
+function formatIsoDate(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
 
 const onSelectCreneau = () => {
   if (creneauPrefere.value === null || isUpdating.value) {

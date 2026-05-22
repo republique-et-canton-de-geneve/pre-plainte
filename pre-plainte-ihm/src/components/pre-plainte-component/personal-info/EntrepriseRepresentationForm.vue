@@ -3,6 +3,7 @@
     <AccessibleVSelect
       :items="typesPersonnesMorales"
       :label="t('informationsPersonnelles.postePersonneMorale')"
+      required
       v-model="postePersonneMorale"
       :error-messages="postePersonneMoraleError"
       item-title="label"

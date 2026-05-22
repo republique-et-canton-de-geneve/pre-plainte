@@ -3,12 +3,23 @@
     <BaseRadioGroup
       v-model="volDansVehicule"
       :label="t('incidentTypes.volDansVehicule')"
+      required
       :options="[
         { label: t('common.oui'), value: true },
         { label: t('common.non'), value: false }
       ]"
       :error-messages="volDansVehiculeError"
     />
+    <v-alert
+      v-if="volDansVehicule === true"
+      type="warning"
+      variant="tonal"
+      density="comfortable"
+      class="mb-4"
+      :icon="mobile ? false : undefined"
+    >
+      {{ t("incidentTypes.volDansVehiculeWarning") }}
+    </v-alert>
     <VolObjetVoleResumeSheet
       v-for="(obj, index) in brouillon.objetsVolesValides"
       :key="`obj-vol-${index}`"
@@ -27,6 +38,7 @@
     <BaseRadioGroup
       v-model="avezVousDegradation"
       :label="t('dommages.questionDegradation')"
+      required
       :options="[
         { label: t('common.oui'), value: true },
         { label: t('common.non'), value: false },
@@ -60,6 +72,7 @@
 import { computed, nextTick, reactive, ref, watch, onMounted, toRaw } from "vue";
 import { useField, useFormContext } from "vee-validate";
 import { useI18n } from "vue-i18n";
+import { useDisplay } from "vuetify";
 import { AUTRE_OPTION, CATEGORIES_OBJETS, EMPTY_VALUE_EM_DASH, RIPOL, VOL_OBJET_CATEGORIE } from "@/constants/constant";
 import VolObjetVoleResumeSheet from "./VolObjetVoleResumeSheet.vue";
 import VolObjetVoleDraftPanel from "./VolObjetVoleDraftPanel.vue";
@@ -71,6 +84,7 @@ import type { PrePlainteFormFields, VolObjetFormSnapshot } from "@/types/pre-pla
 import BaseRadioGroup from "@/components/radio/BaseRadioGroup.vue";
 
 const TEXTE_VIDE = "";
+const NUMERO_IMEI_REGEX = /^\d{15}$/;
 
 const chaineFormulaire = (v: unknown) => String(v ?? TEXTE_VIDE);
 const texteOuVide = (v: string | undefined | null) => v ?? TEXTE_VIDE;
@@ -84,6 +98,7 @@ const cloneRipol = (sel: RipolSelection | null): RipolSelection | null => {
 };
 
 const { t } = useI18n();
+const { mobile } = useDisplay();
 
 const libelleResumeChampAbsent = computed(() => EMPTY_VALUE_EM_DASH);
 const { setFieldValue, setFieldError } = useFormContext<PrePlainteFormFields>();
@@ -370,7 +385,6 @@ const CHAMPS_ERREUR_BROUILLON = [
   "modele",
   "couleur",
   "valeurReelle",
-  "descriptionObjet",
   "plaqueNumero",
   "plaquePays",
 ] as const;
@@ -499,8 +513,9 @@ const validerBrouillonObjetVole = (): boolean => {
     return false;
   }
 
-  if (!descriptionBrouillonTrim()) {
-    setFieldError("descriptionObjet", t("validation.descriptionObjetRequise"));
+  const numeroIMEITrim = chaineFormulaire(numeroIMEI.value).trim();
+  if (!numeroIMEIInconnu.value && numeroIMEITrim && !NUMERO_IMEI_REGEX.test(numeroIMEITrim)) {
+    setFieldError("numeroIMEI", t("validation.numeroIMEIFormat"));
     return false;
   }
 

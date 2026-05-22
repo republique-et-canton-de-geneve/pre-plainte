@@ -294,8 +294,8 @@ public class PdfGenerationAdapter implements PdfGenerationUseCase {
       case CYBER -> handleCybercrime(rows, (Cybercrime) details);
     }
 
-    addIfNotNull(rows, "Date de début de l'événement", formatDate(details.getDateDebutEvent()));
-    addIfNotNull(rows, "Date de fin de l'événement", formatDate(details.getDateFinEvent()));
+    addIfNotNull(rows, "Date de début de l'événement", formatEventDate(details.getDateDebutEvent()));
+    addIfNotNull(rows, "Date de fin de l'événement", formatEventDate(details.getDateFinEvent()));
 
     addSection(document, "EVÈNEMENTS", rows);
   }
@@ -354,7 +354,7 @@ public class PdfGenerationAdapter implements PdfGenerationUseCase {
 
     addBooleanOuiNonPdf(rows, "Avez-vous constaté des dégradations liées à ce vol ?", v.getAvezVousDegradation());
 
-    addLieuEvent(rows, v);
+    addLieuEvent(rows, v, "du vol");
   }
 
   private void addObjetVol(List<String[]> rows, ObjetIncident o) {
@@ -425,10 +425,10 @@ public class PdfGenerationAdapter implements PdfGenerationUseCase {
     addIfNotNull(rows, "Description du dommage", d.getDescription());
     addBooleanOuiNonPdf(rows, "Constat présent", d.getConstatPresent());
     addIfNotNull(rows, "Date du constat", formatDate(d.getDateConstat()));
-    addLieuEvent(rows, d);
+    addLieuEvent(rows, d, "du dommage");
   }
 
-  private void addLieuEvent(List<String[]> rows, IncidentBase details) {
+  private void addLieuEvent(List<String[]> rows, IncidentBase details, String suffixeAdressePrincipale) {
     addBooleanOuiNonPdf(rows, "Adresse de la personne lesée ?", details.getAdresseLesee());
     addIfNotNull(rows, "Type de lieu",
       Optional.ofNullable(details.getTypeLieu())
@@ -437,8 +437,13 @@ public class PdfGenerationAdapter implements PdfGenerationUseCase {
     addBooleanOuiNonPdf(rows, "Connaissez-vous l'adresse exacte du vol ou du dommage ?",
       details.getAdresseConnue());
 
-    addAdresseEvenement("de départ", details.getAdresseIncident(), rows);
-    addAdresseEvenement("d'arrivée", details.getAdresseIncidentSecondaire(), rows);
+    if (Boolean.TRUE.equals(details.getIsTrajet())) {
+      addAdresseEvenement("de départ", details.getAdresseIncident(), rows);
+      addAdresseEvenement("d'arrivée", details.getAdresseIncidentSecondaire(), rows);
+      return;
+    }
+
+    addAdresseEvenement(suffixeAdressePrincipale, details.getAdresseIncident(), rows);
   }
 
   private void handleCybercrime(List<String[]> rows, Cybercrime c) {
@@ -583,6 +588,27 @@ public class PdfGenerationAdapter implements PdfGenerationUseCase {
           .parse(raw, INPUT_DATE_TIME)
           .toLocalDate()
           .format(DATE_FORMAT);
+      }
+
+      return LocalDate
+        .parse(raw, INPUT_DATE)
+        .format(DATE_FORMAT);
+
+    } catch (Exception e) {
+      return raw;
+    }
+  }
+
+  private String formatEventDate(String raw) {
+    if (raw == null || raw.isBlank()) {
+      return null;
+    }
+
+    try {
+      if (raw.contains("T")) {
+        return LocalDateTime
+          .parse(raw, INPUT_DATE_TIME)
+          .format(DATE_TIME_FORMAT);
       }
 
       return LocalDate

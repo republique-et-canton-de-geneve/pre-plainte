@@ -4,7 +4,7 @@
     v-model:search="searchQuery"
     :items="items"
     :loading="loading"
-    :label="label"
+    :label="displayLabel"
     :error-messages="displayedErrors"
     :disabled="disabled"
     :hint="hint"
@@ -34,6 +34,7 @@ import { ref, computed, watch, onMounted } from "vue";
 import { useI18n } from "vue-i18n";
 import type { Ripol, RipolSelection } from "@/types/ripol.interface";
 import { useRipolLoading } from "@/composables/useRipolLoading";
+import { requiredLabel } from "@/utils/helpers/labelHelpers";
 
 const { t } = useI18n();
 const { startLoading, stopLoading } = useRipolLoading();
@@ -54,6 +55,7 @@ interface Props {
   debounceMs?: number;
   displayLabel?: (item: RipolSelection) => string;
   autoSelectWhenSingleResult?: boolean;
+  required?: boolean;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -80,6 +82,7 @@ const getDisplayLabel = (item: RipolSelection) => {
   return typeof raw === "string" ? raw.trim() : raw;
 };
 
+const displayLabel = computed(() => (props.required ? requiredLabel(props.label) : props.label));
 
 const displayedErrors = computed(() => {
   if (props.preload && !initialLoadDone.value) {
@@ -211,5 +214,4 @@ onMounted(() => {
   }
 });
 </script>
-
 

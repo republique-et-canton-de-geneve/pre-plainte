@@ -36,7 +36,6 @@ public class DommageMateriel extends IncidentBase {
     validateurChampsObligatoires(getDateFinEvent(), "La date de fin d'événement est obligatoire.");
 
     verifier(typeDommage != null, "Le type de dommage doit être sélectionné.");
-    verifier(montantEstime != null, "Le montant estimé est obligatoire.");
     verifier(!isBlank(devise), "La devise est obligatoire.");
     verifier(!isEmpty(naturesDommage), "Au moins une nature de dommage doit être sélectionnée.");
     verifier(!isBlank(description), "La description du dommage est obligatoire.");
