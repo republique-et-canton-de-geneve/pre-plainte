@@ -152,9 +152,9 @@ public class SuisseEpoliceObjectMapper {
         .typeOfVehicle(buildVehicleTypeReference(objet))
         .vin(objet.getVin())
         .frameNumber(objet.getNumeroCadre())
-        .mark(buildVehicleBrandReference(objet))
+        .mark(buildBrandReference(objet))
         .markOther(objet.getFabricantAutre())
-        .modelType(buildVehicleModelReference(objet))
+        .modelType(buildModelReference(objet))
         .modelOther(objet.getModeleAutre())
         .colour(buildVehicleColourReference(objet))
         .colourSecondary(buildVehicleColourSecondaireReference(objet))
@@ -267,20 +267,6 @@ public class SuisseEpoliceObjectMapper {
       return null;
     }
     return RipolReferenceBuilder.of(objet.getTypeCode(), objet.getTypeLabel(), TYPE_VEHICULE);
-  }
-
-  public RipolReference buildVehicleBrandReference(ObjetIncident objet) {
-    if (objet.getFabricantCode() == null) {
-      return null;
-    }
-    return RipolReferenceBuilder.of(objet.getFabricantCode(), objet.getFabricantLabel(), VEHICULE_MARQUE);
-  }
-
-  public RipolReference buildVehicleModelReference(ObjetIncident objet) {
-    if (objet.getModeleCode() == null) {
-      return null;
-    }
-    return RipolReferenceBuilder.of(objet.getModeleCode(), objet.getModeleLabel(), VEHICULE_MODELE);
   }
 
   /**
