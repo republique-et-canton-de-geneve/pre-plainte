@@ -24,6 +24,8 @@ import static ch.ge.police.infrastructure.ech051.Ech051Constants.RipolSourceTabl
 import static ch.ge.police.infrastructure.ech051.Ech051Constants.RipolSourceTables.PLAQUE_PAYS;
 import static ch.ge.police.infrastructure.ech051.Ech051Constants.RipolSourceTables.TYPE_OBJET;
 import static ch.ge.police.infrastructure.ech051.Ech051Constants.RipolSourceTables.TYPE_VEHICULE;
+import static ch.ge.police.infrastructure.ech051.Ech051Constants.RipolSourceTables.VEHICULE_MARQUE;
+import static ch.ge.police.infrastructure.ech051.Ech051Constants.RipolSourceTables.VEHICULE_MODELE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -215,8 +217,8 @@ class SuisseEpoliceObjectMapperTest {
     RipolReference colour = mapper.buildColourReference(objet);
     RipolReference colour2 = mapper.buildColourSecondaireReference(objet);
     RipolReference vehicleType = mapper.buildVehicleTypeReference(objet);
-    RipolReference vehicleBrand = mapper.buildBrandReference(objet);
-    RipolReference vehicleModel = mapper.buildModelReference(objet);
+    RipolReference vehicleBrand = mapper.buildVehicleBrandReference(objet);
+    RipolReference vehicleModel = mapper.buildVehicleModelReference(objet);
     RipolReference vehicleColour = mapper.buildVehicleColourReference(objet);
     RipolReference vehicleColour2 = mapper.buildVehicleColourSecondaireReference(objet);
 
@@ -239,10 +241,10 @@ class SuisseEpoliceObjectMapperTest {
     assertEquals(TYPE_VEHICULE, vehicleType.getSourceTable());
 
     assertEquals("FAB1", vehicleBrand.getCode());
-    assertEquals(OBJET_MARQUE, vehicleBrand.getSourceTable());
+    assertEquals(VEHICULE_MARQUE, vehicleBrand.getSourceTable());
 
     assertEquals("MOD1", vehicleModel.getCode());
-    assertEquals(OBJET_MODELE, vehicleModel.getSourceTable());
+    assertEquals(VEHICULE_MODELE, vehicleModel.getSourceTable());
 
     assertEquals("COL1", vehicleColour.getCode());
     assertEquals(COULEUR_VEHICULE, vehicleColour.getSourceTable());
@@ -261,8 +263,8 @@ class SuisseEpoliceObjectMapperTest {
     assertNull(mapper.buildColourReference(objet));
     assertNull(mapper.buildColourSecondaireReference(objet));
     assertNull(mapper.buildVehicleTypeReference(objet));
-    assertNull(mapper.buildBrandReference(objet));
-    assertNull(mapper.buildModelReference(objet));
+    assertNull(mapper.buildVehicleBrandReference(objet));
+    assertNull(mapper.buildVehicleModelReference(objet));
     assertNull(mapper.buildVehicleColourReference(objet));
     assertNull(mapper.buildVehicleColourSecondaireReference(objet));
   }

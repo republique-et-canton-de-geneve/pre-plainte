@@ -382,7 +382,9 @@ const CHAMPS_ERREUR_BROUILLON = [
   "categorieObjet",
   "sousCategorie",
   "fabricant",
+  "fabricantAutre",
   "modele",
+  "modeleAutre",
   "couleur",
   "valeurReelle",
   "plaqueNumero",
@@ -501,6 +503,25 @@ const validerBrouillonObjetVole = (): boolean => {
   if (!typeObjet.value?.code) {
     setFieldError("typeObjet", t("validation.typeObjetRequis"));
     return false;
+  }
+
+  if (categorieObjet.value === VOL_OBJET_CATEGORIE.VEHICULE) {
+    if (!fabricant.value?.code) {
+      setFieldError("fabricant", t("validation.fabricantRequis"));
+      return false;
+    }
+    if (fabricant.value.code === "AUTRE" && !chaineFormulaire(fabricantAutre.value).trim()) {
+      setFieldError("fabricantAutre", t("validation.champRequis"));
+      return false;
+    }
+    if (!modele.value?.code) {
+      setFieldError("modele", t("validation.modeleRequis"));
+      return false;
+    }
+    if (modele.value.code === "AUTRE" && !chaineFormulaire(modeleAutre.value).trim()) {
+      setFieldError("modeleAutre", t("validation.champRequis"));
+      return false;
+    }
   }
 
   if (numeroSerieRequis.value && !chaineFormulaire(numeroSerie.value).trim()) {

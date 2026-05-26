@@ -102,6 +102,47 @@ const validateIncidentRequirement = (
 const hasObjetsVolesEnregistres = (data: Record<string, unknown>) =>
   Array.isArray(data.objetsVolesValides) && data.objetsVolesValides.length > 0;
 
+const isVehicleVolObject = (data: Record<string, any>) => data.categorieObjet === "vehicule" || data.isVehicle === true;
+
+const validateVehicleBrandAndModel = (
+  data: Record<string, any>,
+  ctx: z.RefinementCtx,
+  t: ComposerTranslation,
+  basePath: (string | number)[] = [],
+) => {
+  if (!isVehicleVolObject(data)) {
+    return;
+  }
+  if (!data.fabricant?.code) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: [...basePath, "fabricant"],
+      message: t("validation.fabricantRequis"),
+    });
+  }
+  if (data.fabricant?.code === "AUTRE" && !data.fabricantAutre?.trim()) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: [...basePath, "fabricantAutre"],
+      message: t("validation.champRequis"),
+    });
+  }
+  if (!data.modele?.code) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: [...basePath, "modele"],
+      message: t("validation.modeleRequis"),
+    });
+  }
+  if (data.modele?.code === "AUTRE" && !data.modeleAutre?.trim()) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: [...basePath, "modeleAutre"],
+      message: t("validation.champRequis"),
+    });
+  }
+};
+
 const validateIncidentRequirements = (data: Record<string, any>, ctx: z.RefinementCtx, t: ComposerTranslation) => {
   if (!data.typeIncident) {
     addCustomIssue(ctx, "typeIncident", t("validation.typeIncidentRequis"));
@@ -133,6 +174,11 @@ const validateVolSpecificRules = (data: Record<string, any>, ctx: z.RefinementCt
 
 
   if (hasObjetsVolesEnregistres(data)) {
+    data.objetsVolesValides.forEach((objet: unknown, index: number) => {
+      if (objet && typeof objet === "object") {
+        validateVehicleBrandAndModel(objet as Record<string, any>, ctx, t, ["objetsVolesValides", index]);
+      }
+    });
     return;
   }
 
@@ -161,6 +207,8 @@ const validateVolSpecificRules = (data: Record<string, any>, ctx: z.RefinementCt
   if (!data.numeroIMEIInconnu && data.numeroIMEI?.trim() && !NUMERO_IMEI_REGEX.test(data.numeroIMEI.trim())) {
     addCustomIssue(ctx, "numeroIMEI", t("validation.numeroIMEIFormat"));
   }
+
+  validateVehicleBrandAndModel(data, ctx, t);
 };
 
 function validateRequiredDates(data: any, fields: string[][], ctx: any, t: any) {

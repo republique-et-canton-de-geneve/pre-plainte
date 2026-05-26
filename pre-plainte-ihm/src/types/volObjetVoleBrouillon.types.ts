@@ -19,6 +19,7 @@ export interface VolObjetVoleDraftBrouillon {
   fabricant: RipolSelection | null;
   fabricantError?: string;
   fabricantAutre: string;
+  fabricantAutreError?: string;
   hasBrands: boolean;
   brandKey: string;
   fetchBrandsWithAutre: () => Promise<Ripol[]>;
@@ -31,6 +32,7 @@ export interface VolObjetVoleDraftBrouillon {
   modelsLoading: boolean;
   isAutreModele: boolean;
   modeleAutre: string;
+  modeleAutreError?: string;
   couleur: RipolSelection | null;
   couleurError?: string;
   colourKey: string;
