@@ -41,10 +41,10 @@
   />
 
   <RipolAutocomplete
-    v-if="typeObjet && hasBrands"
+    v-if="typeObjet"
     v-model="fabricant"
     :key="brandKey"
-    :label="t('incidentTypes.fabricant')"
+    :label="requiredLabel(t('incidentTypes.fabricant'))"
     :fetch-fn="fetchBrandsWithAutre"
     :error-messages="fabricantError"
     :hint="t('incidentTypes.hintFabricant')"
@@ -56,7 +56,8 @@
   <v-text-field
     v-if="isAutreFabricant"
     v-model="fabricantAutre"
-    :label="t('incidentTypes.fabricantAutre')"
+    :label="requiredLabel(t('incidentTypes.fabricantAutre'))"
+    :error-messages="fabricantAutreError"
     :hint="t('incidentTypes.hintFabricantAutre')"
     variant="outlined"
     persistent-hint
@@ -64,10 +65,10 @@
   />
 
   <RipolAutocomplete
-    v-if="fabricant && hasModels"
+    v-if="fabricant"
     v-model="modele"
     :key="modelKey"
-    :label="t('incidentTypes.modele')"
+    :label="requiredLabel(t('incidentTypes.modele'))"
     :fetch-fn="fetchModelsWithAutre"
     :error-messages="modeleError"
     :hint="t('incidentTypes.hintModele')"
@@ -79,7 +80,8 @@
   <v-text-field
     v-if="isAutreModele"
     v-model="modeleAutre"
-    :label="t('incidentTypes.modeleAutre')"
+    :label="requiredLabel(t('incidentTypes.modeleAutre'))"
+    :error-messages="modeleAutreError"
     :hint="t('incidentTypes.hintModeleAutre')"
     variant="outlined"
     persistent-hint
@@ -290,9 +292,11 @@ const {
   fabricant,
   fabricantError,
   fabricantAutre,
+  fabricantAutreError,
   modele,
   modeleError,
   modeleAutre,
+  modeleAutreError,
   couleur,
   couleurError,
   couleurSecondaire,
@@ -313,8 +317,6 @@ const {
   brandKey,
   modelKey,
   colourKey,
-  hasBrands,
-  hasModels,
   isAutreFabricant,
   isAutreModele,
   isSwissPlate,

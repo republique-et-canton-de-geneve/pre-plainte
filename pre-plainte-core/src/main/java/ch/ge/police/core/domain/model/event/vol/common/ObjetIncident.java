@@ -29,6 +29,7 @@ public class ObjetIncident {
   private static final String CODE_PREFIX_CYCLOMOTEUR = "07";
   private static final String CODE_PREFIX_VELO = "20";
   private static final String CATEGORIE_PLAQUE = "plaque";
+  private static final String CODE_AUTRE = "AUTRE";
   private static final Pattern NUMERO_IMEI_PATTERN = Pattern.compile("\\d{15}");
 
   private String categorieObjet;
@@ -157,12 +158,31 @@ public class ObjetIncident {
       throw new ValidationMetierException("Le type d'objet volé est obligatoire.");
     }
 
+    if (isVehicleType()) {
+      validateRipolSelection(fabricant, "La marque du vehicule est obligatoire.");
+      validateAutreValue(fabricant, fabricantAutre, "La marque du vehicule doit etre precisee.");
+      validateRipolSelection(modele, "Le modele du vehicule est obligatoire.");
+      validateAutreValue(modele, modeleAutre, "Le modele du vehicule doit etre precise.");
+    }
+
     if (isTelephoneMobile() && !numeroIMEIInconnu && (numeroIMEI == null || numeroIMEI.isBlank())) {
       throw new ValidationMetierException("Le numéro IMEI est obligatoire pour un téléphone volé.");
     }
 
     if (numeroIMEI != null && !numeroIMEI.isBlank() && !NUMERO_IMEI_PATTERN.matcher(numeroIMEI).matches()) {
       throw new ValidationMetierException("Le numéro IMEI doit contenir exactement 15 chiffres.");
+    }
+  }
+
+  private void validateRipolSelection(RipolCode value, String message) {
+    if (value == null || !value.hasCode()) {
+      throw new ValidationMetierException(message);
+    }
+  }
+
+  private void validateAutreValue(RipolCode value, String autreValue, String message) {
+    if (value != null && CODE_AUTRE.equals(value.code()) && (autreValue == null || autreValue.isBlank())) {
+      throw new ValidationMetierException(message);
     }
   }
 }
