@@ -20,9 +20,9 @@ type UseVehicleDetailsRipolArgs = {
 export function useVehicleDetailsRipol({ sousCategorie, activePrefixes }: UseVehicleDetailsRipolArgs) {
   const { value: typeObjet, errorMessage: typeObjetError } = useField<RipolSelection | null>("typeObjet");
   const { value: fabricant, errorMessage: fabricantError } = useField<RipolSelection | null>("fabricant");
-  const { value: fabricantAutre } = useField<string>("fabricantAutre");
+  const { value: fabricantAutre, errorMessage: fabricantAutreError } = useField<string>("fabricantAutre");
   const { value: modele, errorMessage: modeleError } = useField<RipolSelection | null>("modele");
-  const { value: modeleAutre } = useField<string>("modeleAutre");
+  const { value: modeleAutre, errorMessage: modeleAutreError } = useField<string>("modeleAutre");
 
   const { value: couleur, errorMessage: couleurError } = useField<RipolSelection | null>("couleur");
   const { value: couleurSecondaire } = useField<RipolSelection | null>("couleurSecondaire");
@@ -157,9 +157,11 @@ export function useVehicleDetailsRipol({ sousCategorie, activePrefixes }: UseVeh
     fabricant,
     fabricantError,
     fabricantAutre,
+    fabricantAutreError,
     modele,
     modeleError,
     modeleAutre,
+    modeleAutreError,
     couleur,
     couleurError,
     couleurSecondaire,

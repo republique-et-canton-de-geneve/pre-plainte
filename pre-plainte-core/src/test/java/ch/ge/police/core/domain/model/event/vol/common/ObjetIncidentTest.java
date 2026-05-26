@@ -72,4 +72,38 @@ class ObjetIncidentTest {
 
     assertThrows(ValidationMetierException.class, objet::champsObligatoire);
   }
+
+  @Test
+  void shouldRejectVehicleWithoutBrandOrModel() {
+    ObjetIncident objet = ObjetIncident.builder()
+        .isVehicle(true)
+        .type(new RipolCode("200", "Velo"))
+        .build();
+
+    assertThrows(ValidationMetierException.class, objet::champsObligatoire);
+  }
+
+  @Test
+  void shouldAcceptVehicleWithBrandAndModel() {
+    ObjetIncident objet = ObjetIncident.builder()
+        .isVehicle(true)
+        .type(new RipolCode("200", "Velo"))
+        .fabricant(new RipolCode("TREK", "Trek"))
+        .modele(new RipolCode("DOMANE", "Domane"))
+        .build();
+
+    assertDoesNotThrow(objet::champsObligatoire);
+  }
+
+  @Test
+  void shouldRejectVehicleWithOtherBrandOrModelWithoutPrecision() {
+    ObjetIncident objet = ObjetIncident.builder()
+        .isVehicle(true)
+        .type(new RipolCode("200", "Velo"))
+        .fabricant(new RipolCode("AUTRE", "Autre"))
+        .modele(new RipolCode("AUTRE", "Autre"))
+        .build();
+
+    assertThrows(ValidationMetierException.class, objet::champsObligatoire);
+  }
 }

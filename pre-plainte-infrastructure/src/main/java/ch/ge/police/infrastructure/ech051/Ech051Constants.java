@@ -111,6 +111,8 @@ public final class Ech051Constants {
     public static final String OBJET_MODELE = "sacheModell";
     public static final String OBJET_COULEUR = "sacheFarbe";
     public static final String TYPE_VEHICULE = "ART_FZ";
+    public static final String VEHICULE_MARQUE = "ART_MARKE";
+    public static final String VEHICULE_MODELE = "ART_MODELL";
     public static final String COULEUR_VEHICULE = "FARBE_FZ";
     public static final String TYPE_LIEU = "OERTLICHKEIT";
     public static final String MODUS_OPERANDI = "MODUS_OPERANDI";
