@@ -9,6 +9,11 @@ Ce module contient la documentation technique du projet.
 - `api/` : documentation API (Swagger / OpenAPI) (à venir)
 - `adr/` : décisions d’architecture
 
+## Guides disponibles
+
+- [Ajout d’un champ](guides/ajout-champ.md)
+- [Mapping des codes RIPOL pour myAbi](guides/mapping-codes-ripol-myabi.md)
+
 ## Objectif
 
 Centraliser la connaissance technique et faciliter :
