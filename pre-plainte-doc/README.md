@@ -5,6 +5,7 @@ Ce module contient la documentation technique du projet.
 ## Structure
 
 - `guides/` : guides pratiques (ex: ajout de champ)
+- `guides/regles-metier-declaration-vol.md` : règles métier de la déclaration de vol extraites des schémas Zod
 - `architecture/` : documentation architecture (à venir)
 - `api/` : documentation API (Swagger / OpenAPI) (à venir)
 - `adr/` : décisions d’architecture
