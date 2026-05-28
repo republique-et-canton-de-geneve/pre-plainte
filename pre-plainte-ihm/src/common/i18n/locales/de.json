@@ -337,6 +337,7 @@
     "valeurReelle": "Wert des Gegenstands (CHF)",
     "numeroSerie": "Seriennummer",
     "numeroImei": "IMEI-Nummer (nur für Mobiltelefone)",
+    "numeroImeiTooltip": "Die IMEI (International Mobile Equipment Identity) ist die eindeutige 15-stellige Seriennummer Ihres Geräts. Sie finden diese auf der Originalverpackung, Ihrer Kaufrechnung oder über Ihre Apple-/Google-Konten.",
     "descriptionObjet": "Beschreibung der Gegenstände",
     "descriptionComplementaireObjet": "Ergänzende Beschreibung des Gegenstands",
     "descriptionObjetPlaceholder": "Fügen Sie hier alle nützlichen Angaben hinzu (Farben, besondere Merkmale usw.)",

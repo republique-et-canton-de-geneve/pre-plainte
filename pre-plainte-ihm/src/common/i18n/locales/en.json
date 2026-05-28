@@ -337,6 +337,7 @@
     "valeurReelle": "Object value (CHF)",
     "numeroSerie": "Serial number",
     "numeroImei": "IMEI number (mobile phones only)",
+    "numeroImeiTooltip": "The IMEI (International Mobile Equipment Identity) is the unique 15-digit serial number of your device. You can find it on the original box, your purchase invoice, or through your Apple/Google accounts.",
     "descriptionObjet": "Description of the objects",
     "descriptionComplementaireObjet": "Additional description of the object",
     "descriptionObjetPlaceholder": "Add any useful details here (colours, distinguishing features, etc.)",
