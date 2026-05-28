@@ -337,6 +337,7 @@
     "valeurReelle": "Valor do objeto (CHF)",
     "numeroSerie": "Número de série",
     "numeroImei": "Número IMEI (apenas para telemóveis)",
+    "numeroImeiTooltip": "O IMEI (International Mobile Equipment Identity) é o número de série único de 15 dígitos do seu dispositivo. Pode encontrá-lo na caixa original, na fatura de compra ou através das suas contas Apple/Google.",
     "descriptionObjet": "Descrição dos objetos",
     "descriptionComplementaireObjet": "Descrição complementar do objeto",
     "descriptionObjetPlaceholder": "Adicione aqui qualquer detalhe útil (cores, sinais distintivos, etc.)",

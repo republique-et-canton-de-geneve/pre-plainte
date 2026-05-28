@@ -215,7 +215,18 @@
             persistent-hint
             maxlength="15"
             inputmode="numeric"
-          />
+          >
+            <template #append-inner>
+              <v-tooltip location="top">
+                <template #activator="{ props }">
+                  <v-icon v-bind="props" color="primary" size="small"> mdi-information-outline </v-icon>
+                </template>
+                <div class="white-space">
+                  {{ t("incidentTypes.numeroImeiTooltip") }}
+                </div>
+              </v-tooltip>
+            </template>
+          </v-text-field>
           <v-checkbox
             v-model="brouillon.numeroIMEIInconnu"
             :label="t('incidentTypes.numeroIMEIInconnu')"
@@ -282,3 +293,10 @@ defineProps<{
 const { t } = useI18n();
 const { mobile } = useDisplay();
 </script>
+
+<style scoped>
+.white-space {
+  max-width: 300px;
+  white-space: normal;
+}
+</style>
