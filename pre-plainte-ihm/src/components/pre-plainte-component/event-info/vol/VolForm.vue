@@ -313,17 +313,6 @@ const remplirBrouillonDepuisSnapshot = (obj: VolObjetFormSnapshot) => {
   appliquerPaysPlaqueDefaut();
 };
 
-const appliquerSousCategorieDefautTelephone = () => {
-  if (categorieObjet.value === VOL_OBJET_CATEGORIE.TELEPHONE) {
-    sousCategorie.value = VOL_OBJET_CATEGORIE.TELEPHONE_MOBILE;
-  }
-};
-
-const prefillBrouillonCategorieTelephone = () => {
-  categorieObjet.value = VOL_OBJET_CATEGORIE.TELEPHONE;
-  sousCategorie.value = VOL_OBJET_CATEGORIE.TELEPHONE_MOBILE;
-};
-
 const viderChampsVehiculeVol = () => {
   numeroCadre.value = TEXTE_VIDE;
   numeroCadreInconnu.value = false;
@@ -441,7 +430,6 @@ const buildSnapshotFromDraft = (): VolObjetFormSnapshot => {
 const clearDraftChampsObjet = () => {
   isRestoring.value = true;
   viderChampsDetailObjetVol();
-  prefillBrouillonCategorieTelephone();
   hasBrands.value = true;
   hasModels.value = false;
   stopRestoringOnNextTick();
@@ -591,7 +579,6 @@ const initBrouillonAuMontage = () => {
     return;
   }
   isRestoring.value = true;
-  prefillBrouillonCategorieTelephone();
   stopRestoringOnNextTick();
 };
 
@@ -688,8 +675,6 @@ const brouillon = reactive({
   fetchModelsWithAutre,
   fetchColours,
   remplirBrouillonDepuisSnapshot,
-  appliquerSousCategorieDefautTelephone,
-  prefillBrouillonCategorieTelephone,
   reinitialiserDependancesChangementCategorie,
   viderChampsDetailObjetVol,
   clearDraftChampsObjet,
@@ -801,7 +786,6 @@ const modifierObjet = (index: number) => {
   brouillon.isRestoring = true;
   editingIndex.value = index;
   brouillon.remplirBrouillonDepuisSnapshot(obj);
-  brouillon.appliquerSousCategorieDefautTelephone();
   stopRestoringOnNextTick();
 };
 
