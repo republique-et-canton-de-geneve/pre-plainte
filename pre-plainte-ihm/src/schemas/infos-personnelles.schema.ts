@@ -4,8 +4,8 @@ import { VALIDATION_LIMITS } from "@/constants/constant";
 import { validateInternationalPhone } from "@/utils/validations/phoneValidation";
 import { calculateAge, parseDate } from "@/utils/helpers/dateHelpers.ts";
 
-const INFORMATIONS_PERSONNELLES_TIERS = "informationsPersonnelles.tiers";
-const INFORMATIONS_PERSONNELLES_MON_ENTREPRISE = "informationsPersonnelles.monEntreprise";
+const INFORMATIONS_PERSONNELLES_TIERS = "TIERS";
+const INFORMATIONS_PERSONNELLES_MON_ENTREPRISE = "ENTREPRISE";
 
 const AGE_MIN = 16;
 const AGE_MAX = 120;
