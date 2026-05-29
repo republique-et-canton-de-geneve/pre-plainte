@@ -37,12 +37,9 @@
           :active-prefixes="activePrefixes"
           :valeur-reelle="valeurReelle"
           :valeur-reelle-error="valeurReelleError"
-          :description-objet="descriptionObjet"
-          :description-objet-error="descriptionObjetError"
           :on-validate="validerVehiculeDommage"
           @update:sous-categorie="sousCategorie = $event"
           @update:valeurReelle="valeurReelle = $event"
-          @update:descriptionObjet="descriptionObjet = $event"
         />
       </div>
     </template>
@@ -212,7 +209,6 @@ const { value: modeleAutre } = useField<string>("modeleAutre");
 const { value: couleur } = useField<RipolSelection | null>("couleur");
 const { value: couleurSecondaire } = useField<RipolSelection | null>("couleurSecondaire");
 const { value: valeurReelle, errorMessage: valeurReelleError } = useField<string>("valeurReelle");
-const { value: descriptionObjet, errorMessage: descriptionObjetError } = useField<string>("descriptionObjet");
 const { value: numeroCadre } = useField<string>("numeroCadre");
 const { value: numeroCadreInconnu } = useField<boolean>("numeroCadreInconnu");
 const { value: vin } = useField<string>("vin");
@@ -272,8 +268,6 @@ const onDateConstatInput = (e: InputEvent) => {
   applyDateMask(e, dateConstat);
 };
 
-const descriptionBrouillonTrim = () => chaineFormulaire(descriptionObjet.value).trim();
-
 const remplirBrouillonDepuisSnapshot = (obj: VolObjetFormSnapshot) => {
   sousCategorie.value = texteOuVide(obj.sousCategorie);
   typeObjet.value = obj.typeObjet ? { ...obj.typeObjet } : null;
@@ -284,7 +278,6 @@ const remplirBrouillonDepuisSnapshot = (obj: VolObjetFormSnapshot) => {
   couleur.value = obj.couleur ? { ...obj.couleur } : null;
   couleurSecondaire.value = obj.couleurSecondaire ? { ...obj.couleurSecondaire } : null;
   valeurReelle.value = texteOuVide(obj.valeurReelle);
-  descriptionObjet.value = texteOuVide(obj.descriptionObjet);
   numeroCadre.value = texteOuVide(obj.numeroCadre);
   numeroCadreInconnu.value = !!obj.numeroCadreInconnu;
   vin.value = texteOuVide(obj.vin);
@@ -307,7 +300,6 @@ const viderChampsVehiculeBrouillon = () => {
   couleur.value = null;
   couleurSecondaire.value = null;
   valeurReelle.value = TEXTE_VIDE;
-  descriptionObjet.value = TEXTE_VIDE;
   numeroCadre.value = TEXTE_VIDE;
   numeroCadreInconnu.value = false;
   vin.value = TEXTE_VIDE;
@@ -320,7 +312,7 @@ const viderChampsVehiculeBrouillon = () => {
   plaqueCanton.value = null;
 };
 
-const CHAMPS_ERREUR_BROUILLON = ["typeObjet", "descriptionObjet", "sousCategorie"] as const;
+const CHAMPS_ERREUR_BROUILLON = ["typeObjet", "sousCategorie"] as const;
 
 const stopRestoringOnNextTick = () => {
   void nextTick(() => {
@@ -351,7 +343,6 @@ const buildSnapshotFromDraft = (): VolObjetFormSnapshot => ({
   numeroIMEI: "",
   numeroIMEIInconnu: false,
   justificationAbsenceIMEI: "",
-  descriptionObjet: descriptionBrouillonTrim(),
   isVehicle: true,
   numeroCadre: chaineFormulaire(numeroCadre.value),
   numeroCadreInconnu: numeroCadreInconnu.value,
@@ -385,11 +376,6 @@ const validerVehiculeDommage = () => {
 
   if (!typeObjet.value?.code) {
     setFieldError("typeObjet", t("validation.typeObjetRequis"));
-    return;
-  }
-
-  if (!descriptionBrouillonTrim()) {
-    setFieldError("descriptionObjet", t("validation.descriptionObjetRequise"));
     return;
   }
 

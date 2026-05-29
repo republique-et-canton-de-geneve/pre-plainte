@@ -154,7 +154,7 @@ const validateIncidentRequirements = (data: Record<string, any>, ctx: z.Refineme
     return;
   }
 
- 
+
   if (
     data.typeIncident === "vol" &&
     (hasObjetsVolesEnregistres(data) || data.categorieObjet === "plaque")
@@ -399,7 +399,6 @@ export const createEvenementInfoSchema = (t: ComposerTranslation) =>
       numeroIMEIInconnu: z.boolean().optional(),
       justificationAbsenceIMEI: z.string().optional(),
       gravure: z.string().optional(),
-      descriptionObjet: z.string().optional(),
       isVehicle: z.boolean().optional(),
       dateAchat: z
         .string()
