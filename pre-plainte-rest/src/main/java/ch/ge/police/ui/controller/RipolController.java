@@ -8,7 +8,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/ripol")
@@ -28,6 +32,33 @@ public class RipolController {
   public static final String GROUP_TYPE_MODE_OPERATOIRE = "kasPhaenomen";
   public static final String GROUP_TYPE_COULEUR = "103";
   public static final String GROUP_TYPE_CANTON = "1";
+  public static final String GROUP_TYPE_VEHICLE_BRAND = "102";
+  public static final String MASTER_TYPE_VEHICLE_MODEL = GROUP_TYPE_VEHICLE_BRAND;
+  public static final String GROUP_TYPE_VEHICLE_INSURER = "185";
+  private static final String GROUP_TYPE_VEHICLE_INSURER_ALT = "186";
+
+  private static final List<String> VEHICLE_INSURER_GROUP_TYPES = List.of(
+      GROUP_TYPE_VEHICLE_INSURER,
+      GROUP_TYPE_VEHICLE_INSURER_ALT
+  );
+
+  private static final List<String> KNOWN_VEHICLE_INSURER_NAMES = List.of(
+      "AXA", "ALLIANCE", "ALLIANZ", "MOBILIAR", "GENERALI", "ZURICH", "HELVETIA", "BASLER", "VAUDOISE", "BALOISE",
+      "SWISS", "EMMENTAL", "COOP", "SMILE", "BONUS", "PROGRES", "ORION"
+  );
+
+  private static final List<Ripol> DEFAULT_VEHICLE_INSURERS = List.of(
+      ripolInsurer("AXA", "AXA"),
+      ripolInsurer("ALLIANCE", "Alliance"),
+      ripolInsurer("ALLIANZ", "Allianz"),
+      ripolInsurer("MOBILIAR", "Mobiliar"),
+      ripolInsurer("GENERALI", "Generali"),
+      ripolInsurer("ZURICH", "Zurich"),
+      ripolInsurer("HELVETIA", "Helvetia"),
+      ripolInsurer("BASLER", "Basler"),
+      ripolInsurer("VAUDOISE", "Vaudoise"),
+      ripolInsurer("BALOISE", "Baloise")
+  );
 
   private final RipolPort ripolPort;
 
@@ -100,16 +131,19 @@ public class RipolController {
       @RequestParam String vehicleTypeCode,
       @RequestParam(required = false) String search) {
     if (search != null && !search.isBlank()) {
-      return ripolPort.searchBrands(vehicleTypeCode, MASTER_TYPE_VEHICULES, search);
+      return ripolPort.searchCodesByGroupType(GROUP_TYPE_VEHICLE_BRAND, search);
     }
-    return ripolPort.getBrandsByTypeAndMasterType(vehicleTypeCode, MASTER_TYPE_VEHICULES);
+    return ripolPort.getCodesByGroupType(GROUP_TYPE_VEHICLE_BRAND);
   }
 
   @GetMapping("/vehicle-models")
   public List<Ripol> getVehicleModels(
       @RequestParam String brandCode,
       @RequestParam(required = false) String search) {
-    return getModelRipols(brandCode, search);
+    if (search != null && !search.isBlank()) {
+      return ripolPort.searchBrands(brandCode, MASTER_TYPE_VEHICLE_MODEL, search);
+    }
+    return ripolPort.getBrandsByTypeAndMasterType(brandCode, MASTER_TYPE_VEHICLE_MODEL);
   }
 
   @GetMapping("/sexes")
@@ -173,6 +207,96 @@ public class RipolController {
   @GetMapping("/vehicle-colours")
   public List<Ripol> getVehicleColours(@RequestParam(required = false) String search) {
     return getColourRipols(search);
+  }
+
+  @GetMapping("/vehicle-insurers")
+  public List<Ripol> getVehicleInsurers(@RequestParam(required = false) String search) {
+    if (search != null && !search.isBlank()) {
+      return searchVehicleInsurers(search.trim());
+    }
+    return loadDefaultVehicleInsurers();
+  }
+
+  private List<Ripol> loadDefaultVehicleInsurers() {
+    Map<String, Ripol> byCode = new LinkedHashMap<>();
+    for (String insurerName : KNOWN_VEHICLE_INSURER_NAMES) {
+      for (String groupType : VEHICLE_INSURER_GROUP_TYPES) {
+        for (Ripol ripol : ripolPort.searchCodesByGroupType(groupType, insurerName)) {
+          if (isKnownVehicleInsurerName(ripol)) {
+            byCode.putIfAbsent(ripol.code(), ripol);
+          }
+        }
+      }
+    }
+    if (byCode.isEmpty()) {
+      return DEFAULT_VEHICLE_INSURERS;
+    }
+    return byCode.values().stream()
+        .sorted(Comparator.comparing(Ripol::labelFr, String.CASE_INSENSITIVE_ORDER))
+        .toList();
+  }
+
+  private List<Ripol> searchVehicleInsurers(String search) {
+    Map<String, Ripol> byCode = new LinkedHashMap<>();
+    String searchUpper = search.toUpperCase(Locale.ROOT);
+
+    for (String groupType : VEHICLE_INSURER_GROUP_TYPES) {
+      for (Ripol ripol : ripolPort.searchCodesByGroupType(groupType, search)) {
+        if (matchesVehicleInsurerSearch(ripol, searchUpper)) {
+          byCode.putIfAbsent(ripol.code(), ripol);
+        }
+      }
+    }
+
+    for (Ripol fallback : DEFAULT_VEHICLE_INSURERS) {
+      if (matchesVehicleInsurerSearch(fallback, searchUpper)) {
+        byCode.putIfAbsent(fallback.code(), fallback);
+      }
+    }
+
+    if (byCode.isEmpty()) {
+      return DEFAULT_VEHICLE_INSURERS.stream()
+          .filter(r -> matchesVehicleInsurerSearch(r, searchUpper))
+          .toList();
+    }
+
+    return byCode.values().stream()
+        .sorted(Comparator.comparing(Ripol::labelFr, String.CASE_INSENSITIVE_ORDER))
+        .toList();
+  }
+
+  private boolean matchesVehicleInsurerSearch(Ripol ripol, String searchUpper) {
+    if (ripol == null || searchUpper.isBlank()) {
+      return false;
+    }
+    String label = resolveInsurerLabel(ripol).toUpperCase(Locale.ROOT);
+    return label.contains(searchUpper) || searchUpper.contains(label);
+  }
+
+  private boolean isKnownVehicleInsurerName(Ripol ripol) {
+    if (ripol == null) {
+      return false;
+    }
+    String label = resolveInsurerLabel(ripol).toUpperCase(Locale.ROOT);
+    if (label.isBlank()) {
+      return false;
+    }
+    return KNOWN_VEHICLE_INSURER_NAMES.stream()
+        .anyMatch(known -> label.equals(known) || label.contains(known));
+  }
+
+  private static String resolveInsurerLabel(Ripol ripol) {
+    if (ripol.labelFr() != null && !ripol.labelFr().isBlank()) {
+      return ripol.labelFr().trim();
+    }
+    if (ripol.labelDe() != null && !ripol.labelDe().isBlank()) {
+      return ripol.labelDe().trim();
+    }
+    return "";
+  }
+
+  private static Ripol ripolInsurer(String code, String label) {
+    return new Ripol(code, label, label, GROUP_TYPE_VEHICLE_INSURER);
   }
 
   @GetMapping("/cantons")

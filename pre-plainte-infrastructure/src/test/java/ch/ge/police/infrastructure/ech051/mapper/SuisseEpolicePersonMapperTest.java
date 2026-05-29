@@ -36,7 +36,7 @@ class SuisseEpolicePersonMapperTest {
 
   @Test
   void shouldReturnEmptyListWhenInfosIsNull() {
-    List<Person> result = mapper.buildPersons(null, false);
+    List<Person> result = mapper.buildPersons(null, false, "aucune");
 
     assertNotNull(result);
     assertTrue(result.isEmpty());
@@ -48,7 +48,7 @@ class SuisseEpolicePersonMapperTest {
     when(infos.hasOrganisation()).thenReturn(false);
     when(infos.hasTiers()).thenReturn(false);
 
-    List<Person> result = mapper.buildPersons(infos, false);
+    List<Person> result = mapper.buildPersons(infos, false, "aucune");
 
     assertEquals(1, result.size());
 
@@ -66,7 +66,7 @@ class SuisseEpolicePersonMapperTest {
     when(infos.hasOrganisation()).thenReturn(false);
     when(infos.hasTiers()).thenReturn(false);
 
-    List<Person> result = mapper.buildPersons(infos, true);
+    List<Person> result = mapper.buildPersons(infos, true, "aucune");
 
     assertEquals(2, result.size());
 
@@ -92,7 +92,7 @@ class SuisseEpolicePersonMapperTest {
     when(infos.hasTiers()).thenReturn(true);
     when(infos.getTiers()).thenReturn(tiers);
 
-    List<Person> result = mapper.buildPersons(infos, false);
+    List<Person> result = mapper.buildPersons(infos, false, "aucune");
 
     assertEquals(3, result.size());
 
@@ -125,7 +125,7 @@ class SuisseEpolicePersonMapperTest {
 
     when(addressMapper.fromAdresse(adresse)).thenReturn(mappedAddress);
 
-    List<Person> result = mapper.buildPersons(infos, false);
+    List<Person> result = mapper.buildPersons(infos, false, "Alliance");
 
     assertEquals(4, result.size());
 
@@ -151,16 +151,20 @@ class SuisseEpolicePersonMapperTest {
 
     assertEquals(Ech051Constants.PERSON_KEY_ASSURANCE_ENTREPRISE, insurance.getKey());
     assertEquals(PersonType.LEGAL, insurance.getType());
+    assertEquals("Alliance", insurance.getLegalIdentity().getCurrentName());
   }
 
   @Test
   void shouldBuildInsurancePerson() {
-    Person result = mapper.buildInsurancePerson("INS1");
+    Person result = mapper.buildInsurancePerson("INS1", null);
 
     assertEquals("INS1", result.getKey());
     assertEquals(PersonType.LEGAL, result.getType());
     assertNotNull(result.getLegalIdentity());
     assertEquals("aucune", result.getLegalIdentity().getCurrentName());
+
+    Person named = mapper.buildInsurancePerson("INS2", "AXA");
+    assertEquals("AXA", named.getLegalIdentity().getCurrentName());
   }
 
   @Test

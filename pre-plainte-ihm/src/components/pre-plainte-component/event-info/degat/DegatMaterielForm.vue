@@ -169,6 +169,7 @@ import DegatVehiculeEndommageDraftPanel from "./DegatVehiculeEndommageDraftPanel
 import DegatVehiculeEndommageResumeSheet from "./DegatVehiculeEndommageResumeSheet.vue";
 import { toTranslatedOptions } from "@/utils/helpers/traductionHelper";
 import { requiredLabel } from "@/utils/helpers/labelHelpers";
+import { validerPlaqueVehicule } from "@/utils/helpers/volObjetVolHelpers";
 
 const TEXTE_VIDE = "";
 
@@ -312,7 +313,17 @@ const viderChampsVehiculeBrouillon = () => {
   plaqueCanton.value = null;
 };
 
-const CHAMPS_ERREUR_BROUILLON = ["typeObjet", "sousCategorie"] as const;
+const CHAMPS_ERREUR_BROUILLON = [
+  "typeObjet",
+  "sousCategorie",
+  "fabricant",
+  "fabricantAutre",
+  "modele",
+  "modeleAutre",
+  "plaqueNumero",
+  "plaquePays",
+  "plaqueCanton",
+] as const;
 
 const stopRestoringOnNextTick = () => {
   void nextTick(() => {
@@ -376,6 +387,38 @@ const validerVehiculeDommage = () => {
 
   if (!typeObjet.value?.code) {
     setFieldError("typeObjet", t("validation.typeObjetRequis"));
+    return;
+  }
+
+  if (!fabricant.value?.code) {
+    setFieldError("fabricant", t("validation.fabricantRequis"));
+    return;
+  }
+  if (fabricant.value.code === "AUTRE" && !chaineFormulaire(fabricantAutre.value).trim()) {
+    setFieldError("fabricantAutre", t("validation.champRequis"));
+    return;
+  }
+  if (!modele.value?.code) {
+    setFieldError("modele", t("validation.modeleRequis"));
+    return;
+  }
+  if (modele.value.code === "AUTRE" && !chaineFormulaire(modeleAutre.value).trim()) {
+    setFieldError("modeleAutre", t("validation.champRequis"));
+    return;
+  }
+  if (
+    !validerPlaqueVehicule(
+      {
+        sousCategorie: sousCategorie.value,
+        plaqueInconnu: plaqueInconnu.value,
+        plaqueNumero: plaqueNumero.value,
+        plaquePays: plaquePays.value,
+        plaqueCanton: plaqueCanton.value,
+      },
+      setFieldError,
+      t,
+    )
+  ) {
     return;
   }
 

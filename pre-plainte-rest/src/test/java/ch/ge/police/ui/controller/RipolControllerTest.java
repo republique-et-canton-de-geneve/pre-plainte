@@ -7,7 +7,10 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -153,36 +156,32 @@ class RipolControllerTest {
   void getVehicleBrands_withSearch_callsSearchBrands() {
     List<Ripol> expected = List.of(mock(Ripol.class));
 
-    when(ripolPort.searchBrands(
-      "vehicle",
-      RipolController.MASTER_TYPE_VEHICULES,
+    when(ripolPort.searchCodesByGroupType(
+      RipolController.GROUP_TYPE_VEHICLE_BRAND,
       "search")).thenReturn(expected);
 
     List<Ripol> result = controller.getVehicleBrands("vehicle", "search");
 
     assertSame(expected, result);
 
-    verify(ripolPort).searchBrands(
-      "vehicle",
-      RipolController.MASTER_TYPE_VEHICULES,
+    verify(ripolPort).searchCodesByGroupType(
+      RipolController.GROUP_TYPE_VEHICLE_BRAND,
       "search");
   }
 
   @Test
-  void getVehicleBrands_withoutSearch_callsGetBrandsByTypeAndMasterType() {
+  void getVehicleBrands_withoutSearch_returnsFullListFromCache() {
     List<Ripol> expected = List.of(mock(Ripol.class));
 
-    when(ripolPort.getBrandsByTypeAndMasterType(
-      "vehicle",
-      RipolController.MASTER_TYPE_VEHICULES)).thenReturn(expected);
+    when(ripolPort.getCodesByGroupType(RipolController.GROUP_TYPE_VEHICLE_BRAND)).thenReturn(expected);
 
     List<Ripol> result = controller.getVehicleBrands("vehicle", null);
 
     assertSame(expected, result);
 
-    verify(ripolPort).getBrandsByTypeAndMasterType(
-      "vehicle",
-      RipolController.MASTER_TYPE_VEHICULES);
+    verify(ripolPort).getCodesByGroupType(RipolController.GROUP_TYPE_VEHICLE_BRAND);
+    verify(ripolPort, org.mockito.Mockito.never())
+      .searchCodesByGroupType(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString());
   }
 
   @Test
@@ -299,16 +298,47 @@ class RipolControllerTest {
     when(ripolPort.searchModels("brand", "search")).thenReturn(expected);
     when(ripolPort.getModelsByBrand("brand")).thenReturn(expected);
 
+    when(ripolPort.searchBrands("brand", RipolController.MASTER_TYPE_VEHICLE_MODEL, "search")).thenReturn(expected);
+    when(ripolPort.getBrandsByTypeAndMasterType("brand", RipolController.MASTER_TYPE_VEHICLE_MODEL)).thenReturn(expected);
+
     assertSame(expected, controller.getPhoneModels("brand", "search"));
     assertSame(expected, controller.getVehicleModels("brand", "search"));
 
     assertSame(expected, controller.getPhoneModels("brand", null));
     assertSame(expected, controller.getVehicleModels("brand", null));
 
-    verify(ripolPort, org.mockito.Mockito.times(2))
+    verify(ripolPort)
       .searchModels("brand", "search");
 
-    verify(ripolPort, org.mockito.Mockito.times(2))
+    verify(ripolPort)
       .getModelsByBrand("brand");
+
+    verify(ripolPort).searchBrands("brand", RipolController.MASTER_TYPE_VEHICLE_MODEL, "search");
+    verify(ripolPort).getBrandsByTypeAndMasterType("brand", RipolController.MASTER_TYPE_VEHICLE_MODEL);
+  }
+
+  @Test
+  void getVehicleInsurers_withoutSearch_returnsFallbackWhenRipolEmpty() {
+    when(ripolPort.searchCodesByGroupType(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString()))
+        .thenReturn(List.of());
+
+    List<Ripol> result = controller.getVehicleInsurers(null);
+
+    assertFalse(result.isEmpty());
+    assertTrue(result.stream().anyMatch(r -> "AXA".equals(r.labelFr())));
+  }
+
+  @Test
+  void getVehicleInsurers_withSearch_mergesRipolAndFallback() {
+    Ripol axa = new Ripol("20840", "AXA Assurances", "AXA Versicherungen", RipolController.GROUP_TYPE_VEHICLE_INSURER);
+    when(ripolPort.searchCodesByGroupType(RipolController.GROUP_TYPE_VEHICLE_INSURER, "axa"))
+        .thenReturn(List.of(axa));
+    when(ripolPort.searchCodesByGroupType("186", "axa"))
+        .thenReturn(List.of());
+
+    List<Ripol> result = controller.getVehicleInsurers("axa");
+
+    assertFalse(result.isEmpty());
+    assertTrue(result.stream().anyMatch(r -> r.labelFr().contains("AXA")));
   }
 }

@@ -29,6 +29,12 @@ export type VolObjetFormSnapshot = {
   plaqueInconnu?: boolean;
   plaquePays?: RipolSelection | null;
   plaqueCanton?: RipolSelection | null;
+  assuranceAucune?: boolean;
+  assureur?: RipolSelection | null;
+  assureurAutre?: string;
+  numeroAssurance?: string;
+  numeroVignette?: string;
+  numeroMaster?: string;
 };
 
 export interface PrePlainteFormFields {
@@ -131,6 +137,12 @@ export interface PrePlainteFormFields {
   plaqueInconnu?: boolean;
   plaquePays?: RipolSelection | null;
   plaqueCanton?: RipolSelection | null;
+  assuranceAucune?: boolean;
+  assureur?: RipolSelection | null;
+  assureurAutre?: string;
+  numeroAssurance?: string;
+  numeroVignette?: string;
+  numeroMaster?: string;
 
   fichiers: File[];
 

@@ -226,7 +226,7 @@ class SqliteRipolAdapterTest {
     assertEquals("Suisse", byCode.get("CH").labelFr());
     assertEquals("Schweiz", byCode.get("CH").labelDe());
 
-    assertEquals("", byCode.get("DE").labelFr());
+    assertEquals("Deutschland", byCode.get("DE").labelFr());
     assertEquals("Deutschland", byCode.get("DE").labelDe());
 
     assertEquals("Italie", byCode.get("IT").labelFr());
