@@ -245,6 +245,7 @@
       v-model="plaqueNumero"
       :disabled="plaqueInconnu"
       class="mb-2"
+      :error-messages="plaqueNumeroError"
       variant="outlined"
       :hint="isPlaqueObligatoire ? t('incidentTypes.hintPlaqueNumeroObligatoire') : t('incidentTypes.hintPlaqueNumero')"
       persistent-hint
@@ -363,6 +364,7 @@ const {
   dateAchat,
   dateAchatError,
   plaqueNumero,
+  plaqueNumeroError,
   plaqueInconnu,
   plaquePays,
   plaqueCanton,
