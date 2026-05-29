@@ -41,7 +41,7 @@ class ObjetIncidentTest {
     ObjetIncident objet = ObjetIncident.builder()
       .categorieObjet("plaque")
       .plaquePays(SUISSE)
-      .plaqueNumero("GE123456")
+      .plaqueNumero("GE 123456")
       .build();
 
     assertDoesNotThrow(objet::champsObligatoire);
@@ -196,11 +196,12 @@ class ObjetIncidentTest {
   @Test
   void shouldAcceptVehicleWithBrandAndModel() {
     ObjetIncident objet = ObjetIncident.builder()
+      .categorieObjet("vehicule")
       .isVehicle(true)
       .type(new RipolCode("200", "Velo"))
       .fabricant(new RipolCode("TREK", "Trek"))
       .modele(new RipolCode("DOMANE", "Domane"))
-      .plaqueNumero("GE123456")
+      .plaqueNumero("GE 123456")
       .plaquePays(SUISSE)
       .build();
 
@@ -224,13 +225,14 @@ class ObjetIncidentTest {
   @Test
   void shouldAcceptVehicleWithOtherBrandAndModelPrecision() {
     ObjetIncident objet = ObjetIncident.builder()
+      .categorieObjet("vehicule")
       .isVehicle(true)
       .type(new RipolCode("200", "Velo"))
       .fabricant(new RipolCode("AUTRE", "Autre"))
       .fabricantAutre("Marque custom")
       .modele(new RipolCode("AUTRE", "Autre"))
       .modeleAutre("Modele custom")
-      .plaqueNumero("GE123456")
+      .plaqueNumero("GE 123456")
       .plaquePays(SUISSE)
       .build();
 
