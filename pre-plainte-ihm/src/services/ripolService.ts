@@ -6,7 +6,9 @@ const backendUrl = getApiBaseUrl() || "";
 const baseUrl = `${backendUrl}/api/ripol`;
 
 const cache = new Map<string, { data: Ripol[]; timestamp: number }>();
+const searchCache = new Map<string, { data: Ripol[]; timestamp: number }>();
 const CACHE_DURATION = 24 * 60 * 60 * 1000;
+const SEARCH_CACHE_DURATION = 10 * 60 * 1000;
 const endpointLieuOrigine = "lieux-origine";
 
 const getCacheKey = (endpoint: string, params?: Record<string, string>): string =>
@@ -30,6 +32,14 @@ export class RipolService {
   static async search(endpoint: string, search?: string, params?: Record<string, string>): Promise<Ripol[]> {
     const isCacheable = !search;
     const cacheKey = getCacheKey(endpoint, params);
+    const searchCacheKey = search ? `${cacheKey}:search:${search.trim().toLowerCase()}` : null;
+
+    if (searchCacheKey) {
+      const cachedSearch = searchCache.get(searchCacheKey);
+      if (cachedSearch && Date.now() - cachedSearch.timestamp < SEARCH_CACHE_DURATION) {
+        return cachedSearch.data;
+      }
+    }
 
     if (isCacheable) {
       const cached = cache.get(cacheKey);
@@ -62,6 +72,10 @@ export class RipolService {
     }
 
     const data = await response.json();
+
+    if (searchCacheKey) {
+      searchCache.set(searchCacheKey, { data, timestamp: Date.now() });
+    }
 
     if (isCacheable) {
       cache.set(cacheKey, { data, timestamp: Date.now() });
@@ -101,11 +115,20 @@ export class RipolService {
   static readonly searchVehicleTypes = (search?: string): Promise<Ripol[]> =>
     RipolService.search("vehicle-types", search);
 
+  static readonly searchVehicleBrands = (vehicleTypeCode: string, search?: string): Promise<Ripol[]> =>
+    RipolService.search("vehicle-brands", search, { vehicleTypeCode });
+
+  static readonly searchVehicleModels = (brandCode: string, search?: string): Promise<Ripol[]> =>
+    RipolService.search("vehicle-models", search, { brandCode });
+
   static readonly searchObjectColours = (search?: string): Promise<Ripol[]> =>
     RipolService.search("object-colours", search);
 
   static readonly searchVehicleColours = (search?: string): Promise<Ripol[]> =>
     RipolService.search("vehicle-colours", search);
+
+  static readonly searchVehicleInsurers = (search?: string): Promise<Ripol[]> =>
+    RipolService.search("vehicle-insurers", search);
 
   static readonly searchCantons = (search?: string): Promise<Ripol[]> => RipolService.search("cantons", search);
 
@@ -116,6 +139,7 @@ export class RipolService {
       RipolService.searchDocumentTypes(),
       RipolService.searchObjectTypes(),
       RipolService.searchVehicleTypes(),
+      RipolService.searchVehicleBrands("020101"),
     ]);
   }
 }

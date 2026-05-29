@@ -152,6 +152,9 @@ public class SuisseEpoliceObjectMapper {
         .colourSecondary(buildVehicleColourSecondaireReference(objet))
         .velofinderId(objet.getVelofinderId())
         .purchaseDate(objet.getPurchaseDate())
+        .vignetteNumber(blankToNull(objet.getNumeroVignette()))
+        .masterNumber(blankToNull(objet.getNumeroMaster()))
+        .insuranceNumber(blankToNull(objet.getNumeroAssurance()))
         .additionalInformation(buildVehicleAdditionalInfo(objet))
         .numberPlate(buildNumberPlate(objet))
         .build();
@@ -362,5 +365,12 @@ public class SuisseEpoliceObjectMapper {
       return Ech051Constants.VEHICLE_KEY;
     }
     return Integer.toString(VEHICLE_KEY_INDEX_OFFSET  + index);
+  }
+
+  private static String blankToNull(String value) {
+    if (value == null || value.isBlank()) {
+      return null;
+    }
+    return value.trim();
   }
 }
