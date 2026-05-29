@@ -126,7 +126,6 @@ const { value: numeroSerieInconnu } = useField<boolean>("numeroSerieInconnu");
 const { value: numeroIMEI, errorMessage: numeroIMEIError } = useField("numeroIMEI");
 const { value: numeroIMEIInconnu } = useField<boolean>("numeroIMEIInconnu");
 const { value: justificationAbsenceIMEI } = useField<string>("justificationAbsenceIMEI");
-const { value: descriptionObjet, errorMessage: descriptionObjetError } = useField("descriptionObjet");
 const { value: isVehicle } = useField<boolean>("isVehicle");
 
 const { value: numeroCadre } = useField<string>("numeroCadre");
@@ -280,8 +279,6 @@ const hasImei = computed(() => {
 
 const isAutreModele = computed(() => modele.value?.code === "AUTRE");
 
-const descriptionBrouillonTrim = () => chaineFormulaire(descriptionObjet.value).trim();
-
 const remplirBrouillonDepuisSnapshot = (obj: VolObjetFormSnapshot) => {
   categorieObjet.value = obj.categorieObjet;
   sousCategorie.value = texteOuVide(obj.sousCategorie);
@@ -299,7 +296,6 @@ const remplirBrouillonDepuisSnapshot = (obj: VolObjetFormSnapshot) => {
   numeroIMEI.value = texteOuVide(obj.numeroIMEI);
   numeroIMEIInconnu.value = !!obj.numeroIMEIInconnu;
   justificationAbsenceIMEI.value = texteOuVide(obj.justificationAbsenceIMEI);
-  descriptionObjet.value = texteOuVide(obj.descriptionObjet);
   numeroCadre.value = texteOuVide(obj.numeroCadre);
   numeroCadreInconnu.value = !!obj.numeroCadreInconnu;
   vin.value = texteOuVide(obj.vin);
@@ -327,7 +323,6 @@ const viderChampsVehiculeVol = () => {
 };
 
 const reinitialiserDependancesChangementCategorie = (nouvelleCategorie: string) => {
-  descriptionObjet.value = TEXTE_VIDE;
   sousCategorie.value = TEXTE_VIDE;
   typeObjet.value = null;
   fabricant.value = null;
@@ -360,7 +355,6 @@ const viderChampsDetailObjetVol = () => {
   numeroIMEI.value = TEXTE_VIDE;
   numeroIMEIInconnu.value = false;
   justificationAbsenceIMEI.value = TEXTE_VIDE;
-  descriptionObjet.value = TEXTE_VIDE;
   viderChampsVehiculeVol();
 };
 
@@ -412,7 +406,6 @@ const buildSnapshotFromDraft = (): VolObjetFormSnapshot => {
     numeroIMEI: chaineFormulaire(numeroIMEI.value),
     numeroIMEIInconnu: numeroIMEIInconnu.value,
     justificationAbsenceIMEI: chaineFormulaire(justificationAbsenceIMEI.value),
-    descriptionObjet: descriptionBrouillonTrim(),
     isVehicle: estVehicule,
     numeroCadre: chaineFormulaire(numeroCadre.value),
     numeroCadreInconnu: numeroCadreInconnu.value,
@@ -651,8 +644,6 @@ const brouillon = reactive({
   numeroIMEIError,
   numeroIMEIInconnu,
   justificationAbsenceIMEI,
-  descriptionObjet,
-  descriptionObjetError,
   plaqueNumero,
   plaqueNumeroError,
   plaquePays,

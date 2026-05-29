@@ -89,10 +89,6 @@
           <div class="text-caption text-medium-emphasis">{{ t("incidentTypes.dateAchat") }}</div>
           <div class="text-body-2">{{ obj.dateAchat }}</div>
         </v-col>
-        <v-col v-if="obj.descriptionObjet" cols="12">
-          <div class="text-caption text-medium-emphasis">{{ t("incidentTypes.descriptionObjet") }}</div>
-          <div class="text-body-2">{{ obj.descriptionObjet }}</div>
-        </v-col>
       </v-row>
     </v-sheet>
     <v-btn
