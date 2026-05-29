@@ -210,6 +210,9 @@ public class Ech0051DocumentPayload {
     String velofinderId;
     String purchaseDate;
     String additionalInformation;
+    String vignetteNumber;
+    String masterNumber;
+    String insuranceNumber;
     NumberPlate numberPlate;
   }
 
@@ -332,6 +335,7 @@ public class Ech0051DocumentPayload {
     String vehicleRef;
     String personRef;
     String insurerRef;
+    String insuranceNumber;
     RipolReference personRole;
   }
 }

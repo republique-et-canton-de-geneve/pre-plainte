@@ -239,6 +239,16 @@ export class ReverseMapper {
       plaqueInconnu: !!o?.plaqueInconnu,
       plaquePays: o?.plaquePays ?? null,
       plaqueCanton: o?.plaqueCanton ?? null,
+      assuranceAucune: !!o?.assuranceAucune,
+      assureur: o?.assureur?.code
+        ? o.assureur
+        : o?.assureurAutre
+          ? { code: "AUTRE", labelFr: "Autre", labelDe: "Andere" }
+          : null,
+      assureurAutre: toSafeString(o?.assureurAutre),
+      numeroAssurance: toSafeString(o?.numeroAssurance),
+      numeroVignette: toSafeString(o?.numeroVignette),
+      numeroMaster: toSafeString(o?.numeroMaster),
     };
   }
 
@@ -325,6 +335,12 @@ export class ReverseMapper {
       plaqueInconnu: this.getFieldSourceBool(det, base, context, "plaqueInconnu"),
       plaquePays: this.getFieldSource(det, base, context, "plaquePays"),
       plaqueCanton: this.getFieldSource(det, base, context, "plaqueCanton"),
+      assuranceAucune: this.getFieldSourceBool(det, base, context, "assuranceAucune"),
+      assureur: this.resolveAssureurFromBackend(det, base, context),
+      assureurAutre: toSafeString(this.getFieldSource(det, base, context, "assureurAutre")),
+      numeroAssurance: toSafeString(this.getFieldSource(det, base, context, "numeroAssurance")),
+      numeroVignette: toSafeString(this.getFieldSource(det, base, context, "numeroVignette")),
+      numeroMaster: toSafeString(this.getFieldSource(det, base, context, "numeroMaster")),
       gravure: toSafeString(this.getVolObjectFieldSource(det, base, "gravure")),
       valeurReelle: toSafeString(this.getVolObjectFieldSource(det, base, "realValue")),
       numeroSerie: toSafeString(this.getVolObjectFieldSource(det, base, "numeroSerie")),
@@ -365,7 +381,25 @@ export class ReverseMapper {
       plaqueInconnu: undefined,
       plaquePays: null,
       plaqueCanton: null,
+      assuranceAucune: false,
+      assureur: null,
+      assureurAutre: "",
+      numeroAssurance: "",
+      numeroVignette: "",
+      numeroMaster: "",
     };
+  }
+
+  private static resolveAssureurFromBackend(det: any, base: PrePlainteFormFields, context: IncidentContext) {
+    const fromIncident = this.getFieldSource(det, base, context, "assureur");
+    if (fromIncident?.code) {
+      return fromIncident;
+    }
+    const autre = toSafeString(this.getFieldSource(det, base, context, "assureurAutre"));
+    if (autre) {
+      return { code: "AUTRE", labelFr: "Autre", labelDe: "Andere" };
+    }
+    return base.assureur ?? null;
   }
 
   private static mapDamageFields(det: any, base: PrePlainteFormFields, context: IncidentContext) {

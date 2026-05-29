@@ -36,7 +36,7 @@ public class SuisseEpolicePersonMapper {
    * TIERS : 3 personnes (tiers = lésé key=4, déclarant = représentant key=7, assurance key=2)
    * ENTREPRISE : 4 personnes (organisation key=4, déclarant key=6, informant key=8, assurance key=3)
    */
-  public List<Person> buildPersons(InformationsPersonnelles infos, boolean hasVehicles) {
+  public List<Person> buildPersons(InformationsPersonnelles infos, boolean hasVehicles, String insurerName) {
     List<Person> persons = new ArrayList<>();
 
     if (infos == null) {
@@ -44,11 +44,11 @@ public class SuisseEpolicePersonMapper {
     }
 
     if (infos.hasOrganisation() && infos.getOrganisation() != null) {
-      buildEntreprisePersons(infos, persons);
+      buildEntreprisePersons(infos, persons, insurerName);
     } else if (infos.hasTiers() && infos.getTiers() != null) {
-      buildTiersPersons(infos, persons);
+      buildTiersPersons(infos, persons, insurerName);
     } else {
-      buildIndividualPerson(infos, persons, hasVehicles);
+      buildIndividualPerson(infos, persons, hasVehicles, insurerName);
     }
 
     return persons;
@@ -58,7 +58,8 @@ public class SuisseEpolicePersonMapper {
    * Construit les personnes pour une déclaration individuelle (MOI_MEME).
    * Si hasVehicles=true : utilise les keys véhicule et ajoute personne assurance.
    */
-  private void buildIndividualPerson(InformationsPersonnelles infos, List<Person> persons, boolean hasVehicles) {
+  private void buildIndividualPerson(InformationsPersonnelles infos, List<Person> persons, boolean hasVehicles,
+                                     String insurerName) {
     if (hasVehicles) {
       persons.add(buildNaturalPerson(
           Ech051Constants.PERSON_KEY_VEHICLE,
@@ -66,7 +67,7 @@ public class SuisseEpolicePersonMapper {
           infos,
           null
       ));
-      persons.add(buildInsurancePerson(Ech051Constants.INSURER_KEY_VEHICLE));
+      persons.add(buildInsurancePerson(Ech051Constants.INSURER_KEY_VEHICLE, insurerName));
     } else {
       persons.add(buildNaturalPerson(
           Ech051Constants.PERSON_KEY_TIERS,
@@ -84,7 +85,7 @@ public class SuisseEpolicePersonMapper {
    * 2. Déclarant (natural, représentant) - key=7
    * 3. Assurance "aucune" (legal) - key=2
    */
-  private void buildTiersPersons(InformationsPersonnelles infos, List<Person> persons) {
+  private void buildTiersPersons(InformationsPersonnelles infos, List<Person> persons, String insurerName) {
     persons.add(buildNaturalPerson(
         Ech051Constants.PERSON_KEY_TIERS,
         Ech051Constants.IDENTITY_KEY_TIERS,
@@ -97,7 +98,7 @@ public class SuisseEpolicePersonMapper {
         infos,
         null
     ));
-    persons.add(buildInsurancePerson(Ech051Constants.PERSON_KEY_ASSURANCE_TIERS));
+    persons.add(buildInsurancePerson(Ech051Constants.PERSON_KEY_ASSURANCE_TIERS, insurerName));
   }
 
   /**
@@ -107,7 +108,7 @@ public class SuisseEpolicePersonMapper {
    * 3. Informant simplifié (natural) - key=8
    * 4. Assurance "aucune" (legal) - key=3
    */
-  private void buildEntreprisePersons(InformationsPersonnelles infos, List<Person> persons) {
+  private void buildEntreprisePersons(InformationsPersonnelles infos, List<Person> persons, String insurerName) {
     Organisation org = infos.getOrganisation();
 
     persons.add(buildOrganisationPerson(Ech051Constants.PERSON_KEY_ORGANISATION, org));
@@ -122,7 +123,7 @@ public class SuisseEpolicePersonMapper {
         Ech051Constants.IDENTITY_KEY_INFORMANT,
         infos
     ));
-    persons.add(buildInsurancePerson(Ech051Constants.PERSON_KEY_ASSURANCE_ENTREPRISE));
+    persons.add(buildInsurancePerson(Ech051Constants.PERSON_KEY_ASSURANCE_ENTREPRISE, insurerName));
   }
 
   /**
@@ -164,15 +165,13 @@ public class SuisseEpolicePersonMapper {
         .build();
   }
 
-  /**
-   * Construit une personne morale "assurance" par défaut ("aucune").
-   */
-  public Person buildInsurancePerson(String key) {
+  public Person buildInsurancePerson(String key, String insurerName) {
+    String currentName = insurerName != null && !insurerName.isBlank() ? insurerName.trim() : "aucune";
     return Person.builder()
         .key(key)
         .type(PersonType.LEGAL)
         .legalIdentity(LegalIdentity.builder()
-            .currentName("aucune")
+            .currentName(currentName)
             .build())
         .build();
   }

@@ -8,6 +8,9 @@ import ch.ge.police.core.domain.model.event.cybercrime.common.AchatNonRecu;
 import ch.ge.police.core.domain.model.event.cybercrime.common.CommandeFrauduleuse;
 import ch.ge.police.core.domain.model.event.cybercrime.common.FausseAnnonce;
 import ch.ge.police.core.domain.model.event.cybercrime.common.TypeCybercrime;
+import ch.ge.police.core.domain.model.event.dommagematerial.DommageMateriel;
+import ch.ge.police.core.domain.model.event.vol.Vol;
+import ch.ge.police.core.domain.model.event.vol.common.ObjetIncident;
 import ch.ge.police.core.domain.model.informationspersonnelles.InformationsPersonnelles;
 import ch.ge.police.infrastructure.ech051.Ech051Constants;
 import ch.ge.police.infrastructure.ech051.dto.Ech0051DocumentPayload;
@@ -82,8 +85,9 @@ public class SuisseEpoliceMapperForPPL {
     List<ObjectItem> objects = buildObjects(incident, infos);
     List<VehicleItem> vehicles = objectMapper.buildVehiclesFromIncident(incident);
     boolean hasVehicles = !vehicles.isEmpty();
+    String vehicleInsurerName = resolveVehicleInsurerName(incident);
 
-    List<Person> persons = personMapper.buildPersons(infos, hasVehicles);
+    List<Person> persons = personMapper.buildPersons(infos, hasVehicles, vehicleInsurerName);
     ensureCyberCommandeFrauduleusePersonRefs(persons, incident);
     persons = addCyberCounterpartyIfPresent(persons, incident);
     List<Event> events = incident == null
@@ -194,7 +198,7 @@ public class SuisseEpoliceMapperForPPL {
 
     boolean hasCyberInsurer = persons.stream().anyMatch(p -> p != null && Ech051Constants.INSURER_REF_CYBER.equals(p.getKey()));
     if (!hasCyberInsurer) {
-      persons.add(personMapper.buildInsurancePerson(Ech051Constants.INSURER_REF_CYBER));
+      persons.add(personMapper.buildInsurancePerson(Ech051Constants.INSURER_REF_CYBER, "aucune"));
     }
   }
 
@@ -531,6 +535,26 @@ public class SuisseEpoliceMapperForPPL {
     private boolean isBlank(String value) {
       return value == null || value.isBlank();
     }
+  }
+
+  private String resolveVehicleInsurerName(IncidentBase incident) {
+    for (ObjetIncident objet : listVehicleObjets(incident)) {
+      String nom = objet.resolveAssureurNom();
+      if (nom != null && !nom.isBlank()) {
+        return nom;
+      }
+    }
+    return "aucune";
+  }
+
+  private List<ObjetIncident> listVehicleObjets(IncidentBase incident) {
+    if (incident instanceof Vol vol && vol.getObjetsVoles() != null) {
+      return vol.getObjetsVoles().stream().filter(ObjetIncident::isVehicleType).toList();
+    }
+    if (incident instanceof DommageMateriel dommage && dommage.getObjetDegrades() != null) {
+      return dommage.getObjetDegrades().stream().filter(ObjetIncident::isVehicleType).toList();
+    }
+    return List.of();
   }
 
   /**
