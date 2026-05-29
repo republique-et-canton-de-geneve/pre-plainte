@@ -933,7 +933,10 @@
     "selectionnerDocument": "Selecionar uma escolha de documento",
     "disclaimerRequis": "Tem de confirmar esta declaração",
     "constatRequis": "Indique se foi elaborado um auto",
-    "constatDommageRequis": "A data do auto é obrigatória"
+    "constatDommageRequis": "A data do auto é obrigatória",
+    "numeroPlaqueSuisseInvalide": "Número de matrícula suíça inválido (formato esperado: GE 123456)",
+    "numeroPlaqueFranceInvalide": "Número de matrícula francês inválido (formato esperado: AA-123-AA ou 123 ABC 75)",
+    "numeroPlaqueInternationaleInvalide": "Número de matrícula inválido (apenas letras e números, 1 a 12 caracteres)"
   },
   "theme": {
     "toggleTheme": "Alternar o tema",

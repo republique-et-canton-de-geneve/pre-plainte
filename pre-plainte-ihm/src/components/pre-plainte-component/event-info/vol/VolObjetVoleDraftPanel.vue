@@ -43,7 +43,8 @@
           class="my-4"
         />
         <v-text-field
-          v-model="brouillon.plaqueNumero"
+          :model-value="brouillon.plaqueNumero"
+          @update:model-value="onPlaqueInput"
           :label="requiredLabel(t('incidentTypes.plaqueNumero'))"
           :error-messages="brouillon.plaqueNumeroError"
           :hint="t('incidentTypes.hintPlaqueNumero')"
@@ -270,14 +271,26 @@ import RipolAutocomplete from "@/components/ripol/RipolAutocomplete.vue";
 import VehiculeDetailsField from "@/components/pre-plainte-component/event-info/VehiculeDetailsField.vue";
 import type { VolObjetVoleDraftBrouillon } from "@/types/volObjetVoleBrouillon.types";
 import { requiredLabel } from "@/utils/helpers/labelHelpers";
+import { formatLicensePlate } from "@/composables/useLicencePlate.ts";
 
-defineProps<{
+const { t } = useI18n();
+const { mobile } = useDisplay();
+
+const props = defineProps<{
   brouillon: VolObjetVoleDraftBrouillon;
   activePrefixes: readonly string[];
 }>();
 
-const { t } = useI18n();
-const { mobile } = useDisplay();
+defineEmits<{
+  "update:brouillon": [value: VolObjetVoleDraftBrouillon];
+}>();
+
+const onPlaqueInput = (value: string) => {
+  props.brouillon.plaqueNumero = formatLicensePlate(
+    value,
+    props.brouillon.plaquePays?.code,
+  );
+};
 </script>
 
 <style scoped>

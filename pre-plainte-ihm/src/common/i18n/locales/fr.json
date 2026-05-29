@@ -933,7 +933,10 @@
     "selectionnerDocument": "Sélectionner un choix de document",
     "disclaimerRequis": "Vous devez confirmer cette déclaration",
     "constatRequis": "Veuillez indiquer si un constat a été rédigé",
-    "constatDommageRequis": "La date de constat est requise"
+    "constatDommageRequis": "La date de constat est requise",
+    "numeroPlaqueSuisseInvalide": "Numéro de plaque suisse invalide (format attendu : GE 123456)",
+    "numeroPlaqueFranceInvalide": "Numéro de plaque français invalide (format attendu : AA-123-AA ou 123 ABC 75)",
+    "numeroPlaqueInternationaleInvalide": "Numéro de plaque invalide (lettres et chiffres uniquement, 1 à 12 caractères)"
   },
   "theme": {
     "toggleTheme": "Basculer le thème",
