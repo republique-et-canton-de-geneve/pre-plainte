@@ -30,7 +30,17 @@ public class ObjetIncident {
   private static final String CODE_PREFIX_VELO = "20";
   private static final String CATEGORIE_PLAQUE = "plaque";
   private static final String CODE_AUTRE = "AUTRE";
+  private static final String CODE_PAYS_SUISSE = "8100";
+  private static final String CODE_PAYS_FRANCE = "8212";
   private static final Pattern NUMERO_IMEI_PATTERN = Pattern.compile("\\d{15}");
+
+  private static final Pattern PLAQUE_SUISSE_PATTERN = Pattern.compile("^[A-Z]{1,2}\\s?\\d{1,6}$");
+  private static final Pattern PLAQUE_FRANCE_SIV_PATTERN = Pattern.compile("^[A-Z]{2}-?\\d{3}-?[A-Z]{2}$");
+  private static final Pattern PLAQUE_FRANCE_FNI_PATTERN = Pattern.compile("^\\d{1,4}\\s?[A-Z]{1,3}\\s?[\\dA-Z]{2,3}$");
+  private static final Pattern PLAQUE_INTERNATIONALE_PATTERN = Pattern.compile("^[A-Z\\d]{1,12}$");
+  private static final Pattern PLAQUE_FRANCE_SIV_COMPACT_PATTERN = Pattern.compile("^[A-Z]{2}\\d{3}[A-Z]{2}$");
+  private static final Pattern PLAQUE_FRANCE_FNI_COMPACT_PATTERN = Pattern.compile("^\\d{1,4}[A-Z]{1,3}[\\dA-Z]{2,3}$");
+  private static final Pattern PLAQUE_SUISSE_COMPACT_PATTERN = Pattern.compile("^[A-Z]{1,2}\\d{1,6}$");
 
   private String categorieObjet;
   private String sousCategorie;
@@ -147,9 +157,7 @@ public class ObjetIncident {
       if (plaquePays == null || !plaquePays.hasCode()) {
         throw new ValidationMetierException("Le pays de la plaque est obligatoire.");
       }
-      if (plaqueNumero == null || plaqueNumero.isBlank()) {
-        throw new ValidationMetierException("Le numéro de plaque est obligatoire.");
-      }
+      validatePlaqueNumero();
       return;
     }
 
@@ -162,6 +170,7 @@ public class ObjetIncident {
       validateAutreValue(fabricant, fabricantAutre, "La marque du vehicule doit etre precisee.");
       validateRipolSelection(modele, "Le modele du vehicule est obligatoire.");
       validateAutreValue(modele, modeleAutre, "Le modele du vehicule doit etre precise.");
+      validatePlaqueNumero();
     }
 
     if (isTelephoneMobile() && !numeroIMEIInconnu && (numeroIMEI == null || numeroIMEI.isBlank())) {
@@ -170,6 +179,36 @@ public class ObjetIncident {
 
     if (numeroIMEI != null && !numeroIMEI.isBlank() && !NUMERO_IMEI_PATTERN.matcher(numeroIMEI).matches()) {
       throw new ValidationMetierException("Le numéro IMEI doit contenir exactement 15 chiffres.");
+    }
+  }
+
+  private void validatePlaqueNumero() {
+    if (plaqueNumero == null || plaqueNumero.isBlank()) {
+      throw new ValidationMetierException("Le numéro de plaque est obligatoire.");
+    }
+
+    String paysCode = getPlaquePaysCode();
+
+    if (CODE_PAYS_SUISSE.equals(paysCode)) {
+      if (!PLAQUE_SUISSE_PATTERN.matcher(plaqueNumero).matches()) {
+        throw new ValidationMetierException("Le numéro de plaque suisse est invalide.");
+      }
+      return;
+    }
+
+    if (CODE_PAYS_FRANCE.equals(paysCode)) {
+      boolean valid =
+        PLAQUE_FRANCE_SIV_PATTERN.matcher(plaqueNumero).matches()
+          || PLAQUE_FRANCE_FNI_PATTERN.matcher(plaqueNumero).matches();
+
+      if (!valid) {
+        throw new ValidationMetierException("Le numéro de plaque français est invalide.");
+      }
+      return;
+    }
+
+    if (!PLAQUE_INTERNATIONALE_PATTERN.matcher(plaqueNumero).matches()) {
+      throw new ValidationMetierException("Le numéro de plaque est invalide.");
     }
   }
 
