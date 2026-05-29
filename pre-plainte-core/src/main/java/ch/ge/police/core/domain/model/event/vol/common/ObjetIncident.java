@@ -49,7 +49,6 @@ public class ObjetIncident {
   private boolean numeroIMEIInconnu;
   private String justificationAbsenceIMEI;
   private String gravure;
-  private String description;
   private String realValue;
 
   @JsonProperty("isVehicle")

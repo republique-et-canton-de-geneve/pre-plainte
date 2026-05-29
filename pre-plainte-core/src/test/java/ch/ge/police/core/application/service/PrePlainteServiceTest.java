@@ -72,7 +72,6 @@ class PrePlainteServiceTest {
 
     ObjetIncident objet = new ObjetIncident();
     objet.setType(new RipolCode("1", "Téléphone"));
-    objet.setDescription("Test description");
 
     Vol vol = new Vol();
     vol.setDateDebutEvent("2025-01-01");

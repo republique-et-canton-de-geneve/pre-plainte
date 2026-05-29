@@ -252,20 +252,6 @@
         </template>
       </template>
 
-      <v-textarea
-        v-if="brouillon.categorieObjet && brouillon.categorieObjet !== VOL_OBJET_CATEGORIE.PLAQUE"
-        v-model="brouillon.descriptionObjet"
-        clearable
-        :label="t('incidentTypes.descriptionComplementaireObjet')"
-        :placeholder="t('incidentTypes.descriptionObjetPlaceholder')"
-        :error-messages="brouillon.descriptionObjetError"
-        class="my-4"
-        variant="outlined"
-        :hint="t('incidentTypes.hintDescriptionObjet')"
-        persistent-hint
-        rows="3"
-      />
-
       <div v-if="brouillon.categorieObjet" class="d-flex justify-start mt-2">
         <v-btn color="primary" variant="outlined" @click="brouillon.validerObjetVole">
           {{ t("incidentTypes.validerObjetVole") }}

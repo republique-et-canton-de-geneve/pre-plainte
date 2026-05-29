@@ -848,14 +848,6 @@
                             </dd>
                           </v-col>
                         </template>
-                        <v-col v-if="obj.descriptionObjet" cols="12">
-                          <dt :id="`lbl-vo-desc-${vIdx}`">
-                            <v-label class="ge-field-label">{{ t("incidentTypes.descriptionComplementaireObjet") }}</v-label>
-                          </dt>
-                          <dd class="ge-field-value text-body-1" :aria-labelledby="`lbl-vo-desc-${vIdx}`">
-                            {{ obj.descriptionObjet }}
-                          </dd>
-                        </v-col>
                       </v-row>
                     </v-sheet>
                   </v-col>
@@ -1036,14 +1028,6 @@
                           </dt>
                           <dd class="ge-field-value text-body-1" :aria-labelledby="`lbl-dv-da-${dIdx}`">
                             {{ obj.dateAchat }}
-                          </dd>
-                        </v-col>
-                        <v-col v-if="obj.descriptionObjet" cols="12">
-                          <dt :id="`lbl-dv-desc-${dIdx}`">
-                            <v-label class="ge-field-label">{{ t("incidentTypes.descriptionObjet") }}</v-label>
-                          </dt>
-                          <dd class="ge-field-value text-body-1" :aria-labelledby="`lbl-dv-desc-${dIdx}`">
-                            {{ obj.descriptionObjet }}
                           </dd>
                         </v-col>
                       </v-row>
@@ -1435,28 +1419,6 @@
                     </dd>
                   </v-col>
                 </template>
-
-                <v-col
-                  v-if="
-                    isFieldVisible('descriptionObjet') &&
-                    data.descriptionObjet &&
-                    !recapObjetsIncidentMulti(data)
-                  "
-                  cols="12"
-                >
-                  <dt id="lbl-descriptionObjet">
-                    <v-label class="ge-field-label">
-                      {{
-                        t(data.typeIncident === "vol"
-                          ? "incidentTypes.descriptionComplementaireObjet"
-                          : "incidentTypes.descriptionObjet")
-                      }}
-                    </v-label>
-                  </dt>
-                  <dd class="ge-field-value text-body-1" aria-labelledby="lbl-descriptionObjet">
-                    {{ data.descriptionObjet }}
-                  </dd>
-                </v-col>
 
                 <v-col v-if="isFieldVisible('avezVousDegradation') && data.avezVousDegradation" cols="12" md="6">
                   <dt id="lbl-avezVousDegradation">

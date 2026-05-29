@@ -2,7 +2,6 @@ package ch.ge.police.infrastructure.ech051.mapper;
 
 import ch.ge.police.core.domain.model.event.IncidentBase;
 import ch.ge.police.core.domain.model.event.dommagematerial.DommageMateriel;
-import ch.ge.police.core.domain.model.event.dommagematerial.common.TypeDommage;
 import ch.ge.police.core.domain.model.event.vol.Vol;
 import ch.ge.police.core.domain.model.event.vol.common.ObjetIncident;
 import ch.ge.police.infrastructure.ech051.dto.Ech0051DocumentPayload.Identification;
@@ -16,7 +15,6 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.IntStream;
 
 import static ch.ge.police.infrastructure.ech051.Ech051Constants.RipolSourceTables.*;
@@ -64,7 +62,6 @@ public class SuisseEpoliceObjectMapper {
     return ObjectItem.builder()
         .key(objectKey)
         .typeOfObject(buildObjectTypeReference(objet))
-        .description(objet.getDescription())
         .fabricant(buildBrandReference(objet))
         .fabricantAutre(objet.getFabricantAutre())
         .modele(buildModelReference(objet))
@@ -93,10 +90,6 @@ public class SuisseEpoliceObjectMapper {
       }
     }
 
-    String description = Optional.ofNullable(dommage.getTypeDommage())
-        .map(TypeDommage::getLabel)
-        .orElse(null);
-
     ObjectItem item = ObjectItem.builder()
         .key(Ech051Constants.OBJECT_KEY_TIERS)
         .typeOfObject(
@@ -106,7 +99,6 @@ public class SuisseEpoliceObjectMapper {
                 TYPE_OBJET
             )
         )
-        .description(description)
         .additionalInformation(dommage.getDescription())
         .build();
 
@@ -314,7 +306,6 @@ public class SuisseEpoliceObjectMapper {
    */
   public String buildObjectAdditionalInfo(ObjetIncident objet) {
     List<String> details = new ArrayList<>();
-    addIfNotBlank(details, objet.getDescription());
     addImeiDetails(details, objet);
     addIfTrue(details, objet.isNumeroSerieInconnu(), "Numéro de série inconnu");
     addIfTrue(details, objet.isNumeroCadreInconnu(), "Numéro de cadre inconnu");
@@ -330,12 +321,6 @@ public class SuisseEpoliceObjectMapper {
    */
   public String buildVehicleAdditionalInfo(ObjetIncident objet) {
     return buildObjectAdditionalInfo(objet);
-  }
-
-  private void addIfNotBlank(List<String> details, String value) {
-    if (value != null && !value.isBlank()) {
-      details.add(value);
-    }
   }
 
   private void addIfTrue(List<String> details, boolean condition, String value) {
