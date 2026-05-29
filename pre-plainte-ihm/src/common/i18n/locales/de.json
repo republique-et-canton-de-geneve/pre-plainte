@@ -933,7 +933,10 @@
     "selectionnerDocument": "Wählen Sie ein Dokument aus",
     "disclaimerRequis": "Sie müssen diese Erklärung bestätigen",
     "constatRequis": "Bitte geben Sie an, ob ein Rapport erstellt wurde",
-    "constatDommageRequis": "Das Datum des Rapports ist erforderlich"
+    "constatDommageRequis": "Das Datum des Rapports ist erforderlich",
+    "numeroPlaqueSuisseInvalide": "Ungültiges Schweizer Kennzeichen (erwartetes Format: GE 123456)",
+    "numeroPlaqueFranceInvalide": "Ungültiges französisches Kennzeichen (erwartetes Format: AA-123-AA oder 123 ABC 75)",
+    "numeroPlaqueInternationaleInvalide": "Ungültiges Kennzeichen (nur Buchstaben und Zahlen, 1 bis 12 Zeichen)"
   },
   "theme": {
     "toggleTheme": "Design umschalten",

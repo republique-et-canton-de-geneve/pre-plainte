@@ -36,7 +36,7 @@ export function useVehicleDetailsRipol({ sousCategorie, activePrefixes }: UseVeh
   const { value: velofinderId } = useField<string>("velofinderId");
   const { value: dateAchat, errorMessage: dateAchatError } = useField<string>("dateAchat");
 
-  const { value: plaqueNumero } = useField<string>("plaqueNumero");
+  const { value: plaqueNumero, errorMessage: plaqueNumeroError } = useField<string>("plaqueNumero");
   const { value: plaqueInconnu } = useField<boolean>("plaqueInconnu");
   const { value: plaquePays } = useField<RipolSelection | null>("plaquePays");
   const { value: plaqueCanton } = useField<RipolSelection | null>("plaqueCanton");
@@ -174,6 +174,7 @@ export function useVehicleDetailsRipol({ sousCategorie, activePrefixes }: UseVeh
     dateAchat,
     dateAchatError,
     plaqueNumero,
+    plaqueNumeroError,
     plaqueInconnu,
     plaquePays,
     plaqueCanton,

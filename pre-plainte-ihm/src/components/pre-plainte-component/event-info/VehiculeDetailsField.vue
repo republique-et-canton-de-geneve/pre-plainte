@@ -188,9 +188,11 @@
 
     <v-text-field
       :label="isPlaqueObligatoire ? requiredLabel(t('incidentTypes.plaqueNumero')) : t('incidentTypes.plaqueNumero')"
-      v-model="plaqueNumero"
+      :model-value="plaqueNumero"
+      @update:model-value="onPlaqueInput"
       :disabled="plaqueInconnu"
       class="mb-2"
+      :error-messages="plaqueNumeroError"
       variant="outlined"
       :hint="isPlaqueObligatoire ? t('incidentTypes.hintPlaqueNumeroObligatoire') : t('incidentTypes.hintPlaqueNumero')"
       persistent-hint
@@ -216,6 +218,7 @@ import { CATEGORIES_OBJETS } from "@/constants/constant";
 import { applyDateMask } from "@/utils/helpers/dateHelpers.ts";
 import { filterNationalities } from "@/utils/helpers/ripolHelpers.ts";
 import { requiredLabel } from "@/utils/helpers/labelHelpers";
+import { formatLicensePlate } from "@/composables/useLicencePlate.ts";
 
 const { t } = useI18n();
 
@@ -286,6 +289,13 @@ const fetchFilteredNationalities = async (search?: string) => {
   return filterNationalities(data);
 };
 
+const onPlaqueInput = (value: string) => {
+  plaqueNumero.value = formatLicensePlate(
+    value,
+    plaquePays.value?.code,
+  );
+};
+
 const {
   typeObjet,
   typeObjetError,
@@ -309,6 +319,7 @@ const {
   dateAchat,
   dateAchatError,
   plaqueNumero,
+  plaqueNumeroError,
   plaqueInconnu,
   plaquePays,
   plaqueCanton,

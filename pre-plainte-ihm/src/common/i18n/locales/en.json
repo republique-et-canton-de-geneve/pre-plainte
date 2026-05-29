@@ -933,7 +933,10 @@
     "selectionnerDocument": "Select a document choice",
     "disclaimerRequis": "You must confirm this statement",
     "constatRequis": "Please indicate whether a report was drawn up",
-    "constatDommageRequis": "The report date is required"
+    "constatDommageRequis": "The report date is required",
+    "numeroPlaqueSuisseInvalide": "Invalid Swiss license plate number (expected format: GE 123456)",
+    "numeroPlaqueFranceInvalide": "Invalid French license plate number (expected format: AA-123-AA or 123 ABC 75)",
+    "numeroPlaqueInternationaleInvalide": "Invalid license plate number (letters and numbers only, 1 to 12 characters)"
   },
   "theme": {
     "toggleTheme": "Toggle theme",
