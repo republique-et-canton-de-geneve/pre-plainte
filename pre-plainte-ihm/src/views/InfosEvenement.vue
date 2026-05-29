@@ -455,7 +455,6 @@ watch(typeIncident, incident => {
     setFieldValue("modele", null);
     setFieldValue("numeroSerie", "");
     setFieldValue("numeroIMEI", "");
-    setFieldValue("descriptionObjet", "");
     setFieldValue("avezVousDegradation", null);
   }
 

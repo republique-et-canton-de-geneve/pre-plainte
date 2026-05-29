@@ -27,7 +27,6 @@ export const INCIDENT_FIELDS = {
     "numeroIMEI",
     "numeroIMEIInconnu",
     "justificationAbsenceIMEI",
-    "descriptionObjet",
     "objetsVolesValides",
     "avezVousDegradation",
     "adresseLesee",
