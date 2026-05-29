@@ -18,7 +18,6 @@ export type VolObjetFormSnapshot = {
   numeroIMEI?: string;
   numeroIMEIInconnu?: boolean;
   justificationAbsenceIMEI?: string;
-  descriptionObjet?: string;
   isVehicle?: boolean;
   numeroCadre?: string;
   numeroCadreInconnu?: boolean;
@@ -145,7 +144,6 @@ export interface PrePlainteFormFields {
   numeroIMEI?: string;
   numeroIMEIInconnu?: boolean;
   justificationAbsenceIMEI?: string;
-  descriptionObjet: string;
   isVehicle?: boolean;
   avezVousDegradation?: boolean | null;
   objetsVolesValides?: VolObjetFormSnapshot[];

@@ -20,7 +20,6 @@ type IncidentKind = "vol" | "degat-delit" | "cybercrime";
 type VolObjetFormSnapshot = {
   categorieObjet?: string;
   isVehicle?: boolean;
-  descriptionObjet?: string;
   [key: string]: unknown;
 };
 
@@ -129,7 +128,6 @@ export class IncidentMapper {
       numeroIMEIInconnu: this.resolveNumeroIMEIInconnu(form, imeiAllowed),
       justificationAbsenceIMEI: this.resolveJustificationAbsenceIMEI(form, imeiAllowed),
       gravure: this.resolveGravure(form),
-      description: this.toOptionalString(form.descriptionObjet),
       realValue: this.toOptionalString(form.valeurReelle),
       isVehicle,
       purchaseDate: this.resolvePurchaseDate(form, isVehicle),
@@ -305,7 +303,6 @@ export class IncidentMapper {
         const merged = {
           ...form,
           ...s,
-          descriptionObjet: String(s?.descriptionObjet ?? "").trim(),
         } as PrePlainteFormFields;
         const isVehiculeSnapshot = s?.categorieObjet === "vehicule" || s?.isVehicle === true;
         return this.buildObjetIncidentDTO(merged, { isVehicle: !!isVehiculeSnapshot });
@@ -365,7 +362,6 @@ export class IncidentMapper {
           ...form,
           ...s,
           categorieObjet: "vehicule",
-          descriptionObjet: String(s?.descriptionObjet ?? "").trim(),
         } as PrePlainteFormFields;
         return this.buildObjetIncidentDTO(merged, { isVehicle: true });
       });

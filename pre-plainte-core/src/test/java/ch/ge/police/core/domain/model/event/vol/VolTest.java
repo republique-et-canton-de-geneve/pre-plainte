@@ -33,7 +33,6 @@ class VolTest {
         .modele(new RipolCode("12345", "iPhone 14"))
         .numeroSerie("SN001")
         .numeroIMEI("123456789012345")
-        .description("Volé sur la table")
         .build()));
     vol.setAvezVousDegradation(true);
   }

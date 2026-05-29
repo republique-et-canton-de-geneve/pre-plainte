@@ -51,7 +51,6 @@ class SuisseEpoliceObjectMapperTest {
     assertEquals(1, result.size());
     ObjectItem item = result.get(0);
     assertEquals(Ech051Constants.OBJECT_KEY_TIERS, item.getKey());
-    assertEquals("Ordinateur portable", item.getDescription());
     assertEquals("1500", item.getRealValue());
     assertEquals("SER123", item.getNumeroSerie());
     assertEquals("GRAV123", item.getGravure());
@@ -61,7 +60,6 @@ class SuisseEpoliceObjectMapperTest {
     assertNotNull(item.getCouleur());
     assertNotNull(item.getCouleurSecondaire());
     assertNotNull(item.getIdentification());
-    assertTrue(item.getAdditionalInformation().contains("Ordinateur portable"));
     assertTrue(item.getAdditionalInformation().contains("Numéro de cadre inconnu"));
     assertTrue(item.getAdditionalInformation().contains("VIN inconnu"));
     assertTrue(item.getAdditionalInformation().contains("Numéro de plaque inconnu"));
@@ -75,7 +73,6 @@ class SuisseEpoliceObjectMapperTest {
     when(o2.isVehicleType()).thenReturn(false);
     when(o2.getTypeCode()).thenReturn("TYPE2");
     when(o2.getTypeLabel()).thenReturn("Type 2");
-    when(o2.getDescription()).thenReturn("Autre objet");
     when(vol.getObjetsVoles()).thenReturn(List.of(o1, o2));
 
     List<ObjectItem> result = mapper.buildObjectsFromIncident(vol);
@@ -149,7 +146,6 @@ class SuisseEpoliceObjectMapperTest {
     List<ObjectItem> result = mapper.buildObjectsFromIncident(dommage);
 
     assertEquals(1, result.size());
-    assertEquals("Ordinateur portable", result.get(0).getDescription());
     assertNotNull(result.get(0).getIdentification());
   }
 
@@ -168,7 +164,6 @@ class SuisseEpoliceObjectMapperTest {
     assertEquals(1, result.size());
     ObjectItem item = result.get(0);
     assertEquals(Ech051Constants.OBJECT_KEY_TIERS, item.getKey());
-    assertEquals("Vandalisme", item.getDescription());
     assertEquals("Vitre brisée", item.getAdditionalInformation());
     assertNotNull(item.getTypeOfObject());
     assertEquals(Ech051Constants.TYPE_OF_OBJECT_DOMMAGE_CODE, item.getTypeOfObject().getCode());
@@ -293,7 +288,6 @@ class SuisseEpoliceObjectMapperTest {
   @Test
   void shouldBuildAdditionalInfo() {
     ObjetIncident objet = mock(ObjetIncident.class);
-    when(objet.getDescription()).thenReturn("Description");
     when(objet.isNumeroIMEIInconnu()).thenReturn(true);
     when(objet.getJustificationAbsenceIMEI()).thenReturn("introuvable");
     when(objet.isNumeroSerieInconnu()).thenReturn(true);
@@ -304,7 +298,6 @@ class SuisseEpoliceObjectMapperTest {
     String result = mapper.buildObjectAdditionalInfo(objet);
 
     assertNotNull(result);
-    assertTrue(result.contains("Description"));
     assertTrue(result.contains("IMEI inconnu: introuvable"));
     assertTrue(result.contains("Numéro de série inconnu"));
     assertTrue(result.contains("Numéro de cadre inconnu"));
@@ -375,7 +368,6 @@ class SuisseEpoliceObjectMapperTest {
     when(objet.isVehicleType()).thenReturn(vehicleType);
     when(objet.getTypeCode()).thenReturn("TYPE1");
     when(objet.getTypeLabel()).thenReturn("Type label");
-    when(objet.getDescription()).thenReturn("Ordinateur portable");
     when(objet.getFabricantCode()).thenReturn("FAB1");
     when(objet.getFabricantLabel()).thenReturn("Apple");
     when(objet.getFabricantAutre()).thenReturn("Autre fabricant");

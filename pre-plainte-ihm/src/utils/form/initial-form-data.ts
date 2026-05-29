@@ -118,7 +118,6 @@ export const getInitialFormData = (): PrePlainteFormFields => ({
   numeroIMEI: "",
   numeroIMEIInconnu: false,
   justificationAbsenceIMEI: "",
-  descriptionObjet: "",
   isVehicle: false,
   avezVousDegradation: null,
   objetsVolesValides: [],
