@@ -6,7 +6,9 @@ const clean = (value: string) =>
 const formatSwiss = (value: string) => {
   const compact = clean(value);
   const match = compact.match(/^([A-Z]{1,2})(\d*)$/);
-  if (!match) return compact;
+  if (!match) {
+    return compact;
+  }
   const [, letters, numbers] = match;
   return numbers ? `${letters} ${numbers}` : letters;
 };
@@ -39,13 +41,19 @@ const formatFni = (value: string) => {
   const compact = clean(value);
 
   const match = compact.match(/^(\d*)([A-Z]*)([\dA-Z]*)$/);
-  if (!match) return compact;
+  if (!match) {
+    return compact;
+  }
 
   const [, numbers, letters, dept] = match;
 
   let result = numbers;
-  if (letters) result += ` ${letters}`;
-  if (dept) result += ` ${dept}`;
+  if (letters) {
+    result += ` ${letters}`;
+  }
+  if (dept) {
+    result += ` ${dept}`;
+  }
 
   return result.trim();
 };
@@ -54,7 +62,9 @@ export const formatLicensePlate = (
   value: string,
   countryCode?: string,
 ) => {
-  if (!value) return value;
+  if (!value) {
+    return value;
+  }
 
   const upper = value.toUpperCase();
 
