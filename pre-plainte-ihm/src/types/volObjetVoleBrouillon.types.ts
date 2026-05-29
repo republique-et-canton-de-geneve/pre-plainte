@@ -50,8 +50,6 @@ export interface VolObjetVoleDraftBrouillon {
   numeroIMEIError?: string;
   numeroIMEIInconnu: boolean;
   justificationAbsenceIMEI: string;
-  descriptionObjet: string;
-  descriptionObjetError?: string;
   plaqueNumero: string;
   plaqueNumeroError?: string;
   plaquePays: RipolSelection | null;

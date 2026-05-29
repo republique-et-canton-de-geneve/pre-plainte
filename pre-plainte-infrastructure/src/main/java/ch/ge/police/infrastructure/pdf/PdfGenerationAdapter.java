@@ -365,7 +365,6 @@ public class PdfGenerationAdapter implements PdfGenerationUseCase {
     addIfNotNull(rows, "Numéro IMEI (uniquement pour les téléphones portables)", o.getNumeroIMEI());
     addIfNotNull(rows, "Numéro IMEI inconnu", o.isNumeroIMEIInconnu() ? "Oui" : null);
     addIfNotNull(rows, "Justification de l'absence de numéro IMEI", o.getJustificationAbsenceIMEI());
-    addIfNotNull(rows, "Description de l'objet", o.getDescription());
   }
 
   private void addObjetIncident(List<String[]> rows, ObjetIncident o) {

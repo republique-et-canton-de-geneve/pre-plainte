@@ -79,7 +79,6 @@ class PdfGenerationAdapterTest {
     o.setVin("VIN123");
     o.setNumeroSerie("SERIE123");
     o.setNumeroIMEI("IMEI123");
-    o.setDescription("Objet test");
     o.setPurchaseDate("2024-01-01");
     o.setRealValue("800");
 
