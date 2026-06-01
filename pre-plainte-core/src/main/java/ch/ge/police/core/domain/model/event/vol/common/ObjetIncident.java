@@ -26,8 +26,7 @@ import java.util.regex.Pattern;
 public class ObjetIncident {
 
   private static final String CODE_TELEPHONE_MOBILE = "713103";
-  private static final String CODE_PREFIX_CYCLOMOTEUR = "07";
-  private static final String CODE_PREFIX_VELO = "20";
+  private static final String CATEGORIE_VEHICULE = "vehicule";
   private static final String CATEGORIE_PLAQUE = "plaque";
   private static final String CODE_AUTRE = "AUTRE";
   private static final Pattern NUMERO_IMEI_PATTERN = Pattern.compile("\\d{15}");
@@ -123,23 +122,11 @@ public class ObjetIncident {
     return type != null && CODE_TELEPHONE_MOBILE.equals(type.code());
   }
 
-  /**
-   * Détermine si l'objet est un véhicule.
-   * Utilise le flag isVehicle du frontend OU la détection par code RIPOL.
-   * Codes véhicules : "07" (cyclomoteurs), "20" (vélos).
-   */
   public boolean isVehicleType() {
     if (CATEGORIE_PLAQUE.equals(categorieObjet)) {
       return false;
     }
-    if (isVehicle) {
-      return true;
-    }
-    if (type == null || type.code() == null) {
-      return false;
-    }
-    String code = type.code();
-    return code.startsWith(CODE_PREFIX_CYCLOMOTEUR) || code.startsWith(CODE_PREFIX_VELO);
+    return isVehicle || CATEGORIE_VEHICULE.equals(categorieObjet);
   }
 
   public void champsObligatoire() {
