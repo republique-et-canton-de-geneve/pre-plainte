@@ -159,7 +159,6 @@ class SuisseEpoliceRelationsMapperTest {
         .build();
     List<Person> persons = List.of(victim, accused);
     List<Event> events = List.of(event("E1"));
-    List<ObjectItem> objects = List.of(object(Ech051Constants.OBJECT_KEY_CYBER_TRANSACTION));
     BusinessCase businessCase = businessCase("B1");
 
     AchatNonRecu achat = new AchatNonRecu();
@@ -173,10 +172,12 @@ class SuisseEpoliceRelationsMapperTest {
     cybercrime.setTypeCybercrime(TypeCybercrime.ACHAT_NON_RECU);
     cybercrime.setAchatNonRecu(achat);
 
-    Relations result = mapper.buildRelations(persons, events, objects, List.of(), businessCase, DeclarationType.INDIVIDUAL, cybercrime);
+    Relations result = mapper.buildRelations(persons, events, List.of(), List.of(), businessCase, DeclarationType.INDIVIDUAL, cybercrime);
 
     assertNotNull(result);
     assertEquals(1, size(result.getFinancialTransactions()));
+    assertEquals(0, size(result.getEventObjectLinks()));
+    assertEquals(0, size(result.getObjectPersonLinks()));
     assertEquals("IBAN", result.getFinancialTransactions().getFirst().getPaymentType());
     assertNull(result.getFinancialTransactions().getFirst().getTransactionNumber());
     assertEquals("Ricardo", result.getFinancialTransactions().getFirst().getPlatformType());
@@ -254,7 +255,6 @@ class SuisseEpoliceRelationsMapperTest {
         .build();
     List<Person> persons = List.of(victim, notAccused);
     List<Event> events = List.of(event("E1"));
-    List<ObjectItem> objects = List.of(object(Ech051Constants.OBJECT_KEY_CYBER_TRANSACTION));
     BusinessCase businessCase = businessCase("B1");
 
     AchatNonRecu achat = new AchatNonRecu();
@@ -268,7 +268,7 @@ class SuisseEpoliceRelationsMapperTest {
     cybercrime.setTypeCybercrime(TypeCybercrime.ACHAT_NON_RECU);
     cybercrime.setAchatNonRecu(achat);
 
-    Relations result = mapper.buildRelations(persons, events, objects, List.of(), businessCase, DeclarationType.INDIVIDUAL, cybercrime);
+    Relations result = mapper.buildRelations(persons, events, List.of(), List.of(), businessCase, DeclarationType.INDIVIDUAL, cybercrime);
 
     assertEquals(1, size(result.getFinancialTransactions()));
     assertNull(result.getFinancialTransactions().getFirst().getPersonReceiveRef());
@@ -285,7 +285,6 @@ class SuisseEpoliceRelationsMapperTest {
         .build();
     List<Person> persons = List.of(victim, accused);
     List<Event> events = List.of(event("E1"));
-    List<ObjectItem> objects = List.of(object(Ech051Constants.OBJECT_KEY_CYBER_TRANSACTION));
     BusinessCase businessCase = businessCase("B1");
 
     AchatNonRecu achat = new AchatNonRecu();
@@ -299,7 +298,7 @@ class SuisseEpoliceRelationsMapperTest {
     cybercrime.setTypeCybercrime(TypeCybercrime.ACHAT_NON_RECU);
     cybercrime.setAchatNonRecu(achat);
 
-    return mapper.buildRelations(persons, events, objects, List.of(), businessCase, DeclarationType.INDIVIDUAL, cybercrime);
+    return mapper.buildRelations(persons, events, List.of(), List.of(), businessCase, DeclarationType.INDIVIDUAL, cybercrime);
   }
 
   private static Person person(String key) {
