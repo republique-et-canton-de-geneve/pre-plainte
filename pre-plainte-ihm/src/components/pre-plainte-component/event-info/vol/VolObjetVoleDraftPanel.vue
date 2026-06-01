@@ -187,7 +187,7 @@
         "
       >
         <v-text-field
-          :label="brouillon.numeroSerieInconnu ? t('incidentTypes.numeroSerie') : requiredLabel(t('incidentTypes.numeroSerie'))"
+          :label="(!brouillon.numeroSerieRequis || brouillon.numeroSerieInconnu) ? t('incidentTypes.numeroSerie') : requiredLabel(t('incidentTypes.numeroSerie'))"
           v-model="brouillon.numeroSerie"
           :disabled="brouillon.numeroSerieInconnu"
           class="my-4"
@@ -197,6 +197,7 @@
           persistent-hint
         />
         <v-checkbox
+          v-if="brouillon.numeroSerieRequis"
           v-model="brouillon.numeroSerieInconnu"
           :label="t('incidentTypes.numeroSerieInconnu')"
           class="my-4"
