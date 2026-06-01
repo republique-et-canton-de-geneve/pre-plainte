@@ -28,19 +28,6 @@
         persistent-hint
       />
 
-      <v-textarea
-        clearable
-        :label="requiredLabel(t('incidentTypes.descriptionObjet'))"
-        :placeholder="t('incidentTypes.descriptionObjetPlaceholder')"
-        :model-value="descriptionObjet"
-        @update:model-value="emit('update:descriptionObjet', $event)"
-        :error-messages="descriptionObjetError"
-        class="my-4"
-        variant="outlined"
-        :hint="t('incidentTypes.hintDescriptionObjet')"
-        persistent-hint
-      />
-
       <div class="d-flex justify-start mt-2">
         <v-btn color="primary" variant="outlined" @click="onValidate">
           {{ t("dommages.validerVehiculeEndommage") }}
@@ -53,7 +40,6 @@
 <script setup lang="ts">
 import { useI18n } from "vue-i18n";
 import VehiculeDetailsField from "@/components/pre-plainte-component/event-info/VehiculeDetailsField.vue";
-import { requiredLabel } from "@/utils/helpers/labelHelpers";
 
 defineProps<{
   objetsCount: number;
@@ -64,15 +50,12 @@ defineProps<{
   activePrefixes: readonly string[];
   valeurReelle: string;
   valeurReelleError?: string;
-  descriptionObjet: string;
-  descriptionObjetError?: string;
   onValidate: () => void;
 }>();
 
 const emit = defineEmits<{
   (e: "update:sousCategorie", value: string): void;
   (e: "update:valeurReelle", value: any): void;
-  (e: "update:descriptionObjet", value: any): void;
 }>();
 
 const { t } = useI18n();

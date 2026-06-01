@@ -205,7 +205,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, ref, watch } from "vue";
 import { useField } from "vee-validate";
 import { useI18n } from "vue-i18n";
 import {
@@ -262,7 +262,7 @@ const showTitreSejour = computed(() => !!nationalite.value && !isNationaliteSuis
 
 const showLieuOrigine = computed(() => isNationaliteSuisse.value);
 
-const showDocumentNumberField = computed(() => !!typeDocumentIdentite.value);
+const showDocumentNumberField = computed(() => !!typeDocumentIdentite.value && typeDocumentIdentite.value !== "documents_voles_perdus");
 
 const documentNumberLabel = computed(() => {
   switch (typeDocumentIdentite.value) {
@@ -345,6 +345,12 @@ const onCountryChanged = (country: CountrySelection) => {
 const onDateNaissanceInput = (e: InputEvent) => {
   applyDateMask(e, dateNaissance);
 };
+
+watch(typeDocumentIdentite, newValue => {
+  if (newValue === "documents_voles_perdus") {
+    numeroDocumentIdentite.value = "";
+  }
+});
 </script>
 
 <style scoped>

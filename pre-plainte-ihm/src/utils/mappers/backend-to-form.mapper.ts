@@ -228,7 +228,6 @@ export class ReverseMapper {
       numeroIMEI: toSafeString(o?.numeroIMEI),
       numeroIMEIInconnu: !!o?.numeroIMEIInconnu,
       justificationAbsenceIMEI: toSafeString(o?.justificationAbsenceIMEI),
-      descriptionObjet: toSafeString(o?.description),
       isVehicle: !!o?.isVehicle,
       numeroCadre: toSafeString(o?.numeroCadre),
       numeroCadreInconnu: !!o?.numeroCadreInconnu,
@@ -333,7 +332,6 @@ export class ReverseMapper {
       numeroIMEI: toSafeString(this.getVolObjectFieldSource(det, base, "numeroIMEI")),
       numeroIMEIInconnu: this.getVolObjectFieldSourceBool(det, base, "numeroIMEIInconnu"),
       justificationAbsenceIMEI: toSafeString(this.getVolObjectFieldSource(det, base, "justificationAbsenceIMEI")),
-      descriptionObjet: toSafeString(this.getVolObjectFieldSource(det, base, "description")),
       isVehicle: this.getVolObjectFieldSourceBool(det, base, "isVehicle"),
       avezVousDegradation: context.isVol ? det?.avezVousDegradation : base.avezVousDegradation,
       fichiers: this.toFiles(det?.fichiers, base.fichiers ?? []),
@@ -367,7 +365,6 @@ export class ReverseMapper {
       plaqueInconnu: undefined,
       plaquePays: null,
       plaqueCanton: null,
-      descriptionObjet: "",
     };
   }
 

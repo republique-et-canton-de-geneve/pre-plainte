@@ -18,8 +18,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -42,6 +45,7 @@ import static ch.ge.police.infrastructure.ech051.Ech051Constants.CommunicationUs
 public class Ech051Builder {
 
   private static final String RIPOL_SOURCE = "RIPOL";
+  private static final DateTimeFormatter SEP_LOCAL_DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS");
 
   private final SuisseEpoliceMapperForPPL mapper;
 
@@ -471,17 +475,22 @@ public class Ech051Builder {
     if (dateTime == null || dateTime.isBlank()) {
       return null;
     }
+    String value = dateTime.strip();
     try {
-      if (dateTime.contains("T")) {
-        java.time.LocalDateTime ldt = java.time.LocalDateTime.parse(dateTime, DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm"));
-        java.time.ZonedDateTime zdt = ldt.atZone(java.time.ZoneId.of("Europe/Zurich"));
-        return zdt.format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS+01:00"));
-      } else {
-        java.time.LocalDate ld = java.time.LocalDate.parse(dateTime);
-        return ld.atStartOfDay(java.time.ZoneId.of("Europe/Zurich")).format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS+01:00"));
+      if (value.contains("T")) {
+        return parseActionPeriodDateTime(value).format(SEP_LOCAL_DATE_TIME_FORMATTER);
       }
+      return LocalDate.parse(value).atStartOfDay().format(SEP_LOCAL_DATE_TIME_FORMATTER);
     } catch (Exception e) {
       return dateTime;
+    }
+  }
+
+  private LocalDateTime parseActionPeriodDateTime(String value) {
+    try {
+      return OffsetDateTime.parse(value, DateTimeFormatter.ISO_OFFSET_DATE_TIME).toLocalDateTime();
+    } catch (DateTimeParseException ignored) {
+      return LocalDateTime.parse(value, DateTimeFormatter.ISO_DATE_TIME);
     }
   }
 

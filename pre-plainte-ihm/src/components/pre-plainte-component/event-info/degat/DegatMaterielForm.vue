@@ -14,6 +14,41 @@
       :hint="t('dommages.hintTypeDommage')"
     />
 
+    <BaseRadioGroup
+      v-model="constatPresent"
+      :label="t('dommages.constat')"
+      required
+      :options="[
+        { label: t('common.oui'), value: true },
+        { label: t('common.non'), value: false },
+      ]"
+      :error-messages="constatPresent === false ? undefined : constatPresentError"
+    />
+    <v-alert v-if="constatPresent === false" type="warning" variant="tonal" class="mb-8">
+      {{ t("dommages.constatPoliceWarning") }}
+    </v-alert>
+    <template v-if="constatPresent">
+      <v-text-field
+        v-model="dateConstat"
+        :label="requiredLabel(t('dommages.constatDate'))"
+        type="text"
+        placeholder="JJ.MM.AAAA"
+        :error-messages="dateConstatError"
+        class="mb-8"
+        variant="outlined"
+        prepend-inner-icon="mdi-calendar"
+        :hint="t('dommages.hintDateConstat')"
+        persistent-hint
+        @input="onDateConstatInput"
+      />
+      <div class="mb-8">
+        <PieceJointe v-model="fichiers" :label="t('dommages.constatPoliceFichiers')" required />
+        <div v-if="fichiersError" class="text-error text-body-2 mt-2">
+          {{ fichiersError }}
+        </div>
+      </div>
+    </template>
+
     <template v-if="typeDommage === 'dommage-vehicule'">
       <DegatVehiculeEndommageResumeSheet
         v-for="(obj, index) in objetsDegradesValides"
@@ -37,12 +72,9 @@
           :active-prefixes="activePrefixes"
           :valeur-reelle="valeurReelle"
           :valeur-reelle-error="valeurReelleError"
-          :description-objet="descriptionObjet"
-          :description-objet-error="descriptionObjetError"
           :on-validate="validerVehiculeDommage"
           @update:sous-categorie="sousCategorie = $event"
           @update:valeurReelle="valeurReelle = $event"
-          @update:descriptionObjet="descriptionObjet = $event"
         />
       </div>
     </template>
@@ -105,30 +137,6 @@
         </v-tooltip>
       </template>
     </v-textarea>
-    <BaseRadioGroup
-      v-model="constatPresent"
-      :label="t('dommages.constat')"
-      required
-      :options="[
-        { label: t('common.oui'), value: true },
-        { label: t('common.non'), value: false },
-      ]"
-      :error-messages="constatPresentError"
-    />
-    <v-text-field
-      v-if="constatPresent"
-      v-model="dateConstat"
-      :label="requiredLabel(t('dommages.constatDate'))"
-      type="text"
-      placeholder="JJ.MM.AAAA"
-      :error-messages="dateConstatError"
-      class="mb-8"
-      variant="outlined"
-      prepend-inner-icon="mdi-calendar"
-      :hint="t('dommages.hintDateConstat')"
-      persistent-hint
-      @input="onDateConstatInput"
-    />
 
     <v-dialog v-model="dialogConfirmationOuvert" max-width="440">
       <v-card v-if="dialogConfirmation">
@@ -168,6 +176,7 @@ import { applyDateMask } from "@/utils/helpers/dateHelpers.ts";
 import type { PrePlainteFormFields, VolObjetFormSnapshot } from "@/types/pre-plainte.interface";
 import type { RipolSelection } from "@/types/ripol.interface";
 import BaseRadioGroup from "@/components/radio/BaseRadioGroup.vue";
+import PieceJointe from "@/components/piece-jointe/PieceJointe.vue";
 import DegatVehiculeEndommageDraftPanel from "./DegatVehiculeEndommageDraftPanel.vue";
 import DegatVehiculeEndommageResumeSheet from "./DegatVehiculeEndommageResumeSheet.vue";
 import { toTranslatedOptions } from "@/utils/helpers/traductionHelper";
@@ -201,6 +210,7 @@ const { value: naturesDommage, errorMessage: naturesDommageError } = useField<st
 const { value: description, errorMessage: descriptionError } = useField("description");
 const { value: dateConstat, errorMessage: dateConstatError } = useField<string>("dateConstat");
 const { value: constatPresent, errorMessage: constatPresentError } = useField("constatPresent");
+const { value: fichiers, errorMessage: fichiersError } = useField<File[]>("fichiers");
 
 const { value: sousCategorie, errorMessage: sousCategorieError } = useField<string>("sousCategorie");
 const { value: categorieObjet } = useField<string>("categorieObjet");
@@ -212,7 +222,6 @@ const { value: modeleAutre } = useField<string>("modeleAutre");
 const { value: couleur } = useField<RipolSelection | null>("couleur");
 const { value: couleurSecondaire } = useField<RipolSelection | null>("couleurSecondaire");
 const { value: valeurReelle, errorMessage: valeurReelleError } = useField<string>("valeurReelle");
-const { value: descriptionObjet, errorMessage: descriptionObjetError } = useField<string>("descriptionObjet");
 const { value: numeroCadre } = useField<string>("numeroCadre");
 const { value: numeroCadreInconnu } = useField<boolean>("numeroCadreInconnu");
 const { value: vin } = useField<string>("vin");
@@ -272,8 +281,6 @@ const onDateConstatInput = (e: InputEvent) => {
   applyDateMask(e, dateConstat);
 };
 
-const descriptionBrouillonTrim = () => chaineFormulaire(descriptionObjet.value).trim();
-
 const remplirBrouillonDepuisSnapshot = (obj: VolObjetFormSnapshot) => {
   sousCategorie.value = texteOuVide(obj.sousCategorie);
   typeObjet.value = obj.typeObjet ? { ...obj.typeObjet } : null;
@@ -284,7 +291,6 @@ const remplirBrouillonDepuisSnapshot = (obj: VolObjetFormSnapshot) => {
   couleur.value = obj.couleur ? { ...obj.couleur } : null;
   couleurSecondaire.value = obj.couleurSecondaire ? { ...obj.couleurSecondaire } : null;
   valeurReelle.value = texteOuVide(obj.valeurReelle);
-  descriptionObjet.value = texteOuVide(obj.descriptionObjet);
   numeroCadre.value = texteOuVide(obj.numeroCadre);
   numeroCadreInconnu.value = !!obj.numeroCadreInconnu;
   vin.value = texteOuVide(obj.vin);
@@ -307,7 +313,6 @@ const viderChampsVehiculeBrouillon = () => {
   couleur.value = null;
   couleurSecondaire.value = null;
   valeurReelle.value = TEXTE_VIDE;
-  descriptionObjet.value = TEXTE_VIDE;
   numeroCadre.value = TEXTE_VIDE;
   numeroCadreInconnu.value = false;
   vin.value = TEXTE_VIDE;
@@ -320,7 +325,7 @@ const viderChampsVehiculeBrouillon = () => {
   plaqueCanton.value = null;
 };
 
-const CHAMPS_ERREUR_BROUILLON = ["typeObjet", "descriptionObjet", "sousCategorie"] as const;
+const CHAMPS_ERREUR_BROUILLON = ["typeObjet", "sousCategorie"] as const;
 
 const stopRestoringOnNextTick = () => {
   void nextTick(() => {
@@ -351,7 +356,6 @@ const buildSnapshotFromDraft = (): VolObjetFormSnapshot => ({
   numeroIMEI: "",
   numeroIMEIInconnu: false,
   justificationAbsenceIMEI: "",
-  descriptionObjet: descriptionBrouillonTrim(),
   isVehicle: true,
   numeroCadre: chaineFormulaire(numeroCadre.value),
   numeroCadreInconnu: numeroCadreInconnu.value,
@@ -385,11 +389,6 @@ const validerVehiculeDommage = () => {
 
   if (!typeObjet.value?.code) {
     setFieldError("typeObjet", t("validation.typeObjetRequis"));
-    return;
-  }
-
-  if (!descriptionBrouillonTrim()) {
-    setFieldError("descriptionObjet", t("validation.descriptionObjetRequise"));
     return;
   }
 
