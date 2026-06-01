@@ -15,20 +15,15 @@ import ch.ge.police.infrastructure.ech051.dto.Ech0051DocumentPayload.Address;
 import ch.ge.police.infrastructure.ech051.dto.Ech0051DocumentPayload.BusinessCase;
 import ch.ge.police.infrastructure.ech051.dto.Ech0051DocumentPayload.Communication;
 import ch.ge.police.infrastructure.ech051.dto.Ech0051DocumentPayload.Event;
-import ch.ge.police.infrastructure.ech051.dto.Ech0051DocumentPayload.Identification;
 import ch.ge.police.infrastructure.ech051.dto.Ech0051DocumentPayload.LegalIdentity;
 import ch.ge.police.infrastructure.ech051.dto.Ech0051DocumentPayload.NaturalIdentity;
 import ch.ge.police.infrastructure.ech051.dto.Ech0051DocumentPayload.ObjectItem;
 import ch.ge.police.infrastructure.ech051.dto.Ech0051DocumentPayload.Person;
 import ch.ge.police.infrastructure.ech051.dto.Ech0051DocumentPayload.Relations;
-import ch.ge.police.infrastructure.ech051.dto.Ech0051DocumentPayload.RipolReference;
 import ch.ge.police.infrastructure.ech051.dto.Ech0051DocumentPayload.VehicleItem;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
-import java.math.BigDecimal;
-import java.time.OffsetDateTime;
-import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.StringJoiner;
@@ -79,7 +74,7 @@ public class SuisseEpoliceMapperForPPL {
 
     DeclarationType declarationType = resolveDeclarationType(infos);
 
-    List<ObjectItem> objects = buildObjects(incident, infos);
+    List<ObjectItem> objects = objectMapper.buildObjectsFromIncident(incident);
     List<VehicleItem> vehicles = objectMapper.buildVehiclesFromIncident(incident);
     boolean hasVehicles = !vehicles.isEmpty();
 
@@ -106,65 +101,6 @@ public class SuisseEpoliceMapperForPPL {
         .build();
   }
 
-  private List<ObjectItem> buildObjects(IncidentBase incident, InformationsPersonnelles infos) {
-    if (incident instanceof Cybercrime cybercrime
-        && isCyberTransactionType(cybercrime)) {
-      return buildCyberTransactionObjects(cybercrime, infos);
-    }
-    return objectMapper.buildObjectsFromIncident(incident);
-  }
-
-  private List<ObjectItem> buildCyberTransactionObjects(Cybercrime cybercrime, InformationsPersonnelles infos) {
-    RipolReference idTypeReference = RipolReferenceBuilder.of(
-        Ech051Constants.TYPE_OF_OBJECT_CYBER_IDENTITY_CODE,
-        Ech051Constants.TYPE_OF_OBJECT_CYBER_IDENTITY_LABEL,
-        Ech051Constants.RipolSourceTables.TYPE_OBJET_DK_ZAHL
-    );
-
-    Identification identification = null;
-    if (infos != null && infos.getNumeroDocumentIdentite() != null && !infos.getNumeroDocumentIdentite().isBlank()) {
-      identification = Identification.builder()
-          .type(Ech051Constants.TYPE_OF_OBJECT_CYBER_IDENTITY_ID_TYPE)
-          .number(infos.getNumeroDocumentIdentite())
-          .build();
-    }
-
-    ObjectItem identityObject = ObjectItem.builder()
-        .key(Ech051Constants.OBJECT_KEY_TIERS)
-        .typeOfObject(idTypeReference)
-        .identification(identification)
-        .build();
-
-    String amount = null;
-    String purchaseDate = null;
-    if (cybercrime.getCommandeFrauduleuse() != null) {
-      amount = formatAmount(cybercrime.getCommandeFrauduleuse().getMontant());
-      purchaseDate = cybercrime.getCommandeFrauduleuse().getDateDecouverte();
-    } else if (cybercrime.getAchatNonRecu() != null) {
-      amount = cybercrime.getAchatNonRecu().getMontantDelitAchatLigne();
-      purchaseDate = toDateOnly(cybercrime.getAchatNonRecu().getDateOperation());
-    } else if (cybercrime.getFausseAnnonce() != null) {
-      amount = formatAmount(cybercrime.getFausseAnnonce().getMontantDemande());
-      purchaseDate = toDateOnly(cybercrime.getDateDebutEvent());
-    }
-
-    ObjectItem transactionObject = ObjectItem.builder()
-        .key(Ech051Constants.OBJECT_KEY_CYBER_TRANSACTION)
-        .realValue(amount)
-        .purchaseDate(purchaseDate)
-        .build();
-
-    return List.of(identityObject, transactionObject);
-  }
-
-  private String formatAmount(Double value) {
-    if (value == null) {
-      return null;
-    }
-    BigDecimal decimal = BigDecimal.valueOf(value).stripTrailingZeros();
-    return decimal.toPlainString();
-  }
-
   private boolean isCyberTransactionType(Cybercrime cybercrime) {
     if (cybercrime == null) {
       return false;
@@ -173,17 +109,6 @@ public class SuisseEpoliceMapperForPPL {
     return type == TypeCybercrime.COMMANDE_FRAUDULEUSE
         || type == TypeCybercrime.ACHAT_NON_RECU
         || type == TypeCybercrime.FAUSSE_ANNONCE;
-  }
-
-  private String toDateOnly(String dateTime) {
-    if (dateTime == null || dateTime.isBlank()) {
-      return null;
-    }
-    try {
-      return OffsetDateTime.parse(dateTime).toLocalDate().toString();
-    } catch (DateTimeParseException ignored) {
-      return dateTime;
-    }
   }
 
   private void ensureCyberCommandeFrauduleusePersonRefs(List<Person> persons, IncidentBase incident) {
