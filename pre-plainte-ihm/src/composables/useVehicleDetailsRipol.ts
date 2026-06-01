@@ -64,9 +64,9 @@ export function useVehicleDetailsRipol({ sousCategorie, activePrefixes }: UseVeh
   const allModelsCache = ref<Ripol[] | null>(null);
   let vehicleColoursCache: Ripol[] | null = null;
 
-  const isAutreFabricant = computed(() => fabricant.value?.code === "AUTRE");
-  const isAutreModele = computed(() => modele.value?.code === "AUTRE");
-  const isAutreAssureur = computed(() => assureur.value?.code === "AUTRE");
+  const isAutreFabricant = computed(() => fabricant.value?.code === AUTRE_OPTION.code);
+  const isAutreModele = computed(() => modele.value?.code === AUTRE_OPTION.code);
+  const isAutreAssureur = computed(() => assureur.value?.code === AUTRE_OPTION.code);
 
   const isSwissPlate = computed(() => plaquePays.value?.code === RIPOL.PAYS_SUISSE);
   const isVeloCategory = computed(() => sousCategorie.value === "velos");
@@ -114,7 +114,7 @@ export function useVehicleDetailsRipol({ sousCategorie, activePrefixes }: UseVeh
   };
 
   const loadAllModels = async (): Promise<Ripol[]> => {
-    if (isAutreFabricant.value || !fabricant.value?.code || fabricant.value.code === "AUTRE") {
+    if (isAutreFabricant.value || !fabricant.value?.code) {
       return [];
     }
     if (allModelsCache.value) {
