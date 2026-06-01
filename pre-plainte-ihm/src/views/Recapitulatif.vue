@@ -1884,8 +1884,8 @@ const formatTypeDocumentIdentite = (val?: string) => {
       return t("informationsPersonnelles.carteIdentite");
     case "passeport":
       return t("informationsPersonnelles.passeport");
-    case "aucun_document":
-      return t("informationsPersonnelles.aucunDocument");
+    case "documents_voles_perdus":
+      return t("informationsPersonnelles.documentsVolesPerdus");
     default:
       return val || "";
   }
