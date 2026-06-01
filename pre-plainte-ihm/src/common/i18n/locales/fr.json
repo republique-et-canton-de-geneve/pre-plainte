@@ -328,7 +328,7 @@
     "vol": "Vol",
     "degatDelit": "Dégât-délit général",
     "cybercrime": "Cybercrime",
-    "volDansVehicule": "L'objet a-t-il été volé dans ou sur un véhicule ?",
+    "volDansVehicule": "Certains objets que vous allez déclarer ont-ils été volés dans ou sur un véhicule ?",
     "volDansVehiculeWarning": "Attention, vous devrez disposer des informations du véhicule (notamment l'immatriculation) le jour de votre dépôt de plainte.",
     "typeObjet": "Type de l'objet",
     "fabricant": "Marque",
