@@ -328,7 +328,7 @@
     "vol": "Theft",
     "degatDelit": "General hit-and-run / damage offence",
     "cybercrime": "Cybercrime",
-    "volDansVehicule": "Was the object stolen in or on a vehicle?",
+    "volDansVehicule": "Were any of the items you are going to declare stolen in or on a vehicle?",
     "volDansVehiculeWarning": "Please note that you will need to have the vehicle information available (in particular the registration number) on the day you file your complaint.",
     "typeObjet": "Type of object",
     "fabricant": "Brand",
