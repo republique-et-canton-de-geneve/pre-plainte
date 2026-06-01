@@ -14,6 +14,41 @@
       :hint="t('dommages.hintTypeDommage')"
     />
 
+    <BaseRadioGroup
+      v-model="constatPresent"
+      :label="t('dommages.constat')"
+      required
+      :options="[
+        { label: t('common.oui'), value: true },
+        { label: t('common.non'), value: false },
+      ]"
+      :error-messages="constatPresent === false ? undefined : constatPresentError"
+    />
+    <v-alert v-if="constatPresent === false" type="warning" variant="tonal" class="mb-8">
+      {{ t("dommages.constatPoliceWarning") }}
+    </v-alert>
+    <template v-if="constatPresent">
+      <v-text-field
+        v-model="dateConstat"
+        :label="requiredLabel(t('dommages.constatDate'))"
+        type="text"
+        placeholder="JJ.MM.AAAA"
+        :error-messages="dateConstatError"
+        class="mb-8"
+        variant="outlined"
+        prepend-inner-icon="mdi-calendar"
+        :hint="t('dommages.hintDateConstat')"
+        persistent-hint
+        @input="onDateConstatInput"
+      />
+      <div class="mb-8">
+        <PieceJointe v-model="fichiers" :label="t('dommages.constatPoliceFichiers')" required />
+        <div v-if="fichiersError" class="text-error text-body-2 mt-2">
+          {{ fichiersError }}
+        </div>
+      </div>
+    </template>
+
     <template v-if="typeDommage === 'dommage-vehicule'">
       <DegatVehiculeEndommageResumeSheet
         v-for="(obj, index) in objetsDegradesValides"
@@ -102,30 +137,6 @@
         </v-tooltip>
       </template>
     </v-textarea>
-    <BaseRadioGroup
-      v-model="constatPresent"
-      :label="t('dommages.constat')"
-      required
-      :options="[
-        { label: t('common.oui'), value: true },
-        { label: t('common.non'), value: false },
-      ]"
-      :error-messages="constatPresentError"
-    />
-    <v-text-field
-      v-if="constatPresent"
-      v-model="dateConstat"
-      :label="requiredLabel(t('dommages.constatDate'))"
-      type="text"
-      placeholder="JJ.MM.AAAA"
-      :error-messages="dateConstatError"
-      class="mb-8"
-      variant="outlined"
-      prepend-inner-icon="mdi-calendar"
-      :hint="t('dommages.hintDateConstat')"
-      persistent-hint
-      @input="onDateConstatInput"
-    />
 
     <v-dialog v-model="dialogConfirmationOuvert" max-width="440">
       <v-card v-if="dialogConfirmation">
@@ -165,6 +176,7 @@ import { applyDateMask } from "@/utils/helpers/dateHelpers.ts";
 import type { PrePlainteFormFields, VolObjetFormSnapshot } from "@/types/pre-plainte.interface";
 import type { RipolSelection } from "@/types/ripol.interface";
 import BaseRadioGroup from "@/components/radio/BaseRadioGroup.vue";
+import PieceJointe from "@/components/piece-jointe/PieceJointe.vue";
 import DegatVehiculeEndommageDraftPanel from "./DegatVehiculeEndommageDraftPanel.vue";
 import DegatVehiculeEndommageResumeSheet from "./DegatVehiculeEndommageResumeSheet.vue";
 import { toTranslatedOptions } from "@/utils/helpers/traductionHelper";
@@ -198,6 +210,7 @@ const { value: naturesDommage, errorMessage: naturesDommageError } = useField<st
 const { value: description, errorMessage: descriptionError } = useField("description");
 const { value: dateConstat, errorMessage: dateConstatError } = useField<string>("dateConstat");
 const { value: constatPresent, errorMessage: constatPresentError } = useField("constatPresent");
+const { value: fichiers, errorMessage: fichiersError } = useField<File[]>("fichiers");
 
 const { value: sousCategorie, errorMessage: sousCategorieError } = useField<string>("sousCategorie");
 const { value: categorieObjet } = useField<string>("categorieObjet");

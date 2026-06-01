@@ -563,6 +563,8 @@
     "questionDegradation": "Did you notice any damage related to this theft?",
     "constat": "Was a police report drawn up?",
     "constatDate": "Report date",
+    "constatPoliceFichiers": "Police report",
+    "constatPoliceWarning": "Before continuing your request, please have the damage recorded by the police by calling 117. You can save the pre-complaint draft and complete it after the report has been drawn up. To do this, click the \"Save and come back later\" button at the bottom of the page.",
     "hintTypeDommage": "Select the type of damage",
     "hintMontantEstime": "Enter the estimated amount of damage in figures",
     "hintNatureDommage": "Select the nature of the observed damage",
@@ -933,7 +935,8 @@
     "selectionnerDocument": "Select a document choice",
     "disclaimerRequis": "You must confirm this statement",
     "constatRequis": "Please indicate whether a report was drawn up",
-    "constatDommageRequis": "The report date is required"
+    "constatDommageRequis": "The report date is required",
+    "constatPoliceFichierRequis": "Please upload the police report"
   },
   "theme": {
     "toggleTheme": "Toggle theme",

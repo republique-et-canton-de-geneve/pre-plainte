@@ -191,7 +191,7 @@
         </v-row>
       </template>
 
-      <div v-if="typeIncident !== 'cybercrime'" class="mb-8">
+      <div v-if="typeIncident === 'vol'" class="mb-8">
         <PieceJointe v-model="fichiers" :label="t('dommages.fichiers')" />
       </div>
       <AdresseEvent v-if="typeIncident !== 'cybercrime'" />
