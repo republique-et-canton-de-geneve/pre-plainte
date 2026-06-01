@@ -201,7 +201,7 @@
     "carteIdentite": "Identity card",
     "passeport": "Passport",
     "numeroDocumentIdentite": "Document number",
-    "aucunDocument": "I do not have an identity document",
+    "documentsVolesPerdus": "Stolen or lost documents",
     "numeroCarteIdentite": "Identity card number",
     "numeroPasseport": "Passport number",
     "telechargerPieceIdentite": "Upload a copy of the identity card or passport",

@@ -201,7 +201,7 @@
     "carteIdentite": "Cartão de identidade",
     "passeport": "Passaporte",
     "numeroDocumentIdentite": "Número do documento",
-    "aucunDocument": "Não tenho documento de identidade",
+    "documentsVolesPerdus": "Documentos roubados ou perdidos",
     "numeroCarteIdentite": "Número do cartão de identidade",
     "numeroPasseport": "Número do passaporte",
     "telechargerPieceIdentite": "Carregar uma cópia do cartão de identidade ou do passaporte",
