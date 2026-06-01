@@ -40,7 +40,6 @@ public final class Ech051Constants {
   
   // === Clés objets et véhicules ===
   public static final String OBJECT_KEY_TIERS = "5";
-  public static final String OBJECT_KEY_CYBER_TRANSACTION = "10";
   public static final String VEHICLE_KEY = "2";
   public static final String INSURER_REF = "2";
   public static final String INSURER_REF_VEHICLE = "3";
@@ -82,9 +81,6 @@ public final class Ech051Constants {
   public static final String TYPE_OF_CRIME_CYBER_FAUSSE_ANNONCE_LABEL = "escroquerie";
   public static final String TYPE_OF_CRIME_CYBER_ACHAT_NON_RECU_CODE = "1000146100";
   public static final String TYPE_OF_CRIME_CYBER_ACHAT_NON_RECU_LABEL = "escroquerie";
-  public static final String TYPE_OF_OBJECT_CYBER_IDENTITY_CODE = "200300";
-  public static final String TYPE_OF_OBJECT_CYBER_IDENTITY_LABEL = "carte d'identité";
-  public static final String TYPE_OF_OBJECT_CYBER_IDENTITY_ID_TYPE = "IDPass";
   public static final String TYPE_OF_OBJECT_DOMMAGE_CODE = "200219";
   public static final String TYPE_OF_OBJECT_DOMMAGE_LABEL = "Dommage matériel";
   public static final String MODE_OPERANDI_DEGRADATIONS_CODE = "4000236";
@@ -106,7 +102,6 @@ public final class Ech051Constants {
     public static final String NATIONALITE = "EXT_GPNATI";
     public static final String LIEU_ORIGINE = "EXT_GDE_HEIMATORT";
     public static final String TYPE_OBJET = "sacheBezeichnung";
-    public static final String TYPE_OBJET_DK_ZAHL = "DK_ZAHL";
     public static final String OBJET_MARQUE = "sacheMarke";
     public static final String OBJET_MODELE = "sacheModell";
     public static final String OBJET_COULEUR = "sacheFarbe";

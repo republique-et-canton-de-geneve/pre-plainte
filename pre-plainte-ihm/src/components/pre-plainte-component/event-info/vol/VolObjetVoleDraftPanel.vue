@@ -215,7 +215,18 @@
             persistent-hint
             maxlength="15"
             inputmode="numeric"
-          />
+          >
+            <template #append-inner>
+              <v-tooltip location="top">
+                <template #activator="{ props }">
+                  <v-icon v-bind="props" color="primary" size="small"> mdi-information-outline </v-icon>
+                </template>
+                <div class="white-space">
+                  {{ t("incidentTypes.numeroImeiTooltip") }}
+                </div>
+              </v-tooltip>
+            </template>
+          </v-text-field>
           <v-checkbox
             v-model="brouillon.numeroIMEIInconnu"
             :label="t('incidentTypes.numeroIMEIInconnu')"
@@ -240,20 +251,6 @@
           </template>
         </template>
       </template>
-
-      <v-textarea
-        v-if="brouillon.categorieObjet && brouillon.categorieObjet !== VOL_OBJET_CATEGORIE.PLAQUE"
-        v-model="brouillon.descriptionObjet"
-        clearable
-        :label="t('incidentTypes.descriptionComplementaireObjet')"
-        :placeholder="t('incidentTypes.descriptionObjetPlaceholder')"
-        :error-messages="brouillon.descriptionObjetError"
-        class="my-4"
-        variant="outlined"
-        :hint="t('incidentTypes.hintDescriptionObjet')"
-        persistent-hint
-        rows="3"
-      />
 
       <div v-if="brouillon.categorieObjet" class="d-flex justify-start mt-2">
         <v-btn color="primary" variant="outlined" @click="brouillon.validerObjetVole">
@@ -282,3 +279,10 @@ defineProps<{
 const { t } = useI18n();
 const { mobile } = useDisplay();
 </script>
+
+<style scoped>
+.white-space {
+  max-width: 300px;
+  white-space: normal;
+}
+</style>

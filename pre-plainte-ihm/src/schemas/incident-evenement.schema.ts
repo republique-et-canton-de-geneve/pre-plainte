@@ -154,7 +154,7 @@ const validateIncidentRequirements = (data: Record<string, any>, ctx: z.Refineme
     return;
   }
 
- 
+
   if (
     data.typeIncident === "vol" &&
     (hasObjetsVolesEnregistres(data) || data.categorieObjet === "plaque")
@@ -165,6 +165,21 @@ const validateIncidentRequirements = (data: Record<string, any>, ctx: z.Refineme
   rules.forEach(({ field, message }) => {
     validateIncidentRequirement(data, ctx, field, message);
   });
+};
+
+const validateDommageConstatPolice = (data: Record<string, any>, ctx: z.RefinementCtx, t: ComposerTranslation) => {
+  if (data.typeIncident !== "degat-delit") {
+    return;
+  }
+
+  if (data.constatPresent === false) {
+    addCustomIssue(ctx, "constatPresent", t("dommages.constatPoliceWarning"));
+    return;
+  }
+
+  if (data.constatPresent === true && (!Array.isArray(data.fichiers) || data.fichiers.length === 0)) {
+    addCustomIssue(ctx, "fichiers", t("validation.constatPoliceFichierRequis"));
+  }
 };
 
 const validateVolSpecificRules = (data: Record<string, any>, ctx: z.RefinementCtx, t: ComposerTranslation) => {
@@ -399,7 +414,6 @@ export const createEvenementInfoSchema = (t: ComposerTranslation) =>
       numeroIMEIInconnu: z.boolean().optional(),
       justificationAbsenceIMEI: z.string().optional(),
       gravure: z.string().optional(),
-      descriptionObjet: z.string().optional(),
       isVehicle: z.boolean().optional(),
       dateAchat: z
         .string()
@@ -634,6 +648,7 @@ export const createEvenementInfoSchema = (t: ComposerTranslation) =>
     .superRefine((data, ctx) => {
       validateIncidentRequirements(data, ctx, t);
       validateVolSpecificRules(data, ctx, t);
+      validateDommageConstatPolice(data, ctx, t);
     })
     .superRefine((data, ctx) => {
       if (data.typeCybercrime !== "commande-frauduleuse") {

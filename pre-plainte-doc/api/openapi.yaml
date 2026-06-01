@@ -1,0 +1,770 @@
+openapi: 3.0.3
+info:
+  title: API Pré-plainte
+  version: 1.0.0
+  description: Spécification OpenAPI statique des routes exposées par le backend Spring Boot.
+servers:
+  - url: http://localhost:8080
+    description: Backend local
+tags:
+  - name: Configuration
+  - name: Pré-plainte
+  - name: Challenge e-mail
+  - name: eSirius
+  - name: RIPOL
+  - name: SQLite debug
+  - name: S3 debug
+paths:
+  /api/config:
+    get:
+      tags: [Configuration]
+      summary: Retourne la configuration publique consommée par le frontend.
+      responses:
+        "200":
+          description: Configuration publique.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PublicConfig"
+  /api/preplainte/draft:
+    post:
+      tags: [Pré-plainte]
+      summary: Enregistre une pré-plainte en brouillon et envoie le lien de reprise par e-mail.
+      parameters:
+        - $ref: "#/components/parameters/AcceptLanguage"
+      requestBody:
+        $ref: "#/components/requestBodies/PrePlainte"
+      responses:
+        "200":
+          description: Brouillon enregistré. La réponse ne contient pas de corps.
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+  /api/preplainte/draft/{demandeId}:
+    get:
+      tags: [Pré-plainte]
+      summary: Récupère une pré-plainte sauvegardée en brouillon.
+      parameters:
+        - $ref: "#/components/parameters/DemandeId"
+      responses:
+        "200":
+          description: Brouillon trouvé.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PrePlainte"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+  /api/preplainte/soumission:
+    post:
+      tags: [Pré-plainte]
+      summary: Soumet définitivement une pré-plainte.
+      requestBody:
+        $ref: "#/components/requestBodies/PrePlainte"
+      responses:
+        "200":
+          description: Identifiant ou résultat de soumission retourné par le cas d'usage.
+          content:
+            text/plain:
+              schema:
+                type: string
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+  /api/preplainte/pdf:
+    post:
+      tags: [Pré-plainte]
+      summary: Génère le PDF récapitulatif d'une pré-plainte.
+      requestBody:
+        $ref: "#/components/requestBodies/PrePlainte"
+      responses:
+        "200":
+          description: PDF généré.
+          headers:
+            Content-Disposition:
+              description: Nom du fichier PDF proposé au téléchargement.
+              schema:
+                type: string
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+  /api/email-challenges/request:
+    post:
+      tags: [Challenge e-mail]
+      summary: Demande l'envoi d'un code de vérification par e-mail.
+      parameters:
+        - $ref: "#/components/parameters/AcceptLanguage"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EmailChallengeRequest"
+      responses:
+        "204":
+          description: Code envoyé.
+        "429":
+          description: Demande trop rapprochée.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+  /api/email-challenges/verify:
+    post:
+      tags: [Challenge e-mail]
+      summary: Vérifie un code reçu par e-mail.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EmailChallengeVerifyRequest"
+      responses:
+        "200":
+          description: Résultat de vérification.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EmailChallengeVerifyResult"
+        "404":
+          description: Challenge introuvable.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+  /api/esirius/sites:
+    get:
+      tags: [eSirius]
+      summary: Liste les sites eSirius.
+      responses:
+        "200":
+          $ref: "#/components/responses/GenericObjectList"
+  /api/esirius/sites/{siteCode}/listServices:
+    get:
+      tags: [eSirius]
+      summary: Liste les services eSirius d'un site.
+      parameters:
+        - $ref: "#/components/parameters/SiteCode"
+      responses:
+        "200":
+          $ref: "#/components/responses/GenericObjectList"
+  /api/esirius/sites/{siteCode}/services/{serviceId}/plannings/begins/{begin}/periods/{period}/availabilities:
+    get:
+      tags: [eSirius]
+      summary: Liste les disponibilités d'un service eSirius.
+      parameters:
+        - $ref: "#/components/parameters/SiteCode"
+        - name: serviceId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: begin
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: period
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          $ref: "#/components/responses/GenericObjectList"
+  /api/esirius/appointments:
+    post:
+      tags: [eSirius]
+      summary: Crée un rendez-vous eSirius.
+      requestBody:
+        $ref: "#/components/requestBodies/GenericObject"
+      responses:
+        "200":
+          $ref: "#/components/responses/GenericObject"
+    put:
+      tags: [eSirius]
+      summary: Modifie un rendez-vous eSirius.
+      requestBody:
+        $ref: "#/components/requestBodies/GenericObject"
+      responses:
+        "200":
+          $ref: "#/components/responses/GenericObject"
+  /api/esirius/appointments/{codeRdv}:
+    get:
+      tags: [eSirius]
+      summary: Récupère les informations d'un rendez-vous.
+      parameters:
+        - $ref: "#/components/parameters/CodeRdv"
+      responses:
+        "200":
+          $ref: "#/components/responses/GenericObject"
+    delete:
+      tags: [eSirius]
+      summary: Annule un rendez-vous.
+      parameters:
+        - $ref: "#/components/parameters/CodeRdv"
+      responses:
+        "200":
+          $ref: "#/components/responses/GenericObject"
+  /api/ripol/codes:
+    get:
+      tags: [RIPOL]
+      summary: Liste ou recherche les codes d'un groupType RIPOL.
+      parameters:
+        - name: groupType
+          in: query
+          required: true
+          schema:
+            type: string
+        - $ref: "#/components/parameters/Search"
+      responses:
+        "200":
+          $ref: "#/components/responses/RipolList"
+  /api/ripol/group-types:
+    get:
+      tags: [RIPOL]
+      summary: Liste les groupTypes distincts de la table RIPOL principale.
+      responses:
+        "200":
+          $ref: "#/components/responses/StringList"
+  /api/ripol/brands:
+    get:
+      tags: [RIPOL]
+      summary: Liste ou recherche les marques liées à un type d'objet.
+      parameters:
+        - name: masterValue
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: masterType
+          in: query
+          required: false
+          schema:
+            type: string
+            default: "183"
+        - $ref: "#/components/parameters/Search"
+      responses:
+        "200":
+          $ref: "#/components/responses/RipolList"
+  /api/ripol/models:
+    get:
+      tags: [RIPOL]
+      summary: Liste ou recherche les modèles d'une marque.
+      parameters:
+        - name: masterValue
+          in: query
+          required: true
+          schema:
+            type: string
+        - $ref: "#/components/parameters/Search"
+      responses:
+        "200":
+          $ref: "#/components/responses/RipolList"
+  /api/ripol/object-types:
+    get:
+      tags: [RIPOL]
+      summary: Liste ou recherche les types d'objets.
+      parameters:
+        - $ref: "#/components/parameters/Search"
+      responses:
+        "200":
+          $ref: "#/components/responses/RipolList"
+  /api/ripol/phone-brands:
+    get:
+      tags: [RIPOL]
+      summary: Liste ou recherche les marques de téléphones.
+      parameters:
+        - $ref: "#/components/parameters/Search"
+      responses:
+        "200":
+          $ref: "#/components/responses/RipolList"
+  /api/ripol/phone-models:
+    get:
+      tags: [RIPOL]
+      summary: Liste ou recherche les modèles de téléphones d'une marque.
+      parameters:
+        - name: brandCode
+          in: query
+          required: true
+          schema:
+            type: string
+        - $ref: "#/components/parameters/Search"
+      responses:
+        "200":
+          $ref: "#/components/responses/RipolList"
+  /api/ripol/vehicle-types:
+    get:
+      tags: [RIPOL]
+      summary: Liste ou recherche les types de véhicules.
+      parameters:
+        - $ref: "#/components/parameters/Search"
+      responses:
+        "200":
+          $ref: "#/components/responses/RipolList"
+  /api/ripol/vehicle-brands:
+    get:
+      tags: [RIPOL]
+      summary: Liste ou recherche les marques de véhicules.
+      parameters:
+        - name: vehicleTypeCode
+          in: query
+          required: true
+          schema:
+            type: string
+        - $ref: "#/components/parameters/Search"
+      responses:
+        "200":
+          $ref: "#/components/responses/RipolList"
+  /api/ripol/vehicle-models:
+    get:
+      tags: [RIPOL]
+      summary: Liste ou recherche les modèles de véhicules d'une marque.
+      parameters:
+        - name: brandCode
+          in: query
+          required: true
+          schema:
+            type: string
+        - $ref: "#/components/parameters/Search"
+      responses:
+        "200":
+          $ref: "#/components/responses/RipolList"
+  /api/ripol/sexes:
+    get:
+      tags: [RIPOL]
+      summary: Liste les sexes.
+      responses:
+        "200":
+          $ref: "#/components/responses/RipolList"
+  /api/ripol/nationalities:
+    get:
+      tags: [RIPOL]
+      summary: Liste ou recherche les nationalités.
+      parameters:
+        - $ref: "#/components/parameters/Search"
+      responses:
+        "200":
+          $ref: "#/components/responses/RipolList"
+  /api/ripol/communes:
+    get:
+      tags: [RIPOL]
+      summary: Liste ou recherche les communes.
+      parameters:
+        - $ref: "#/components/parameters/Search"
+      responses:
+        "200":
+          $ref: "#/components/responses/RipolList"
+  /api/ripol/lieux-origine:
+    get:
+      tags: [RIPOL]
+      summary: Liste ou recherche les lieux d'origine.
+      parameters:
+        - $ref: "#/components/parameters/Search"
+      responses:
+        "200":
+          $ref: "#/components/responses/RipolList"
+  /api/ripol/document-types:
+    get:
+      tags: [RIPOL]
+      summary: Liste ou recherche les types de documents d'identité.
+      parameters:
+        - $ref: "#/components/parameters/Search"
+      responses:
+        "200":
+          $ref: "#/components/responses/RipolList"
+  /api/ripol/location-types:
+    get:
+      tags: [RIPOL]
+      summary: Liste ou recherche les types de lieux.
+      parameters:
+        - $ref: "#/components/parameters/Search"
+      responses:
+        "200":
+          $ref: "#/components/responses/RipolList"
+  /api/ripol/modus-operandi:
+    get:
+      tags: [RIPOL]
+      summary: Liste ou recherche les modes opératoires.
+      parameters:
+        - $ref: "#/components/parameters/Search"
+      responses:
+        "200":
+          $ref: "#/components/responses/RipolList"
+  /api/ripol/object-colours:
+    get:
+      tags: [RIPOL]
+      summary: Liste ou recherche les couleurs d'objets.
+      parameters:
+        - $ref: "#/components/parameters/Search"
+      responses:
+        "200":
+          $ref: "#/components/responses/RipolList"
+  /api/ripol/vehicle-colours:
+    get:
+      tags: [RIPOL]
+      summary: Liste ou recherche les couleurs de véhicules.
+      parameters:
+        - $ref: "#/components/parameters/Search"
+      responses:
+        "200":
+          $ref: "#/components/responses/RipolList"
+  /api/ripol/cantons:
+    get:
+      tags: [RIPOL]
+      summary: Liste ou recherche les cantons.
+      parameters:
+        - $ref: "#/components/parameters/Search"
+      responses:
+        "200":
+          $ref: "#/components/responses/RipolList"
+  /api/sqlite/tables:
+    get:
+      tags: [SQLite debug]
+      summary: Liste les tables SQLite disponibles.
+      responses:
+        "200":
+          $ref: "#/components/responses/StringList"
+  /api/sqlite/columns:
+    get:
+      tags: [SQLite debug]
+      summary: Liste les colonnes d'une table SQLite.
+      parameters:
+        - $ref: "#/components/parameters/TableName"
+      responses:
+        "200":
+          $ref: "#/components/responses/StringList"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+  /api/sqlite/rows:
+    get:
+      tags: [SQLite debug]
+      summary: Liste les lignes d'une table SQLite.
+      parameters:
+        - $ref: "#/components/parameters/TableName"
+        - $ref: "#/components/parameters/Limit"
+      responses:
+        "200":
+          $ref: "#/components/responses/GenericObjectList"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+  /api/sqlite/grouptypes:
+    get:
+      tags: [SQLite debug]
+      summary: Liste les groupTypes distincts d'une table SQLite.
+      parameters:
+        - $ref: "#/components/parameters/TableName"
+      responses:
+        "200":
+          $ref: "#/components/responses/StringList"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+  /api/sqlite/rows/by-grouptype:
+    get:
+      tags: [SQLite debug]
+      summary: Liste les lignes SQLite filtrées par groupType.
+      parameters:
+        - $ref: "#/components/parameters/TableName"
+        - name: groupType
+          in: query
+          required: true
+          schema:
+            type: string
+        - $ref: "#/components/parameters/Limit"
+      responses:
+        "200":
+          $ref: "#/components/responses/GenericObjectList"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+  /api/dev-s3/objects:
+    get:
+      tags: [S3 debug]
+      summary: Liste les objets du bucket S3 de debug.
+      description: Disponible uniquement si `s3.debug.enabled=true`.
+      parameters:
+        - name: prefix
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: maxKeys
+          in: query
+          required: false
+          schema:
+            type: integer
+            maximum: 1000
+        - name: continuationToken
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Objets S3 listés.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/S3ListResult"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+  /api/dev-s3/objects/{key}:
+    get:
+      tags: [S3 debug]
+      summary: Télécharge un objet du bucket S3 de debug.
+      description: Disponible uniquement si `s3.debug.enabled=true`.
+      parameters:
+        - name: key
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Clé S3 encodée dans l'URL.
+        - name: asAttachment
+          in: query
+          required: false
+          schema:
+            type: boolean
+            default: true
+      responses:
+        "200":
+          description: Flux binaire de l'objet S3.
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+components:
+  requestBodies:
+    PrePlainte:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/PrePlainte"
+    GenericObject:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/GenericObject"
+  parameters:
+    AcceptLanguage:
+      name: Accept-Language
+      in: header
+      required: false
+      schema:
+        type: string
+        example: fr
+      description: Locale utilisée par Spring pour choisir la langue des e-mails.
+    DemandeId:
+      name: demandeId
+      in: path
+      required: true
+      schema:
+        type: string
+    SiteCode:
+      name: siteCode
+      in: path
+      required: true
+      schema:
+        type: string
+    CodeRdv:
+      name: codeRdv
+      in: path
+      required: true
+      schema:
+        type: string
+    Search:
+      name: search
+      in: query
+      required: false
+      schema:
+        type: string
+      description: Si présent et non vide, active la recherche au lieu de la liste complète.
+    TableName:
+      name: tableName
+      in: query
+      required: true
+      schema:
+        type: string
+    Limit:
+      name: limit
+      in: query
+      required: false
+      schema:
+        type: integer
+        default: 100
+  responses:
+    RipolList:
+      description: Liste de codes RIPOL.
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: "#/components/schemas/Ripol"
+    StringList:
+      description: Liste de chaînes.
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              type: string
+    GenericObject:
+      description: Objet générique.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/GenericObject"
+    GenericObjectList:
+      description: Liste d'objets génériques.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/GenericObjectList"
+    BadRequest:
+      description: Requête invalide ou règle métier non respectée.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    InternalServerError:
+      description: Erreur technique non gérée.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+  schemas:
+    PublicConfig:
+      type: object
+      properties:
+        backendUrl:
+          type: string
+        captchaSitekey:
+          type: string
+        captchaEnabled:
+          type: string
+          enum: ["true", "false"]
+        environment:
+          type: string
+    PrePlainte:
+      type: object
+      description: Objet domaine `ch.ge.police.core.domain.model.PrePlainte`. Le contrat exact dépend des sous-types d'incident et des informations personnelles envoyés par le frontend.
+      additionalProperties: true
+      properties:
+        demandeId:
+          type: string
+        informationsPersonnelles:
+          type: object
+          additionalProperties: true
+        incident:
+          type: object
+          additionalProperties: true
+        creneauRendezVous:
+          type: object
+          additionalProperties: true
+        pdfRecapitulatif:
+          type: object
+          additionalProperties: true
+    EmailChallengeRequest:
+      type: object
+      required: [email, key]
+      properties:
+        email:
+          type: string
+          format: email
+        key:
+          type: string
+    EmailChallengeVerifyRequest:
+      type: object
+      required: [email, key, code]
+      properties:
+        email:
+          type: string
+          format: email
+        key:
+          type: string
+        code:
+          type: string
+    EmailChallengeVerifyResult:
+      type: object
+      properties:
+        success:
+          type: boolean
+        status:
+          type: string
+          enum: [SUCCESS, INVALID, EXPIRED, LOCKED, ALREADY_VERIFIED]
+        remainingAttempts:
+          type: integer
+          nullable: true
+    Ripol:
+      type: object
+      properties:
+        code:
+          type: string
+        labelFr:
+          type: string
+        labelDe:
+          type: string
+        groupeType:
+          type: string
+    S3ObjectItem:
+      type: object
+      properties:
+        key:
+          type: string
+        size:
+          type: integer
+          format: int64
+        lastModified:
+          type: string
+          format: date-time
+        eTag:
+          type: string
+    S3ListResult:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/S3ObjectItem"
+        nextContinuationToken:
+          type: string
+          nullable: true
+    GenericObject:
+      type: object
+      additionalProperties: true
+    GenericObjectList:
+      type: array
+      items:
+        $ref: "#/components/schemas/GenericObject"
+    ErrorResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+        errorCode:
+          type: string
+        errorId:
+          type: string

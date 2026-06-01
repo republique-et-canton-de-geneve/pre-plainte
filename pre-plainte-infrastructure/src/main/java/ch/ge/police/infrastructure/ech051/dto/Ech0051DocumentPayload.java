@@ -172,7 +172,6 @@ public class Ech0051DocumentPayload {
   public static class ObjectItem {
     String key;
     RipolReference typeOfObject;
-    String description;
     RipolReference fabricant;
     String fabricantAutre;
     RipolReference modele;

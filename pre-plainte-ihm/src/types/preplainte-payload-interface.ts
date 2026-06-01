@@ -90,7 +90,6 @@ export type ObjetIncidentDTO = {
   numeroIMEIInconnu?: boolean;
   justificationAbsenceIMEI?: string;
   gravure?: string;
-  description?: string;
   realValue?: string;
   isVehicle?: boolean;
   purchaseDate?: string;

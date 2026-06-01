@@ -111,10 +111,6 @@
             }}
           </div>
         </v-col>
-        <v-col v-if="obj.descriptionObjet" cols="12">
-          <div class="text-caption text-medium-emphasis">{{ t("incidentTypes.descriptionComplementaireObjet") }}</div>
-          <div class="text-body-2">{{ obj.descriptionObjet }}</div>
-        </v-col>
         <template v-if="hasImeiPourSnapshotVol(obj)">
           <v-col cols="12" md="6">
             <div class="text-caption text-medium-emphasis">{{ t("incidentTypes.numeroImei") }}</div>

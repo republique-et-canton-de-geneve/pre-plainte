@@ -12,6 +12,7 @@ import ch.ge.police.core.domain.model.event.dommagematerial.DommageMateriel;
 import ch.ge.police.core.domain.model.event.dommagematerial.common.NatureDommage;
 import ch.ge.police.core.domain.model.event.vol.Vol;
 import ch.ge.police.core.domain.model.informationspersonnelles.InformationsPersonnelles;
+import ch.ge.police.core.domain.model.informationspersonnelles.common.Tiers;
 import ch.ge.police.infrastructure.ech051.Ech051Constants;
 import ch.ge.police.infrastructure.ech051.dto.Ech0051DocumentPayload.ActionPlace;
 import ch.ge.police.infrastructure.ech051.dto.Ech0051DocumentPayload.Event;
@@ -227,6 +228,81 @@ class SuisseEpoliceEventMapperTest {
     assertEquals("2025-11-11T11:11:00.000+01:00", result.getActionPeriod().getFrom());
     assertEquals("2025-11-11T12:00:00.000+01:00", result.getActionPeriod().getTo());
     assertNull(result.getSecondaryActionPlace());
+  }
+
+  @Test
+  void shouldBuildCyberTransactionEventWithPersonalAddress() {
+    Cybercrime cybercrime = mock(Cybercrime.class);
+    AchatNonRecu achat = new AchatNonRecu();
+    InformationsPersonnelles infos = mock(InformationsPersonnelles.class);
+    Adresse personalAddress = mock(Adresse.class);
+    RipolLocation place = RipolLocation.builder()
+        .code("6621")
+        .label("Genève")
+        .sourceTable("PTT_ORT")
+        .zipCode("1201")
+        .build();
+
+    when(cybercrime.getTypeCybercrime()).thenReturn(TypeCybercrime.ACHAT_NON_RECU);
+    when(cybercrime.getAchatNonRecu()).thenReturn(achat);
+    when(cybercrime.getCommandeFrauduleuse()).thenReturn(null);
+    when(cybercrime.getFausseAnnonce()).thenReturn(null);
+    when(cybercrime.getDatePremierContact()).thenReturn("2025-11-11T11:11:00.000+01:00");
+    when(cybercrime.getDateDernierContact()).thenReturn("2025-11-11T12:00:00.000+01:00");
+    when(cybercrime.getDescriptionCybercrime()).thenReturn("Faits");
+    when(cybercrime.getTypeLieu()).thenReturn(null);
+    when(infos.getAdresse()).thenReturn(personalAddress);
+    when(addressMapper.isAddressComplete(personalAddress)).thenReturn(true);
+    when(addressMapper.buildAddressPlace(personalAddress)).thenReturn(place);
+    when(personalAddress.adresse()).thenReturn("Rue du Stand 1");
+
+    Event result = mapper.buildEvent(cybercrime, infos);
+
+    assertNotNull(result.getActionPlace());
+    assertEquals("Rue du Stand 1", result.getActionPlace().getStreet());
+    assertEquals("Genève", result.getActionPlace().getCityArea());
+    assertEquals("6621", result.getActionPlace().getPlace().getCode());
+    assertNull(result.getActionPlace().getCountry());
+    assertNull(result.getSecondaryActionPlace());
+  }
+
+  @Test
+  void shouldBuildCyberTransactionEventWithTiersAddressWhenVictimIsTiers() {
+    Cybercrime cybercrime = mock(Cybercrime.class);
+    AchatNonRecu achat = new AchatNonRecu();
+    InformationsPersonnelles infos = mock(InformationsPersonnelles.class);
+    Tiers tiers = mock(Tiers.class);
+    Adresse declarantAddress = mock(Adresse.class);
+    Adresse tiersAddress = mock(Adresse.class);
+    RipolLocation place = RipolLocation.builder()
+        .code("6608")
+        .label("Carouge")
+        .sourceTable("PTT_ORT")
+        .zipCode("1227")
+        .build();
+
+    when(cybercrime.getTypeCybercrime()).thenReturn(TypeCybercrime.ACHAT_NON_RECU);
+    when(cybercrime.getAchatNonRecu()).thenReturn(achat);
+    when(cybercrime.getCommandeFrauduleuse()).thenReturn(null);
+    when(cybercrime.getFausseAnnonce()).thenReturn(null);
+    when(cybercrime.getDatePremierContact()).thenReturn("2025-11-11T11:11:00.000+01:00");
+    when(cybercrime.getDateDernierContact()).thenReturn("2025-11-11T12:00:00.000+01:00");
+    when(cybercrime.getDescriptionCybercrime()).thenReturn("Faits");
+    when(cybercrime.getTypeLieu()).thenReturn(null);
+    when(infos.hasTiers()).thenReturn(true);
+    when(infos.getTiers()).thenReturn(tiers);
+    when(infos.getAdresse()).thenReturn(declarantAddress);
+    when(tiers.getAdresse()).thenReturn(tiersAddress);
+    when(addressMapper.isAddressComplete(tiersAddress)).thenReturn(true);
+    when(addressMapper.buildAddressPlace(tiersAddress)).thenReturn(place);
+    when(tiersAddress.adresse()).thenReturn("Route des Acacias 10");
+
+    Event result = mapper.buildEvent(cybercrime, infos);
+
+    assertNotNull(result.getActionPlace());
+    assertEquals("Route des Acacias 10", result.getActionPlace().getStreet());
+    assertEquals("Carouge", result.getActionPlace().getCityArea());
+    assertEquals("6608", result.getActionPlace().getPlace().getCode());
   }
 
   @Test
@@ -453,7 +529,7 @@ class SuisseEpoliceEventMapperTest {
   }
 
   @Test
-  void shouldIncludeFactsOnCyberTransactionEvent() {
+  void shouldIncludeTrimmedFactsOnCyberTransactionEvent() {
     Cybercrime cybercrime = mock(Cybercrime.class);
     when(cybercrime.getTypeCybercrime()).thenReturn(TypeCybercrime.ACHAT_NON_RECU);
     when(cybercrime.getAchatNonRecu()).thenReturn(new AchatNonRecu());
@@ -461,7 +537,7 @@ class SuisseEpoliceEventMapperTest {
     when(cybercrime.getFausseAnnonce()).thenReturn(null);
     when(cybercrime.getDateDebutEvent()).thenReturn("2026-01-01");
     when(cybercrime.getDateFinEvent()).thenReturn("2026-01-02");
-    when(cybercrime.getDescriptionCybercrime()).thenReturn("Faits synthétiques");
+    when(cybercrime.getDescriptionCybercrime()).thenReturn("  Faits synthétiques  ");
     when(cybercrime.getTypeLieu()).thenReturn(null);
 
     Event event = mapper.buildEvent(cybercrime, null);

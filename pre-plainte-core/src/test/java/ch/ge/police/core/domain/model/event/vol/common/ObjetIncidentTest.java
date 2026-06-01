@@ -23,6 +23,17 @@ class ObjetIncidentTest {
   }
 
   @Test
+  void shouldNotTreatIdentityDocumentCodeAsVehicle() {
+    ObjetIncident objet = ObjetIncident.builder()
+        .categorieObjet("documents")
+        .sousCategorie("papiers_identite")
+        .type(new RipolCode("200300", "Passeport"))
+        .build();
+
+    assertFalse(objet.isVehicleType());
+  }
+
+  @Test
   void shouldAcceptPlaqueWithPlateNumberWithoutObjectTypeOrDescription() {
     ObjetIncident objet = ObjetIncident.builder()
         .categorieObjet("plaque")
