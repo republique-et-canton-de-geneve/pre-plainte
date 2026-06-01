@@ -82,6 +82,8 @@ public class InfosPersonne {
     verifierChampObligatoire(telephone, "Le numéro de téléphone est obligatoire.");
     verifierChampObligatoire(email, "L'adresse e-mail est obligatoire.");
     verifierChampObligatoire(typeDocumentIdentite, "Le type de document d'identité est obligatoire.");
-    verifierChampObligatoire(numeroDocumentIdentite, "Le numéro de document d'identité est obligatoire.");
+    if (typeDocumentIdentite != TypeDocumentIdentite.DOCUMENTS_VOLES_PERDUS) {
+      verifierChampObligatoire(numeroDocumentIdentite, "Le numéro de document d'identité est obligatoire.");
+    }
   }
 }
