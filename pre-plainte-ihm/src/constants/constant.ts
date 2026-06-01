@@ -34,8 +34,8 @@ export const LIENS_AVEC_PERSONNE = [
 
 export const GENRE_LABEL_KEYS: Record<string, string> = {
   "0": "informationsPersonnelles.nonRenseigne",
-  "1": "informationsPersonnelles.homme",
-  "2": "informationsPersonnelles.femme",
+  "1": "informationsPersonnelles.masculin",
+  "2": "informationsPersonnelles.feminin",
 };
 
 export const GENRES_ORDER = ["1", "2", "0"];
@@ -43,6 +43,7 @@ export const GENRES_ORDER = ["1", "2", "0"];
 export const TYPES_DOCUMENT_IDENTITE = [
   { value: "carte_identite", labelKey: "informationsPersonnelles.carteIdentite" },
   { value: "passeport", labelKey: "informationsPersonnelles.passeport" },
+  { value: "documents_voles_perdus", labelKey: "informationsPersonnelles.documentsVolesPerdus" },
 ] as const;
 
 export const TITRES_SEJOUR = [

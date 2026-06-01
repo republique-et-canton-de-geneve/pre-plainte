@@ -111,13 +111,16 @@ class SuisseEpoliceMapperForPPLTest {
     PrePlainte p = new PrePlainte("CYB-ENT", basePersonne(), Incident.of(cyber));
     Ech0051DocumentPayload doc = mapper.toDocument(p);
 
-    assertThat(doc.getObjects()).hasSize(2);
+    assertThat(doc.getObjects()).isEmpty();
+    assertThat(doc.getRelations().getEventObjectLinks()).isEmpty();
+    assertThat(doc.getRelations().getObjectPersonLinks()).isEmpty();
+    assertThat(doc.getEvents().getFirst().getFacts()).isEqualTo("Achat jamais reçu");
     assertThat(doc.getPersons().stream().anyMatch(
         person -> person != null && person.getType() == PersonType.LEGAL)).isTrue();
   }
 
   @Test
-  void toDocument_mapsCyberCommandeFrauduleuse_addsInsurerPersonAndTransactionObjects() {
+  void toDocument_mapsCyberCommandeFrauduleuse_addsInsurerPersonWithoutObjects() {
     CommandeFrauduleuse cf = new CommandeFrauduleuse();
     cf.setDateDecouverte("2025-03-01");
     cf.setMontant(250.0);
@@ -132,7 +135,10 @@ class SuisseEpoliceMapperForPPLTest {
     PrePlainte p = new PrePlainte("CYB-CF", basePersonne(), Incident.of(cyber));
     Ech0051DocumentPayload doc = mapper.toDocument(p);
 
-    assertThat(doc.getObjects()).hasSize(2);
+    assertThat(doc.getObjects()).isEmpty();
+    assertThat(doc.getRelations().getEventObjectLinks()).isEmpty();
+    assertThat(doc.getRelations().getObjectPersonLinks()).isEmpty();
+    assertThat(doc.getEvents().getFirst().getFacts()).isEqualTo("Commande frauduleuse");
     assertThat(doc.getPersons().stream().map(Ech0051DocumentPayload.Person::getKey))
         .contains(Ech051Constants.INSURER_REF_CYBER);
   }
@@ -159,7 +165,10 @@ class SuisseEpoliceMapperForPPLTest {
     PrePlainte p = new PrePlainte("FAUSSE-PPL", basePersonne(), Incident.of(cyber));
     Ech0051DocumentPayload doc = mapper.toDocument(p);
 
-    assertThat(doc.getObjects()).hasSize(2);
+    assertThat(doc.getObjects()).isEmpty();
+    assertThat(doc.getRelations().getEventObjectLinks()).isEmpty();
+    assertThat(doc.getRelations().getObjectPersonLinks()).isEmpty();
+    assertThat(doc.getEvents().getFirst().getFacts()).isEqualTo("Arnaque au loyer");
     assertThat(doc.getPersons().stream().filter(x -> x != null && x.getType() == PersonType.NATURAL).count()).isGreaterThanOrEqualTo(2);
   }
 
@@ -192,12 +201,13 @@ class SuisseEpoliceMapperForPPLTest {
     PrePlainte p = new PrePlainte("ACHAT-NAT", ip, Incident.of(cyber));
     Ech0051DocumentPayload doc = mapper.toDocument(p);
 
-    assertThat(doc.getObjects()).hasSize(2);
-    assertThat(doc.getObjects().getFirst().getIdentification()).isNull();
+    assertThat(doc.getObjects()).isEmpty();
+    assertThat(doc.getRelations().getEventObjectLinks()).isEmpty();
+    assertThat(doc.getRelations().getObjectPersonLinks()).isEmpty();
   }
 
   @Test
-  void toDocument_mapsCyberAutre_skipsTransactionObjectsAndCounterparty() {
+  void toDocument_mapsCyberAutre_skipsObjectsAndCounterparty() {
     Cybercrime cyber = new Cybercrime();
     cyber.setTypeCybercrime(TypeCybercrime.AUTRE);
     cyber.setDateDebutEvent("2025-06-01");
