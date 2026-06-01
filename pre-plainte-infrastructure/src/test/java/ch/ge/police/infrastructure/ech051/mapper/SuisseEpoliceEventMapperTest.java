@@ -529,7 +529,7 @@ class SuisseEpoliceEventMapperTest {
   }
 
   @Test
-  void shouldIncludeFactsOnCyberTransactionEvent() {
+  void shouldIncludeTrimmedFactsOnCyberTransactionEvent() {
     Cybercrime cybercrime = mock(Cybercrime.class);
     when(cybercrime.getTypeCybercrime()).thenReturn(TypeCybercrime.ACHAT_NON_RECU);
     when(cybercrime.getAchatNonRecu()).thenReturn(new AchatNonRecu());
@@ -537,7 +537,7 @@ class SuisseEpoliceEventMapperTest {
     when(cybercrime.getFausseAnnonce()).thenReturn(null);
     when(cybercrime.getDateDebutEvent()).thenReturn("2026-01-01");
     when(cybercrime.getDateFinEvent()).thenReturn("2026-01-02");
-    when(cybercrime.getDescriptionCybercrime()).thenReturn("Faits synthétiques");
+    when(cybercrime.getDescriptionCybercrime()).thenReturn("  Faits synthétiques  ");
     when(cybercrime.getTypeLieu()).thenReturn(null);
 
     Event event = mapper.buildEvent(cybercrime, null);
