@@ -95,6 +95,33 @@ class Ech051BuilderTest {
   }
 
   @Test
+  void generateEch051Xml_shouldMapCybercrimeDescriptionAsFactsWithoutObjects() {
+    PrePlainte prePlainte = mock(PrePlainte.class);
+    Ech0051DocumentPayload payload = Ech0051DocumentPayload.builder()
+        .processData(Ech0051DocumentPayload.ProcessData.builder()
+            .deliveryDate("2026-03-16")
+            .sourceId(Ech051Constants.SourceIds.CYBERCRIME_ACHAT_NON_RECU)
+            .processingStatus("GREEN")
+            .build())
+        .persons(List.of(buildNaturalPerson()))
+        .events(List.of(Ech0051DocumentPayload.Event.builder()
+            .key("EVT-CYBER")
+            .descriptionShort(Ech051Constants.SourceIds.CYBERCRIME_ACHAT_NON_RECU)
+            .facts("Description cybercrime transmise à MyAbi")
+            .build()))
+        .relations(Ech0051DocumentPayload.Relations.builder().build())
+        .build();
+
+    when(mapper.toDocument(prePlainte)).thenReturn(payload);
+
+    String xml = builder.generateEch051Xml(prePlainte, false);
+
+    assertThat(xml)
+        .contains("<eCH-0051:facts>Description cybercrime transmise à MyAbi</eCH-0051:facts>")
+        .doesNotContain("<eCH-0051:object>");
+  }
+
+  @Test
   void generateEch051Xml_shouldUseCyberFausseAnnonceMessageTypeWhenProcessDataMatches() {
     PrePlainte prePlainte = mock(PrePlainte.class);
     when(mapper.toDocument(prePlainte)).thenReturn(buildPayloadWithCyberProcessSource(Ech051Constants.SourceIds.CYBERCRIME_FAUSSE_ANNONCE));

@@ -54,7 +54,7 @@ public class SuisseEpoliceRelationsMapper {
 
     if (incident instanceof Cybercrime cybercrime
         && isCyberTransactionType(cybercrime)) {
-      buildCyberCommandeFrauduleuseRelations(persons, eventRef, businessCaseRef, objects, incident, relationsBuilder);
+      buildCyberCommandeFrauduleuseRelations(persons, eventRef, businessCaseRef, incident, relationsBuilder);
       buildEventBusinessCaseLink(eventRef, businessCaseRef, relationsBuilder);
       return relationsBuilder.build();
     }
@@ -74,7 +74,6 @@ public class SuisseEpoliceRelationsMapper {
       List<Person> persons,
       String eventRef,
       String businessCaseRef,
-      List<ObjectItem> objects,
       IncidentBase incident,
       Relations.RelationsBuilder builder
   ) {
@@ -83,37 +82,6 @@ public class SuisseEpoliceRelationsMapper {
     buildInvolvedPartyVictim(victimRef, eventRef, businessCaseRef, builder);
     buildInvolvedPartyAccused(accusedRef, eventRef, businessCaseRef, builder);
     buildCyberVictimAccusedPersonLink(victimRef, accusedRef, builder);
-
-    ObjectItem identityObject = findObjectByKey(objects, Ech051Constants.OBJECT_KEY_TIERS);
-    if (identityObject != null && victimRef != null) {
-      builder.objectPersonLink(
-          ObjectPersonLink.builder()
-              .objectRef(identityObject.getKey())
-              .insurerRef(Ech051Constants.INSURER_REF_CYBER)
-              .personRef(victimRef)
-              .build()
-      );
-    }
-
-    ObjectItem transactionObject = findObjectByKey(objects, Ech051Constants.OBJECT_KEY_CYBER_TRANSACTION);
-    if (transactionObject != null) {
-      buildEventObjectLink(transactionObject, eventRef, builder);
-      if (victimRef != null) {
-        builder.objectPersonLink(
-            ObjectPersonLink.builder()
-                .objectRef(transactionObject.getKey())
-                .personRole(RipolReferenceBuilder.of(
-                    Ech051Constants.INVOLVEMENT_TYPE_VICTIM_CODE,
-                    Ech051Constants.INVOLVEMENT_TYPE_VICTIM_LABEL,
-                    Ech051Constants.INVOLVEMENT_SOURCE_TABLE
-                ))
-                .insurerRef(Ech051Constants.INSURER_REF_CYBER)
-                .personRef(victimRef)
-                .build()
-        );
-      }
-    }
-
     buildFinancialTransaction(incident, eventRef, victimRef, accusedRef, builder);
   }
 
@@ -260,13 +228,6 @@ public class SuisseEpoliceRelationsMapper {
             .person2Ref(accusedRef)
             .build()
     );
-  }
-
-  private ObjectItem findObjectByKey(List<ObjectItem> objects, String key) {
-    return objects.stream()
-        .filter(o -> o != null && key.equals(o.getKey()))
-        .findFirst()
-        .orElse(null);
   }
 
   /**
