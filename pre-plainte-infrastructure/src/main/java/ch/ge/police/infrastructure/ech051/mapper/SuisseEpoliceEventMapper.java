@@ -366,7 +366,7 @@ public class SuisseEpoliceEventMapper {
     if (incident instanceof Cybercrime cybercrime) {
       String description = cybercrime.getDescriptionCybercrime();
       if (description != null && !description.isBlank()) {
-        return description;
+        return description.strip();
       }
     }
     return null;

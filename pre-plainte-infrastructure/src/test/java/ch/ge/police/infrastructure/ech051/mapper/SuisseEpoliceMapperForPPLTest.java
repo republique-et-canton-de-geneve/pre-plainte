@@ -114,6 +114,7 @@ class SuisseEpoliceMapperForPPLTest {
     assertThat(doc.getObjects()).isEmpty();
     assertThat(doc.getRelations().getEventObjectLinks()).isEmpty();
     assertThat(doc.getRelations().getObjectPersonLinks()).isEmpty();
+    assertThat(doc.getEvents().getFirst().getFacts()).isEqualTo("Achat jamais reçu");
     assertThat(doc.getPersons().stream().anyMatch(
         person -> person != null && person.getType() == PersonType.LEGAL)).isTrue();
   }
@@ -137,6 +138,7 @@ class SuisseEpoliceMapperForPPLTest {
     assertThat(doc.getObjects()).isEmpty();
     assertThat(doc.getRelations().getEventObjectLinks()).isEmpty();
     assertThat(doc.getRelations().getObjectPersonLinks()).isEmpty();
+    assertThat(doc.getEvents().getFirst().getFacts()).isEqualTo("Commande frauduleuse");
     assertThat(doc.getPersons().stream().map(Ech0051DocumentPayload.Person::getKey))
         .contains(Ech051Constants.INSURER_REF_CYBER);
   }
@@ -166,6 +168,7 @@ class SuisseEpoliceMapperForPPLTest {
     assertThat(doc.getObjects()).isEmpty();
     assertThat(doc.getRelations().getEventObjectLinks()).isEmpty();
     assertThat(doc.getRelations().getObjectPersonLinks()).isEmpty();
+    assertThat(doc.getEvents().getFirst().getFacts()).isEqualTo("Arnaque au loyer");
     assertThat(doc.getPersons().stream().filter(x -> x != null && x.getType() == PersonType.NATURAL).count()).isGreaterThanOrEqualTo(2);
   }
 
