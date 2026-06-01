@@ -44,7 +44,34 @@ class Ech051BuilderTest {
 
     String xml = builder.generateEch051Xml(prePlainte, true);
 
-    assertThat(xml).contains("<eCH-0058:senderId>T4-TEST</eCH-0058:senderId>").contains("<eCH-0058:recipientId>T4-DEST</eCH-0058:recipientId>").contains("<eCH-0058:testDeliveryFlag>true</eCH-0058:testDeliveryFlag>").contains("<eCH-0051:legal>").contains("<eCH-0051:currentName>ACME Assurance SA</eCH-0051:currentName>").contains("john.doe@test.ch").contains("+41791234567").contains("+41221234567").contains("<eCH-0051:uri>").contains("<eCH-0051:marking xml:lang=\"fr\">quality_assurance_link</eCH-0051:marking>").contains("<eCH-0051:uri>https://example.test/profile</eCH-0051:uri>").contains("<eCH-0051:bootyAmount>").contains("<eCH-0051:amount>2500</eCH-0051:amount>").contains("sourceTable=\"LOCALITY_TABLE\"").contains("Quartier centre").contains("2026-01-12T10:15:00.000+01:00").contains("2026-01-12T11:45:00.000+01:00").contains("2026-01-13T00:00:00.000+01:00").contains("2026-01-14T00:00:00.000+01:00").contains("date-invalide").contains("<eCH-0051:vehicle>").contains("VELO-999").contains("CADRE-123").contains("VIN-456").contains("AutreMarque").contains("AutreModele").contains("GE123456").contains("sourceTable=\"CANTON_TABLE\"").contains("sourceTable=\"COUNTRY_TABLE\"").contains("<eCH-0051:vehiclePersonLink>").contains("VEH-1").contains("PER-1").contains("INS-1").contains("sourceTable=\"vehicleTypeTable\"").contains("sourceTable=\"vehicleBrandTable\"").contains("sourceTable=\"vehicleModelTable\"").contains("sourceTable=\"vehicleColourTable\"").contains("sourceTable=\"vehicleColourSecondaryTable\"").contains("<eCH-0051:financialTransaction").contains("sep:paymentType=\"IBAN\"").contains("sep:platformType=\"Ricardo\"").contains("sep:platformId=\"RID-778899\"").contains("sep:transactionNumber=\"REF-778899\"").contains("<eCH-0051:accountSend>inconnu</eCH-0051:accountSend>").contains("<eCH-0051:accountReceive>CH9300762011623852957</eCH-0051:accountReceive>");
+    assertThat(xml).contains("<eCH-0058:senderId>T4-TEST</eCH-0058:senderId>").contains("<eCH-0058:recipientId>T4-DEST</eCH-0058:recipientId>").contains("<eCH-0058:testDeliveryFlag>true</eCH-0058:testDeliveryFlag>").contains("<eCH-0051:legal>").contains("<eCH-0051:currentName>ACME Assurance SA</eCH-0051:currentName>").contains("john.doe@test.ch").contains("+41791234567").contains("+41221234567").contains("<eCH-0051:uri>").contains("<eCH-0051:marking xml:lang=\"fr\">quality_assurance_link</eCH-0051:marking>").contains("<eCH-0051:uri>https://example.test/profile</eCH-0051:uri>").contains("<eCH-0051:bootyAmount>").contains("<eCH-0051:amount>2500</eCH-0051:amount>").contains("sourceTable=\"LOCALITY_TABLE\"").contains("Quartier centre").contains("2026-01-12T10:15:00.000").contains("2026-01-12T11:45:00.000").contains("2026-01-13T00:00:00.000").contains("2026-01-14T00:00:00.000").contains("date-invalide").contains("<eCH-0051:vehicle>").contains("VELO-999").contains("CADRE-123").contains("VIN-456").contains("AutreMarque").contains("AutreModele").contains("GE123456").contains("sourceTable=\"CANTON_TABLE\"").contains("sourceTable=\"COUNTRY_TABLE\"").contains("<eCH-0051:vehiclePersonLink>").contains("VEH-1").contains("PER-1").contains("INS-1").contains("sourceTable=\"vehicleTypeTable\"").contains("sourceTable=\"vehicleBrandTable\"").contains("sourceTable=\"vehicleModelTable\"").contains("sourceTable=\"vehicleColourTable\"").contains("sourceTable=\"vehicleColourSecondaryTable\"").contains("<eCH-0051:financialTransaction").contains("sep:paymentType=\"IBAN\"").contains("sep:platformType=\"Ricardo\"").contains("sep:platformId=\"RID-778899\"").contains("sep:transactionNumber=\"REF-778899\"").contains("<eCH-0051:accountSend>inconnu</eCH-0051:accountSend>").contains("<eCH-0051:accountReceive>CH9300762011623852957</eCH-0051:accountReceive>");
+  }
+
+  @Test
+  void generateEch051Xml_shouldKeepActionPeriodLocalTimeWhenInputHasOffset() {
+    PrePlainte prePlainte = mock(PrePlainte.class);
+    Ech0051DocumentPayload.Event event = Ech0051DocumentPayload.Event.builder()
+        .key("EVT-OFFSET")
+        .actionPeriod(Ech0051DocumentPayload.ActionPeriod.builder()
+            .from("2026-01-12T10:15:00.000+01:00")
+            .to("2026-07-12T11:45:00.000+02:00")
+            .build())
+        .build();
+    Ech0051DocumentPayload payload = Ech0051DocumentPayload.builder()
+        .processData(Ech0051DocumentPayload.ProcessData.builder().deliveryDate("2026-03-16").sourceId(Ech051Constants.SourceIds.VOL).processingStatus("GREEN").build())
+        .events(List.of(event))
+        .relations(Ech0051DocumentPayload.Relations.builder().build())
+        .build();
+
+    when(mapper.toDocument(prePlainte)).thenReturn(payload);
+
+    String xml = builder.generateEch051Xml(prePlainte, false);
+
+    assertThat(xml)
+        .contains("<eCH-0051:actionPeriodFrom>2026-01-12T10:15:00.000</eCH-0051:actionPeriodFrom>")
+        .contains("<eCH-0051:actionPeriodTo>2026-07-12T11:45:00.000</eCH-0051:actionPeriodTo>")
+        .doesNotContain("<eCH-0051:actionPeriodFrom>2026-01-12T10:15:00.000+01:00</eCH-0051:actionPeriodFrom>")
+        .doesNotContain("<eCH-0051:actionPeriodTo>2026-07-12T11:45:00.000+02:00</eCH-0051:actionPeriodTo>");
   }
 
   @Test
