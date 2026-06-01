@@ -53,4 +53,12 @@ class InfosPersonneTest {
     Exception ex = assertThrows(ValidationMetierException.class, p::validateBasicInfo);
     assertTrue(ex.getMessage().contains("adresse"));
   }
+
+  @Test
+  void shouldNotThrowWhenNumeroDocumentIdentiteMissingForDocumentsVolesPerdus() {
+    InfosPersonne p = createValidPerson();
+    p.setTypeDocumentIdentite(TypeDocumentIdentite.DOCUMENTS_VOLES_PERDUS);
+    p.setNumeroDocumentIdentite(null);
+    assertDoesNotThrow(p::validateBasicInfo);
+  }
 }

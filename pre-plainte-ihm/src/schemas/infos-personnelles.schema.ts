@@ -109,14 +109,14 @@ export const createInfosPersonnellesSchema = (t: ComposerTranslation) => {
         .min(1, t("validation.selectionnerDocument")),
 
       numeroDocumentIdentite: z.preprocess(
-        val => (val == null || false ? val : String(val).trim()),
+        val => (val == null ? val : String(val).trim()),
         z.string().optional(),
       ),
 
       tiersTypeDocumentIdentite: z.string().optional(),
 
       tiersNumeroDocumentIdentite: z.preprocess(
-        val => (val == null || false ? val : String(val).trim()),
+        val => (val == null ? val : String(val).trim()),
         z.string().optional(),
       ),
 
