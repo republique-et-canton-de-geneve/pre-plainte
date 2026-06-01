@@ -563,6 +563,8 @@
     "questionDegradation": "Constatou danos relacionados com este roubo?",
     "constat": "Foi elaborado um auto policial?",
     "constatDate": "Data do auto",
+    "constatPoliceFichiers": "Auto policial",
+    "constatPoliceWarning": "Antes de continuar o seu pedido, solicite à polícia a constatação do dano ligando para o 117. Pode guardar o rascunho da pré-queixa para a finalizar depois da redação do auto. Para isso, clique no botão \"Guardar e voltar mais tarde\" situado no fim da página.",
     "hintTypeDommage": "Selecione o tipo de dano",
     "hintMontantEstime": "Indique o montante estimado dos danos em algarismos",
     "hintNatureDommage": "Selecione a natureza do dano observado",
@@ -933,7 +935,8 @@
     "selectionnerDocument": "Selecionar uma escolha de documento",
     "disclaimerRequis": "Tem de confirmar esta declaração",
     "constatRequis": "Indique se foi elaborado um auto",
-    "constatDommageRequis": "A data do auto é obrigatória"
+    "constatDommageRequis": "A data do auto é obrigatória",
+    "constatPoliceFichierRequis": "Carregue o auto policial"
   },
   "theme": {
     "toggleTheme": "Alternar o tema",

@@ -563,6 +563,8 @@
     "questionDegradation": "Avez-vous constaté des dégradations liées à ce vol ?",
     "constat": "Un constat de police a-t-il été rédigé ?",
     "constatDate": "Date du constat",
+    "constatPoliceFichiers": "Constat de police",
+    "constatPoliceWarning": "Avant de continuer votre démarche, veuillez faire constater le dommage par la police en appelant le 117. Vous pouvez enregistrer le brouillon de la pré-plainte pour la finaliser après rédaction du constat. Pour cela, cliquez sur le bouton \"enregistrer et revenir plus tard\" situé en bas de la page.",
     "hintTypeDommage": "Sélectionnez le type de dommage",
     "hintMontantEstime": "Indiquez le montant estimé des dommages en chiffres",
     "hintNatureDommage": "Sélectionnez la nature du dommage observé",
@@ -933,7 +935,8 @@
     "selectionnerDocument": "Sélectionner un choix de document",
     "disclaimerRequis": "Vous devez confirmer cette déclaration",
     "constatRequis": "Veuillez indiquer si un constat a été rédigé",
-    "constatDommageRequis": "La date de constat est requise"
+    "constatDommageRequis": "La date de constat est requise",
+    "constatPoliceFichierRequis": "Veuillez télécharger le constat de police"
   },
   "theme": {
     "toggleTheme": "Basculer le thème",
