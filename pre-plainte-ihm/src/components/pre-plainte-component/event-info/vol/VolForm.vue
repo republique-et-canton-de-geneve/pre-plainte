@@ -82,6 +82,7 @@ import { filterNationalities, sortRipolByLabelFr } from "@/utils/helpers/ripolHe
 import type { RipolSelection, Ripol } from "@/types/ripol.interface";
 import type { PrePlainteFormFields, VolObjetFormSnapshot } from "@/types/pre-plainte.interface";
 import BaseRadioGroup from "@/components/radio/BaseRadioGroup.vue";
+import { validerPlaqueVehicule } from "@/utils/helpers/volObjetVolHelpers";
 
 const TEXTE_VIDE = "";
 const NUMERO_IMEI_REGEX = /^\d{15}$/;
@@ -501,6 +502,21 @@ const validerBrouillonObjetVole = (): boolean => {
     }
     if (modele.value.code === "AUTRE" && !chaineFormulaire(modeleAutre.value).trim()) {
       setFieldError("modeleAutre", t("validation.champRequis"));
+      return false;
+    }
+    if (
+      !validerPlaqueVehicule(
+        {
+          sousCategorie: sousCategorie.value,
+          plaqueInconnu: plaqueInconnu.value,
+          plaqueNumero: plaqueNumero.value,
+          plaquePays: plaquePays.value,
+          plaqueCanton: plaqueCanton.value,
+        },
+        setFieldError,
+        t,
+      )
+    ) {
       return false;
     }
   }

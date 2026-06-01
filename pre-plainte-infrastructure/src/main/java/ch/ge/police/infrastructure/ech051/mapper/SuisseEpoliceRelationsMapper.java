@@ -403,18 +403,11 @@ public class SuisseEpoliceRelationsMapper {
       buildEventVehicleLink(vehicle, eventRef, builder);
 
       if (organisationRef != null) {
-        builder.vehiclePersonLink(
-            VehiclePersonLink.builder()
-                .vehicleRef(vehicle.getKey())
-                .personRole(RipolReferenceBuilder.of(
-                    Ech051Constants.INVOLVEMENT_TYPE_VICTIM_CODE,
-                    Ech051Constants.INVOLVEMENT_TYPE_VICTIM_LABEL,
-                    Ech051Constants.INVOLVEMENT_SOURCE_TABLE
-                ))
-                .insurerRef(Ech051Constants.PERSON_KEY_ASSURANCE_ENTREPRISE)
-                .personRef(organisationRef)
-                .build()
-        );
+        builder.vehiclePersonLink(buildVehicleVictimLink(
+            vehicle,
+            organisationRef,
+            Ech051Constants.PERSON_KEY_ASSURANCE_ENTREPRISE
+        ));
       }
     }
   }
@@ -637,18 +630,11 @@ public class SuisseEpoliceRelationsMapper {
       buildEventVehicleLink(vehicle, eventRef, builder);
 
       if (victimRef != null) {
-        builder.vehiclePersonLink(
-            VehiclePersonLink.builder()
-                .vehicleRef(vehicle.getKey())
-                .personRole(RipolReferenceBuilder.of(
-                    Ech051Constants.INVOLVEMENT_TYPE_VICTIM_CODE,
-                    Ech051Constants.INVOLVEMENT_TYPE_VICTIM_LABEL,
-                    Ech051Constants.INVOLVEMENT_SOURCE_TABLE
-                ))
-                .personRef(victimRef)
-                .insurerRef(Ech051Constants.INSURER_REF_VEHICLE)
-                .build()
-        );
+        builder.vehiclePersonLink(buildVehicleVictimLink(
+            vehicle,
+            victimRef,
+            Ech051Constants.INSURER_REF_VEHICLE
+        ));
       }
     }
   }
@@ -712,6 +698,22 @@ public class SuisseEpoliceRelationsMapper {
         );
       }
     }
+  }
+
+  private VehiclePersonLink buildVehicleVictimLink(VehicleItem vehicle, String personRef, String insurerRef) {
+    VehiclePersonLink.VehiclePersonLinkBuilder linkBuilder = VehiclePersonLink.builder()
+        .vehicleRef(vehicle.getKey())
+        .personRole(RipolReferenceBuilder.of(
+            Ech051Constants.INVOLVEMENT_TYPE_VICTIM_CODE,
+            Ech051Constants.INVOLVEMENT_TYPE_VICTIM_LABEL,
+            Ech051Constants.INVOLVEMENT_SOURCE_TABLE
+        ))
+        .personRef(personRef)
+        .insurerRef(insurerRef);
+    if (vehicle.getInsuranceNumber() != null && !vehicle.getInsuranceNumber().isBlank()) {
+      linkBuilder.insuranceNumber(vehicle.getInsuranceNumber());
+    }
+    return linkBuilder.build();
   }
 
   /**

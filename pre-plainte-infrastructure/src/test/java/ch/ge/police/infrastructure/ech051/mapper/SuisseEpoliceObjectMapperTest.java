@@ -122,6 +122,22 @@ class SuisseEpoliceObjectMapperTest {
   }
 
   @Test
+  void shouldMapVehicleInsuranceFields() {
+    ObjetIncident vehicle = mockVehicleObjet();
+    when(vehicle.getNumeroAssurance()).thenReturn("3213213");
+    when(vehicle.getNumeroVignette()).thenReturn("432432432");
+    when(vehicle.getNumeroMaster()).thenReturn("432432432");
+    Vol vol = mock(Vol.class);
+    when(vol.getObjetsVoles()).thenReturn(List.of(vehicle));
+
+    VehicleItem item = mapper.buildVehiclesFromIncident(vol).getFirst();
+
+    assertEquals("3213213", item.getInsuranceNumber());
+    assertEquals("432432432", item.getVignetteNumber());
+    assertEquals("432432432", item.getMasterNumber());
+  }
+
+  @Test
   void shouldBuildPlateTheftAsObjectAndNotVehicle() {
     ObjetIncident plaque = ObjetIncident.builder()
         .categorieObjet("plaque")

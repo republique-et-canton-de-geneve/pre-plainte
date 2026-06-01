@@ -1,4 +1,9 @@
-import { CATEGORIES_OBJETS, RIPOL, VEHICULE_CATEGORIES_AVEC_PLAQUE } from "@/constants/constant";
+import {
+  CATEGORIES_OBJETS,
+  RIPOL,
+  VEHICULE_CATEGORIES_AVEC_PLAQUE,
+  VEHICULE_CATEGORIES_PLAQUE_OBLIGATOIRE,
+} from "@/constants/constant";
 import type { PrePlainteFormFields, VolObjetFormSnapshot } from "@/types/pre-plainte.interface";
 
 export type VolObjetVolTranslate = (key: string, ...args: unknown[]) => string;
@@ -65,4 +70,46 @@ export function libelleModeleResumeVolObjet(obj: VolObjetFormSnapshot): string {
     return obj.modeleAutre;
   }
   return obj.modele?.label ?? TEXTE_VIDE;
+}
+
+export function affichePlaquePourSousCategorie(sousCategorie?: string): boolean {
+  return !!sousCategorie && VEHICULE_CATEGORIES_AVEC_PLAQUE.includes(sousCategorie);
+}
+
+export function isPlaqueObligatoirePourSousCategorie(sousCategorie?: string): boolean {
+  return !!sousCategorie && VEHICULE_CATEGORIES_PLAQUE_OBLIGATOIRE.includes(sousCategorie);
+}
+
+type ChampsPlaqueVehicule = {
+  sousCategorie?: string;
+  plaqueInconnu?: boolean;
+  plaqueNumero?: string;
+  plaquePays?: { code?: string } | null;
+  plaqueCanton?: { code?: string } | null;
+};
+
+export function validerPlaqueVehicule(
+  champs: ChampsPlaqueVehicule,
+  setFieldError: (field: string, message: string) => void,
+  t: VolObjetVolTranslate,
+): boolean {
+  if (!affichePlaquePourSousCategorie(champs.sousCategorie)) {
+    return true;
+  }
+  if (champs.plaqueInconnu && !isPlaqueObligatoirePourSousCategorie(champs.sousCategorie)) {
+    return true;
+  }
+  if (!champs.plaquePays?.code) {
+    setFieldError("plaquePays", t("validation.champRequis"));
+    return false;
+  }
+  if (!champs.plaqueNumero?.trim()) {
+    setFieldError("plaqueNumero", t("validation.champRequis"));
+    return false;
+  }
+  if (champs.plaquePays.code === RIPOL.PAYS_SUISSE && !champs.plaqueCanton?.code) {
+    setFieldError("plaqueCanton", t("validation.champRequis"));
+    return false;
+  }
+  return true;
 }
