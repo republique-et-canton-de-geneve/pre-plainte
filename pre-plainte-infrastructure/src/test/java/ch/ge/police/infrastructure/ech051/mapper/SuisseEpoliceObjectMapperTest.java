@@ -1,5 +1,6 @@
 package ch.ge.police.infrastructure.ech051.mapper;
 
+import ch.ge.police.core.domain.model.common.RipolCode;
 import ch.ge.police.core.domain.model.event.IncidentBase;
 import ch.ge.police.core.domain.model.event.dommagematerial.DommageMateriel;
 import ch.ge.police.core.domain.model.event.dommagematerial.common.TypeDommage;
@@ -135,6 +136,23 @@ class SuisseEpoliceObjectMapperTest {
     assertEquals(1, objects.size());
     assertTrue(vehicles.isEmpty());
     assertTrue(objects.get(0).getAdditionalInformation().contains("Numéro de plaque: GE123456"));
+  }
+
+  @Test
+  void shouldBuildIdentityDocumentCodeAsObjectAndNotVehicle() {
+    ObjetIncident passeport = ObjetIncident.builder()
+        .categorieObjet("documents")
+        .sousCategorie("papiers_identite")
+        .type(new RipolCode("200300", "Passeport"))
+        .build();
+    Vol vol = mockVolWith(passeport);
+
+    List<ObjectItem> objects = mapper.buildObjectsFromIncident(vol);
+    List<VehicleItem> vehicles = mapper.buildVehiclesFromIncident(vol);
+
+    assertEquals(1, objects.size());
+    assertTrue(vehicles.isEmpty());
+    assertEquals("200300", objects.getFirst().getTypeOfObject().getCode());
   }
 
   @Test
