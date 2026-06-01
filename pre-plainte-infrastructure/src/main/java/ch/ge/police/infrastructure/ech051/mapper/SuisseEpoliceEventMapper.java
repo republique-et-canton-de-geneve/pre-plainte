@@ -96,7 +96,7 @@ public class SuisseEpoliceEventMapper {
    */
   public Event buildEvent(IncidentBase incident, InformationsPersonnelles infos) {
     if (incident instanceof Cybercrime cybercrime && isCyberTransactionType(cybercrime)) {
-      return buildCyberTransactionEvent(cybercrime);
+      return buildCyberTransactionEvent(cybercrime, infos);
     }
 
     Adresse primaryActionAddress = incident.getAdresseIncident();
@@ -128,24 +128,13 @@ public class SuisseEpoliceEventMapper {
       .build();
   }
 
-  private Event buildCyberTransactionEvent(Cybercrime incident) {
-    RipolLocation unknownCountry = RipolLocation.builder()
-        .code(Ech051Constants.COUNTRY_UNKNOWN_RIPOL_CODE)
-        .label(Ech051Constants.COUNTRY_UNKNOWN_LABEL)
-        .sourceTable("EXT_GPNATI")
-        .zipCode(null)
-        .build();
-
-    ActionPlace cyberPlace = ActionPlace.builder()
-        .country(unknownCountry)
-        .build();
-
+  private Event buildCyberTransactionEvent(Cybercrime incident, InformationsPersonnelles infos) {
     return Event.builder()
         .key(Ech051Constants.EVENT_KEY)
         .descriptionShort(determineEventDescription(incident))
         .complaintDate(LocalDate.now().toString())
         .actionPeriod(resolveCyberActionPeriod(incident))
-        .actionPlace(cyberPlace)
+        .actionPlace(resolveCyberActionPlace(infos))
         .secondaryActionPlace(null)
         .bootyAmount(buildBootyAmount(incident))
         .locality(buildLocalityReference(incident))
@@ -154,6 +143,37 @@ public class SuisseEpoliceEventMapper {
         .facts(buildEventFacts(incident))
         .additionalInformation(buildEventAdditionalInformation(incident))
         .build();
+  }
+
+  private ActionPlace resolveCyberActionPlace(InformationsPersonnelles infos) {
+    Adresse victimAddress = resolveVictimAddress(infos);
+    if (addressMapper.isAddressComplete(victimAddress)) {
+      return buildActionPlace(victimAddress);
+    }
+
+    RipolLocation unknownCountry = RipolLocation.builder()
+        .code(Ech051Constants.COUNTRY_UNKNOWN_RIPOL_CODE)
+        .label(Ech051Constants.COUNTRY_UNKNOWN_LABEL)
+        .sourceTable("EXT_GPNATI")
+        .zipCode(null)
+        .build();
+
+    return ActionPlace.builder()
+        .country(unknownCountry)
+        .build();
+  }
+
+  private Adresse resolveVictimAddress(InformationsPersonnelles infos) {
+    if (infos == null) {
+      return null;
+    }
+    if (infos.hasOrganisation() && infos.getOrganisation() != null) {
+      return infos.getOrganisation().getAdresse();
+    }
+    if (infos.hasTiers() && infos.getTiers() != null) {
+      return infos.getTiers().getAdresse();
+    }
+    return infos.getAdresse();
   }
 
   private ActionPeriod resolveCyberActionPeriod(Cybercrime cybercrime) {
