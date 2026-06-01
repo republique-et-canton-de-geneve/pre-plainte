@@ -201,7 +201,7 @@
     "carteIdentite": "Carte d'identité",
     "passeport": "Passeport",
     "numeroDocumentIdentite": "Numéro document",
-    "aucunDocument": "Je n'ai pas de document d'identité",
+    "documentsVolesPerdus": "Documents volés ou perdus",
     "numeroCarteIdentite": "Numéro de carte d'identité",
     "numeroPasseport": "Numéro de passeport",
     "telechargerPieceIdentite": "Télécharger une copie de la pièce d'identité ou du passeport",

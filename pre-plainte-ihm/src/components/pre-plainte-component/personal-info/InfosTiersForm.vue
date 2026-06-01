@@ -194,7 +194,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, ref, watch } from "vue";
 import { useField } from "vee-validate";
 import { useI18n } from "vue-i18n";
 import { RIPOL } from "@/constants/constant";
@@ -245,7 +245,7 @@ const displayGenreLabel = (item: RipolSelection) => {
 const typesDocumentIdentite = computed(() => toTranslatedOptions(TYPES_DOCUMENT_IDENTITE, t));
 
 const showDocumentNumberFieldTiers = computed(
-  () => !!tiersTypeDocumentIdentite.value,
+  () => !!tiersTypeDocumentIdentite.value  && tiersTypeDocumentIdentite.value !== "documents_voles_perdus",
 );
 
 const documentNumberLabelTiers = computed(() => {
@@ -331,6 +331,12 @@ const onTiersCountryChanged = (country: CountrySelection) => {
 const onTiersDateNaissanceInput = (e: InputEvent) => {
   applyDateMask(e, tiersDateNaissance);
 };
+
+watch(tiersTypeDocumentIdentite, newValue => {
+  if (newValue === "documents_voles_perdus") {
+    tiersNumeroDocumentIdentite.value = "";
+  }
+});
 </script>
 
 <style scoped>

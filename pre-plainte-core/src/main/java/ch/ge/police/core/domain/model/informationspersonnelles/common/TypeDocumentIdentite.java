@@ -9,7 +9,8 @@ import java.util.Arrays;
 
 public enum TypeDocumentIdentite {
   CARTE_IDENTITE("carte_identite", "Carte d'identité"),
-  PASSEPORT("passeport", "Passeport");
+  PASSEPORT("passeport", "Passeport"),
+  DOCUMENTS_VOLES_PERDUS("documents_voles_perdus", "Documents volés ou perdus");
 
   private final String code;
 
