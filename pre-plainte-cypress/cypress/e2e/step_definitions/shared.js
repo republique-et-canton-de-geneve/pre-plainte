@@ -295,6 +295,10 @@ Then("la demande de code email est envoyée pour {string}", (email) => {
   });
 });
 
+Then("la demande de code email est prise en compte", () => {
+  cy.get('[data-cy="email-otp"]').should(bevisible);
+});
+
 Then("la vérification du code email est envoyée pour {string} avec le code {string}", (email, code) => {
   cy.wait("@verifyEmailChallenge").then(({ request }) => {
     expect(request.body.email).to.eq(email);
