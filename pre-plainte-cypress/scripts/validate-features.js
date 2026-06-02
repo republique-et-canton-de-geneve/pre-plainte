@@ -3,6 +3,7 @@ import path from "node:path";
 import process from "node:process";
 
 const featureDir = path.resolve("cypress/e2e");
+const supportStepDefinitionsDir = path.resolve("cypress/support/step_definitions");
 const errors = [];
 
 const frenchStep = /^\s*(Etant donné|Étant donné|Quand|Alors|Et|Mais)\b/;
@@ -17,6 +18,24 @@ function featureFiles(dir) {
     }
     return entry.isFile() && entry.name.endsWith(".feature") ? [fullPath] : [];
   });
+}
+
+function hasStepDefinitionFiles(dir) {
+  if (!fs.existsSync(dir)) {
+    return false;
+  }
+
+  return fs.readdirSync(dir, { withFileTypes: true }).some(entry => {
+    const fullPath = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      return hasStepDefinitionFiles(fullPath);
+    }
+    return entry.isFile() && /\.(js|mjs|ts|tsx)$/.test(entry.name);
+  });
+}
+
+if (!hasStepDefinitionFiles(supportStepDefinitionsDir)) {
+  errors.push("Aucun fichier de step definitions trouvé dans cypress/support/step_definitions.");
 }
 
 for (const file of featureFiles(featureDir)) {
