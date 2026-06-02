@@ -330,6 +330,7 @@ const reinitialiserDependancesChangementCategorie = (nouvelleCategorie: string) 
   couleur.value = null;
   hasBrands.value = true;
   hasModels.value = false;
+  numeroSerieInconnu.value = false;
   viderChampsVehiculeVol();
   if (nouvelleCategorie === VOL_OBJET_CATEGORIE.TELEPHONE) {
     sousCategorie.value = VOL_OBJET_CATEGORIE.TELEPHONE_MOBILE;
