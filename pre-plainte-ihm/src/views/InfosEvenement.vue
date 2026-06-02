@@ -18,6 +18,7 @@
         persistent-hint
         clearable
         class="mb-8 mt-5"
+        data-cy="type-incident"
       />
       <VolForm v-if="typeIncident === 'vol'" />
       <DegatMaterielForm v-if="typeIncident === 'degat-delit'" />
@@ -198,10 +199,10 @@
 
       <div class="d-md-none mt-4">
         <div class="pre-plainte-mobile-step-actions d-flex flex-column gap-4 mb-2">
-          <v-btn variant="outlined" color="primary" class="w-100" @click="handleCancelClick">
+          <v-btn variant="outlined" color="primary" class="w-100" data-cy="precedent-evenement" @click="handleCancelClick">
             {{ t("common.precedent") }}
           </v-btn>
-          <v-btn type="submit" variant="flat" color="primary" class="w-100" @click="onSubmit">
+          <v-btn type="submit" variant="flat" color="primary" class="w-100" data-cy="continuer-evenement" @click="onSubmit">
             {{ t("common.continuer") }}
           </v-btn>
         </div>
@@ -224,10 +225,10 @@
       </v-col>
       <v-spacer />
       <v-col cols="12" md="auto" class="d-flex justify-end">
-        <v-btn variant="outlined" color="primary" class="me-4" @click="handleCancelClick">
+        <v-btn variant="outlined" color="primary" class="me-4" data-cy="precedent-evenement" @click="handleCancelClick">
           {{ t("common.precedent") }}
         </v-btn>
-        <v-btn type="submit" variant="flat" color="primary" @click="onSubmit">
+        <v-btn type="submit" variant="flat" color="primary" data-cy="continuer-evenement" @click="onSubmit">
           {{ t("common.poursuivre") }}
         </v-btn>
       </v-col>

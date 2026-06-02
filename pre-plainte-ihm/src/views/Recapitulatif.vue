@@ -1607,6 +1607,7 @@
         class="w-100"
         :loading="isSubmitting"
         :disabled="isSubmitDisabled"
+        data-cy="soumettre-preplainte"
         @click="submit"
       >
         {{ t("submission.soumettrePrePlainte") }}
@@ -1619,6 +1620,7 @@
         variant="flat"
         :loading="isSubmitting"
         :disabled="isSubmitDisabled"
+        data-cy="soumettre-preplainte"
         @click="submit"
       >
         {{ t("submission.soumettrePrePlainte") }}

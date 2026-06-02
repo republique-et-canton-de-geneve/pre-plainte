@@ -20,6 +20,7 @@
         :hint="t('informationsPersonnelles.hintEmail')"
         persistent-hint
         autocomplete="email"
+        data-cy="verification-email"
       />
 
       <v-btn
@@ -28,6 +29,7 @@
         class="mb-4"
         :disabled="!emailValide || codeRequestLoading"
         :loading="codeRequestLoading"
+        data-cy="envoyer-code-email"
         @click="onRequestCode"
       >
         {{ t("emailChallenge.envoyerCodeSecurite") }}
@@ -61,7 +63,7 @@
       </v-alert>
 
       <div class="pre-plainte-mobile-step-actions d-md-none mt-4 d-flex flex-column gap-4 mb-2">
-        <v-btn variant="outlined" color="primary" class="w-100" @click="emit('cancel')">
+        <v-btn variant="outlined" color="primary" class="w-100" data-cy="precedent-verification-email" @click="emit('cancel')">
           {{ t("common.precedent") }}
         </v-btn>
         <v-btn
@@ -70,6 +72,7 @@
           class="w-100"
           :disabled="!canContinue || verifySubmitLoading"
           :loading="verifySubmitLoading"
+          data-cy="continuer-verification-email"
           type="submit"
         >
           {{ t("common.continuer") }}
@@ -79,7 +82,7 @@
 
     <v-row class="mt-4 d-none d-md-flex" align="center" justify="end">
       <v-col cols="12" md="auto" class="d-flex justify-end flex-wrap">
-        <v-btn variant="outlined" color="primary" class="me-4" @click="emit('cancel')">
+        <v-btn variant="outlined" color="primary" class="me-4" data-cy="precedent-verification-email" @click="emit('cancel')">
           {{ t("common.precedent") }}
         </v-btn>
         <v-btn
@@ -88,6 +91,7 @@
           size="large"
           :disabled="!canContinue || verifySubmitLoading"
           :loading="verifySubmitLoading"
+          data-cy="continuer-verification-email"
           type="submit"
         >
           {{ t("common.continuer") }}

@@ -2,7 +2,7 @@
   <div class="sticky-stepper mt-10">
     <v-stepper v-model="step" direction="horizontal" class="custom-stepper d-flex flex-column">
       <template v-for="(item, index) in stepsToRender" :key="index">
-        <v-stepper-item color="primary" :title="item.title" :complete="step > index + 1" :value="index + 1" />
+        <v-stepper-item color="primary" :title="item.title" :complete="step > index + 1" :value="index + 1" :data-cy="`step-${index + 1}`" />
         <div v-if="index < stepsToRender.length - 1" class="step-vertical-separator"></div>
       </template>
     </v-stepper>

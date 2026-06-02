@@ -184,6 +184,7 @@
       class="mb-4"
       variant="outlined"
       persistent-hint
+      data-cy="type-document-identite"
     />
 
     <v-text-field
