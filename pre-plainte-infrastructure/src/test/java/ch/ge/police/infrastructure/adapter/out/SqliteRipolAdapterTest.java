@@ -563,6 +563,212 @@ class SqliteRipolAdapterTest {
     assertSame(first, second);
   }
 
+  @Test
+  void getCodesByGroupType_shouldDeduplicateVehicleBrandsWithSameDisplayLabel() throws Exception {
+    Path db = Files.createTempFile("ripol-dedup-test-", ".db");
+    db.toFile().deleteOnExit();
+    String jdbcUrl = "jdbc:sqlite:" + db.toAbsolutePath();
+
+    try (Connection conn = DriverManager.getConnection(jdbcUrl); Statement st = conn.createStatement()) {
+      st.execute("""
+          CREATE TABLE TBINCIDENTCODE (
+            ID INTEGER PRIMARY KEY,
+            GROUPTYPE TEXT,
+            CODEVALUE TEXT,
+            TEXT TEXT,
+            MASTERTYPE TEXT,
+            MASTERVALUE TEXT
+          )
+        """);
+      st.execute("""
+          CREATE TABLE TBLOCALIZATION (
+            PK INTEGER,
+            GROUPTYPE TEXT,
+            LOCALE_ID INTEGER,
+            TRANSLATION TEXT
+          )
+        """);
+      st.execute("""
+          INSERT INTO TBINCIDENTCODE (ID, GROUPTYPE, CODEVALUE, TEXT)
+          VALUES (1, '102', '26662', 'AUDI')
+        """);
+      st.execute("""
+          INSERT INTO TBINCIDENTCODE (ID, GROUPTYPE, CODEVALUE, TEXT)
+          VALUES (2, '102', '6604', 'AUDI')
+        """);
+      st.execute("""
+          INSERT INTO TBINCIDENTCODE (ID, GROUPTYPE, CODEVALUE, TEXT)
+          VALUES (3, '102', '3780', 'BMW')
+        """);
+    }
+
+    String classpathLocation = "bdd/dbppel3";
+    ResourceLoader loader =
+      new SingleResourceLoader("classpath:" + classpathLocation, new FileSystemResource(db.toFile()));
+    SqliteRipolAdapter adapter = new SqliteRipolAdapter(loader, classpathLocation);
+
+    List<Ripol> brands = adapter.getCodesByGroupType("102");
+
+    assertEquals(2, brands.size());
+    assertEquals("6604", brands.stream().filter(r -> "AUDI".equals(r.labelDe())).findFirst().orElseThrow().code());
+    assertTrue(brands.stream().anyMatch(r -> "BMW".equals(r.labelDe())));
+  }
+
+  @Test
+  void getCodesByGroupType_shouldPreferFrenchLabelForVehicleColoursAndExcludeSystemCodes() throws Exception {
+    Path db = Files.createTempFile("ripol-colour-fr-test-", ".db");
+    db.toFile().deleteOnExit();
+    String jdbcUrl = "jdbc:sqlite:" + db.toAbsolutePath();
+
+    try (Connection conn = DriverManager.getConnection(jdbcUrl); Statement st = conn.createStatement()) {
+      st.execute("""
+          CREATE TABLE TBINCIDENTCODE (
+            ID INTEGER PRIMARY KEY,
+            GROUPTYPE TEXT,
+            CODEVALUE TEXT,
+            TEXT TEXT
+          )
+        """);
+      st.execute("""
+          CREATE TABLE TBLOCALIZATION (
+            PK INTEGER,
+            GROUPTYPE TEXT,
+            LOCALE_ID INTEGER,
+            TRANSLATION TEXT
+          )
+        """);
+      st.execute("""
+          INSERT INTO TBINCIDENTCODE (ID, GROUPTYPE, CODEVALUE, TEXT)
+          VALUES (1, '103', '5001', 'Effektlack')
+        """);
+      st.execute("""
+          INSERT INTO TBLOCALIZATION (PK, GROUPTYPE, LOCALE_ID, TRANSLATION)
+          VALUES (1, '103', 3, 'Effet laqué')
+        """);
+      st.execute("""
+          INSERT INTO TBINCIDENTCODE (ID, GROUPTYPE, CODEVALUE, TEXT)
+          VALUES (2, '103', '9012', 'Eintrag gültig')
+        """);
+      st.execute("""
+          INSERT INTO TBLOCALIZATION (PK, GROUPTYPE, LOCALE_ID, TRANSLATION)
+          VALUES (2, '103', 3, 'Eintrag gültig')
+        """);
+    }
+
+    String classpathLocation = "bdd/dbppel3";
+    ResourceLoader loader =
+      new SingleResourceLoader("classpath:" + classpathLocation, new FileSystemResource(db.toFile()));
+    SqliteRipolAdapter adapter = new SqliteRipolAdapter(loader, classpathLocation);
+
+    List<Ripol> colours = adapter.getCodesByGroupType("103");
+
+    assertEquals(1, colours.size());
+    assertEquals("5001", colours.getFirst().code());
+    assertEquals("Effet laqué", colours.getFirst().labelFr());
+    assertEquals("Effektlack", colours.getFirst().labelDe());
+  }
+
+  @Test
+  void getBrandsByTypeAndMasterType_shouldExcludeLongNumericOnlyModelLabels() throws Exception {
+    Path db = Files.createTempFile("ripol-model-numeric-test-", ".db");
+    db.toFile().deleteOnExit();
+    String jdbcUrl = "jdbc:sqlite:" + db.toAbsolutePath();
+
+    try (Connection conn = DriverManager.getConnection(jdbcUrl); Statement st = conn.createStatement()) {
+      st.execute("""
+          CREATE TABLE TBINCIDENTCODE (
+            ID INTEGER PRIMARY KEY,
+            GROUPTYPE TEXT,
+            CODEVALUE TEXT,
+            TEXT TEXT,
+            MASTERTYPE TEXT,
+            MASTERVALUE TEXT
+          )
+        """);
+      st.execute("""
+          CREATE TABLE TBLOCALIZATION (
+            PK INTEGER,
+            GROUPTYPE TEXT,
+            LOCALE_ID INTEGER,
+            TRANSLATION TEXT
+          )
+        """);
+      st.execute("""
+          INSERT INTO TBINCIDENTCODE (ID, GROUPTYPE, CODEVALUE, TEXT, MASTERTYPE, MASTERVALUE)
+          VALUES (1, '198', '176', '100 Avant Quattro', '102', '4196')
+        """);
+      st.execute("""
+          INSERT INTO TBINCIDENTCODE (ID, GROUPTYPE, CODEVALUE, TEXT, MASTERTYPE, MASTERVALUE)
+          VALUES (2, '198', '104274', '123456789012345678901234567890', '102', '4196')
+        """);
+    }
+
+    String classpathLocation = "bdd/dbppel3";
+    ResourceLoader loader =
+      new SingleResourceLoader("classpath:" + classpathLocation, new FileSystemResource(db.toFile()));
+    SqliteRipolAdapter adapter = new SqliteRipolAdapter(loader, classpathLocation);
+
+    List<Ripol> models = adapter.getBrandsByTypeAndMasterType("4196", "102");
+
+    assertEquals(1, models.size());
+    assertEquals("176", models.getFirst().code());
+    assertEquals("100 Avant Quattro", models.getFirst().labelDe());
+  }
+
+  @Test
+  void getCodesByGroupType_shouldExcludeInactiveRowsWhenActiveColumnPresent() throws Exception {
+    Path db = Files.createTempFile("ripol-usable-test-", ".db");
+    db.toFile().deleteOnExit();
+    String jdbcUrl = "jdbc:sqlite:" + db.toAbsolutePath();
+
+    try (Connection conn = DriverManager.getConnection(jdbcUrl); Statement st = conn.createStatement()) {
+      st.execute("""
+          CREATE TABLE TBINCIDENTCODE (
+            ID INTEGER PRIMARY KEY,
+            GROUPTYPE TEXT,
+            CODEVALUE TEXT,
+            TEXT TEXT,
+            ACTIVE TEXT,
+            SELECTABLE TEXT
+          )
+        """);
+      st.execute("""
+          CREATE TABLE TBLOCALIZATION (
+            PK INTEGER,
+            GROUPTYPE TEXT,
+            LOCALE_ID INTEGER,
+            TRANSLATION TEXT
+          )
+        """);
+      st.execute("""
+          INSERT INTO TBINCIDENTCODE (ID, GROUPTYPE, CODEVALUE, TEXT, ACTIVE, SELECTABLE)
+          VALUES (1, '11', 'CH', 'Schweiz', '1', '1')
+        """);
+      st.execute("""
+          INSERT INTO TBLOCALIZATION (PK, GROUPTYPE, LOCALE_ID, TRANSLATION)
+          VALUES (1, '11', 3, 'Suisse')
+        """);
+      st.execute("""
+          INSERT INTO TBINCIDENTCODE (ID, GROUPTYPE, CODEVALUE, TEXT, ACTIVE, SELECTABLE)
+          VALUES (2, '11', 'XX', 'Inactive', '0', '1')
+        """);
+      st.execute("""
+          INSERT INTO TBINCIDENTCODE (ID, GROUPTYPE, CODEVALUE, TEXT, ACTIVE, SELECTABLE)
+          VALUES (3, '11', 'YY', 'Not selectable', '1', '0')
+        """);
+    }
+
+    String classpathLocation = "bdd/dbppel3";
+    ResourceLoader loader =
+      new SingleResourceLoader("classpath:" + classpathLocation, new FileSystemResource(db.toFile()));
+    SqliteRipolAdapter adapter = new SqliteRipolAdapter(loader, classpathLocation);
+
+    List<Ripol> codes = adapter.getCodesByGroupType("11");
+
+    assertEquals(1, codes.size());
+    assertEquals("CH", codes.getFirst().code());
+  }
+
   private static SqliteRipolAdapter newAdapterPointingToTempDb() throws Exception {
     String classpathLocation = "bdd/dbppel3";
     ResourceLoader loader = new SingleResourceLoader("classpath:" + classpathLocation, new FileSystemResource(sqliteFile.toFile()));

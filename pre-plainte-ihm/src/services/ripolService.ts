@@ -10,6 +10,7 @@ const searchCache = new Map<string, { data: Ripol[]; timestamp: number }>();
 const CACHE_DURATION = 24 * 60 * 60 * 1000;
 const SEARCH_CACHE_DURATION = 10 * 60 * 1000;
 const endpointLieuOrigine = "lieux-origine";
+const PRELOAD_VEHICLE_TYPE_CODE = "020101";
 
 const getCacheKey = (endpoint: string, params?: Record<string, string>): string =>
   params ? `${endpoint}:${JSON.stringify(params)}` : endpoint;
@@ -115,8 +116,12 @@ export class RipolService {
   static readonly searchVehicleTypes = (search?: string): Promise<Ripol[]> =>
     RipolService.search("vehicle-types", search);
 
-  static readonly searchVehicleBrands = (vehicleTypeCode: string, search?: string): Promise<Ripol[]> =>
-    RipolService.search("vehicle-brands", search, { vehicleTypeCode });
+  static readonly searchVehicleBrands = (search?: string, vehicleTypeCode?: string): Promise<Ripol[]> =>
+    RipolService.search(
+      "vehicle-brands",
+      search,
+      vehicleTypeCode?.trim() ? { vehicleTypeCode: vehicleTypeCode.trim() } : undefined,
+    );
 
   static readonly searchVehicleModels = (brandCode: string, search?: string): Promise<Ripol[]> =>
     RipolService.search("vehicle-models", search, { brandCode });
@@ -139,7 +144,7 @@ export class RipolService {
       RipolService.searchDocumentTypes(),
       RipolService.searchObjectTypes(),
       RipolService.searchVehicleTypes(),
-      RipolService.searchVehicleBrands("020101"),
+      RipolService.searchVehicleBrands(),
     ]);
   }
 }

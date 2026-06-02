@@ -207,13 +207,13 @@ const fetchBrands = async () => {
   if (!typeObjet.value?.code) {
     return [];
   }
-  const masterType = selectedCategorie.value?.useVehicleTypes
-    ? RIPOL.MASTER_TYPE_VEHICULES
-    : RIPOL.MASTER_TYPE_OBJETS;
-  const results = await RipolService.search("brands", undefined, {
-    masterValue: typeObjet.value.code,
-    masterType,
-  });
+  const isVehicle = selectedCategorie.value?.useVehicleTypes === true;
+  const results = isVehicle
+    ? await RipolService.searchVehicleBrands(undefined, typeObjet.value.code)
+    : await RipolService.search("brands", undefined, {
+        masterValue: typeObjet.value.code,
+        masterType: RIPOL.MASTER_TYPE_OBJETS,
+      });
   hasBrands.value = results.length > 0;
   return results;
 };
@@ -227,11 +227,14 @@ const fetchModels = async () => {
   if (!fabricant.value?.code) {
     return [];
   }
+  const isVehicle = selectedCategorie.value?.useVehicleTypes === true;
   modelsLoading.value = true;
   try {
-    const results = await RipolService.search("models", undefined, {
-      masterValue: fabricant.value.code,
-    });
+    const results = isVehicle
+      ? await RipolService.searchVehicleModels(fabricant.value.code)
+      : await RipolService.search("models", undefined, {
+          masterValue: fabricant.value.code,
+        });
     hasModels.value = results.length > 0;
     return results;
   } finally {

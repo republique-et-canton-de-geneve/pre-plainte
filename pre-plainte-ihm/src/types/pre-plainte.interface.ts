@@ -1,6 +1,22 @@
 import type { CreneauRendezVous } from "@/types/rendez-vous-interface";
 import type { RipolSelection } from "./ripol.interface";
 
+type VehiclePlateFields = {
+  plaqueNumero?: string;
+  plaqueInconnu?: boolean;
+  plaquePays?: RipolSelection | null;
+  plaqueCanton?: RipolSelection | null;
+};
+
+type VehicleInsuranceFields = {
+  assuranceAucune?: boolean;
+  assureur?: RipolSelection | null;
+  assureurAutre?: string;
+  numeroAssurance?: string;
+  numeroVignette?: string;
+  numeroMaster?: string;
+};
+
 export type VolObjetFormSnapshot = {
   categorieObjet: string;
   sousCategorie?: string;
@@ -25,17 +41,8 @@ export type VolObjetFormSnapshot = {
   vinInconnu?: boolean;
   velofinderId?: string;
   dateAchat?: string;
-  plaqueNumero?: string;
-  plaqueInconnu?: boolean;
-  plaquePays?: RipolSelection | null;
-  plaqueCanton?: RipolSelection | null;
-  assuranceAucune?: boolean;
-  assureur?: RipolSelection | null;
-  assureurAutre?: string;
-  numeroAssurance?: string;
-  numeroVignette?: string;
-  numeroMaster?: string;
-};
+} & VehiclePlateFields &
+  VehicleInsuranceFields;
 
 export interface PrePlainteFormFields {
   /* Informations générales */

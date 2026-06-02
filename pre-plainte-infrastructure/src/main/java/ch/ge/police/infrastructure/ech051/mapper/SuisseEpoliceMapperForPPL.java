@@ -198,7 +198,7 @@ public class SuisseEpoliceMapperForPPL {
 
     boolean hasCyberInsurer = persons.stream().anyMatch(p -> p != null && Ech051Constants.INSURER_REF_CYBER.equals(p.getKey()));
     if (!hasCyberInsurer) {
-      persons.add(personMapper.buildInsurancePerson(Ech051Constants.INSURER_REF_CYBER, "aucune"));
+      persons.add(personMapper.buildInsurancePerson(Ech051Constants.INSURER_REF_CYBER, Ech051Constants.INSURER_NAME_NONE));
     }
   }
 
@@ -544,7 +544,7 @@ public class SuisseEpoliceMapperForPPL {
         return nom;
       }
     }
-    return "aucune";
+    return Ech051Constants.INSURER_NAME_NONE;
   }
 
   private List<ObjetIncident> listVehicleObjets(IncidentBase incident) {

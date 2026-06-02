@@ -104,7 +104,7 @@ export function useVehicleDetailsRipol({ sousCategorie, activePrefixes }: UseVeh
     }
     brandsLoading.value = true;
     try {
-      const results = await RipolService.searchVehicleBrands(typeObjet.value.code);
+      const results = await RipolService.searchVehicleBrands(undefined, typeObjet.value.code);
       allBrandsCache.value = sortRipolByLabelFr(results);
       hasBrands.value = allBrandsCache.value.length > 0;
       return allBrandsCache.value;
@@ -164,7 +164,11 @@ export function useVehicleDetailsRipol({ sousCategorie, activePrefixes }: UseVeh
           })
         : [...VEHICLE_INSURERS_FALLBACK];
     }
-    return [...sortRipolByLabelFr(insurers), AUTRE_OPTION];
+    const toSelection = (r: Ripol): RipolSelection => ({
+      code: r.code,
+      label: r.labelFr?.trim() || r.labelDe?.trim() || r.code,
+    });
+    return [...sortRipolByLabelFr(insurers).map(toSelection), toSelection(AUTRE_OPTION)];
   };
 
   const resetVehicleCaches = () => {
