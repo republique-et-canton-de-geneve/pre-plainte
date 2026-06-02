@@ -54,6 +54,12 @@ const defaultRipolData = {
 export const stubRipol = (overrides = {}) => {
   const data = { ...defaultRipolData, ...overrides };
 
+  cy.intercept("GET", "**/api/config", {
+    backendUrl: "",
+    captchaEnabled: "false",
+    captchaSitekey: "",
+  }).as("getConfig");
+
   cy.intercept("GET", "**/api/ripol/vehicle-types*", data.vehicleTypes).as("getRipolVehicleTypes");
   cy.intercept("GET", "**/api/ripol/brands*", data.brands).as("getRipolBrands");
   cy.intercept("GET", "**/api/ripol/models*", data.models).as("getRipolModels");
