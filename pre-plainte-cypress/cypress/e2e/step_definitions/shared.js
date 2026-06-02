@@ -45,24 +45,6 @@ const libellesChamps = {
   "Coordonnées du tiers concerné": "Coordonnées du tiers",
 };
 
-const assertDevEmailVerificationBypass = (email, code) => {
-  cy.window().should(win => {
-    const data = JSON.parse(win.localStorage.getItem("pp-data") ?? "{}");
-    expect(data.email).to.eq(email);
-    expect(data.confirmationEmail).to.be.oneOf([code, "000000"]);
-  });
-};
-
-const assertEmailChallengeReady = () => {
-  cy.get("body").then($body => {
-    if ($body.find('[data-cy="email-otp"]').length > 0) {
-      cy.get('[data-cy="email-otp"]').should(bevisible);
-      return;
-    }
-    cy.get('[data-cy="continuer-verification-email"]').filter(":visible").first().should(beenabled);
-  });
-};
-
 Given("je suis sur le formulaire", () => {
   stubRipol();
   cy.visit("/");
@@ -81,20 +63,20 @@ Given("je suis sur l'etape informations generales", () => {
 Given("je suis sur l'étape vérification email avec un challenge valide", () => {
   stubRipol();
   stubEmailChallengeOk();
-  cy.demarrerPrePlainteAEtape(2);
+  cy.demarrerPrePlainteAEtape(2, {}, { disableEmailChallengeBypass: true });
 });
 
 Given("je suis sur l'etape verification email avec un challenge valide", () => {
   stubRipol();
   stubEmailChallengeOk();
-  cy.demarrerPrePlainteAEtape(2);
+  cy.demarrerPrePlainteAEtape(2, {}, { disableEmailChallengeBypass: true });
 });
 
 Given("je suis sur l'étape vérification email avec un challenge invalide", () => {
   stubRipol();
   stubEmailChallengeOk();
   stubEmailChallengeInvalid();
-  cy.demarrerPrePlainteAEtape(2);
+  cy.demarrerPrePlainteAEtape(2, {}, { disableEmailChallengeBypass: true });
 });
 
 Given("je suis sur la section vol de véhicule", () => {
@@ -267,16 +249,7 @@ Then("le message {string} s'affiche sous le champ {string}", (message, champ) =>
 
 Then("le message {string} s'affiche", (message) => {
   if (message === messageCodeEmailInvalide) {
-    cy.get("@verifyEmailChallengeInvalid.all").then(calls => {
-      if (calls.length > 0) {
-        cy.contains(message).should(bevisible);
-        return;
-      }
-      cy.window().should(win => {
-        const data = JSON.parse(win.localStorage.getItem("pp-data") ?? "{}");
-        expect(data.confirmationEmail).to.match(/^\d{6}$/);
-      });
-    });
+    cy.contains(message).should(bevisible);
     return;
   }
   cy.contains(message).should(bevisible);
@@ -312,39 +285,28 @@ Then("le bouton d'envoi du code email est actif", () => {
 });
 
 Then("la demande de code email est envoyée pour {string}", (email) => {
-  assertEmailChallengeReady();
-  cy.get("@requestEmailChallenge.all").then(calls => {
-    if (calls.length > 0) {
-      expect(calls[0].request.body.email).to.eq(email);
-      expect(calls[0].request.body.key).to.be.a("string").and.not.be.empty;
-      return;
-    }
-    cy.get('[data-cy="verification-email"]').find("input").should("have.value", email);
+  cy.wait("@requestEmailChallenge").then(({ request }) => {
+    expect(request.body.email).to.eq(email);
+    expect(request.body.key).to.be.a("string").and.not.be.empty;
   });
 });
 
 Then("la vérification du code email est envoyée pour {string} avec le code {string}", (email, code) => {
-  cy.get("@verifyEmailChallenge.all").then(calls => {
-    if (calls.length > 0) {
-      expect(calls[0].request.body.email).to.eq(email);
-      expect(calls[0].request.body.key).to.be.a("string").and.not.be.empty;
-      expect(calls[0].request.body.code).to.eq(code);
-      return;
-    }
-    assertDevEmailVerificationBypass(email, code);
+  cy.wait("@verifyEmailChallenge").then(({ request }) => {
+    expect(request.body.email).to.eq(email);
+    expect(request.body.key).to.be.a("string").and.not.be.empty;
+    expect(request.body.code).to.eq(code);
   });
 });
 
 Then("la vérification invalide du code email est envoyée", () => {
-  cy.get("@verifyEmailChallengeInvalid.all").then(calls => {
-    if (calls.length > 0) {
-      expect(calls[0].request.body.code).to.eq("111111");
-    }
+  cy.wait("@verifyEmailChallengeInvalid").then(({ request }) => {
+    expect(request.body.code).to.eq("111111");
   });
 });
 
 Then("la zone OTP email est affichée", () => {
-  assertEmailChallengeReady();
+  cy.get('[data-cy="email-otp"]').should(bevisible);
 });
 
 Given("que je renseigne tous les champs obligatoires avec des valeurs valides", (dataTable) => {
