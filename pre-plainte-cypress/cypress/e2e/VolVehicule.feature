@@ -1,13 +1,14 @@
-Feature: Vol d'objet - véhicule
+# language: fr
+Fonctionnalité: Vol d'objet - véhicule
 
-  Context:
+  Contexte:
     Etant donné que je suis sur la section vol de véhicule
 
-  Scenario: 1 - BVA - aucun type de véhicule renseigné
+  Scénario: BVA - aucun type de véhicule renseigné
     Quand je valide l'objet volé
     Alors le message "Le type de l'objet est requis" s'affiche
 
-  Scenario: 2 - BVA - fabricant "Autre" vide puis renseigné avec un caractère
+  Scénario: BVA - fabricant "Autre" vide puis renseigné avec un caractère
     Quand je renseigne le type de véhicule "Voiture"
     Et je sélectionne "Autre (préciser)" dans l'autocomplétion "Marque"
     Et je valide l'objet volé
@@ -16,7 +17,7 @@ Feature: Vol d'objet - véhicule
     Et je valide l'objet volé
     Alors le message "Le modèle est requis" s'affiche
 
-  Scenario: 3 - BVA - modèle "Autre" vide puis renseigné avec un caractère
+  Scénario: BVA - modèle "Autre" vide puis renseigné avec un caractère
     Quand je renseigne le type de véhicule "Voiture"
     Et je sélectionne "Toyota" dans l'autocomplétion "Marque"
     Et je sélectionne "Autre (préciser)" dans l'autocomplétion "Modèle"
