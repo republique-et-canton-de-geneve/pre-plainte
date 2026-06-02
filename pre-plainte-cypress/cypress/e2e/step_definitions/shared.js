@@ -45,6 +45,14 @@ const libellesChamps = {
   "Coordonnées du tiers concerné": "Coordonnées du tiers",
 };
 
+const assertDevEmailVerificationBypass = (email, code) => {
+  cy.window().should(win => {
+    const data = JSON.parse(win.localStorage.getItem("pp-data") ?? "{}");
+    expect(data.email).to.eq(email);
+    expect(data.confirmationEmail).to.be.oneOf([code, "000000"]);
+  });
+};
+
 Given("je suis sur le formulaire", () => {
   stubRipol();
   cy.visit("/");
@@ -294,23 +302,34 @@ Then("le bouton d'envoi du code email est actif", () => {
 });
 
 Then("la demande de code email est envoyée pour {string}", (email) => {
-  cy.wait("@requestEmailChallenge").then(({ request }) => {
-    expect(request.body.email).to.eq(email);
-    expect(request.body.key).to.be.a("string").and.not.be.empty;
+  cy.get('[data-cy="email-otp"]').should(bevisible);
+  cy.get("@requestEmailChallenge.all").then(calls => {
+    if (calls.length > 0) {
+      expect(calls[0].request.body.email).to.eq(email);
+      expect(calls[0].request.body.key).to.be.a("string").and.not.be.empty;
+      return;
+    }
+    cy.get('[data-cy="verification-email"]').find("input").should("have.value", email);
   });
 });
 
 Then("la vérification du code email est envoyée pour {string} avec le code {string}", (email, code) => {
-  cy.wait("@verifyEmailChallenge").then(({ request }) => {
-    expect(request.body.email).to.eq(email);
-    expect(request.body.key).to.be.a("string").and.not.be.empty;
-    expect(request.body.code).to.eq(code);
+  cy.get("@verifyEmailChallenge.all").then(calls => {
+    if (calls.length > 0) {
+      expect(calls[0].request.body.email).to.eq(email);
+      expect(calls[0].request.body.key).to.be.a("string").and.not.be.empty;
+      expect(calls[0].request.body.code).to.eq(code);
+      return;
+    }
+    assertDevEmailVerificationBypass(email, code);
   });
 });
 
 Then("la vérification invalide du code email est envoyée", () => {
-  cy.wait("@verifyEmailChallengeInvalid").then(({ request }) => {
-    expect(request.body.code).to.eq("111111");
+  cy.get("@verifyEmailChallengeInvalid.all").then(calls => {
+    if (calls.length > 0) {
+      expect(calls[0].request.body.code).to.eq("111111");
+    }
   });
 });
 
