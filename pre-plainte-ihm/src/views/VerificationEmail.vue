@@ -24,6 +24,7 @@
       />
 
       <v-btn
+        type="button"
         variant="flat"
         color="primary"
         class="mb-4"
