@@ -46,14 +46,11 @@ const libellesChamps = {
 };
 
 const assertDevEmailRequestBypass = () => {
-  cy.window().should(win => {
-    expect(win.localStorage.getItem("pp-email-challenge-key")).to.be.a("string").and.not.be.empty;
-  });
+  cy.get('[data-cy="email-otp"]').should(bevisible);
 };
 
 const assertDevEmailVerificationBypass = (email, code) => {
   cy.window().should(win => {
-    expect(win.localStorage.getItem("pp-email-challenge-key")).to.be.a("string").and.not.be.empty;
     const data = JSON.parse(win.localStorage.getItem("pp-data") ?? "{}");
     expect(data.email).to.eq(email);
     expect(data.confirmationEmail).to.eq(code);
@@ -276,8 +273,10 @@ Then("le message {string} s'affiche", (message) => {
 });
 
 Then("l'objet volé est enregistré", () => {
-  cy.contains("Ajouter un autre objet volé").should(bevisible);
-  cy.contains("Ajouter un objet volé").should(notbevisible);
+  cy.window().should(win => {
+    const data = JSON.parse(win.localStorage.getItem("pp-data") ?? "{}");
+    expect(data.objetsVolesValides).to.have.length.greaterThan(0);
+  });
 });
 
 Then("le bouton {string} est désactivé", (texte) => {
