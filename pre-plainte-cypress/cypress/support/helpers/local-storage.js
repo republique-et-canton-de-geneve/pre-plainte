@@ -2,6 +2,7 @@ export const STORAGE_KEYS = [
   "pp-data",
   "pp-step",
   "pp-email-challenge-key",
+  "pp-dev-skip-email-challenge",
   "pp-open-section",
   "pre-plainte-locale",
 ];
@@ -17,6 +18,10 @@ export const setPrePlainteStep = (storage, step, data = {}, options = {}) => {
 
   if (options.emailChallengeKey) {
     storage.setItem("pp-email-challenge-key", options.emailChallengeKey);
+  }
+
+  if (options.disableEmailChallengeBypass) {
+    storage.setItem("pp-dev-skip-email-challenge", "false");
   }
 
   if (options.openSection) {
