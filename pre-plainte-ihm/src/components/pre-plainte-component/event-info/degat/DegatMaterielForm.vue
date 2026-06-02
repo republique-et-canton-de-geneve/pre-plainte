@@ -220,6 +220,12 @@ const { value: plaqueNumero } = useField<string>("plaqueNumero");
 const { value: plaqueInconnu } = useField<boolean>("plaqueInconnu");
 const { value: plaquePays } = useField<RipolSelection | null>("plaquePays");
 const { value: plaqueCanton } = useField<RipolSelection | null>("plaqueCanton");
+const { value: assuranceAucune } = useField<boolean>("assuranceAucune");
+const { value: assureur } = useField<RipolSelection | null>("assureur");
+const { value: assureurAutre } = useField<string>("assureurAutre");
+const { value: numeroAssurance } = useField<string>("numeroAssurance");
+const { value: numeroVignette } = useField<string>("numeroVignette");
+const { value: numeroMaster } = useField<string>("numeroMaster");
 const { value: isVehicle } = useField<boolean>("isVehicle");
 const { value: objetsDegradesValides } = useField<VolObjetFormSnapshot[]>("objetsDegradesValides");
 
@@ -289,6 +295,12 @@ const remplirBrouillonDepuisSnapshot = (obj: VolObjetFormSnapshot) => {
   plaqueInconnu.value = !!obj.plaqueInconnu;
   plaquePays.value = obj.plaquePays ? { ...obj.plaquePays } : null;
   plaqueCanton.value = obj.plaqueCanton ? { ...obj.plaqueCanton } : null;
+  assuranceAucune.value = !!obj.assuranceAucune;
+  assureur.value = obj.assureur ? { ...obj.assureur } : null;
+  assureurAutre.value = texteOuVide(obj.assureurAutre);
+  numeroAssurance.value = texteOuVide(obj.numeroAssurance);
+  numeroVignette.value = texteOuVide(obj.numeroVignette);
+  numeroMaster.value = texteOuVide(obj.numeroMaster);
 };
 
 const viderChampsVehiculeBrouillon = () => {
@@ -311,6 +323,12 @@ const viderChampsVehiculeBrouillon = () => {
   plaqueInconnu.value = false;
   plaquePays.value = null;
   plaqueCanton.value = null;
+  assuranceAucune.value = false;
+  assureur.value = null;
+  assureurAutre.value = TEXTE_VIDE;
+  numeroAssurance.value = TEXTE_VIDE;
+  numeroVignette.value = TEXTE_VIDE;
+  numeroMaster.value = TEXTE_VIDE;
 };
 
 const CHAMPS_ERREUR_BROUILLON = [
@@ -365,6 +383,12 @@ const buildSnapshotFromDraft = (): VolObjetFormSnapshot => ({
   plaqueInconnu: plaqueInconnu.value,
   plaquePays: cloneRipol(plaquePays.value),
   plaqueCanton: cloneRipol(plaqueCanton.value),
+  assuranceAucune: assuranceAucune.value,
+  assureur: cloneRipol(assureur.value),
+  assureurAutre: chaineFormulaire(assureurAutre.value),
+  numeroAssurance: chaineFormulaire(numeroAssurance.value),
+  numeroVignette: chaineFormulaire(numeroVignette.value),
+  numeroMaster: chaineFormulaire(numeroMaster.value),
 });
 
 const mettreListe = (liste: VolObjetFormSnapshot[]) => {
@@ -415,7 +439,7 @@ const validerVehiculeDommage = () => {
         plaquePays: plaquePays.value,
         plaqueCanton: plaqueCanton.value,
       },
-      setFieldError,
+      (field, message) => setFieldError(field as any, message),
       t,
     )
   ) {

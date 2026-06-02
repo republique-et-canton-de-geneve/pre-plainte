@@ -160,7 +160,7 @@ class RipolControllerTest {
       RipolController.GROUP_TYPE_VEHICLE_BRAND,
       "search")).thenReturn(expected);
 
-    List<Ripol> result = controller.getVehicleBrands("vehicle", "search");
+    List<Ripol> result = controller.getVehicleBrands(null, "search");
 
     assertSame(expected, result);
 
@@ -175,13 +175,29 @@ class RipolControllerTest {
 
     when(ripolPort.getCodesByGroupType(RipolController.GROUP_TYPE_VEHICLE_BRAND)).thenReturn(expected);
 
-    List<Ripol> result = controller.getVehicleBrands("vehicle", null);
+    List<Ripol> result = controller.getVehicleBrands(null, null);
 
     assertSame(expected, result);
 
     verify(ripolPort).getCodesByGroupType(RipolController.GROUP_TYPE_VEHICLE_BRAND);
     verify(ripolPort, org.mockito.Mockito.never())
       .searchCodesByGroupType(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString());
+  }
+
+  @Test
+  void getVehicleBrands_withVehicleTypeCode_filtersByCategory() {
+    Ripol audi = new Ripol("6604", "AUDI", "AUDI", RipolController.GROUP_TYPE_VEHICLE_BRAND);
+    Ripol bikes = new Ripol("7352", "3G BIKES", "3G BIKES", RipolController.GROUP_TYPE_VEHICLE_BRAND);
+
+    when(ripolPort.getBrandsByTypeAndMasterType("010101", RipolController.MASTER_TYPE_VEHICULES))
+        .thenReturn(List.of());
+    when(ripolPort.getCodesByGroupType(RipolController.GROUP_TYPE_VEHICLE_BRAND))
+        .thenReturn(List.of(audi, bikes));
+
+    List<Ripol> result = controller.getVehicleBrands("010101", null);
+
+    assertEquals(1, result.size());
+    assertEquals("AUDI", result.getFirst().labelFr());
   }
 
   @Test
@@ -319,7 +335,9 @@ class RipolControllerTest {
 
   @Test
   void getVehicleInsurers_withoutSearch_returnsFallbackWhenRipolEmpty() {
-    when(ripolPort.searchCodesByGroupType(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString()))
+    when(ripolPort.getCodesByGroupType(RipolController.GROUP_TYPE_VEHICLE_INSURER))
+        .thenReturn(List.of());
+    when(ripolPort.getCodesByGroupType("186"))
         .thenReturn(List.of());
 
     List<Ripol> result = controller.getVehicleInsurers(null);
