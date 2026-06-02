@@ -8,6 +8,7 @@ const bevisible = "be.visible";
 const notbevisible = "not.be.visible";
 const bedisabled = "be.disabled";
 const beenabled = "be.enabled";
+const emailChallengeBypassKey = "pp-dev-skip-email-challenge";
 
 const donneesEvenementVolVehicule = {
   nationalite: ripolSelection("8100", "Suisse"),
@@ -64,12 +65,14 @@ Given("je suis sur l'étape vérification email avec un challenge valide", () =>
   stubRipol();
   stubEmailChallengeOk();
   cy.demarrerPrePlainteAEtape(2, {}, { disableEmailChallengeBypass: true });
+  cy.window().its("localStorage").invoke("getItem", emailChallengeBypassKey).should("eq", "false");
 });
 
 Given("je suis sur l'etape verification email avec un challenge valide", () => {
   stubRipol();
   stubEmailChallengeOk();
   cy.demarrerPrePlainteAEtape(2, {}, { disableEmailChallengeBypass: true });
+  cy.window().its("localStorage").invoke("getItem", emailChallengeBypassKey).should("eq", "false");
 });
 
 Given("je suis sur l'étape vérification email avec un challenge invalide", () => {
@@ -77,6 +80,7 @@ Given("je suis sur l'étape vérification email avec un challenge invalide", () 
   stubEmailChallengeOk();
   stubEmailChallengeInvalid();
   cy.demarrerPrePlainteAEtape(2, {}, { disableEmailChallengeBypass: true });
+  cy.window().its("localStorage").invoke("getItem", emailChallengeBypassKey).should("eq", "false");
 });
 
 Given("je suis sur la section vol de véhicule", () => {
@@ -206,7 +210,7 @@ When("je saisis l'email de vérification {string}", (email) => {
 });
 
 When("je demande l'envoi du code email", () => {
-  cy.get('[data-cy="envoyer-code-email"]').click();
+  cy.get('[data-cy="envoyer-code-email"]').should(bevisible).and(beenabled).click();
 });
 
 When("je saisis le code email {string}", (code) => {
