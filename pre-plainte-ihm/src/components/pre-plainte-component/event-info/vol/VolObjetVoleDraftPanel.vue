@@ -189,7 +189,7 @@
         <v-text-field
           :label="(!brouillon.numeroSerieRequis || brouillon.numeroSerieInconnu) ? t('incidentTypes.numeroSerie') : requiredLabel(t('incidentTypes.numeroSerie'))"
           v-model="brouillon.numeroSerie"
-          :disabled="brouillon.numeroSerieInconnu"
+          :disabled="brouillon.numeroSerieRequis && brouillon.numeroSerieInconnu"
           class="my-4"
           :error-messages="brouillon.numeroSerieError"
           variant="outlined"
