@@ -7,6 +7,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.util.ArrayList;
@@ -64,14 +65,15 @@ public class SqliteRipolAdapter implements RipolPort {
     GROUP_TYPE_LIEU,
     GROUP_TYPE_CANTON
   );
-  private static final String COL_ID = "ID";
   private static final String COL_CODEVALUE = "CODEVALUE";
   private static final String COL_TEXT_FR = "TEXT_FR";
   private static final String COL_TEXT_DE = "TEXT_DE";
   private static final String COL_GROUPTYPE = "GROUPTYPE";
   private static final String TRACE_ID = "traceId";
   private static final int LOCALE_FR = 3;
-  private static final Set<String> TEXT_ONLY_BULK_GROUP_TYPES = Set.of(
+  private static final String SQL_SELECT_TEXT_FR =
+    "COALESCE(NULLIF(trim(loc.TRANSLATION), ''), code.TEXT) AS TEXT_FR\n";
+  private static final Set<String> DEDUPLICATE_BY_LABEL_GROUP_TYPES = Set.of(
     GROUP_TYPE_VEHICULE,
     GROUP_TYPE_VEHICLE_BRAND,
     GROUP_TYPE_COULEUR
@@ -81,8 +83,8 @@ public class SqliteRipolAdapter implements RipolPort {
   private final Map<String, List<Ripol>> codesByGroupTypeCache = new ConcurrentHashMap<>();
   private final Map<String, List<Ripol>> brandsByKeyCache = new ConcurrentHashMap<>();
   private final Map<String, List<Ripol>> modelsByBrandCache = new ConcurrentHashMap<>();
-  private final Map<Long, String> frenchTranslationsByPk = new ConcurrentHashMap<>();
-  private volatile boolean frenchTranslationsLoaded;
+  private final boolean incidentCodeHasActiveColumn;
+  private final boolean incidentCodeHasSelectableColumn;
 
   private static final RowMapper<Ripol> RIPOL_ROW_MAPPER = (rs, rowNum) ->
     new Ripol(
@@ -121,7 +123,102 @@ public class SqliteRipolAdapter implements RipolPort {
     dataSource.setUrl(jdbcUrl);
 
     this.jdbcTemplate = new JdbcTemplate(dataSource);
+    this.incidentCodeHasActiveColumn = incidentCodeHasColumn("ACTIVE");
+    this.incidentCodeHasSelectableColumn = incidentCodeHasColumn("SELECTABLE");
+    log.info(
+      "event=ripol_incident_code_filters traceId={} active={} selectable={}",
+      MDC.get(TRACE_ID),
+      incidentCodeHasActiveColumn,
+      incidentCodeHasSelectableColumn
+    );
     createSearchIndexes();
+  }
+
+  private boolean incidentCodeHasColumn(String columnName) {
+    try {
+      return Boolean.TRUE.equals(
+        jdbcTemplate.execute(
+          (Connection conn) -> {
+            DatabaseMetaData meta = conn.getMetaData();
+            try (ResultSet rs = meta.getColumns(null, null, TABLE_INCIDENT_CODE, columnName)) {
+              return rs.next();
+            }
+          }
+        )
+      );
+    } catch (DataAccessException e) {
+      log.warn(
+        "event=ripol_column_detection_failure traceId={} column={} error={}",
+        MDC.get(TRACE_ID),
+        columnName,
+        e.getMessage(),
+        e
+      );
+      return false;
+    }
+  }
+
+  private String sqlAndUsableIncidentCodeFilter() {
+    StringBuilder filter = new StringBuilder();
+    if (incidentCodeHasActiveColumn) {
+      filter.append(" AND CAST(code.ACTIVE AS INTEGER) = 1");
+    }
+    if (incidentCodeHasSelectableColumn) {
+      filter.append(" AND CAST(code.SELECTABLE AS INTEGER) = 1");
+    }
+    return filter.toString();
+  }
+
+  private String sqlAndUsableIncidentCodeFilterUnaliased() {
+    StringBuilder filter = new StringBuilder();
+    if (incidentCodeHasActiveColumn) {
+      filter.append(" AND CAST(ACTIVE AS INTEGER) = 1");
+    }
+    if (incidentCodeHasSelectableColumn) {
+      filter.append(" AND CAST(SELECTABLE AS INTEGER) = 1");
+    }
+    return filter.toString();
+  }
+
+  private String sqlWhereUsableIncidentCodeFilterUnaliased() {
+    List<String> conditions = new ArrayList<>();
+    if (incidentCodeHasActiveColumn) {
+      conditions.add("CAST(ACTIVE AS INTEGER) = 1");
+    }
+    if (incidentCodeHasSelectableColumn) {
+      conditions.add("CAST(SELECTABLE AS INTEGER) = 1");
+    }
+    if (conditions.isEmpty()) {
+      return "";
+    }
+    return " WHERE " + String.join(" AND ", conditions);
+  }
+
+  private String usableIncidentCodeIndexPredicate() {
+    List<String> conditions = new ArrayList<>();
+    if (incidentCodeHasActiveColumn) {
+      conditions.add("CAST(ACTIVE AS INTEGER) = 1");
+    }
+    if (incidentCodeHasSelectableColumn) {
+      conditions.add("CAST(SELECTABLE AS INTEGER) = 1");
+    }
+    return String.join(" AND ", conditions);
+  }
+
+  private String sqlExcludeSystemIncidentCodes() {
+    return " AND code.CODEVALUE NOT LIKE '90%' ";
+  }
+
+  private String sqlExcludeNumericOnlyLabels() {
+    return """
+       AND NOT (
+         length(trim(code.TEXT)) >= 10
+         AND trim(code.TEXT) NOT GLOB '*[^0-9]*'
+       )""";
+  }
+
+  private String sqlExcludeUnusableRipolLabels() {
+    return sqlExcludeSystemIncidentCodes() + sqlExcludeNumericOnlyLabels();
   }
 
   private void createSearchIndexes() {
@@ -132,6 +229,12 @@ public class SqliteRipolAdapter implements RipolPort {
         "CREATE INDEX IF NOT EXISTS idx_tbin_master ON TBINCIDENTCODE(MASTERTYPE, MASTERVALUE)");
       jdbcTemplate.execute(
         "CREATE INDEX IF NOT EXISTS idx_tbin_grouptype_text ON TBINCIDENTCODE(GROUPTYPE, TEXT)");
+      String usablePredicate = usableIncidentCodeIndexPredicate();
+      if (!usablePredicate.isEmpty()) {
+        jdbcTemplate.execute(
+          "CREATE INDEX IF NOT EXISTS idx_tbin_grouptype_usable ON TBINCIDENTCODE(GROUPTYPE) WHERE "
+            + usablePredicate);
+      }
       jdbcTemplate.execute(
         "CREATE INDEX IF NOT EXISTS idx_loc_locale_pk ON TBLOCALIZATION(LOCALE_ID, PK)");
     } catch (DataAccessException e) {
@@ -157,8 +260,6 @@ public class SqliteRipolAdapter implements RipolPort {
       MDC.get(TRACE_ID),
       PRELOADED_GROUP_TYPES.size()
     );
-
-    ensureFrenchTranslationsLoaded();
 
     for (String groupType : PRELOADED_GROUP_TYPES) {
       try {
@@ -305,24 +406,25 @@ public class SqliteRipolAdapter implements RipolPort {
   }
 
   private List<Ripol> queryCodesByGroupType(String groupType) {
-    if (TEXT_ONLY_BULK_GROUP_TYPES.contains(groupType)) {
-      return queryCodesByGroupTypeTextOnly(groupType);
-    }
-
     String sql = """
           SELECT
               code.GROUPTYPE,
               code.CODEVALUE,
               code.TEXT AS TEXT_DE,
-              COALESCE(loc.TRANSLATION, code.TEXT, '') AS TEXT_FR
+              """ + SQL_SELECT_TEXT_FR + """
           FROM TBINCIDENTCODE code
           LEFT JOIN TBLOCALIZATION loc ON loc.PK = code.ID AND loc.LOCALE_ID = 3
           WHERE code.GROUPTYPE = ?
+          """ + sqlAndUsableIncidentCodeFilter() + sqlExcludeUnusableRipolLabels() + """
           ORDER BY TEXT_FR ASC
       """;
 
     try {
-      return jdbcTemplate.query(sql, RIPOL_ROW_MAPPER, groupType);
+      List<Ripol> rows = jdbcTemplate.query(sql, RIPOL_ROW_MAPPER, groupType);
+      if (DEDUPLICATE_BY_LABEL_GROUP_TYPES.contains(groupType)) {
+        return deduplicateByDisplayLabel(rows);
+      }
+      return rows;
     } catch (DataAccessException e) {
       log.error(
         "event=ripol_get_codes_by_group_type_failure traceId={} groupType={} error={}",
@@ -335,145 +437,26 @@ public class SqliteRipolAdapter implements RipolPort {
     }
   }
 
-  private void ensureFrenchTranslationsLoaded() {
-    if (frenchTranslationsLoaded) {
-      return;
-    }
-    synchronized (frenchTranslationsByPk) {
-      if (frenchTranslationsLoaded) {
-        return;
-      }
-      long start = System.currentTimeMillis();
-      String sql =
-        "SELECT PK, TRANSLATION FROM TBLOCALIZATION WHERE LOCALE_ID = ? AND TRANSLATION IS NOT NULL";
-      try {
-        jdbcTemplate.query(
-          sql,
-          rs -> {
-            frenchTranslationsByPk.put(rs.getLong("PK"), rs.getString("TRANSLATION"));
-          },
-          LOCALE_FR
-        );
-        frenchTranslationsLoaded = true;
-        log.info(
-          "event=ripol_french_translations_loaded traceId={} count={} durationMs={}",
-          MDC.get(TRACE_ID),
-          frenchTranslationsByPk.size(),
-          System.currentTimeMillis() - start
-        );
-      } catch (DataAccessException e) {
-        log.error(
-          "event=ripol_french_translations_load_failure traceId={} error={}",
-          MDC.get(TRACE_ID),
-          e.getMessage(),
-          e
-        );
-        throw new RipolAccessException("Erreur lors du chargement des traductions françaises", e);
-      }
-    }
-  }
-
-  private String resolveFrenchLabel(long id, String germanText) {
-    ensureFrenchTranslationsLoaded();
-    String french = frenchTranslationsByPk.get(id);
-    if (french != null && !french.isBlank()) {
-      return french;
-    }
-    return germanText != null ? germanText : "";
-  }
-
-  private RowMapper<Ripol> bulkRipolRowMapper() {
-    return (rs, rowNum) -> {
-      long id = rs.getLong(COL_ID);
-      String textDe = rs.getString(COL_TEXT_DE);
-      return new Ripol(
-        rs.getString(COL_CODEVALUE),
-        resolveFrenchLabel(id, textDe),
-        textDe,
-        rs.getString(COL_GROUPTYPE)
-      );
-    };
-  }
-
-  private List<Ripol> queryCodesByGroupTypeTextOnly(String groupType) {
-    String sql = """
-          SELECT
-              code.ID,
-              code.GROUPTYPE,
-              code.CODEVALUE,
-              code.TEXT AS TEXT_DE
-          FROM TBINCIDENTCODE code
-          WHERE code.GROUPTYPE = ?
-          ORDER BY code.TEXT ASC
-      """;
-
-    try {
-      return jdbcTemplate.query(sql, bulkRipolRowMapper(), groupType);
-    } catch (DataAccessException e) {
-      log.error(
-        "event=ripol_get_codes_by_group_type_text_only_failure traceId={} groupType={} error={}",
-        MDC.get(TRACE_ID),
-        groupType,
-        e.getMessage(),
-        e
-      );
-      throw new RipolAccessException("Erreur lors de la récupération des codes RIPOL", e);
-    }
-  }
-
   private List<Ripol> queryCodesByGroupTypeWithSearch(String groupType, String likePattern) {
-    if (TEXT_ONLY_BULK_GROUP_TYPES.contains(groupType)) {
-      ensureFrenchTranslationsLoaded();
-      String sql = """
-            SELECT
-                code.ID,
-                code.GROUPTYPE,
-                code.CODEVALUE,
-                code.TEXT AS TEXT_DE
-            FROM TBINCIDENTCODE code
-            WHERE code.GROUPTYPE = ?
-              AND (
-                LOWER(code.TEXT) LIKE ?
-                OR code.ID IN (
-                  SELECT loc.PK
-                  FROM TBLOCALIZATION loc
-                  WHERE loc.LOCALE_ID = ?
-                    AND LOWER(loc.TRANSLATION) LIKE ?
-                )
-              )
-            ORDER BY code.TEXT ASC
-            LIMIT ?
-        """;
-
-      return jdbcTemplate.query(
-        sql,
-        bulkRipolRowMapper(),
-        groupType,
-        likePattern,
-        LOCALE_FR,
-        likePattern,
-        SEARCH_RESULT_LIMIT
-      );
-    }
-
     String sql = """
           SELECT
               code.GROUPTYPE,
               code.CODEVALUE,
               code.TEXT AS TEXT_DE,
-              COALESCE(loc.TRANSLATION, code.TEXT, '') AS TEXT_FR
+              """ + SQL_SELECT_TEXT_FR + """
           FROM TBINCIDENTCODE code
           LEFT JOIN TBLOCALIZATION loc ON loc.PK = code.ID AND loc.LOCALE_ID = 3
           WHERE code.GROUPTYPE = ?
+            """ + sqlAndUsableIncidentCodeFilter() + sqlExcludeUnusableRipolLabels() + """
             AND (
               LOWER(code.TEXT) LIKE ?
-              OR LOWER(COALESCE(loc.TRANSLATION, '')) LIKE ?
+              OR LOWER(COALESCE(NULLIF(trim(loc.TRANSLATION), ''), '')) LIKE ?
             )
           ORDER BY TEXT_FR ASC
           LIMIT ?
       """;
 
-    return jdbcTemplate.query(
+    List<Ripol> rows = jdbcTemplate.query(
       sql,
       RIPOL_ROW_MAPPER,
       groupType,
@@ -481,6 +464,10 @@ public class SqliteRipolAdapter implements RipolPort {
       likePattern,
       SEARCH_RESULT_LIMIT
     );
+    if (DEDUPLICATE_BY_LABEL_GROUP_TYPES.contains(groupType)) {
+      return deduplicateByDisplayLabel(rows);
+    }
+    return rows;
   }
 
   @Override
@@ -495,25 +482,26 @@ public class SqliteRipolAdapter implements RipolPort {
   }
 
   private List<Ripol> queryBrandsByTypeAndMasterType(String masterValue, String masterType) {
-    if (GROUP_TYPE_VEHICLE_BRAND.equals(masterType)) {
-      return queryBrandsByTypeAndMasterTypeTextOnly(masterValue, masterType);
-    }
-
     String sql = """
           SELECT
               ? AS GROUPTYPE,
               code.CODEVALUE,
               code.TEXT AS TEXT_DE,
-              COALESCE(loc.TRANSLATION, code.TEXT, '') AS TEXT_FR
+              """ + SQL_SELECT_TEXT_FR + """
           FROM TBINCIDENTCODE code
           LEFT JOIN TBLOCALIZATION loc ON loc.PK = code.ID AND loc.LOCALE_ID = 3
           WHERE code.MASTERTYPE = ?
             AND code.MASTERVALUE = ?
+            """ + sqlAndUsableIncidentCodeFilter() + sqlExcludeUnusableRipolLabels() + """
           ORDER BY TEXT_FR ASC
       """;
 
     try {
-      return jdbcTemplate.query(sql, RIPOL_ROW_MAPPER, masterType, masterType, masterValue);
+      List<Ripol> rows = jdbcTemplate.query(sql, RIPOL_ROW_MAPPER, masterType, masterType, masterValue);
+      if (GROUP_TYPE_VEHICLE_BRAND.equals(masterType)) {
+        return deduplicateByDisplayLabel(rows);
+      }
+      return rows;
     } catch (DataAccessException e) {
       log.error(
         "event=ripol_get_brands_failure traceId={} masterType={} masterValue={} error={}",
@@ -527,91 +515,28 @@ public class SqliteRipolAdapter implements RipolPort {
     }
   }
 
-  private List<Ripol> queryBrandsByTypeAndMasterTypeTextOnly(String masterValue, String masterType) {
-    String sql = """
-          SELECT
-              code.ID,
-              ? AS GROUPTYPE,
-              code.CODEVALUE,
-              code.TEXT AS TEXT_DE
-          FROM TBINCIDENTCODE code
-          WHERE code.MASTERTYPE = ?
-            AND code.MASTERVALUE = ?
-          ORDER BY code.TEXT ASC
-      """;
-
-    try {
-      return jdbcTemplate.query(sql, bulkRipolRowMapper(), masterType, masterType, masterValue);
-    } catch (DataAccessException e) {
-      log.error(
-        "event=ripol_get_brands_text_only_failure traceId={} masterType={} masterValue={} error={}",
-        MDC.get(TRACE_ID),
-        masterType,
-        masterValue,
-        e.getMessage(),
-        e
-      );
-      throw new RipolAccessException("Erreur lors de la récupération des marques", e);
-    }
-  }
-
   private List<Ripol> queryBrandsByTypeAndMasterTypeWithSearch(
       String masterValue, String masterType, String likePattern) {
-    if (GROUP_TYPE_VEHICLE_BRAND.equals(masterType)) {
-      ensureFrenchTranslationsLoaded();
-      String sql = """
-            SELECT
-                code.ID,
-                ? AS GROUPTYPE,
-                code.CODEVALUE,
-                code.TEXT AS TEXT_DE
-            FROM TBINCIDENTCODE code
-            WHERE code.MASTERTYPE = ?
-              AND code.MASTERVALUE = ?
-              AND (
-                LOWER(code.TEXT) LIKE ?
-                OR code.ID IN (
-                  SELECT loc.PK
-                  FROM TBLOCALIZATION loc
-                  WHERE loc.LOCALE_ID = ?
-                    AND LOWER(loc.TRANSLATION) LIKE ?
-                )
-              )
-            ORDER BY code.TEXT ASC
-            LIMIT ?
-        """;
-
-      return jdbcTemplate.query(
-        sql,
-        bulkRipolRowMapper(),
-        masterType,
-        masterType,
-        masterValue,
-        likePattern,
-        LOCALE_FR,
-        likePattern,
-        SEARCH_RESULT_LIMIT);
-    }
-
     String sql = """
           SELECT
               ? AS GROUPTYPE,
               code.CODEVALUE,
               code.TEXT AS TEXT_DE,
-              COALESCE(loc.TRANSLATION, code.TEXT, '') AS TEXT_FR
+              """ + SQL_SELECT_TEXT_FR + """
           FROM TBINCIDENTCODE code
           LEFT JOIN TBLOCALIZATION loc ON loc.PK = code.ID AND loc.LOCALE_ID = 3
           WHERE code.MASTERTYPE = ?
             AND code.MASTERVALUE = ?
+            """ + sqlAndUsableIncidentCodeFilter() + sqlExcludeUnusableRipolLabels() + """
             AND (
               LOWER(code.TEXT) LIKE ?
-              OR LOWER(COALESCE(loc.TRANSLATION, '')) LIKE ?
+              OR LOWER(COALESCE(NULLIF(trim(loc.TRANSLATION), ''), '')) LIKE ?
             )
           ORDER BY TEXT_FR ASC
           LIMIT ?
       """;
 
-    return jdbcTemplate.query(
+    List<Ripol> rows = jdbcTemplate.query(
       sql,
       RIPOL_ROW_MAPPER,
       masterType,
@@ -620,6 +545,10 @@ public class SqliteRipolAdapter implements RipolPort {
       likePattern,
       likePattern,
       SEARCH_RESULT_LIMIT);
+    if (GROUP_TYPE_VEHICLE_BRAND.equals(masterType)) {
+      return deduplicateByDisplayLabel(rows);
+    }
+    return rows;
   }
 
   private List<Ripol> queryModelsByBrandWithSearch(String brandCode, String likePattern) {
@@ -628,16 +557,28 @@ public class SqliteRipolAdapter implements RipolPort {
               '185' AS GROUPTYPE,
               code.CODEVALUE,
               code.TEXT AS TEXT_DE,
-              code.TEXT AS TEXT_FR
+              """ + SQL_SELECT_TEXT_FR + """
           FROM TBINCIDENTCODE code
+          LEFT JOIN TBLOCALIZATION loc ON loc.PK = code.ID AND loc.LOCALE_ID = 3
           WHERE code.MASTERTYPE = '185'
             AND code.MASTERVALUE = ?
-            AND LOWER(code.TEXT) LIKE ?
-          ORDER BY code.TEXT ASC
+            """ + sqlAndUsableIncidentCodeFilter() + sqlExcludeUnusableRipolLabels() + """
+            AND (
+              LOWER(code.TEXT) LIKE ?
+              OR LOWER(COALESCE(NULLIF(trim(loc.TRANSLATION), ''), '')) LIKE ?
+            )
+          ORDER BY TEXT_FR ASC
           LIMIT ?
       """;
 
-    return jdbcTemplate.query(sql, RIPOL_ROW_MAPPER, brandCode, likePattern, SEARCH_RESULT_LIMIT);
+    return jdbcTemplate.query(
+      sql,
+      RIPOL_ROW_MAPPER,
+      brandCode,
+      likePattern,
+      likePattern,
+      SEARCH_RESULT_LIMIT
+    );
   }
 
   private static String toPrefixLikePattern(String search) {
@@ -659,11 +600,12 @@ public class SqliteRipolAdapter implements RipolPort {
               '185' AS GROUPTYPE,
               code.CODEVALUE,
               code.TEXT AS TEXT_DE,
-              COALESCE(loc.TRANSLATION, code.TEXT, '') AS TEXT_FR
+              """ + SQL_SELECT_TEXT_FR + """
           FROM TBINCIDENTCODE code
           LEFT JOIN TBLOCALIZATION loc ON loc.PK = code.ID AND loc.LOCALE_ID = 3
           WHERE code.MASTERTYPE = '185'
             AND code.MASTERVALUE = ?
+            """ + sqlAndUsableIncidentCodeFilter() + sqlExcludeUnusableRipolLabels() + """
           ORDER BY TEXT_FR ASC
       """;
 
@@ -763,6 +705,52 @@ public class SqliteRipolAdapter implements RipolPort {
     return query.apply(containsPattern);
   }
 
+  private List<Ripol> deduplicateByDisplayLabel(List<Ripol> items) {
+    if (items == null || items.isEmpty()) {
+      return List.of();
+    }
+    if (items.size() == 1) {
+      return items;
+    }
+    Map<String, Ripol> uniqueByLabel = new LinkedHashMap<>();
+    for (Ripol item : items) {
+      uniqueByLabel.merge(displayLabelKey(item), item, this::preferCanonicalRipol);
+    }
+    return new ArrayList<>(uniqueByLabel.values());
+  }
+
+  private String displayLabelKey(Ripol ripol) {
+    String label = ripol.labelFr();
+    if (label == null || label.isBlank()) {
+      label = ripol.labelDe();
+    }
+    if (label == null || label.isBlank()) {
+      label = ripol.code();
+    }
+    return label.trim().toLowerCase(Locale.ROOT);
+  }
+
+  private Ripol preferCanonicalRipol(Ripol current, Ripol candidate) {
+    return compareRipolCodes(current.code(), candidate.code()) <= 0 ? current : candidate;
+  }
+
+  private int compareRipolCodes(String left, String right) {
+    if (left == null && right == null) {
+      return 0;
+    }
+    if (left == null) {
+      return 1;
+    }
+    if (right == null) {
+      return -1;
+    }
+    try {
+      return Long.compare(Long.parseLong(left), Long.parseLong(right));
+    } catch (NumberFormatException ignored) {
+      return left.compareToIgnoreCase(right);
+    }
+  }
+
   private String validateAndResolveTableName(String tableName) {
     if (tableName == null || tableName.isBlank()) {
       throw new IllegalArgumentException("Le nom de la table ne peut pas être vide");
@@ -776,7 +764,8 @@ public class SqliteRipolAdapter implements RipolPort {
 
   private String selectAllWithLimitSql(String safeTableName) {
     return switch (safeTableName) {
-      case TABLE_INCIDENT_CODE -> "SELECT * FROM TBINCIDENTCODE LIMIT ?";
+      case TABLE_INCIDENT_CODE ->
+        "SELECT * FROM TBINCIDENTCODE" + sqlWhereUsableIncidentCodeFilterUnaliased() + " LIMIT ?";
       case TABLE_LOCALIZATION -> "SELECT * FROM TBLOCALIZATION LIMIT ?";
       default -> throw new IllegalArgumentException("Nom de table non autorisé");
     };
@@ -784,7 +773,10 @@ public class SqliteRipolAdapter implements RipolPort {
 
   private String selectDistinctGroupTypesSql(String safeTableName) {
     return switch (safeTableName) {
-      case TABLE_INCIDENT_CODE -> "SELECT DISTINCT GROUPTYPE FROM TBINCIDENTCODE ORDER BY GROUPTYPE";
+      case TABLE_INCIDENT_CODE ->
+        "SELECT DISTINCT GROUPTYPE FROM TBINCIDENTCODE"
+          + sqlWhereUsableIncidentCodeFilterUnaliased()
+          + " ORDER BY GROUPTYPE";
       case TABLE_LOCALIZATION -> "SELECT DISTINCT GROUPTYPE FROM TBLOCALIZATION ORDER BY GROUPTYPE";
       default -> throw new IllegalArgumentException("Nom de table non autorisé");
     };
@@ -792,7 +784,8 @@ public class SqliteRipolAdapter implements RipolPort {
 
   private String selectByGroupTypeWithLimitSql(String safeTableName) {
     return switch (safeTableName) {
-      case TABLE_INCIDENT_CODE -> "SELECT * FROM TBINCIDENTCODE WHERE GROUPTYPE = ? LIMIT ?";
+      case TABLE_INCIDENT_CODE ->
+        "SELECT * FROM TBINCIDENTCODE WHERE GROUPTYPE = ?" + sqlAndUsableIncidentCodeFilterUnaliased() + " LIMIT ?";
       case TABLE_LOCALIZATION -> "SELECT * FROM TBLOCALIZATION WHERE GROUPTYPE = ? LIMIT ?";
       default -> throw new IllegalArgumentException("Nom de table non autorisé");
     };

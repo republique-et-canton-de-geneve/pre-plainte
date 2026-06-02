@@ -2,6 +2,7 @@ package ch.ge.police.ui.controller;
 
 import ch.ge.police.core.domain.model.ripol.Ripol;
 import ch.ge.police.core.port.out.RipolPort;
+import ch.ge.police.ui.ripol.VehicleBrandCategoryFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -128,12 +129,37 @@ public class RipolController {
 
   @GetMapping("/vehicle-brands")
   public List<Ripol> getVehicleBrands(
-      @RequestParam String vehicleTypeCode,
+      @RequestParam(required = false) String vehicleTypeCode,
       @RequestParam(required = false) String search) {
+    if (vehicleTypeCode != null && !vehicleTypeCode.isBlank()) {
+      return getVehicleBrandsForType(vehicleTypeCode.trim(), search);
+    }
     if (search != null && !search.isBlank()) {
       return ripolPort.searchCodesByGroupType(GROUP_TYPE_VEHICLE_BRAND, search);
     }
     return ripolPort.getCodesByGroupType(GROUP_TYPE_VEHICLE_BRAND);
+  }
+
+  private List<Ripol> getVehicleBrandsForType(String vehicleTypeCode, String search) {
+    List<Ripol> linked = ripolPort.getBrandsByTypeAndMasterType(vehicleTypeCode, MASTER_TYPE_VEHICULES);
+    List<Ripol> base = linked.isEmpty()
+        ? ripolPort.getCodesByGroupType(GROUP_TYPE_VEHICLE_BRAND)
+        : linked;
+    List<Ripol> filtered = VehicleBrandCategoryFilter.filterByVehicleTypeCode(base, vehicleTypeCode);
+    if (search == null || search.isBlank()) {
+      return filtered;
+    }
+    String term = search.trim().toLowerCase(Locale.ROOT);
+    return filtered.stream()
+        .filter(brand -> matchesRipolSearchTerm(brand, term))
+        .toList();
+  }
+
+  private static boolean matchesRipolSearchTerm(Ripol ripol, String term) {
+    String code = ripol.code() != null ? ripol.code().toLowerCase(Locale.ROOT) : "";
+    String fr = ripol.labelFr() != null ? ripol.labelFr().toLowerCase(Locale.ROOT) : "";
+    String de = ripol.labelDe() != null ? ripol.labelDe().toLowerCase(Locale.ROOT) : "";
+    return code.contains(term) || fr.contains(term) || de.contains(term);
   }
 
   @GetMapping("/vehicle-models")
@@ -218,14 +244,14 @@ public class RipolController {
   }
 
   private List<Ripol> loadDefaultVehicleInsurers() {
+    List<Ripol> all = VEHICLE_INSURER_GROUP_TYPES.stream()
+        .flatMap(groupType -> ripolPort.getCodesByGroupType(groupType).stream())
+        .toList();
+
     Map<String, Ripol> byCode = new LinkedHashMap<>();
-    for (String insurerName : KNOWN_VEHICLE_INSURER_NAMES) {
-      for (String groupType : VEHICLE_INSURER_GROUP_TYPES) {
-        for (Ripol ripol : ripolPort.searchCodesByGroupType(groupType, insurerName)) {
-          if (isKnownVehicleInsurerName(ripol)) {
-            byCode.putIfAbsent(ripol.code(), ripol);
-          }
-        }
+    for (Ripol ripol : all) {
+      if (isKnownVehicleInsurerName(ripol)) {
+        byCode.putIfAbsent(ripol.code(), ripol);
       }
     }
     if (byCode.isEmpty()) {

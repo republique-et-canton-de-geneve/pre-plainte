@@ -166,7 +166,9 @@ public class SuisseEpolicePersonMapper {
   }
 
   public Person buildInsurancePerson(String key, String insurerName) {
-    String currentName = insurerName != null && !insurerName.isBlank() ? insurerName.trim() : "aucune";
+    String currentName = insurerName != null && !insurerName.isBlank()
+        ? insurerName.trim()
+        : Ech051Constants.INSURER_NAME_NONE;
     return Person.builder()
         .key(key)
         .type(PersonType.LEGAL)
