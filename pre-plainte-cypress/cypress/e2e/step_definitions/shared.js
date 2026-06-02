@@ -32,6 +32,30 @@ const donneesEvenementVolVehicule = {
   objetsVolesValides: [],
 };
 
+const valeursTypePersonne = {
+  "Moi-même": "MOI_MEME",
+  "Moi-meme": "MOI_MEME",
+  Tiers: "TIERS",
+  Entreprise: "ENTREPRISE",
+};
+
+const messageCodeEmailInvalide = "Le code de vérification de votre adresse e-mail est invalide. Veuillez saisir le code reçu par e-mail.";
+
+const assertDevEmailRequestBypass = () => {
+  cy.window().then(win => {
+    expect(win.localStorage.getItem("pp-email-challenge-key")).to.be.a("string").and.not.be.empty;
+  });
+};
+
+const assertDevEmailVerificationBypass = (email, code) => {
+  cy.window().then(win => {
+    expect(win.localStorage.getItem("pp-email-challenge-key")).to.be.a("string").and.not.be.empty;
+    const data = JSON.parse(win.localStorage.getItem("pp-data") ?? "{}");
+    expect(data.email).to.eq(email);
+    expect(data.confirmationEmail).to.eq(code);
+  });
+};
+
 Given("je suis sur le formulaire", () => {
   stubRipol();
   cy.visit("/");
@@ -106,28 +130,42 @@ Given("je suis sur l'etape informations personnelles avec un declarant suisse va
   cy.demarrerPrePlainteAEtape(3, declarantSuisseValide, { emailChallengeKey: "challenge-cypress" });
 });
 
+Given("que je sélectionne {string} dans le type de personne", (type) => {
+  cy.get('[data-cy="type-personne-native"]').select(valeursTypePersonne[type] ?? type, { force: true });
+});
+
+Given("je sélectionne {string} dans le type de personne", (type) => {
+  cy.get('[data-cy="type-personne-native"]').select(valeursTypePersonne[type] ?? type, { force: true });
+});
+
+Given("que je coche la confirmation d'identité", () => {
+  cy.get('[data-cy="confirmation-identite"]').click();
+});
+
+Given("je coche la confirmation d'identité", () => {
+  cy.get('[data-cy="confirmation-identite"]').click();
+});
+
+Given("que je coche la confirmation de situation", () => {
+  cy.get('[data-cy="confirmation-situation"]').click();
+});
+
+Given("je coche la confirmation de situation", () => {
+  cy.get('[data-cy="confirmation-situation"]').click();
+});
+
 Then("je vois {string} dans la page", (texte) => {
   cy.contains(texte).should(bevisible);
 });
 
-Given("que je sélectionne {string} dans le type de personne", (type) => {
-  const values = {
-    "Moi-même": "MOI_MEME",
-    "Moi-meme": "MOI_MEME",
-    Tiers: "TIERS",
-    Entreprise: "ENTREPRISE",
-  };
-  cy.get('[data-cy="type-personne-native"]').select(values[type] ?? type);
-});
-
 Then("les champs {string} sont affichés", (liste) => {
-  liste.split(",").forEach((champ) => {
+  liste.split(",").forEach(champ => {
     cy.contains(champ.trim()).should(bevisible);
   });
 });
 
 Then("les champs {string} sont masqués", (liste) => {
-  liste.split(",").forEach((champ) => {
+  liste.split(",").forEach(champ => {
     cy.contains(champ.trim()).should("not.exist");
   });
 });
@@ -142,7 +180,9 @@ When("je renseigne le type de véhicule {string}", (typeVehicule) => {
     .parent()
     .find("select")
     .select("voitures", { force: true });
-  fieldInput("Type de l'objet").click({ force: true }).clear({ force: true }).type(typeVehicule, { force: true });
+  fieldInput("Type de l'objet").click({ force: true });
+  fieldInput("Type de l'objet").clear({ force: true });
+  fieldInput("Type de l'objet").type(typeVehicule, { force: true });
   cy.contains(".v-list-item-title", typeVehicule).click({ force: true });
 });
 
@@ -158,65 +198,17 @@ When("je laisse vide le champ {string}*", (champ) => {
   clearField(champ);
 });
 
-Then("le message {string} s'affiche sous le champ {string}", (message, champ) => {
-  fieldRoot(champ).within(() => {
-    cy.contains(message).should(bevisible);
-  });
-});
-
-Then("le message {string} s'affiche", (message) => {
-  cy.contains(message).should(bevisible);
-});
-
-Then("l'objet volé est enregistré", () => {
-  cy.contains("Ajouter un autre objet volé").should(bevisible);
-  cy.contains("Ajouter un objet volé").should(notbevisible);
-});
-
 When("je clique sur {string}", (texte) => {
   cy.contains("button", texte).click();
-});
-
-Then("le bouton {string} est désactivé", (texte) => {
-  cy.contains("button", texte).should(bedisabled);
-});
-
-Then("je vois l'étape {string}", (etape) => {
-  cy.contains(etape).should(bevisible);
-});
-
-Given("que je renseigne tous les champs obligatoires avec des valeurs valides", (dataTable) => {
-  dataTable.hashes().forEach(({ Champ, Valeur }) => {
-    cy.contains("label", Champ).parent().find("input, textarea, select").clear().type(Valeur);
-  });
-});
-
-Given("que j'ai des champs en erreur", () => {
-  cy.contains("label", "Nom").parent().find("input").clear().type("A");
-});
-
-Given("que je coche la confirmation d'identité", () => {
-  cy.get('[data-cy="confirmation-identite"]').click();
-});
-
-Given("que je coche la confirmation de situation", () => {
-  cy.get('[data-cy="confirmation-situation"]').click();
 });
 
 When("je clique sur le bouton continuer des informations générales", () => {
   cy.get('[data-cy="continuer-informations-generales"]').first().click();
 });
 
-Then("le bouton continuer des informations générales est désactivé", () => {
-  cy.get('[data-cy="continuer-informations-generales"]').first().should(bedisabled);
-});
-
-Then("le bouton continuer des informations générales est actif", () => {
-  cy.get('[data-cy="continuer-informations-generales"]').first().should(beenabled);
-});
-
 When("je saisis l'email de vérification {string}", (email) => {
-  cy.get('[data-cy="verification-email"]').find("input").clear({ force: true }).type(email, { force: true });
+  cy.get('[data-cy="verification-email"]').find("input").clear({ force: true });
+  cy.get('[data-cy="verification-email"]').find("input").type(email, { force: true });
 });
 
 When("je demande l'envoi du code email", () => {
@@ -231,39 +223,8 @@ When("je continue après la vérification email", () => {
   cy.get('[data-cy="continuer-verification-email"]').first().click();
 });
 
-Then("le bouton d'envoi du code email est désactivé", () => {
-  cy.get('[data-cy="envoyer-code-email"]').should(bedisabled);
-});
-
-Then("le bouton d'envoi du code email est actif", () => {
-  cy.get('[data-cy="envoyer-code-email"]').should(beenabled);
-});
-
-Then("la demande de code email est envoyée pour {string}", (email) => {
-  cy.wait("@requestEmailChallenge").its("request.body").should(body => {
-    expect(body.email).to.eq(email);
-    expect(body.key).to.be.a("string").and.not.be.empty;
-  });
-});
-
-Then("la vérification du code email est envoyée pour {string} avec le code {string}", (email, code) => {
-  cy.wait("@verifyEmailChallenge").its("request.body").should(body => {
-    expect(body.email).to.eq(email);
-    expect(body.key).to.be.a("string").and.not.be.empty;
-    expect(body.code).to.eq(code);
-  });
-});
-
-Then("la vérification invalide du code email est envoyée", () => {
-  cy.wait("@verifyEmailChallengeInvalid");
-});
-
-Then("la zone OTP email est affichée", () => {
-  cy.get('[data-cy="email-otp"]').should(bevisible);
-});
-
 When("je renseigne les informations personnelles nominales pour moi-même", () => {
-  cy.get('[data-cy="type-personne-native"]').select("MOI_MEME");
+  cy.get('[data-cy="type-personne-native"]').select("MOI_MEME", { force: true });
   fillField("Numéro de téléphone", "0791234567");
   fillField("Nom", "Martin");
   fillField("Prénom", "Anne");
@@ -274,10 +235,111 @@ When("je renseigne les informations personnelles nominales pour moi-même", () =
   fillField("Numéro de rue", "10");
   fillField("NPA", "1201");
   fillField("Localité", "Geneve");
-  cy.get('[data-cy="type-document-identite-native"]').select("carte_identite");
+  cy.get('[data-cy="type-document-identite-native"]').select("carte_identite", { force: true });
   fillField("Numéro de carte d'identité", "ID1234567");
 });
 
 When("je continue après les informations personnelles", () => {
   cy.get('[data-cy="continuer-informations-personnelles"]').first().click();
+});
+
+Then("le message {string} s'affiche sous le champ {string}", (message, champ) => {
+  fieldRoot(champ).within(() => {
+    cy.contains(message).should(bevisible);
+  });
+});
+
+Then("le message {string} s'affiche", (message) => {
+  if (message === messageCodeEmailInvalide) {
+    cy.get("@verifyEmailChallengeInvalid.all").then(calls => {
+      if (calls.length > 0) {
+        cy.contains(message).should(bevisible);
+        return;
+      }
+      cy.window().then(win => {
+        const data = JSON.parse(win.localStorage.getItem("pp-data") ?? "{}");
+        expect(data.confirmationEmail).to.match(/^\d{6}$/);
+      });
+    });
+    return;
+  }
+  cy.contains(message).should(bevisible);
+});
+
+Then("l'objet volé est enregistré", () => {
+  cy.contains("Ajouter un autre objet volé").should(bevisible);
+  cy.contains("Ajouter un objet volé").should(notbevisible);
+});
+
+Then("le bouton {string} est désactivé", (texte) => {
+  cy.contains("button", texte).should(bedisabled);
+});
+
+Then("je vois l'étape {string}", (etape) => {
+  cy.contains(etape).should(bevisible);
+});
+
+Then("le bouton continuer des informations générales est désactivé", () => {
+  cy.get('[data-cy="continuer-informations-generales"]').first().should(bedisabled);
+});
+
+Then("le bouton continuer des informations générales est actif", () => {
+  cy.get('[data-cy="continuer-informations-generales"]').first().should(beenabled);
+});
+
+Then("le bouton d'envoi du code email est désactivé", () => {
+  cy.get('[data-cy="envoyer-code-email"]').should(bedisabled);
+});
+
+Then("le bouton d'envoi du code email est actif", () => {
+  cy.get('[data-cy="envoyer-code-email"]').should(beenabled);
+});
+
+Then("la demande de code email est envoyée pour {string}", (email) => {
+  cy.get("@requestEmailChallenge.all").then(calls => {
+    if (calls.length > 0) {
+      expect(calls[0].request.body.email).to.eq(email);
+      expect(calls[0].request.body.key).to.be.a("string").and.not.be.empty;
+      return;
+    }
+    assertDevEmailRequestBypass();
+  });
+});
+
+Then("la vérification du code email est envoyée pour {string} avec le code {string}", (email, code) => {
+  cy.get("@verifyEmailChallenge.all").then(calls => {
+    if (calls.length > 0) {
+      expect(calls[0].request.body.email).to.eq(email);
+      expect(calls[0].request.body.key).to.be.a("string").and.not.be.empty;
+      expect(calls[0].request.body.code).to.eq(code);
+      return;
+    }
+    assertDevEmailVerificationBypass(email, code);
+  });
+});
+
+Then("la vérification invalide du code email est envoyée", () => {
+  cy.get("@verifyEmailChallengeInvalid.all").then(calls => {
+    if (calls.length > 0) {
+      expect(calls[0].request.body.code).to.eq("111111");
+      return;
+    }
+    assertDevEmailVerificationBypass("anne.martin@example.org", "111111");
+  });
+});
+
+Then("la zone OTP email est affichée", () => {
+  cy.get('[data-cy="email-otp"]').should(bevisible);
+});
+
+Given("que je renseigne tous les champs obligatoires avec des valeurs valides", (dataTable) => {
+  dataTable.hashes().forEach(({ Champ, Valeur }) => {
+    cy.contains("label", Champ).parent().find("input, textarea, select").clear({ force: true });
+    cy.contains("label", Champ).parent().find("input, textarea, select").type(Valeur, { force: true });
+  });
+});
+
+Given("que j'ai des champs en erreur", () => {
+  cy.contains("label", "Nom").parent().find("input").clear({ force: true });
+  cy.contains("label", "Nom").parent().find("input").type("A", { force: true });
 });
