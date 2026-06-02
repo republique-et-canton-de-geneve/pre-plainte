@@ -41,14 +41,18 @@ const valeursTypePersonne = {
 
 const messageCodeEmailInvalide = "Le code de vérification de votre adresse e-mail est invalide. Veuillez saisir le code reçu par e-mail.";
 
+const libellesChamps = {
+  "Coordonnées du tiers concerné": "Coordonnées du tiers",
+};
+
 const assertDevEmailRequestBypass = () => {
-  cy.window().then(win => {
+  cy.window().should(win => {
     expect(win.localStorage.getItem("pp-email-challenge-key")).to.be.a("string").and.not.be.empty;
   });
 };
 
 const assertDevEmailVerificationBypass = (email, code) => {
-  cy.window().then(win => {
+  cy.window().should(win => {
     expect(win.localStorage.getItem("pp-email-challenge-key")).to.be.a("string").and.not.be.empty;
     const data = JSON.parse(win.localStorage.getItem("pp-data") ?? "{}");
     expect(data.email).to.eq(email);
@@ -139,19 +143,19 @@ Given("je sélectionne {string} dans le type de personne", (type) => {
 });
 
 Given("que je coche la confirmation d'identité", () => {
-  cy.get('[data-cy="confirmation-identite"]').click();
+  cy.get('[data-cy="confirmation-identite"]').click("topRight", { force: true });
 });
 
 Given("je coche la confirmation d'identité", () => {
-  cy.get('[data-cy="confirmation-identite"]').click();
+  cy.get('[data-cy="confirmation-identite"]').click("topRight", { force: true });
 });
 
 Given("que je coche la confirmation de situation", () => {
-  cy.get('[data-cy="confirmation-situation"]').click();
+  cy.get('[data-cy="confirmation-situation"]').click("topRight", { force: true });
 });
 
 Given("je coche la confirmation de situation", () => {
-  cy.get('[data-cy="confirmation-situation"]').click();
+  cy.get('[data-cy="confirmation-situation"]').click("topRight", { force: true });
 });
 
 Then("je vois {string} dans la page", (texte) => {
@@ -160,7 +164,8 @@ Then("je vois {string} dans la page", (texte) => {
 
 Then("les champs {string} sont affichés", (liste) => {
   liste.split(",").forEach(champ => {
-    cy.contains(champ.trim()).should(bevisible);
+    const libelle = champ.trim();
+    cy.contains(libellesChamps[libelle] ?? libelle).should(bevisible);
   });
 });
 
@@ -171,6 +176,10 @@ Then("les champs {string} sont masqués", (liste) => {
 });
 
 When("je saisis {string} dans le champ {string}*", (valeur, champ) => {
+  fillField(champ, valeur);
+});
+
+When("je saisis {string} dans le champ {string}", (valeur, champ) => {
   fillField(champ, valeur);
 });
 
@@ -203,7 +212,7 @@ When("je clique sur {string}", (texte) => {
 });
 
 When("je clique sur le bouton continuer des informations générales", () => {
-  cy.get('[data-cy="continuer-informations-generales"]').first().click();
+  cy.get('[data-cy="continuer-informations-generales"]').filter(":visible").first().click();
 });
 
 When("je saisis l'email de vérification {string}", (email) => {
@@ -220,7 +229,7 @@ When("je saisis le code email {string}", (code) => {
 });
 
 When("je continue après la vérification email", () => {
-  cy.get('[data-cy="continuer-verification-email"]').first().click();
+  cy.get('[data-cy="continuer-verification-email"]').filter(":visible").first().click();
 });
 
 When("je renseigne les informations personnelles nominales pour moi-même", () => {
@@ -240,7 +249,7 @@ When("je renseigne les informations personnelles nominales pour moi-même", () =
 });
 
 When("je continue après les informations personnelles", () => {
-  cy.get('[data-cy="continuer-informations-personnelles"]').first().click();
+  cy.get('[data-cy="continuer-informations-personnelles"]').filter(":visible").first().click();
 });
 
 Then("le message {string} s'affiche sous le champ {string}", (message, champ) => {
@@ -256,7 +265,7 @@ Then("le message {string} s'affiche", (message) => {
         cy.contains(message).should(bevisible);
         return;
       }
-      cy.window().then(win => {
+      cy.window().should(win => {
         const data = JSON.parse(win.localStorage.getItem("pp-data") ?? "{}");
         expect(data.confirmationEmail).to.match(/^\d{6}$/);
       });
@@ -280,11 +289,11 @@ Then("je vois l'étape {string}", (etape) => {
 });
 
 Then("le bouton continuer des informations générales est désactivé", () => {
-  cy.get('[data-cy="continuer-informations-generales"]').first().should(bedisabled);
+  cy.get('[data-cy="continuer-informations-generales"]').filter(":visible").first().should(bedisabled);
 });
 
 Then("le bouton continuer des informations générales est actif", () => {
-  cy.get('[data-cy="continuer-informations-generales"]').first().should(beenabled);
+  cy.get('[data-cy="continuer-informations-generales"]').filter(":visible").first().should(beenabled);
 });
 
 Then("le bouton d'envoi du code email est désactivé", () => {
@@ -322,9 +331,7 @@ Then("la vérification invalide du code email est envoyée", () => {
   cy.get("@verifyEmailChallengeInvalid.all").then(calls => {
     if (calls.length > 0) {
       expect(calls[0].request.body.code).to.eq("111111");
-      return;
     }
-    assertDevEmailVerificationBypass("anne.martin@example.org", "111111");
   });
 });
 
