@@ -206,9 +206,9 @@ const validateVolSpecificRules = (data: Record<string, any>, ctx: z.RefinementCt
     }
   }
 
-  if (
-    data.categorieObjet !== "vehicule" &&
-    data.categorieObjet !== "plaque" &&
+  if ((data.categorieObjet === "telephone" ||
+      data.categorieObjet === "informatique" ||
+      data.categorieObjet === "photo_video") &&
     !data.numeroSerieInconnu &&
     !data.numeroSerie?.trim()
   ) {
