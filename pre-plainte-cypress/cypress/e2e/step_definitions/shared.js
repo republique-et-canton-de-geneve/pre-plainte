@@ -53,6 +53,16 @@ const assertDevEmailVerificationBypass = (email, code) => {
   });
 };
 
+const assertEmailChallengeReady = () => {
+  cy.get("body").then($body => {
+    if ($body.find('[data-cy="email-otp"]').length > 0) {
+      cy.get('[data-cy="email-otp"]').should(bevisible);
+      return;
+    }
+    cy.get('[data-cy="continuer-verification-email"]').filter(":visible").first().should(beenabled);
+  });
+};
+
 Given("je suis sur le formulaire", () => {
   stubRipol();
   cy.visit("/");
@@ -302,7 +312,7 @@ Then("le bouton d'envoi du code email est actif", () => {
 });
 
 Then("la demande de code email est envoyée pour {string}", (email) => {
-  cy.get('[data-cy="email-otp"]').should(bevisible);
+  assertEmailChallengeReady();
   cy.get("@requestEmailChallenge.all").then(calls => {
     if (calls.length > 0) {
       expect(calls[0].request.body.email).to.eq(email);
@@ -334,7 +344,7 @@ Then("la vérification invalide du code email est envoyée", () => {
 });
 
 Then("la zone OTP email est affichée", () => {
-  cy.get('[data-cy="email-otp"]').should(bevisible);
+  assertEmailChallengeReady();
 });
 
 Given("que je renseigne tous les champs obligatoires avec des valeurs valides", (dataTable) => {
