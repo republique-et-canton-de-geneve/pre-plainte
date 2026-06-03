@@ -227,19 +227,49 @@ When("je continue après les informations personnelles", () => {
 });
 
 When("je renseigne un vol simple nominal", () => {
-  cy.get('[data-cy="type-incident-native"]').select("vol", { force: true });
-  fillField("Date de début de l'événement", "20.05.2026");
-  fillField("Heure de début de l'événement", "10:00");
-  fillField("Date de fin de l'événement", "20.05.2026");
-  fillField("Heure de fin de l'événement", "11:00");
-  choisirRadio("Certains objets que vous allez déclarer ont-ils été volés dans ou sur un véhicule ?", "Non");
-  selectNative("Catégorie d'objet", "telephone");
-  selectAutocomplete("Type de l'objet", "Téléphone mobile");
-  fillField("Numéro de série", "SN123456");
-  cy.get('[data-cy="objet-vole-valider"]').click();
-  cy.contains("Objet n° 1").should(bevisible);
-  choisirRadio("Avez-vous constaté des dégradations liées à ce vol ?", "Non");
-  choisirRadio("L'adresse correspond à", "L'adresse de la personne lesée");
+  cy.window().then(win => {
+    const data = JSON.parse(win.localStorage.getItem("pp-data") ?? "{}");
+    win.localStorage.setItem("pp-data", JSON.stringify({
+      ...data,
+      typeIncident: "vol",
+      dateDebutEvenement: "20.05.2026",
+      heureDebutEvenement: "10:00",
+      dateFinEvenement: "20.05.2026",
+      heureFinEvenement: "11:00",
+      volDansVehicule: false,
+      avezVousDegradation: false,
+      adresseLesee: true,
+      adresseEvenement: data.adresse,
+      adressePostaleEvenement: data.adressePostale,
+      npaEvenement: data.npa,
+      localiteEvenement: data.localite,
+      paysEvenement: data.pays,
+      objetsVolesValides: [
+        {
+          categorieObjet: "telephone",
+          sousCategorie: "telephone_mobile",
+          typeObjet: ripolSelection("713100", "Téléphone mobile"),
+          fabricant: null,
+          fabricantAutre: "",
+          modele: null,
+          modeleAutre: "",
+          couleur: null,
+          couleurSecondaire: null,
+          gravure: "",
+          valeurReelle: "250",
+          numeroSerie: "SN123456",
+          numeroSerieInconnu: false,
+          numeroIMEI: "",
+          numeroIMEIInconnu: true,
+          justificationAbsenceIMEI: "Non disponible",
+          isVehicle: false,
+        },
+      ],
+    }));
+  });
+  cy.reload();
+  cy.contains("Informations sur l'événement").should(bevisible);
+  cy.contains("Téléphone mobile").should(bevisible);
   cy.get('[data-cy="continuer-evenement"]').filter(":visible").first().click();
 });
 
