@@ -1,14 +1,12 @@
 import { Given, Then, When } from "@badeball/cypress-cucumber-preprocessor";
 import { clearField, fieldInput, fieldRoot, fillField, selectAutocomplete } from "../../support/helpers/vuetify";
 import { ripolSelection, stubRipol } from "../../support/stubs/ripol";
-import { stubEmailChallengeInvalid, stubEmailChallengeOk } from "../../support/stubs/email-challenge";
 import { declarantSuisseValide, donneesEmailVerifie } from "../../support/data/pre-plainte";
 
 const bevisible = "be.visible";
 const notbevisible = "not.be.visible";
 const bedisabled = "be.disabled";
 const beenabled = "be.enabled";
-const emailChallengeBypassKey = "pp-dev-skip-email-challenge";
 
 const donneesEvenementVolVehicule = {
   nationalite: ripolSelection("8100", "Suisse"),
@@ -40,8 +38,6 @@ const valeursTypePersonne = {
   Entreprise: "ENTREPRISE",
 };
 
-const messageCodeEmailInvalide = "Le code de vérification de votre adresse e-mail est invalide. Veuillez saisir le code reçu par e-mail.";
-
 const libellesChamps = {
   "Coordonnées du tiers concerné": "Coordonnées du tiers",
 };
@@ -59,28 +55,6 @@ Given("je suis sur l'étape informations générales", () => {
 Given("je suis sur l'etape informations generales", () => {
   stubRipol();
   cy.demarrerPrePlainteAEtape(1);
-});
-
-Given("je suis sur l'étape vérification email avec un challenge valide", () => {
-  stubRipol();
-  stubEmailChallengeOk();
-  cy.demarrerPrePlainteAEtape(2, {}, { disableEmailChallengeBypass: true });
-  cy.window().its("localStorage").invoke("getItem", emailChallengeBypassKey).should("eq", "false");
-});
-
-Given("je suis sur l'etape verification email avec un challenge valide", () => {
-  stubRipol();
-  stubEmailChallengeOk();
-  cy.demarrerPrePlainteAEtape(2, {}, { disableEmailChallengeBypass: true });
-  cy.window().its("localStorage").invoke("getItem", emailChallengeBypassKey).should("eq", "false");
-});
-
-Given("je suis sur l'étape vérification email avec un challenge invalide", () => {
-  stubRipol();
-  stubEmailChallengeOk();
-  stubEmailChallengeInvalid();
-  cy.demarrerPrePlainteAEtape(2, {}, { disableEmailChallengeBypass: true });
-  cy.window().its("localStorage").invoke("getItem", emailChallengeBypassKey).should("eq", "false");
 });
 
 Given("je suis sur la section vol de véhicule", () => {
@@ -204,27 +178,6 @@ When("je clique sur le bouton continuer des informations générales", () => {
   cy.get('[data-cy="continuer-informations-generales"]').filter(":visible").first().click();
 });
 
-When("je saisis l'email de vérification {string}", (email) => {
-  cy.get('[data-cy="verification-email"]').find("input").clear({ force: true });
-  cy.get('[data-cy="verification-email"]').find("input").type(email, { force: true });
-});
-
-When("je demande l'envoi du code email", () => {
-  cy.get('[data-cy="envoyer-code-email"]').should(bevisible).and(beenabled).click();
-});
-
-When("je saisis le code email {string}", (code) => {
-  cy.get("body").then($body => {
-    if ($body.find('[data-cy="email-otp"]').length > 0) {
-      cy.get('[data-cy="email-otp"]').find("input").first().type(code, { force: true });
-    }
-  });
-});
-
-When("je continue après la vérification email", () => {
-  cy.get('[data-cy="continuer-verification-email"]').filter(":visible").first().click();
-});
-
 When("je renseigne les informations personnelles nominales pour moi-même", () => {
   cy.get('[data-cy="type-personne-native"]').select("MOI_MEME", { force: true });
   fillField("Numéro de téléphone", "0791234567");
@@ -252,10 +205,6 @@ Then("le message {string} s'affiche sous le champ {string}", (message, champ) =>
 });
 
 Then("le message {string} s'affiche", (message) => {
-  if (message === messageCodeEmailInvalide) {
-    cy.contains(message).should(bevisible);
-    return;
-  }
   cy.contains(message).should(bevisible);
 });
 
@@ -278,43 +227,6 @@ Then("le bouton continuer des informations générales est désactivé", () => {
 
 Then("le bouton continuer des informations générales est actif", () => {
   cy.get('[data-cy="continuer-informations-generales"]').filter(":visible").first().should(beenabled);
-});
-
-Then("le bouton d'envoi du code email est désactivé", () => {
-  cy.get('[data-cy="envoyer-code-email"]').should(bedisabled);
-});
-
-Then("le bouton d'envoi du code email est actif", () => {
-  cy.get('[data-cy="envoyer-code-email"]').should(beenabled);
-});
-
-Then("la demande de code email est envoyée pour {string}", (email) => {
-  cy.wait("@requestEmailChallenge").then(({ request }) => {
-    expect(request.body.email).to.eq(email);
-    expect(request.body.key).to.be.a("string").and.not.be.empty;
-  });
-});
-
-Then("la demande de code email est prise en compte", () => {
-  cy.get('[data-cy="email-otp"]').should(bevisible);
-});
-
-Then("la vérification du code email est envoyée pour {string} avec le code {string}", (email, code) => {
-  cy.wait("@verifyEmailChallenge").then(({ request }) => {
-    expect(request.body.email).to.eq(email);
-    expect(request.body.key).to.be.a("string").and.not.be.empty;
-    expect(request.body.code).to.eq(code);
-  });
-});
-
-Then("la vérification invalide du code email est envoyée", () => {
-  cy.wait("@verifyEmailChallengeInvalid").then(({ request }) => {
-    expect(request.body.code).to.eq("111111");
-  });
-});
-
-Then("la zone OTP email est affichée", () => {
-  cy.get('[data-cy="email-otp"]').should(bevisible);
 });
 
 Given("que je renseigne tous les champs obligatoires avec des valeurs valides", (dataTable) => {
