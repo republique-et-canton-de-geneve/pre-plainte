@@ -15,7 +15,7 @@
     "@friendlycaptcha/sdk": "^0.1.32",
     "@mdi/font": "^7.4.47",
     "@mdi/js": "^7.4.47",
-    "@tanstack/vue-query": "^5.83.1",
+    "@tanstack/vue-query": "5.83.1",
     "@vee-validate/zod": "^4.15.1",
     "escape-html": "^1.0.3",
     "flag-icons": "^7.5.0",
