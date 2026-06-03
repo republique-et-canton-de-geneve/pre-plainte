@@ -231,6 +231,7 @@ When("je renseigne un vol simple nominal", () => {
     const data = JSON.parse(win.localStorage.getItem("pp-data") ?? "{}");
     win.localStorage.setItem("pp-data", JSON.stringify({
       ...data,
+      ...declarantSuisseValide,
       typeIncident: "vol",
       dateDebutEvenement: "20.05.2026",
       heureDebutEvenement: "10:00",
@@ -239,11 +240,11 @@ When("je renseigne un vol simple nominal", () => {
       volDansVehicule: false,
       avezVousDegradation: false,
       adresseLesee: true,
-      adresseEvenement: data.adresse,
-      adressePostaleEvenement: data.adressePostale,
-      npaEvenement: data.npa,
-      localiteEvenement: data.localite,
-      paysEvenement: data.pays,
+      adresseEvenement: declarantSuisseValide.adresse,
+      adressePostaleEvenement: declarantSuisseValide.adressePostale,
+      npaEvenement: declarantSuisseValide.npa,
+      localiteEvenement: declarantSuisseValide.localite,
+      paysEvenement: declarantSuisseValide.pays,
       objetsVolesValides: [
         {
           categorieObjet: "telephone",
