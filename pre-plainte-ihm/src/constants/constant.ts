@@ -119,6 +119,8 @@ export const VOL_OBJET_CATEGORIE = {
   TELEPHONE: "telephone",
   TELEPHONE_MOBILE: "telephone_mobile",
   BIJOUX: "bijoux",
+  INFORMATIQUE: "informatique",
+  PHOTO_VIDEO: "photo_video",
 } as const;
 
 /**
