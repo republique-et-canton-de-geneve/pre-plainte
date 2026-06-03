@@ -2,6 +2,7 @@ package ch.ge.police.ui.controller;
 
 import ch.ge.police.core.domain.model.ripol.Ripol;
 import ch.ge.police.core.port.out.RipolPort;
+import ch.ge.police.ui.ripol.VehicleBrandCategoryFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -9,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.Locale;
 
 @RestController
 @RequestMapping("/api/ripol")
@@ -28,6 +30,8 @@ public class RipolController {
   public static final String GROUP_TYPE_MODE_OPERATOIRE = "kasPhaenomen";
   public static final String GROUP_TYPE_COULEUR = "103";
   public static final String GROUP_TYPE_CANTON = "1";
+  public static final String GROUP_TYPE_VEHICLE_BRAND = "102";
+  public static final String MASTER_TYPE_VEHICLE_MODEL = GROUP_TYPE_VEHICLE_BRAND;
 
   private final RipolPort ripolPort;
 
@@ -97,19 +101,47 @@ public class RipolController {
 
   @GetMapping("/vehicle-brands")
   public List<Ripol> getVehicleBrands(
-      @RequestParam String vehicleTypeCode,
+      @RequestParam(required = false) String vehicleTypeCode,
       @RequestParam(required = false) String search) {
-    if (search != null && !search.isBlank()) {
-      return ripolPort.searchBrands(vehicleTypeCode, MASTER_TYPE_VEHICULES, search);
+    if (vehicleTypeCode != null && !vehicleTypeCode.isBlank()) {
+      return getVehicleBrandsForType(vehicleTypeCode.trim(), search);
     }
-    return ripolPort.getBrandsByTypeAndMasterType(vehicleTypeCode, MASTER_TYPE_VEHICULES);
+    if (search != null && !search.isBlank()) {
+      return ripolPort.searchCodesByGroupType(GROUP_TYPE_VEHICLE_BRAND, search);
+    }
+    return ripolPort.getCodesByGroupType(GROUP_TYPE_VEHICLE_BRAND);
+  }
+
+  private List<Ripol> getVehicleBrandsForType(String vehicleTypeCode, String search) {
+    List<Ripol> linked = ripolPort.getBrandsByTypeAndMasterType(vehicleTypeCode, MASTER_TYPE_VEHICULES);
+    List<Ripol> base = linked.isEmpty()
+        ? ripolPort.getCodesByGroupType(GROUP_TYPE_VEHICLE_BRAND)
+        : linked;
+    List<Ripol> filtered = VehicleBrandCategoryFilter.filterByVehicleTypeCode(base, vehicleTypeCode);
+    if (search == null || search.isBlank()) {
+      return filtered;
+    }
+    String term = search.trim().toLowerCase(Locale.ROOT);
+    return filtered.stream()
+        .filter(brand -> matchesRipolSearchTerm(brand, term))
+        .toList();
+  }
+
+  private static boolean matchesRipolSearchTerm(Ripol ripol, String term) {
+    String code = ripol.code() != null ? ripol.code().toLowerCase(Locale.ROOT) : "";
+    String fr = ripol.labelFr() != null ? ripol.labelFr().toLowerCase(Locale.ROOT) : "";
+    String de = ripol.labelDe() != null ? ripol.labelDe().toLowerCase(Locale.ROOT) : "";
+    return code.contains(term) || fr.contains(term) || de.contains(term);
   }
 
   @GetMapping("/vehicle-models")
   public List<Ripol> getVehicleModels(
       @RequestParam String brandCode,
       @RequestParam(required = false) String search) {
-    return getModelRipols(brandCode, search);
+    if (search != null && !search.isBlank()) {
+      return ripolPort.searchBrands(brandCode, MASTER_TYPE_VEHICLE_MODEL, search);
+    }
+    return ripolPort.getBrandsByTypeAndMasterType(brandCode, MASTER_TYPE_VEHICLE_MODEL);
   }
 
   @GetMapping("/sexes")

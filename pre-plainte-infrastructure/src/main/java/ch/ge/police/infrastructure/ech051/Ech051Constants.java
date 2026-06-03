@@ -50,6 +50,7 @@ public final class Ech051Constants {
 
   public static final String COUNTRY_UNKNOWN_RIPOL_CODE = "9999";
   public static final String COUNTRY_UNKNOWN_LABEL = "inconnu";
+  public static final String INSURER_NAME_NONE = "aucune";
 
   // === Relations constants ===
   public static final String INVOLVEMENT_TYPE_VICTIM_CODE = "1";
@@ -120,6 +121,7 @@ public final class Ech051Constants {
 
     public static final String VOL = "5357";
     public static final String VELO_MOFA = "5350";
+    public static final String DOMMAGE = "5352";
     public static final String CYBER_COMMANDE_FRAUDULEUSE = "5388";
     public static final String CYBER_FAUSSE_ANNONCE = "5389";
     public static final String CYBER_ACHAT_NON_RECU = "5387";

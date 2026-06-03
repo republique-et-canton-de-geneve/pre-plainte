@@ -537,6 +537,8 @@ public class Ech051Builder {
     Ech0051DocumentXml.VehicleDefinitionXml definitionXml = new Ech0051DocumentXml.VehicleDefinitionXml();
     definitionXml.setVelofinderId(dto.getVelofinderId());
     definitionXml.setPurchaseDate(dto.getPurchaseDate());
+    definitionXml.setVignetteNumber(dto.getVignetteNumber());
+    definitionXml.setMasterNumber(dto.getMasterNumber());
     definitionXml.setFrameNumber(dto.getFrameNumber());
     definitionXml.setMarkOther(dto.getMarkOther());
     definitionXml.setModelOther(dto.getModelOther());
@@ -699,6 +701,7 @@ public class Ech051Builder {
         vpLink.setVehicleRef(link.getVehicleRef());
         vpLink.setPersonRef(link.getPersonRef());
         vpLink.setInsurerRef(link.getInsurerRef());
+        vpLink.setInsuranceNumber(link.getInsuranceNumber());
         vpLink.setPersonRole(mapRipolValue(link.getPersonRole()));
         relationsXml.getVehiclePersonLinks().add(vpLink);
       });
@@ -824,10 +827,53 @@ public class Ech051Builder {
     if (isCyberCommandeFrauduleuse(documentDto)) {
       return Ech051Constants.MessageTypes.CYBER_COMMANDE_FRAUDULEUSE;
     }
-    if (documentDto != null && documentDto.getVehicles() != null && !documentDto.getVehicles().isEmpty()) {
+
+    if (isDommage(documentDto)) {
+      return Ech051Constants.MessageTypes.DOMMAGE;
+    }
+
+    boolean hasVehicle = documentDto != null && documentDto.getVehicles() != null && !documentDto.getVehicles().isEmpty();
+    if (isVol(documentDto) && hasVehicle) {
       return Ech051Constants.MessageTypes.VELO_MOFA;
     }
-    return Ech051Constants.MessageTypes.VOL;
+    if (isVol(documentDto)) {
+      return Ech051Constants.MessageTypes.VOL;
+    }
+
+    return defaultMessageType;
+  }
+
+  private boolean isDommage(Ech0051DocumentPayload documentDto) {
+    if (documentDto == null) {
+      return false;
+    }
+    Ech0051DocumentPayload.ProcessData processData = documentDto.getProcessData();
+    if (processData != null && Ech051Constants.SourceIds.DOMMAGE_MATERIEL.equals(processData.getSourceId())) {
+      return true;
+    }
+    return hasAnyTypeOfCrime(documentDto, Ech051Constants.TYPE_OF_CRIME_DOMMAGE_CODE);
+  }
+
+  private boolean isVol(Ech0051DocumentPayload documentDto) {
+    if (documentDto == null) {
+      return false;
+    }
+    Ech0051DocumentPayload.ProcessData processData = documentDto.getProcessData();
+    if (processData != null && Ech051Constants.SourceIds.VOL.equals(processData.getSourceId())) {
+      return true;
+    }
+    return hasAnyTypeOfCrime(documentDto, Ech051Constants.TYPE_OF_CRIME_VOL_CODE);
+  }
+
+  private boolean hasAnyTypeOfCrime(Ech0051DocumentPayload documentDto, String code) {
+    if (documentDto == null || documentDto.getEvents() == null || code == null) {
+      return false;
+    }
+    return documentDto.getEvents().stream()
+        .map(Ech0051DocumentPayload.Event::getTypeOfCrime)
+        .filter(Objects::nonNull)
+        .map(Ech0051DocumentPayload.RipolReference::getCode)
+        .anyMatch(code::equals);
   }
 
   private boolean isCyberCommandeFrauduleuse(Ech0051DocumentPayload documentDto) {
