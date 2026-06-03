@@ -43,6 +43,7 @@ export const GENRES_ORDER = ["1", "2", "0"];
 export const TYPES_DOCUMENT_IDENTITE = [
   { value: "carte_identite", labelKey: "informationsPersonnelles.carteIdentite" },
   { value: "passeport", labelKey: "informationsPersonnelles.passeport" },
+  { value: "documents_voles_perdus", labelKey: "informationsPersonnelles.documentsVolesPerdus" },
 ] as const;
 
 export const TITRES_SEJOUR = [
@@ -118,6 +119,8 @@ export const VOL_OBJET_CATEGORIE = {
   TELEPHONE: "telephone",
   TELEPHONE_MOBILE: "telephone_mobile",
   BIJOUX: "bijoux",
+  INFORMATIQUE: "informatique",
+  PHOTO_VIDEO: "photo_video",
 } as const;
 
 /**
