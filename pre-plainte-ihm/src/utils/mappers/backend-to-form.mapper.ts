@@ -240,12 +240,8 @@ export class ReverseMapper {
       plaquePays: o?.plaquePays ?? null,
       plaqueCanton: o?.plaqueCanton ?? null,
       assuranceAucune: !!o?.assuranceAucune,
-      assureur: o?.assureur?.code
-        ? o.assureur
-        : o?.assureurAutre
-          ? { code: "AUTRE", labelFr: "Autre", labelDe: "Andere" }
-          : null,
-      assureurAutre: toSafeString(o?.assureurAutre),
+      assureur: null,
+      assureurAutre: toSafeString(o?.assureurAutre) || toSafeString(o?.assureur?.label),
       numeroAssurance: toSafeString(o?.numeroAssurance),
       numeroVignette: toSafeString(o?.numeroVignette),
       numeroMaster: toSafeString(o?.numeroMaster),
@@ -336,8 +332,8 @@ export class ReverseMapper {
       plaquePays: this.getFieldSource(det, base, context, "plaquePays"),
       plaqueCanton: this.getFieldSource(det, base, context, "plaqueCanton"),
       assuranceAucune: this.getFieldSourceBool(det, base, context, "assuranceAucune"),
-      assureur: this.resolveAssureurFromBackend(det, base, context),
-      assureurAutre: toSafeString(this.getFieldSource(det, base, context, "assureurAutre")),
+      assureur: null,
+      assureurAutre: this.resolveNomAssureurFromBackend(det, base, context),
       numeroAssurance: toSafeString(this.getFieldSource(det, base, context, "numeroAssurance")),
       numeroVignette: toSafeString(this.getFieldSource(det, base, context, "numeroVignette")),
       numeroMaster: toSafeString(this.getFieldSource(det, base, context, "numeroMaster")),
@@ -390,16 +386,16 @@ export class ReverseMapper {
     };
   }
 
-  private static resolveAssureurFromBackend(det: any, base: PrePlainteFormFields, context: IncidentContext) {
-    const fromIncident = this.getFieldSource(det, base, context, "assureur");
-    if (fromIncident?.code) {
-      return fromIncident;
-    }
+  private static resolveNomAssureurFromBackend(det: any, base: PrePlainteFormFields, context: IncidentContext) {
     const autre = toSafeString(this.getFieldSource(det, base, context, "assureurAutre"));
     if (autre) {
-      return { code: "AUTRE", labelFr: "Autre", labelDe: "Andere" };
+      return autre;
     }
-    return base.assureur ?? null;
+    const legacy = this.getFieldSource(det, base, context, "assureur");
+    if (legacy?.label) {
+      return toSafeString(legacy.label);
+    }
+    return toSafeString(base.assureurAutre);
   }
 
   private static mapDamageFields(det: any, base: PrePlainteFormFields, context: IncidentContext) {

@@ -293,18 +293,18 @@ export const AUTRE_OPTION: Ripol = {
   groupeType: "",
 };
 
-export const VEHICLE_INSURERS_FALLBACK: Ripol[] = [
-  { code: "AXA", labelFr: "AXA", labelDe: "AXA", groupeType: "185" },
-  { code: "ALLIANCE", labelFr: "Alliance", labelDe: "Alliance", groupeType: "185" },
-  { code: "ALLIANZ", labelFr: "Allianz", labelDe: "Allianz", groupeType: "185" },
-  { code: "MOBILIAR", labelFr: "Mobiliar", labelDe: "Mobiliar", groupeType: "185" },
-  { code: "GENERALI", labelFr: "Generali", labelDe: "Generali", groupeType: "185" },
-  { code: "ZURICH", labelFr: "Zurich", labelDe: "Zurich", groupeType: "185" },
-  { code: "HELVETIA", labelFr: "Helvetia", labelDe: "Helvetia", groupeType: "185" },
-  { code: "BASLER", labelFr: "Basler", labelDe: "Basler", groupeType: "185" },
-  { code: "VAUDOISE", labelFr: "Vaudoise", labelDe: "Vaudoise", groupeType: "185" },
-  { code: "BALOISE", labelFr: "Baloise", labelDe: "Baloise", groupeType: "185" },
-];
+export const VEHICLE_INSURER_SUGGESTIONS = [
+  "AXA",
+  "Alliance",
+  "Allianz",
+  "Mobiliar",
+  "Generali",
+  "Zurich",
+  "Helvetia",
+  "Basler",
+  "Vaudoise",
+  "Baloise",
+] as const;
 
 export const MOYEN_PAIEMENT = {
   IBAN: "iban",

@@ -10,7 +10,6 @@ const searchCache = new Map<string, { data: Ripol[]; timestamp: number }>();
 const CACHE_DURATION = 24 * 60 * 60 * 1000;
 const SEARCH_CACHE_DURATION = 10 * 60 * 1000;
 const endpointLieuOrigine = "lieux-origine";
-const PRELOAD_VEHICLE_TYPE_CODE = "020101";
 
 const getCacheKey = (endpoint: string, params?: Record<string, string>): string =>
   params ? `${endpoint}:${JSON.stringify(params)}` : endpoint;
@@ -131,9 +130,6 @@ export class RipolService {
 
   static readonly searchVehicleColours = (search?: string): Promise<Ripol[]> =>
     RipolService.search("vehicle-colours", search);
-
-  static readonly searchVehicleInsurers = (search?: string): Promise<Ripol[]> =>
-    RipolService.search("vehicle-insurers", search);
 
   static readonly searchCantons = (search?: string): Promise<Ripol[]> => RipolService.search("cantons", search);
 

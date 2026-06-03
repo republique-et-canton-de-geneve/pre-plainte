@@ -138,11 +138,11 @@ public class ObjetIncident {
     if (assuranceAucune) {
       return null;
     }
-    if (assureur != null && assureur.hasCode() && !CODE_AUTRE.equals(assureur.code())) {
-      return assureur.label();
-    }
     if (assureurAutre != null && !assureurAutre.isBlank()) {
       return assureurAutre.trim();
+    }
+    if (assureur != null && assureur.label() != null && !assureur.label().isBlank()) {
+      return assureur.label().trim();
     }
     return null;
   }
