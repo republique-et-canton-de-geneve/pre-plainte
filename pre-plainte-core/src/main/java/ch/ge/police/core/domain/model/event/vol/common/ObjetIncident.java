@@ -62,6 +62,13 @@ public class ObjetIncident {
   private RipolCode plaquePays;
   private RipolCode plaqueCanton;
 
+  private boolean assuranceAucune;
+  private RipolCode assureur;
+  private String assureurAutre;
+  private String numeroAssurance;
+  private String numeroVignette;
+  private String numeroMaster;
+
   public String getTypeCode() {
     return type != null ? type.code() : null;
   }
@@ -116,6 +123,27 @@ public class ObjetIncident {
 
   public String getPlaqueCantonLabel() {
     return plaqueCanton != null ? plaqueCanton.label() : null;
+  }
+
+  public String getAssureurCode() {
+    return assureur != null ? assureur.code() : null;
+  }
+
+  public String getAssureurLabel() {
+    return assureur != null ? assureur.label() : null;
+  }
+
+  public String resolveAssureurNom() {
+    if (assuranceAucune) {
+      return null;
+    }
+    if (assureurAutre != null && !assureurAutre.isBlank()) {
+      return assureurAutre.trim();
+    }
+    if (assureur != null && assureur.label() != null && !assureur.label().isBlank()) {
+      return assureur.label().trim();
+    }
+    return null;
   }
 
   public boolean isTelephoneMobile() {

@@ -70,8 +70,8 @@ public class SuisseEpoliceObjectMapper {
         .couleurSecondaire(buildColourSecondaireReference(objet))
         .realValue(objet.getRealValue())
         .purchaseDate(objet.getPurchaseDate())
-        .numeroSerie(objet.getNumeroSerie())
-        .gravure(objet.getGravure())
+        .numeroSerie(numeroSerieForMyAbi(objet))
+        .gravure(gravureForMyAbi(objet))
         .identification(buildIdentification(objet))
         .additionalInformation(buildObjectAdditionalInfo(objet))
         .build();
@@ -152,6 +152,9 @@ public class SuisseEpoliceObjectMapper {
         .colourSecondary(buildVehicleColourSecondaireReference(objet))
         .velofinderId(objet.getVelofinderId())
         .purchaseDate(objet.getPurchaseDate())
+        .vignetteNumber(blankToNull(objet.getNumeroVignette()))
+        .masterNumber(blankToNull(objet.getNumeroMaster()))
+        .insuranceNumber(blankToNull(objet.getNumeroAssurance()))
         .additionalInformation(buildVehicleAdditionalInfo(objet))
         .numberPlate(buildNumberPlate(objet))
         .build();
@@ -161,7 +164,7 @@ public class SuisseEpoliceObjectMapper {
    * Construit la plaque d'immatriculation pour un véhicule.
    */
   private NumberPlate buildNumberPlate(ObjetIncident objet) {
-    if (objet.getPlaqueNumero() == null || objet.getPlaqueNumero().isBlank()) {
+    if (!hasPlaqueNumeroForMyAbi(objet)) {
       return null;
     }
     return NumberPlate.builder()
@@ -285,16 +288,16 @@ public class SuisseEpoliceObjectMapper {
    * Construit l'identification d'un objet (IMEI ou numéro de série).
    */
   public Identification buildIdentification(ObjetIncident objet) {
-    if (objet.getNumeroIMEI() != null) {
+    if (hasImeiForMyAbi(objet)) {
       return Identification.builder()
           .type("IMEI")
-          .number(objet.getNumeroIMEI())
+          .number(objet.getNumeroIMEI().trim())
           .build();
     }
-    if (objet.getNumeroSerie() != null) {
+    if (hasNumeroSerieForMyAbi(objet)) {
       return Identification.builder()
           .type("serialNumber")
-          .number(objet.getNumeroSerie())
+          .number(objet.getNumeroSerie().trim())
           .build();
     }
     return null;
@@ -306,12 +309,9 @@ public class SuisseEpoliceObjectMapper {
    */
   public String buildObjectAdditionalInfo(ObjetIncident objet) {
     List<String> details = new ArrayList<>();
-    addImeiDetails(details, objet);
-    addIfTrue(details, objet.isNumeroSerieInconnu(), "Numéro de série inconnu");
     addIfTrue(details, objet.isNumeroCadreInconnu(), "Numéro de cadre inconnu");
     addIfTrue(details, objet.isVinInconnu(), "VIN inconnu");
-    addIfTrue(details, objet.isPlaqueInconnu(), "Numéro de plaque inconnu");
-    addPlaqueNumero(details, objet);
+    addPlaqueNumeroForMyAbi(details, objet);
 
     return details.isEmpty() ? null : String.join(" | ", details);
   }
@@ -329,19 +329,40 @@ public class SuisseEpoliceObjectMapper {
     }
   }
 
-  private void addImeiDetails(List<String> details, ObjetIncident objet) {
-    if (objet.isNumeroIMEIInconnu()) {
-      String justification = objet.getJustificationAbsenceIMEI();
-      if (justification != null && !justification.isBlank()) {
-        details.add("IMEI inconnu: " + justification);
-      }
+  private void addPlaqueNumeroForMyAbi(List<String> details, ObjetIncident objet) {
+    if (!objet.isVehicleType() && hasPlaqueNumeroForMyAbi(objet)) {
+      details.add("Numéro de plaque: " + objet.getPlaqueNumero().trim());
     }
   }
 
-  private void addPlaqueNumero(List<String> details, ObjetIncident objet) {
-    if (objet.getPlaqueNumero() != null && !objet.getPlaqueNumero().isBlank() && !objet.isVehicleType()) {
-      details.add("Numéro de plaque: " + objet.getPlaqueNumero());
-    }
+  private static String numeroSerieForMyAbi(ObjetIncident objet) {
+    return hasNumeroSerieForMyAbi(objet) ? objet.getNumeroSerie().trim() : null;
+  }
+
+  private static String gravureForMyAbi(ObjetIncident objet) {
+    return hasGravureForMyAbi(objet) ? objet.getGravure().trim() : null;
+  }
+
+  private static boolean hasNumeroSerieForMyAbi(ObjetIncident objet) {
+    return !objet.isNumeroSerieInconnu()
+        && objet.getNumeroSerie() != null
+        && !objet.getNumeroSerie().isBlank();
+  }
+
+  private static boolean hasGravureForMyAbi(ObjetIncident objet) {
+    return objet.getGravure() != null && !objet.getGravure().isBlank();
+  }
+
+  private static boolean hasImeiForMyAbi(ObjetIncident objet) {
+    return !objet.isNumeroIMEIInconnu()
+        && objet.getNumeroIMEI() != null
+        && !objet.getNumeroIMEI().isBlank();
+  }
+
+  private static boolean hasPlaqueNumeroForMyAbi(ObjetIncident objet) {
+    return !objet.isPlaqueInconnu()
+        && objet.getPlaqueNumero() != null
+        && !objet.getPlaqueNumero().isBlank();
   }
 
   private static String objectXmlKey(int index, int total) {
@@ -362,5 +383,12 @@ public class SuisseEpoliceObjectMapper {
       return Ech051Constants.VEHICLE_KEY;
     }
     return Integer.toString(VEHICLE_KEY_INDEX_OFFSET  + index);
+  }
+
+  private static String blankToNull(String value) {
+    if (value == null || value.isBlank()) {
+      return null;
+    }
+    return value.trim();
   }
 }

@@ -138,7 +138,20 @@ export class IncidentMapper {
       plaqueInconnu: this.resolvePlaqueInconnu(form, objetAvecPlaque),
       plaquePays: this.resolvePlaquePays(form, objetAvecPlaque),
       plaqueCanton: this.resolvePlaqueCanton(form, objetAvecPlaque),
+      assuranceAucune: isVehicle ? !!form.assuranceAucune : undefined,
+      assureur: undefined,
+      assureurAutre: isVehicle ? this.resolveNomAssureurVehicule(form) : undefined,
+      numeroAssurance: isVehicle ? this.toOptionalString(form.numeroAssurance) : undefined,
+      numeroVignette: isVehicle ? this.toOptionalString(form.numeroVignette) : undefined,
+      numeroMaster: isVehicle ? this.toOptionalString(form.numeroMaster) : undefined,
     };
+  }
+
+  private static resolveNomAssureurVehicule(form: PrePlainteFormFields) {
+    if (form.assuranceAucune) {
+      return undefined;
+    }
+    return this.toOptionalString(form.assureurAutre);
   }
 
   private static resolveFabricantAutre(form: PrePlainteFormFields) {
@@ -212,7 +225,7 @@ export class IncidentMapper {
   }
 
   private static resolvePurchaseDate(form: PrePlainteFormFields, isVehicle: boolean) {
-    if (!isVehicle) {
+    if (!isVehicle || !form.dateAchat?.trim()) {
       return undefined;
     }
     return toIsoDate(form.dateAchat);

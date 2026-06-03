@@ -26,6 +26,7 @@ import static ch.ge.police.infrastructure.ech051.Ech051Constants.RipolSourceTabl
 import static ch.ge.police.infrastructure.ech051.Ech051Constants.RipolSourceTables.TYPE_OBJET;
 import static ch.ge.police.infrastructure.ech051.Ech051Constants.RipolSourceTables.TYPE_VEHICULE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -63,7 +64,7 @@ class SuisseEpoliceObjectMapperTest {
     assertNotNull(item.getIdentification());
     assertTrue(item.getAdditionalInformation().contains("Numéro de cadre inconnu"));
     assertTrue(item.getAdditionalInformation().contains("VIN inconnu"));
-    assertTrue(item.getAdditionalInformation().contains("Numéro de plaque inconnu"));
+    assertFalse(item.getAdditionalInformation().contains("Numéro de plaque inconnu"));
   }
 
   @Test
@@ -120,6 +121,22 @@ class SuisseEpoliceObjectMapperTest {
     assertEquals("GE123456", item.getNumberPlate().getNumber());
     assertEquals("CH", item.getNumberPlate().getCountry().getCode());
     assertEquals("GE", item.getNumberPlate().getCanton().getCode());
+  }
+
+  @Test
+  void shouldMapVehicleInsuranceFields() {
+    ObjetIncident vehicle = mockVehicleObjet();
+    when(vehicle.getNumeroAssurance()).thenReturn("3213213");
+    when(vehicle.getNumeroVignette()).thenReturn("432432432");
+    when(vehicle.getNumeroMaster()).thenReturn("432432432");
+    Vol vol = mock(Vol.class);
+    when(vol.getObjetsVoles()).thenReturn(List.of(vehicle));
+
+    VehicleItem item = mapper.buildVehiclesFromIncident(vol).getFirst();
+
+    assertEquals("3213213", item.getInsuranceNumber());
+    assertEquals("432432432", item.getVignetteNumber());
+    assertEquals("432432432", item.getMasterNumber());
   }
 
   @Test
@@ -283,6 +300,7 @@ class SuisseEpoliceObjectMapperTest {
   @Test
   void shouldBuildIdentificationFromImeiOrSerialNumber() {
     ObjetIncident imeiObject = mock(ObjetIncident.class);
+    when(imeiObject.isNumeroIMEIInconnu()).thenReturn(false);
     when(imeiObject.getNumeroIMEI()).thenReturn("IMEI123");
     when(imeiObject.getNumeroSerie()).thenReturn("SER123");
 
@@ -292,6 +310,7 @@ class SuisseEpoliceObjectMapperTest {
     assertEquals("IMEI123", identificationImei.getNumber());
 
     ObjetIncident serialObject = mock(ObjetIncident.class);
+    when(serialObject.isNumeroSerieInconnu()).thenReturn(false);
     when(serialObject.getNumeroSerie()).thenReturn("SER999");
 
     Identification identificationSerial = mapper.buildIdentification(serialObject);
@@ -306,22 +325,47 @@ class SuisseEpoliceObjectMapperTest {
   @Test
   void shouldBuildAdditionalInfo() {
     ObjetIncident objet = mock(ObjetIncident.class);
-    when(objet.isNumeroIMEIInconnu()).thenReturn(true);
-    when(objet.getJustificationAbsenceIMEI()).thenReturn("introuvable");
-    when(objet.isNumeroSerieInconnu()).thenReturn(true);
     when(objet.isNumeroCadreInconnu()).thenReturn(true);
     when(objet.isVinInconnu()).thenReturn(true);
-    when(objet.isPlaqueInconnu()).thenReturn(true);
 
     String result = mapper.buildObjectAdditionalInfo(objet);
 
     assertNotNull(result);
-    assertTrue(result.contains("IMEI inconnu: introuvable"));
-    assertTrue(result.contains("Numéro de série inconnu"));
     assertTrue(result.contains("Numéro de cadre inconnu"));
     assertTrue(result.contains("VIN inconnu"));
-    assertTrue(result.contains("Numéro de plaque inconnu"));
+    assertFalse(result.contains("IMEI inconnu"));
+    assertFalse(result.contains("Numéro de série inconnu"));
     assertEquals(result, mapper.buildVehicleAdditionalInfo(objet));
+  }
+
+  @Test
+  void shouldOmitIdentificationFieldsFromMyAbiWhenAbsent() {
+    ObjetIncident nonVehicle = mock(ObjetIncident.class);
+    when(nonVehicle.isVehicleType()).thenReturn(false);
+    when(nonVehicle.isNumeroIMEIInconnu()).thenReturn(true);
+    when(nonVehicle.isNumeroSerieInconnu()).thenReturn(true);
+    when(nonVehicle.getNumeroSerie()).thenReturn("SER123");
+    when(nonVehicle.getGravure()).thenReturn("  ");
+    when(nonVehicle.getTypeCode()).thenReturn("TYPE1");
+    when(nonVehicle.getTypeLabel()).thenReturn("Type");
+
+    ObjetIncident vehicle = mock(ObjetIncident.class);
+    when(vehicle.isVehicleType()).thenReturn(true);
+    when(vehicle.isPlaqueInconnu()).thenReturn(true);
+    when(vehicle.getPlaqueNumero()).thenReturn("GE123456");
+    when(vehicle.getTypeCode()).thenReturn("TYPE1");
+    when(vehicle.getTypeLabel()).thenReturn("Type");
+
+    Vol vol = mock(Vol.class);
+    when(vol.getObjetsVoles()).thenReturn(List.of(nonVehicle, vehicle));
+
+    ObjectItem objectItem = mapper.buildObjectsFromIncident(vol).getFirst();
+    VehicleItem vehicleItem = mapper.buildVehiclesFromIncident(vol).getFirst();
+
+    assertNull(objectItem.getNumeroSerie());
+    assertNull(objectItem.getGravure());
+    assertNull(objectItem.getIdentification());
+    assertNull(vehicleItem.getNumberPlate());
   }
 
   @Test
@@ -415,6 +459,7 @@ class SuisseEpoliceObjectMapperTest {
     when(objet.getNumeroCadre()).thenReturn("CADRE123");
     when(objet.getVelofinderId()).thenReturn("VELO123");
     when(objet.getPlaqueNumero()).thenReturn("GE123456");
+    when(objet.isPlaqueInconnu()).thenReturn(false);
     when(objet.getPlaquePaysCode()).thenReturn("CH");
     when(objet.getPlaquePaysLabel()).thenReturn("Suisse");
     when(objet.getPlaqueCantonCode()).thenReturn("GE");
