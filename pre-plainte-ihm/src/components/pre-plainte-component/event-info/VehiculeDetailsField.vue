@@ -167,24 +167,15 @@
   <h5 class="mb-2 text-subtitle-1">{{ t("incidentTypes.assuranceVehicule") }}</h5>
 
   <template v-if="!assuranceAucune">
-    <RipolAutocomplete
-      v-model="assureur"
-      :label="t('incidentTypes.assureur')"
-      :fetch-fn="fetchVehicleInsurersWithAutre"
-      :hint="t('incidentTypes.hintAssureur')"
-      :preload="true"
-      :min-search-length="0"
-      class="mb-2"
-    />
-
-    <v-text-field
-      v-if="isAutreAssureur"
+    <v-combobox
       v-model="assureurAutre"
-      :label="t('incidentTypes.assureurAutre')"
+      :items="vehicleInsurerSuggestions"
+      :label="t('incidentTypes.assureur')"
       :error-messages="assureurAutreError"
-      :hint="t('incidentTypes.hintAssureurAutre')"
+      :hint="t('incidentTypes.hintAssureur')"
       variant="outlined"
       persistent-hint
+      clearable
       class="mb-2"
     />
   </template>
@@ -275,7 +266,7 @@ import { useI18n } from "vue-i18n";
 import RipolAutocomplete from "@/components/ripol/RipolAutocomplete.vue";
 import { useVehicleDetailsRipol } from "@/composables/useVehicleDetailsRipol";
 import AccessibleVSelect from "@/components/accessibility/AccessibleVSelect.vue";
-import { CATEGORIES_OBJETS } from "@/constants/constant";
+import { CATEGORIES_OBJETS, VEHICLE_INSURER_SUGGESTIONS } from "@/constants/constant";
 import { applyDateMask } from "@/utils/helpers/dateHelpers.ts";
 import { filterNationalities } from "@/utils/helpers/ripolHelpers.ts";
 import { requiredLabel } from "@/utils/helpers/labelHelpers";
@@ -376,7 +367,6 @@ const {
   plaquePays,
   plaqueCanton,
   assuranceAucune,
-  assureur,
   assureurAutre,
   assureurAutreError,
   numeroAssurance,
@@ -393,7 +383,6 @@ const {
   modelsLoading,
   isAutreFabricant,
   isAutreModele,
-  isAutreAssureur,
   isSwissPlate,
   isVeloCategory,
   hasVin,
@@ -404,7 +393,6 @@ const {
   fetchBrandsWithAutre,
   fetchModelsWithAutre,
   fetchColours,
-  fetchVehicleInsurersWithAutre,
   RipolService,
 } = useVehicleDetailsRipol({ sousCategorie, activePrefixes: computedActivePrefixes });
 </script>

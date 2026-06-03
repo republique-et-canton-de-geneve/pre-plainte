@@ -332,31 +332,4 @@ class RipolControllerTest {
     verify(ripolPort).searchBrands("brand", RipolController.MASTER_TYPE_VEHICLE_MODEL, "search");
     verify(ripolPort).getBrandsByTypeAndMasterType("brand", RipolController.MASTER_TYPE_VEHICLE_MODEL);
   }
-
-  @Test
-  void getVehicleInsurers_withoutSearch_returnsFallbackWhenRipolEmpty() {
-    when(ripolPort.getCodesByGroupType(RipolController.GROUP_TYPE_VEHICLE_INSURER))
-        .thenReturn(List.of());
-    when(ripolPort.getCodesByGroupType("186"))
-        .thenReturn(List.of());
-
-    List<Ripol> result = controller.getVehicleInsurers(null);
-
-    assertFalse(result.isEmpty());
-    assertTrue(result.stream().anyMatch(r -> "AXA".equals(r.labelFr())));
-  }
-
-  @Test
-  void getVehicleInsurers_withSearch_mergesRipolAndFallback() {
-    Ripol axa = new Ripol("20840", "AXA Assurances", "AXA Versicherungen", RipolController.GROUP_TYPE_VEHICLE_INSURER);
-    when(ripolPort.searchCodesByGroupType(RipolController.GROUP_TYPE_VEHICLE_INSURER, "axa"))
-        .thenReturn(List.of(axa));
-    when(ripolPort.searchCodesByGroupType("186", "axa"))
-        .thenReturn(List.of());
-
-    List<Ripol> result = controller.getVehicleInsurers("axa");
-
-    assertFalse(result.isEmpty());
-    assertTrue(result.stream().anyMatch(r -> r.labelFr().contains("AXA")));
-  }
 }

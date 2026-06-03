@@ -4,7 +4,6 @@ import { useField } from "vee-validate";
 import {
   AUTRE_OPTION,
   RIPOL,
-  VEHICLE_INSURERS_FALLBACK,
   VEHICULE_CATEGORIES_AVEC_PLAQUE,
   VEHICULE_CATEGORIES_AVEC_VIN,
   VEHICULE_CATEGORIES_PLAQUE_OBLIGATOIRE,
@@ -43,7 +42,6 @@ export function useVehicleDetailsRipol({ sousCategorie, activePrefixes }: UseVeh
   const { value: plaqueCanton } = useField<RipolSelection | null>("plaqueCanton");
 
   const { value: assuranceAucune } = useField<boolean>("assuranceAucune");
-  const { value: assureur } = useField<RipolSelection | null>("assureur");
   const { value: assureurAutre, errorMessage: assureurAutreError } = useField<string>("assureurAutre");
   const { value: numeroAssurance } = useField<string>("numeroAssurance");
   const { value: numeroVignette } = useField<string>("numeroVignette");
@@ -66,7 +64,6 @@ export function useVehicleDetailsRipol({ sousCategorie, activePrefixes }: UseVeh
 
   const isAutreFabricant = computed(() => fabricant.value?.code === AUTRE_OPTION.code);
   const isAutreModele = computed(() => modele.value?.code === AUTRE_OPTION.code);
-  const isAutreAssureur = computed(() => assureur.value?.code === AUTRE_OPTION.code);
 
   const isSwissPlate = computed(() => plaquePays.value?.code === RIPOL.PAYS_SUISSE);
   const isVeloCategory = computed(() => sousCategorie.value === "velos");
@@ -151,24 +148,6 @@ export function useVehicleDetailsRipol({ sousCategorie, activePrefixes }: UseVeh
       vehicleColoursCache = await RipolService.searchVehicleColours();
     }
     return vehicleColoursCache;
-  };
-
-  const fetchVehicleInsurersWithAutre = async (search?: string): Promise<RipolSelection[]> => {
-    let insurers = await RipolService.searchVehicleInsurers(search);
-    if (insurers.length === 0) {
-      const query = search?.trim().toLowerCase() ?? "";
-      insurers = query
-        ? VEHICLE_INSURERS_FALLBACK.filter(item => {
-            const labels = [item.labelFr, item.labelDe, item.code].map(v => (v ?? "").toLowerCase());
-            return labels.some(label => label.includes(query));
-          })
-        : [...VEHICLE_INSURERS_FALLBACK];
-    }
-    const toSelection = (r: Ripol): RipolSelection => ({
-      code: r.code,
-      label: r.labelFr?.trim() || r.labelDe?.trim() || r.code,
-    });
-    return [...sortRipolByLabelFr(insurers).map(toSelection), toSelection(AUTRE_OPTION)];
   };
 
   const resetVehicleCaches = () => {
@@ -265,7 +244,6 @@ export function useVehicleDetailsRipol({ sousCategorie, activePrefixes }: UseVeh
     plaquePays,
     plaqueCanton,
     assuranceAucune,
-    assureur,
     assureurAutre,
     assureurAutreError,
     numeroAssurance,
@@ -282,7 +260,6 @@ export function useVehicleDetailsRipol({ sousCategorie, activePrefixes }: UseVeh
     modelsLoading,
     isAutreFabricant,
     isAutreModele,
-    isAutreAssureur,
     isSwissPlate,
     isVeloCategory,
     hasVin,
@@ -293,7 +270,6 @@ export function useVehicleDetailsRipol({ sousCategorie, activePrefixes }: UseVeh
     fetchBrandsWithAutre,
     fetchModelsWithAutre,
     fetchColours,
-    fetchVehicleInsurersWithAutre,
     RipolService,
   };
 }
