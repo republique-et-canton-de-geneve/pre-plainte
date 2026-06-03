@@ -12,6 +12,7 @@
       :hint="t('informationsPersonnelles.hintNomTiers')"
       persistent-hint
       required
+      :maxlength="TEXT_FIELD_MAX_LENGTH"
     />
     <v-text-field
       :label="requiredLabel(t('informationsPersonnelles.prenom'))"
@@ -22,6 +23,7 @@
       :hint="t('informationsPersonnelles.hintPrenomTiers')"
       persistent-hint
       required
+      :maxlength="TEXT_FIELD_MAX_LENGTH"
     />
 
     <RipolAutocomplete
@@ -83,6 +85,7 @@
       :hint="adresseHint"
       persistent-hint
       required
+      :maxlength="TEXT_FIELD_MAX_LENGTH"
     />
 
     <v-text-field
@@ -96,6 +99,7 @@
       :hint="adressePostaleHint"
       persistent-hint
       required
+      :maxlength="TEXT_FIELD_MAX_LENGTH"
     />
     <v-text-field
       :label="requiredLabel(t('informationsPersonnelles.npa'))"
@@ -108,6 +112,7 @@
       :hint="npaHint"
       persistent-hint
       required
+      :maxlength="TEXT_FIELD_MAX_LENGTH"
     />
     <v-text-field
       :label="requiredLabel(t('informationsPersonnelles.localite'))"
@@ -120,6 +125,7 @@
       :hint="localiteHint"
       persistent-hint
       required
+      :maxlength="TEXT_FIELD_MAX_LENGTH"
     />
 
     <h4 class="mb-8 mb-md-4 mt-4 mt-md-6 text-h4 text-md-h4 font-weight-bold">
@@ -152,6 +158,7 @@
           : t('informationsPersonnelles.hintNumeroPasseportTiers')
       "
       persistent-hint
+      :maxlength="TEXT_FIELD_MAX_LENGTH"
     />
 
     <h4 class="mb-8 mb-md-4 mt-4 mt-md-6 text-h4 text-md-h4 font-weight-bold">
@@ -176,6 +183,7 @@
       :hint="t('informationsPersonnelles.hintEmailTiers')"
       persistent-hint
       required
+      :maxlength="EMAIL_FIELD_MAX_LENGTH"
     />
     <v-text-field
       :label="requiredLabel(t('informationsPersonnelles.confirmationEmail'))"
@@ -187,6 +195,7 @@
       :hint="t('informationsPersonnelles.hintConfirmationEmailTiers')"
       persistent-hint
       required
+      :maxlength="EMAIL_FIELD_MAX_LENGTH"
     />
 
     <slot name="buttons"></slot>
@@ -197,7 +206,7 @@
 import { computed, ref, watch } from "vue";
 import { useField } from "vee-validate";
 import { useI18n } from "vue-i18n";
-import { RIPOL } from "@/constants/constant";
+import { EMAIL_FIELD_MAX_LENGTH, RIPOL, TEXT_FIELD_MAX_LENGTH } from "@/constants/constant";
 import AddressLookup from "@/components/adresse/AddressLookup.vue";
 import PhoneInput from "@/components/phone/PhoneInput.vue";
 import RipolAutocomplete from "@/components/ripol/RipolAutocomplete.vue";
