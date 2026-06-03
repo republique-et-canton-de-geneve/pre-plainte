@@ -276,8 +276,12 @@ When("je renseigne un vol simple nominal", () => {
 When("je sélectionne le premier créneau disponible", () => {
   cy.wait("@getEsiriusServices");
   cy.wait("@getEsiriusAvailabilities");
-  cy.get('[data-cy="creneau-row-0"]').should(bevisible);
-  cy.get('[data-cy="creneau-radio-0"]').click({ force: true });
+  cy.get('[data-cy="creneau-row-0"]')
+    .filter(":visible")
+    .first()
+    .within(() => {
+      cy.get('[data-cy="creneau-radio-0"]').click({ force: true });
+    });
 });
 
 When("je continue après le rendez-vous", () => {
