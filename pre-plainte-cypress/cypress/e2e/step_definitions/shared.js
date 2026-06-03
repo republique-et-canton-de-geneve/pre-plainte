@@ -321,8 +321,8 @@ Then("je vois l'étape {string}", (etape) => {
 });
 
 Then("le récapitulatif du parcours nominal est affiché", () => {
-  cy.contains("Validation").should(bevisible);
-  cy.contains("Martin").should(bevisible);
+  cy.contains("#recap-title", "Récapitulatif").should(bevisible);
+  cy.contains("MARTIN").should(bevisible);
   cy.contains("Anne").should(bevisible);
   cy.contains("Téléphone mobile").should(bevisible);
   cy.contains("Poste PPEL").should(bevisible);
