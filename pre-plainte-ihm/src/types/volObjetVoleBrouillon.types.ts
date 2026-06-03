@@ -42,6 +42,7 @@ export interface VolObjetVoleDraftBrouillon {
   isBijouxCategory: boolean;
   valeurReelle: string;
   valeurReelleError?: string;
+  numeroSerieRequis: boolean;
   numeroSerie: string;
   numeroSerieError?: string;
   numeroSerieInconnu: boolean;
