@@ -233,7 +233,7 @@ When("je renseigne un vol simple nominal", () => {
   fillField("Date de fin de l'événement", "20.05.2026");
   fillField("Heure de fin de l'événement", "11:00");
   choisirRadio("Certains objets que vous allez déclarer ont-ils été volés dans ou sur un véhicule ?", "Non");
-  selectNative("Catégorie de l'objet", "bagages");
+  selectNative("Catégorie d'objet", "bagages");
   selectNative("Sous-catégorie", "sacs_main");
   selectAutocomplete("Type de l'objet", "Sac à main");
   fillField("Numéro de série", "SN123456");
