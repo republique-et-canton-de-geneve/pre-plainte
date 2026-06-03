@@ -334,6 +334,7 @@ const reinitialiserDependancesChangementCategorie = (nouvelleCategorie: string) 
   couleur.value = null;
   hasBrands.value = true;
   hasModels.value = false;
+  numeroSerieInconnu.value = false;
   viderChampsVehiculeVol();
   if (nouvelleCategorie === VOL_OBJET_CATEGORIE.TELEPHONE) {
     sousCategorie.value = VOL_OBJET_CATEGORIE.TELEPHONE_MOBILE;
@@ -456,9 +457,9 @@ const appliquerCategorieEtSousDepuisCodeRipol = (code: string) => {
 
 const numeroSerieRequis = computed(
   () =>
-    categorieObjet.value !== VOL_OBJET_CATEGORIE.VEHICULE &&
-    categorieObjet.value !== VOL_OBJET_CATEGORIE.PLAQUE &&
-    !numeroSerieInconnu.value,
+    categorieObjet.value === VOL_OBJET_CATEGORIE.TELEPHONE ||
+    categorieObjet.value === VOL_OBJET_CATEGORIE.INFORMATIQUE ||
+    categorieObjet.value === VOL_OBJET_CATEGORIE.PHOTO_VIDEO,
 );
 
 const numeroIMEIRequis = computed(
@@ -524,7 +525,7 @@ const validerBrouillonObjetVole = (): boolean => {
     }
   }
 
-  if (numeroSerieRequis.value && !chaineFormulaire(numeroSerie.value).trim()) {
+  if (numeroSerieRequis.value && !numeroSerieInconnu.value && !chaineFormulaire(numeroSerie.value).trim()) {
     setFieldError("numeroSerie", t("validation.numeroSerieRequis"));
     return false;
   }
@@ -659,6 +660,7 @@ const brouillon = reactive({
   numeroSerie,
   numeroSerieError,
   numeroSerieInconnu,
+  numeroSerieRequis,
   numeroIMEI,
   numeroIMEIError,
   numeroIMEIInconnu,

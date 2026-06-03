@@ -31,7 +31,7 @@ const hasValue = (value: unknown) =>
   Array.isArray(value) ? value.length > 0 : typeof value === "string" ? value.trim().length > 0 : !!value;
 
 export const createInfosPersonnellesSchema = (t: ComposerTranslation) => {
-  const isTiers = (lienAvecPersonne?: string) => lienAvecPersonne === t(INFORMATIONS_PERSONNELLES_TIERS);
+  const isTiers = (lienAvecPersonne?: string) => lienAvecPersonne === INFORMATIONS_PERSONNELLES_TIERS;
 
   const isRequiredWhenTiers = (lienAvecPersonne: string | undefined, value: unknown) =>
     !isTiers(lienAvecPersonne) || hasValue(value);
@@ -109,14 +109,14 @@ export const createInfosPersonnellesSchema = (t: ComposerTranslation) => {
         .min(1, t("validation.selectionnerDocument")),
 
       numeroDocumentIdentite: z.preprocess(
-        val => (val == null || val === undefined ? val : String(val).trim()),
-        z.string().min(1, t("validation.numeroDocumentRequis")),
+        val => (val == null ? val : String(val).trim()),
+        z.string().optional(),
       ),
 
       tiersTypeDocumentIdentite: z.string().optional(),
 
       tiersNumeroDocumentIdentite: z.preprocess(
-        val => (val == null || val === undefined ? val : String(val).trim()),
+        val => (val == null ? val : String(val).trim()),
         z.string().optional(),
       ),
 
@@ -146,7 +146,8 @@ export const createInfosPersonnellesSchema = (t: ComposerTranslation) => {
     })
     .refine(
       data => {
-        return !!(data.numeroDocumentIdentite && data.numeroDocumentIdentite.length > 0);
+        return data.typeDocumentIdentite === "documents_voles_perdus"
+          || !!(data.numeroDocumentIdentite && data.numeroDocumentIdentite.length > 0);
       },
       {
         message: t("validation.numeroDocumentRequis"),
@@ -157,7 +158,8 @@ export const createInfosPersonnellesSchema = (t: ComposerTranslation) => {
       message: t("validation.selectionnerDocument"),
       path: ["tiersTypeDocumentIdentite"],
     })
-    .refine(data => isRequiredWhenTiers(data.lienAvecPersonne, data.tiersNumeroDocumentIdentite), {
+    .refine(data => isRequiredWhenTiers(data.lienAvecPersonne, data.tiersNumeroDocumentIdentite)
+      || data.tiersTypeDocumentIdentite === "documents_voles_perdus", {
       message: t("validation.numeroDocumentRequis"),
       path: ["tiersNumeroDocumentIdentite"],
     })
@@ -176,7 +178,7 @@ export const createInfosPersonnellesSchema = (t: ComposerTranslation) => {
     )
     .refine(
       data => {
-        if (data.lienAvecPersonne && data.lienAvecPersonne === t(INFORMATIONS_PERSONNELLES_TIERS)) {
+        if (data.lienAvecPersonne && data.lienAvecPersonne === INFORMATIONS_PERSONNELLES_TIERS) {
           return !!(data.typeRepresentation && data.typeRepresentation.length > 0);
         }
         return true;
@@ -188,7 +190,7 @@ export const createInfosPersonnellesSchema = (t: ComposerTranslation) => {
     )
     .refine(
       data => {
-        if (data.lienAvecPersonne && data.lienAvecPersonne === t(INFORMATIONS_PERSONNELLES_MON_ENTREPRISE)) {
+        if (data.lienAvecPersonne && data.lienAvecPersonne === INFORMATIONS_PERSONNELLES_MON_ENTREPRISE) {
           return !!(data.postePersonneMorale && data.postePersonneMorale.length > 0);
         }
         return true;
@@ -200,7 +202,7 @@ export const createInfosPersonnellesSchema = (t: ComposerTranslation) => {
     )
     .refine(
       data => {
-        const isTiers = data.lienAvecPersonne === t(INFORMATIONS_PERSONNELLES_TIERS);
+        const isTiers = data.lienAvecPersonne === INFORMATIONS_PERSONNELLES_TIERS;
         if (isTiers) {
           return !!(data.tiersNom && data.tiersNom.length >= VALIDATION_LIMITS.NOM_MIN);
         }
@@ -213,7 +215,7 @@ export const createInfosPersonnellesSchema = (t: ComposerTranslation) => {
     )
     .refine(
       data => {
-        const isTiers = data.lienAvecPersonne === t(INFORMATIONS_PERSONNELLES_TIERS);
+        const isTiers = data.lienAvecPersonne === INFORMATIONS_PERSONNELLES_TIERS;
         if (isTiers) {
           return !!(data.tiersPrenom && data.tiersPrenom.length >= VALIDATION_LIMITS.PRENOM_MIN);
         }
@@ -226,7 +228,7 @@ export const createInfosPersonnellesSchema = (t: ComposerTranslation) => {
     )
     .refine(
       data => {
-        const isTiers = data.lienAvecPersonne === t(INFORMATIONS_PERSONNELLES_TIERS);
+        const isTiers = data.lienAvecPersonne === INFORMATIONS_PERSONNELLES_TIERS;
         if (isTiers) {
           return !!data.tiersGenre?.code;
         }
@@ -239,7 +241,7 @@ export const createInfosPersonnellesSchema = (t: ComposerTranslation) => {
     )
     .refine(
       data => {
-        const isTiers = data.lienAvecPersonne === t(INFORMATIONS_PERSONNELLES_TIERS);
+        const isTiers = data.lienAvecPersonne === INFORMATIONS_PERSONNELLES_TIERS;
         if (isTiers) {
           return !!data.tiersNationalite?.code;
         }
@@ -252,7 +254,7 @@ export const createInfosPersonnellesSchema = (t: ComposerTranslation) => {
     )
     .refine(
       data => {
-        const isTiers = data.lienAvecPersonne === t(INFORMATIONS_PERSONNELLES_TIERS);
+        const isTiers = data.lienAvecPersonne === INFORMATIONS_PERSONNELLES_TIERS;
         if (isTiers) {
           return !!(data.tiersDateNaissance && data.tiersDateNaissance.length > 0);
         }
@@ -265,7 +267,7 @@ export const createInfosPersonnellesSchema = (t: ComposerTranslation) => {
     )
     .refine(
       data => {
-        const isTiers = data.lienAvecPersonne === t(INFORMATIONS_PERSONNELLES_TIERS);
+        const isTiers = data.lienAvecPersonne === INFORMATIONS_PERSONNELLES_TIERS;
         if (isTiers) {
           return !!(data.tiersDateNaissance && parseDate(data.tiersDateNaissance) !== null);
         }
@@ -278,7 +280,7 @@ export const createInfosPersonnellesSchema = (t: ComposerTranslation) => {
     )
     .refine(
       data => {
-        const isTiers = data.lienAvecPersonne === t(INFORMATIONS_PERSONNELLES_TIERS);
+        const isTiers = data.lienAvecPersonne === INFORMATIONS_PERSONNELLES_TIERS;
         if (isTiers) {
           const birthDate = data.tiersDateNaissance ? parseDate(data.tiersDateNaissance) : null;
           if (!birthDate) {
@@ -296,7 +298,7 @@ export const createInfosPersonnellesSchema = (t: ComposerTranslation) => {
     )
     .refine(
       data => {
-        const isTiers = data.lienAvecPersonne === t(INFORMATIONS_PERSONNELLES_TIERS);
+        const isTiers = data.lienAvecPersonne === INFORMATIONS_PERSONNELLES_TIERS;
         if (isTiers) {
           return !!(data.tiersAdresse && data.tiersAdresse.length >= VALIDATION_LIMITS.ADRESSE_MIN);
         }
@@ -309,7 +311,7 @@ export const createInfosPersonnellesSchema = (t: ComposerTranslation) => {
     )
     .refine(
       data => {
-        const isTiers = data.lienAvecPersonne === t(INFORMATIONS_PERSONNELLES_TIERS);
+        const isTiers = data.lienAvecPersonne === INFORMATIONS_PERSONNELLES_TIERS;
         if (isTiers) {
           const value = data.tiersAdressePostale?.trim() ?? "";
           return /^[a-zA-Z0-9\s]*$/.test(value);
@@ -323,7 +325,7 @@ export const createInfosPersonnellesSchema = (t: ComposerTranslation) => {
     )
     .refine(
       data => {
-        const isTiers = data.lienAvecPersonne === t(INFORMATIONS_PERSONNELLES_TIERS);
+        const isTiers = data.lienAvecPersonne === INFORMATIONS_PERSONNELLES_TIERS;
         if (isTiers) {
           return !!(data.tiersNpa && data.tiersNpa.length > 0 && /^\d+$/.test(data.tiersNpa));
         }
@@ -336,7 +338,7 @@ export const createInfosPersonnellesSchema = (t: ComposerTranslation) => {
     )
     .refine(
       data => {
-        const isTiers = data.lienAvecPersonne === t(INFORMATIONS_PERSONNELLES_TIERS);
+        const isTiers = data.lienAvecPersonne === INFORMATIONS_PERSONNELLES_TIERS;
         if (isTiers) {
           return !!(data.tiersLocalite && data.tiersLocalite.length >= 2);
         }
@@ -349,7 +351,7 @@ export const createInfosPersonnellesSchema = (t: ComposerTranslation) => {
     )
     .refine(
       data => {
-        const isTiers = data.lienAvecPersonne === t(INFORMATIONS_PERSONNELLES_TIERS);
+        const isTiers = data.lienAvecPersonne === INFORMATIONS_PERSONNELLES_TIERS;
         if (isTiers) {
           return !!(
             data.tiersTelephone &&
@@ -366,7 +368,7 @@ export const createInfosPersonnellesSchema = (t: ComposerTranslation) => {
     )
     .refine(
       data => {
-        const isTiers = data.lienAvecPersonne === t(INFORMATIONS_PERSONNELLES_TIERS);
+        const isTiers = data.lienAvecPersonne === INFORMATIONS_PERSONNELLES_TIERS;
         if (!isTiers) {
           return true;
         }
@@ -379,7 +381,7 @@ export const createInfosPersonnellesSchema = (t: ComposerTranslation) => {
     )
     .refine(
       data => {
-        const isTiers = data.lienAvecPersonne === t(INFORMATIONS_PERSONNELLES_TIERS);
+        const isTiers = data.lienAvecPersonne === INFORMATIONS_PERSONNELLES_TIERS;
         if (!isTiers) {
           return true;
         }
@@ -392,7 +394,7 @@ export const createInfosPersonnellesSchema = (t: ComposerTranslation) => {
     )
     .refine(
       data => {
-        const isTiers = data.lienAvecPersonne === t(INFORMATIONS_PERSONNELLES_TIERS);
+        const isTiers = data.lienAvecPersonne === INFORMATIONS_PERSONNELLES_TIERS;
         if (isTiers) {
           return data.tiersEmail === data.tiersConfirmationEmail;
         }
@@ -405,7 +407,7 @@ export const createInfosPersonnellesSchema = (t: ComposerTranslation) => {
     )
     .refine(
       data => {
-        const isOrganisation = data.lienAvecPersonne === t(INFORMATIONS_PERSONNELLES_MON_ENTREPRISE);
+        const isOrganisation = data.lienAvecPersonne === INFORMATIONS_PERSONNELLES_MON_ENTREPRISE;
         if (isOrganisation) {
           return !!(data.organisationNom && data.organisationNom.length >= VALIDATION_LIMITS.NOM_MIN);
         }
@@ -418,7 +420,7 @@ export const createInfosPersonnellesSchema = (t: ComposerTranslation) => {
     )
     .refine(
       data => {
-        const isOrganisation = data.lienAvecPersonne === t(INFORMATIONS_PERSONNELLES_MON_ENTREPRISE);
+        const isOrganisation = data.lienAvecPersonne === INFORMATIONS_PERSONNELLES_MON_ENTREPRISE;
         if (isOrganisation) {
           return !!(data.organisationAdresse && data.organisationAdresse.length >= VALIDATION_LIMITS.ADRESSE_MIN);
         }
@@ -431,7 +433,7 @@ export const createInfosPersonnellesSchema = (t: ComposerTranslation) => {
     )
     .refine(
       data => {
-        const isOrganisation = data.lienAvecPersonne === t(INFORMATIONS_PERSONNELLES_MON_ENTREPRISE);
+        const isOrganisation = data.lienAvecPersonne === INFORMATIONS_PERSONNELLES_MON_ENTREPRISE;
         if (isOrganisation) {
           const value = data.organisationAdressePostale?.trim() ?? "";
           return /^[a-zA-Z0-9\s]*$/.test(value);
@@ -445,7 +447,7 @@ export const createInfosPersonnellesSchema = (t: ComposerTranslation) => {
     )
     .refine(
       data => {
-        const isOrganisation = data.lienAvecPersonne === t(INFORMATIONS_PERSONNELLES_MON_ENTREPRISE);
+        const isOrganisation = data.lienAvecPersonne === INFORMATIONS_PERSONNELLES_MON_ENTREPRISE;
         if (isOrganisation) {
           return !!(data.organisationNpa && data.organisationNpa.length > 0 && /^\d+$/.test(data.organisationNpa));
         }
@@ -458,7 +460,7 @@ export const createInfosPersonnellesSchema = (t: ComposerTranslation) => {
     )
     .refine(
       data => {
-        const isOrganisation = data.lienAvecPersonne === t(INFORMATIONS_PERSONNELLES_MON_ENTREPRISE);
+        const isOrganisation = data.lienAvecPersonne === INFORMATIONS_PERSONNELLES_MON_ENTREPRISE;
         if (isOrganisation) {
           return !!(data.organisationLocalite && data.organisationLocalite.length >= 2);
         }
@@ -471,7 +473,7 @@ export const createInfosPersonnellesSchema = (t: ComposerTranslation) => {
     )
     .refine(
       data => {
-        const isOrganisation = data.lienAvecPersonne === t(INFORMATIONS_PERSONNELLES_MON_ENTREPRISE);
+        const isOrganisation = data.lienAvecPersonne === INFORMATIONS_PERSONNELLES_MON_ENTREPRISE;
         if (isOrganisation) {
           return !!(
             data.organisationTelephone &&
@@ -488,7 +490,7 @@ export const createInfosPersonnellesSchema = (t: ComposerTranslation) => {
     )
     .refine(
       data => {
-        const isOrganisation = data.lienAvecPersonne === t(INFORMATIONS_PERSONNELLES_MON_ENTREPRISE);
+        const isOrganisation = data.lienAvecPersonne === INFORMATIONS_PERSONNELLES_MON_ENTREPRISE;
         if (!isOrganisation) {
           return true;
         }
@@ -501,7 +503,7 @@ export const createInfosPersonnellesSchema = (t: ComposerTranslation) => {
     )
     .refine(
       data => {
-        const isOrganisation = data.lienAvecPersonne === t(INFORMATIONS_PERSONNELLES_MON_ENTREPRISE);
+        const isOrganisation = data.lienAvecPersonne === INFORMATIONS_PERSONNELLES_MON_ENTREPRISE;
         if (!isOrganisation) {
           return true;
         }
@@ -517,7 +519,7 @@ export const createInfosPersonnellesSchema = (t: ComposerTranslation) => {
     )
     .refine(
       data => {
-        const isOrganisation = data.lienAvecPersonne === t(INFORMATIONS_PERSONNELLES_MON_ENTREPRISE);
+        const isOrganisation = data.lienAvecPersonne === INFORMATIONS_PERSONNELLES_MON_ENTREPRISE;
         if (isOrganisation) {
           return data.organisationEmail === data.organisationConfirmationEmail;
         }
