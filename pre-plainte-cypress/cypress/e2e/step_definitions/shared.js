@@ -281,13 +281,19 @@ When("je sélectionne le premier créneau disponible", () => {
     .filter(":visible")
     .first()
     .within(() => {
-      cy.get('[data-cy="creneau-radio-0"] input[type="radio"]').click({ force: true });
+      cy.get('[data-cy="creneau-radio-0"]').click({ force: true });
+      cy.get('[data-cy="creneau-radio-0"] input[type="radio"]').should("be.checked");
     });
 });
 
 When("je continue après le rendez-vous", () => {
   cy.get('[data-cy="continuer-rendez-vous"]').filter(":visible").first().click();
   cy.window().its("localStorage").invoke("getItem", "pp-step").should("eq", "6");
+  cy.window().its("localStorage").invoke("getItem", "pp-data").then(data => {
+    const parsedData = JSON.parse(data ?? "{}");
+    expect(parsedData.selectedCreneau).to.exist;
+    expect(parsedData.selectedCreneau.lieu).to.eq("Poste PPEL");
+  });
 });
 
 When("je soumets la pré-plainte", () => {
