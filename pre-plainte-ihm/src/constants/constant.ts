@@ -5,6 +5,10 @@ export const DEMARCHE_PLAINTE_URL = "https://www.ge.ch/vol-cambriolage-dommage-p
 export const EMPTY_VALUE_DISPLAY = "-";
 export const EMPTY_VALUE_EM_DASH = "—";
 
+export const TEXT_FIELD_MAX_LENGTH = 250;
+export const EMAIL_FIELD_MAX_LENGTH = 254;
+export const TEXTAREA_MAX_LENGTH = 1000;
+
 export const STEPS = [
   { titleKey: "steps.informationsGenerales" },
   { titleKey: "steps.verificationEmail" },

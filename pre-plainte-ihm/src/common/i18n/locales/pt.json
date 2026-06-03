@@ -854,6 +854,8 @@
     "telephoneInvalid": "Número de telefone inválido (exemplo: {example})",
     "ageInvalideTiers": "A idade deve estar entre 10 e 120 anos.",
     "telephoneMin": "O número deve conter pelo menos {min} algarismos e estar em conformidade com o formato internacional, por exemplo: 41789054454.",
+    "emailRequis": "O endereço de email é obrigatório",
+    "emailTropLong": "O endereço de email não pode exceder 254 caracteres",
     "emailInvalide": "Formato de email inválido",
     "codeEmailRequis": "Introduza o código de verificação recebido por email.",
     "codeEmailLongueur": "O código deve conter exatamente {n} algarismos.",
