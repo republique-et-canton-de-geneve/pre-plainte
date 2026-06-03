@@ -854,6 +854,8 @@
     "telephoneInvalid": "Numéro de téléphone invalide (exemple : {example})",
     "ageInvalideTiers": "L'âge doit être entre 10 et 120 ans.",
     "telephoneMin": "Le numéro doit contenir au moins {min} chiffres et être conforme au format international, par exemple : 41789054454.",
+    "emailRequis": "L'adresse email est requise",
+    "emailTropLong": "L'adresse email ne peut pas dépasser 254 caractères",
     "emailInvalide": "Format d'email invalide",
     "codeEmailRequis": "Veuillez saisir le code de vérification reçu par e-mail.",
     "codeEmailLongueur": "Le code doit comporter exactement {n} chiffres.",
