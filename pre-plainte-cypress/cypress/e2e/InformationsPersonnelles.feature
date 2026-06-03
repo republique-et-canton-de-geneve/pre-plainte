@@ -17,4 +17,5 @@ Fonctionnalité: Informations personnelles
     Etant donné que je suis sur l'étape informations personnelles
     Quand je renseigne les informations personnelles nominales pour moi-même
     Et je continue après les informations personnelles
-    Alors je vois l'étape "Informations sur l'événement"
+    Alors aucune erreur de champ obligatoire n'est affichée
+    Et je vois l'étape "Informations sur l'événement"
