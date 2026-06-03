@@ -139,19 +139,16 @@ export class IncidentMapper {
       plaquePays: this.resolvePlaquePays(form, objetAvecPlaque),
       plaqueCanton: this.resolvePlaqueCanton(form, objetAvecPlaque),
       assuranceAucune: isVehicle ? !!form.assuranceAucune : undefined,
-      assureur: isVehicle && form.assureur?.code && !form.assuranceAucune ? form.assureur : undefined,
-      assureurAutre: isVehicle ? this.resolveAssureurAutre(form) : undefined,
+      assureur: undefined,
+      assureurAutre: isVehicle ? this.resolveNomAssureurVehicule(form) : undefined,
       numeroAssurance: isVehicle ? this.toOptionalString(form.numeroAssurance) : undefined,
       numeroVignette: isVehicle ? this.toOptionalString(form.numeroVignette) : undefined,
       numeroMaster: isVehicle ? this.toOptionalString(form.numeroMaster) : undefined,
     };
   }
 
-  private static resolveAssureurAutre(form: PrePlainteFormFields) {
+  private static resolveNomAssureurVehicule(form: PrePlainteFormFields) {
     if (form.assuranceAucune) {
-      return undefined;
-    }
-    if (!this.isAutre(form.assureur?.code)) {
       return undefined;
     }
     return this.toOptionalString(form.assureurAutre);

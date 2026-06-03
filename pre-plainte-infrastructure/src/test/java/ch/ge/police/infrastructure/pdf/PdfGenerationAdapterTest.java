@@ -168,6 +168,51 @@ class PdfGenerationAdapterTest {
   }
 
   @Test
+  void shouldRenderVehicleInsuranceFieldsInPdf() throws Exception {
+    ObjetIncident o = objetComplet();
+    o.setVehicle(true);
+    o.setType(new RipolCode("010101", "Voiture"));
+    o.setAssureurAutre("AXA");
+    o.setNumeroAssurance("POL-123");
+    o.setNumeroVignette("VIG-456");
+    o.setNumeroMaster("MST-789");
+
+    Vol vol = new Vol();
+    vol.setDateDebutEvent("2025-01-03");
+    vol.setDateFinEvent("2025-01-03");
+    vol.setObjetsVoles(List.of(o));
+
+    String text = extractPdfText(adapter.generatePdf(new PrePlainte("VOL-INS", basePersonne(), Incident.of(vol))));
+
+    assertPdfTextContains(text, "Compagnie d'assurance");
+    assertPdfTextContains(text, "AXA");
+    assertPdfTextContains(text, "Numéro d'assurance");
+    assertPdfTextContains(text, "POL-123");
+    assertPdfTextContains(text, "Numéro de vignette");
+    assertPdfTextContains(text, "VIG-456");
+    assertPdfTextContains(text, "Numéro de master");
+    assertPdfTextContains(text, "MST-789");
+  }
+
+  @Test
+  void shouldRenderNoVehicleInsuranceInPdf() throws Exception {
+    ObjetIncident o = objetComplet();
+    o.setVehicle(true);
+    o.setType(new RipolCode("010101", "Voiture"));
+    o.setAssuranceAucune(true);
+
+    Vol vol = new Vol();
+    vol.setDateDebutEvent("2025-01-04");
+    vol.setDateFinEvent("2025-01-04");
+    vol.setObjetsVoles(List.of(o));
+
+    String text = extractPdfText(adapter.generatePdf(new PrePlainte("VOL-NO-INS", basePersonne(), Incident.of(vol))));
+
+    assertPdfTextContains(text, "Assurance véhicule");
+    assertPdfTextContains(text, "Aucune");
+  }
+
+  @Test
   void shouldGeneratePdfVolWithoutObject() {
 
     Vol vol = new Vol();

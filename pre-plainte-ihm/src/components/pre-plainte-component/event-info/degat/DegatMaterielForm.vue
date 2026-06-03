@@ -221,7 +221,6 @@ const { value: plaqueInconnu } = useField<boolean>("plaqueInconnu");
 const { value: plaquePays } = useField<RipolSelection | null>("plaquePays");
 const { value: plaqueCanton } = useField<RipolSelection | null>("plaqueCanton");
 const { value: assuranceAucune } = useField<boolean>("assuranceAucune");
-const { value: assureur } = useField<RipolSelection | null>("assureur");
 const { value: assureurAutre } = useField<string>("assureurAutre");
 const { value: numeroAssurance } = useField<string>("numeroAssurance");
 const { value: numeroVignette } = useField<string>("numeroVignette");
@@ -296,8 +295,7 @@ const remplirBrouillonDepuisSnapshot = (obj: VolObjetFormSnapshot) => {
   plaquePays.value = obj.plaquePays ? { ...obj.plaquePays } : null;
   plaqueCanton.value = obj.plaqueCanton ? { ...obj.plaqueCanton } : null;
   assuranceAucune.value = !!obj.assuranceAucune;
-  assureur.value = obj.assureur ? { ...obj.assureur } : null;
-  assureurAutre.value = texteOuVide(obj.assureurAutre);
+  assureurAutre.value = texteOuVide(obj.assureurAutre) || texteOuVide(obj.assureur?.label);
   numeroAssurance.value = texteOuVide(obj.numeroAssurance);
   numeroVignette.value = texteOuVide(obj.numeroVignette);
   numeroMaster.value = texteOuVide(obj.numeroMaster);
@@ -324,7 +322,6 @@ const viderChampsVehiculeBrouillon = () => {
   plaquePays.value = null;
   plaqueCanton.value = null;
   assuranceAucune.value = false;
-  assureur.value = null;
   assureurAutre.value = TEXTE_VIDE;
   numeroAssurance.value = TEXTE_VIDE;
   numeroVignette.value = TEXTE_VIDE;
@@ -384,7 +381,7 @@ const buildSnapshotFromDraft = (): VolObjetFormSnapshot => ({
   plaquePays: cloneRipol(plaquePays.value),
   plaqueCanton: cloneRipol(plaqueCanton.value),
   assuranceAucune: assuranceAucune.value,
-  assureur: cloneRipol(assureur.value),
+  assureur: null,
   assureurAutre: chaineFormulaire(assureurAutre.value),
   numeroAssurance: chaineFormulaire(numeroAssurance.value),
   numeroVignette: chaineFormulaire(numeroVignette.value),
