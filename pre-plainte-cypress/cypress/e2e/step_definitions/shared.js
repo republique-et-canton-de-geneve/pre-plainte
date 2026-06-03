@@ -60,7 +60,7 @@ Given("je suis sur le formulaire", () => {
 
 Given("je démarre un parcours nominal complet", () => {
   stubRipol({
-    objectTypes: [ripol("150001", "Sac à main")],
+    objectTypes: [ripol("713100", "Téléphone mobile")],
     brands: [],
     models: [],
     objectColours: [ripol("NOIR", "Noir")],
@@ -233,9 +233,8 @@ When("je renseigne un vol simple nominal", () => {
   fillField("Date de fin de l'événement", "20.05.2026");
   fillField("Heure de fin de l'événement", "11:00");
   choisirRadio("Certains objets que vous allez déclarer ont-ils été volés dans ou sur un véhicule ?", "Non");
-  selectNative("Catégorie d'objet", "bagages");
-  selectNative("Sous-catégorie", "sacs_main");
-  selectAutocomplete("Type de l'objet", "Sac à main");
+  selectNative("Catégorie d'objet", "telephone");
+  selectAutocomplete("Type de l'objet", "Téléphone mobile");
   fillField("Numéro de série", "SN123456");
   cy.get('[data-cy="objet-vole-valider"]').click();
   cy.contains("Objet n° 1").should(bevisible);
@@ -290,7 +289,7 @@ Then("le récapitulatif du parcours nominal est affiché", () => {
   cy.contains("Validation").should(bevisible);
   cy.contains("Martin").should(bevisible);
   cy.contains("Anne").should(bevisible);
-  cy.contains("Sac à main").should(bevisible);
+  cy.contains("Téléphone mobile").should(bevisible);
   cy.contains("Poste PPEL").should(bevisible);
 });
 
