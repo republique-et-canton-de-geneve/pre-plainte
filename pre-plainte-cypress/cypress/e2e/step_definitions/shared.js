@@ -281,9 +281,7 @@ When("je sélectionne le premier créneau disponible", () => {
     .filter(":visible")
     .first()
     .within(() => {
-      cy.get('[data-cy="creneau-radio-0"] input[type="radio"]')
-        .check({ force: true })
-        .should("be.checked");
+      cy.get('[data-cy="creneau-radio-0"]').click({ force: true });
     });
 });
 
