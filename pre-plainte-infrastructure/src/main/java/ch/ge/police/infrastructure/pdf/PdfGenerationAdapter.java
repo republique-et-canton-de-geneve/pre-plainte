@@ -388,6 +388,21 @@ public class PdfGenerationAdapter implements PdfGenerationUseCase {
     addIfNotNull(rows, "Numéro de plaque inconnu", o.isPlaqueInconnu() ? "Oui" : null);
     addIfNotNull(rows, "Pays de la plaque", o.getPlaquePaysLabel());
     addIfNotNull(rows, "Canton de la plaque", o.getPlaqueCantonLabel());
+    addObjetVehicleInsurance(rows, o);
+  }
+
+  private void addObjetVehicleInsurance(List<String[]> rows, ObjetIncident o) {
+    if (!o.isVehicleType()) {
+      return;
+    }
+    if (o.isAssuranceAucune()) {
+      addIfNotNull(rows, "Assurance véhicule", "Aucune");
+      return;
+    }
+    addIfNotNull(rows, "Compagnie d'assurance", o.resolveAssureurNom());
+    addIfNotNull(rows, "Numéro d'assurance", o.getNumeroAssurance());
+    addIfNotNull(rows, "Numéro de vignette", o.getNumeroVignette());
+    addIfNotNull(rows, "Numéro de master", o.getNumeroMaster());
   }
 
   private void handleDommage(List<String[]> rows, DommageMateriel d) {

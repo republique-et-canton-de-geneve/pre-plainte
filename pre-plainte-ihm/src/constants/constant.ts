@@ -296,6 +296,19 @@ export const AUTRE_OPTION: Ripol = {
   groupeType: "",
 };
 
+export const VEHICLE_INSURER_SUGGESTIONS = [
+  "AXA",
+  "Alliance",
+  "Allianz",
+  "Mobiliar",
+  "Generali",
+  "Zurich",
+  "Helvetia",
+  "Basler",
+  "Vaudoise",
+  "Baloise",
+] as const;
+
 export const MOYEN_PAIEMENT = {
   IBAN: "iban",
   PAYPAL: "paypal",

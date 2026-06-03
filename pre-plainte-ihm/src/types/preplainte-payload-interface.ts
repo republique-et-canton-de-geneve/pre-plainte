@@ -100,6 +100,12 @@ export type ObjetIncidentDTO = {
   plaqueInconnu?: boolean;
   plaquePays?: RipolCodeDTO;
   plaqueCanton?: RipolCodeDTO;
+  assuranceAucune?: boolean;
+  assureur?: RipolCodeDTO;
+  assureurAutre?: string;
+  numeroAssurance?: string;
+  numeroVignette?: string;
+  numeroMaster?: string;
 };
 
 export type IncidentVolDTO = IncidentBaseDTO & {

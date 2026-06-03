@@ -105,6 +105,12 @@ export const getInitialFormData = (): PrePlainteFormFields => ({
   plaqueInconnu: false,
   plaquePays: null,
   plaqueCanton: null,
+  assuranceAucune: false,
+  assureur: null,
+  assureurAutre: "",
+  numeroAssurance: "",
+  numeroVignette: "",
+  numeroMaster: "",
 
   fichiers: [],
 

@@ -3,7 +3,7 @@
     v-model="selectedValue"
     v-model:search="searchQuery"
     :items="items"
-    :loading="loading"
+    :loading="isLoading"
     :label="displayLabel"
     :error-messages="displayedErrors"
     :disabled="disabled"
@@ -15,7 +15,7 @@
     item-value="code"
     return-object
     variant="outlined"
-    :no-filter="!preload"
+    :no-filter="disableVuetifyFilter"
     :no-data-text="noDataText"
     :value-comparator="compareByCode"
   >
@@ -35,15 +35,20 @@ import { useI18n } from "vue-i18n";
 import type { Ripol, RipolSelection } from "@/types/ripol.interface";
 import { useRipolLoading } from "@/composables/useRipolLoading";
 import { requiredLabel } from "@/utils/helpers/labelHelpers";
+import { filterRipolSelections } from "@/utils/helpers/ripolFilterHelpers";
 
 const { t } = useI18n();
 const { startLoading, stopLoading } = useRipolLoading();
+
+const LOCAL_FILTER_THRESHOLD = 300;
+const MAX_VISIBLE_ITEMS = 100;
 
 interface Props {
   modelValue: RipolSelection | null;
   label: string;
   fetchFn: (search?: string) => Promise<Ripol[]>;
   errorMessages?: string | string[];
+  loading?: boolean;
   disabled?: boolean;
   hint?: string;
   persistentHint?: boolean;
@@ -72,10 +77,15 @@ const emit = defineEmits<{
 }>();
 
 const items = ref<RipolSelection[]>(props.modelValue ? [props.modelValue] : []);
-const loading = ref(false);
+const allItems = ref<RipolSelection[]>([]);
+const useLocalFilter = ref(false);
+const fetchLoading = ref(false);
+const isLoading = computed(() => props.loading === true || fetchLoading.value);
 const initialLoadDone = ref(false);
 const searchQuery = ref("");
+const disableVuetifyFilter = computed(() => useLocalFilter.value || !props.preload);
 let debounceTimeout: ReturnType<typeof setTimeout> | null = null;
+let fetchGeneration = 0;
 
 const getDisplayLabel = (item: RipolSelection) => {
   const raw = props.displayLabel ? props.displayLabel(item) : item.label;
@@ -92,7 +102,7 @@ const displayedErrors = computed(() => {
 });
 
 const noDataText = computed(() => {
-  if (loading.value) {
+  if (isLoading.value) {
     return t("ripol.chargementEnCours");
   }
   if (props.preload) {
@@ -140,27 +150,57 @@ const compareByCode = (currentValue: RipolSelection | null, itemValue: RipolSele
   return currentValue.code === itemValue.code;
 };
 
+const withSelectedValue = (visible: RipolSelection[]): RipolSelection[] => {
+  if (props.modelValue && !visible.some(item => item.code === props.modelValue?.code)) {
+    return [props.modelValue, ...visible];
+  }
+  return visible;
+};
+
+const applyLocalFilter = (search?: string) => {
+  const filtered = filterRipolSelections(allItems.value, search);
+  items.value = withSelectedValue(filtered.slice(0, MAX_VISIBLE_ITEMS));
+};
+
+const setItemsFromFetch = (newItems: RipolSelection[]) => {
+  if (props.autoSelectWhenSingleResult && !props.modelValue && newItems.length === 1) {
+    emit("update:modelValue", newItems[0]);
+  }
+
+  if (newItems.length > LOCAL_FILTER_THRESHOLD) {
+    useLocalFilter.value = true;
+    allItems.value = newItems;
+    applyLocalFilter(searchQuery.value);
+    return;
+  }
+
+  useLocalFilter.value = false;
+  allItems.value = [];
+  items.value = withSelectedValue(newItems);
+};
+
 const fetchItems = async (search?: string) => {
-  loading.value = true;
+  const generation = ++fetchGeneration;
+  fetchLoading.value = true;
   startLoading();
   try {
     const results = await props.fetchFn(search);
-    const newItems = results.map(ripol => mapRipolToSelection(ripol));
-
-    if (props.autoSelectWhenSingleResult && !props.modelValue && newItems.length === 1) {
-      emit("update:modelValue", newItems[0]);
+    if (generation !== fetchGeneration) {
+      return;
     }
-
-    if (props.modelValue && !newItems.some(item => item.code === props.modelValue?.code)) {
-      newItems.unshift(props.modelValue);
-    }
-
-    items.value = newItems;
+    setItemsFromFetch(results.map(ripol => mapRipolToSelection(ripol)));
   } catch (error) {
-    console.error("Erreur lors de la recherche RIPOL:", error);
-    items.value = props.modelValue ? [props.modelValue] : [];
+    if (generation === fetchGeneration) {
+      console.error("Erreur lors de la recherche RIPOL:", error);
+      useLocalFilter.value = false;
+      allItems.value = [];
+      items.value = props.modelValue ? [props.modelValue] : [];
+    }
   } finally {
-    loading.value = false;
+    if (generation !== fetchGeneration) {
+      return;
+    }
+    fetchLoading.value = false;
     stopLoading();
     if (props.preload) {
       initialLoadDone.value = true;
@@ -169,6 +209,11 @@ const fetchItems = async (search?: string) => {
 };
 
 watch(searchQuery, search => {
+  if (useLocalFilter.value) {
+    applyLocalFilter(search);
+    return;
+  }
+
   if (props.preload) {
     return;
   }
@@ -184,7 +229,6 @@ watch(searchQuery, search => {
     return;
   }
 
-  // Éviter de relancer la recherche si le texte correspond à l'élément sélectionné
   if (props.modelValue && search.trim() === (props.modelValue.label ?? "").trim()) {
     return;
   }
@@ -214,4 +258,3 @@ onMounted(() => {
   }
 });
 </script>
-
