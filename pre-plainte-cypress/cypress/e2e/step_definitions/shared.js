@@ -1,6 +1,9 @@
 import { Given, Then, When } from "@badeball/cypress-cucumber-preprocessor";
-import { clearField, fieldInput, fieldRoot, fillField, selectAutocomplete } from "../../support/helpers/vuetify";
-import { ripolSelection, stubRipol } from "../../support/stubs/ripol";
+import { clearField, fieldInput, fieldRoot, fillField, selectAutocomplete, selectNative } from "../../support/helpers/vuetify";
+import { ripol, ripolSelection, stubRipol } from "../../support/stubs/ripol";
+import { stubEmailChallengeVerificationOk } from "../../support/stubs/email-challenge";
+import { stubEsiriusOk } from "../../support/stubs/esirius";
+import { stubSoumissionPrePlainteOk } from "../../support/stubs/pre-plainte";
 import { declarantSuisseValide, donneesEmailVerifie } from "../../support/data/pre-plainte";
 
 const bevisible = "be.visible";
@@ -42,9 +45,30 @@ const libellesChamps = {
   "Coordonnées du tiers concerné": "Coordonnées du tiers",
 };
 
+const choisirRadio = (question, option) => {
+  cy.contains("legend", question)
+    .parents("fieldset")
+    .first()
+    .contains(".v-label", option)
+    .click({ force: true });
+};
+
 Given("je suis sur le formulaire", () => {
   stubRipol();
   cy.visit("/");
+});
+
+Given("je démarre un parcours nominal complet", () => {
+  stubRipol({
+    objectTypes: [ripol("150001", "Sac à main")],
+    brands: [],
+    models: [],
+    objectColours: [ripol("NOIR", "Noir")],
+  });
+  stubEmailChallengeVerificationOk();
+  stubEsiriusOk();
+  stubSoumissionPrePlainteOk();
+  cy.demarrerPrePlainteAEtape(1);
 });
 
 Given("je suis sur l'étape informations générales", () => {
@@ -178,6 +202,10 @@ When("je clique sur le bouton continuer des informations générales", () => {
   cy.get('[data-cy="continuer-informations-generales"]').filter(":visible").first().click();
 });
 
+When("le challenge email est considéré comme vérifié", () => {
+  cy.demarrerPrePlainteAEtape(3, donneesEmailVerifie, { emailChallengeKey: "challenge-cypress" });
+});
+
 When("je renseigne les informations personnelles nominales pour moi-même", () => {
   cy.get('[data-cy="type-personne-native"]').select("MOI_MEME", { force: true });
   fillField("Numéro de téléphone", "0791234567");
@@ -198,6 +226,39 @@ When("je continue après les informations personnelles", () => {
   cy.get('[data-cy="continuer-informations-personnelles"]').filter(":visible").first().click();
 });
 
+When("je renseigne un vol simple nominal", () => {
+  cy.get('[data-cy="type-incident-native"]').select("vol", { force: true });
+  fillField("Date de début de l'événement", "20.05.2026");
+  fillField("Heure de début de l'événement", "10:00");
+  fillField("Date de fin de l'événement", "20.05.2026");
+  fillField("Heure de fin de l'événement", "11:00");
+  choisirRadio("Certains objets que vous allez déclarer ont-ils été volés dans ou sur un véhicule ?", "Non");
+  selectNative("Catégorie de l'objet", "bagages");
+  selectNative("Sous-catégorie", "sacs_main");
+  selectAutocomplete("Type de l'objet", "Sac à main");
+  fillField("Numéro de série", "SN123456");
+  cy.get('[data-cy="objet-vole-valider"]').click();
+  cy.contains("Objet n° 1").should(bevisible);
+  choisirRadio("Avez-vous constaté des dégradations liées à ce vol ?", "Non");
+  choisirRadio("L'adresse correspond à", "L'adresse de la personne lesée");
+  cy.get('[data-cy="continuer-evenement"]').filter(":visible").first().click();
+});
+
+When("je sélectionne le premier créneau disponible", () => {
+  cy.wait("@getEsiriusServices");
+  cy.wait("@getEsiriusAvailabilities");
+  cy.get('[data-cy="creneau-row-0"]').should(bevisible);
+  cy.get('[data-cy="creneau-radio-0"]').click({ force: true });
+});
+
+When("je continue après le rendez-vous", () => {
+  cy.get('[data-cy="continuer-rendez-vous"]').filter(":visible").first().click();
+});
+
+When("je soumets la pré-plainte", () => {
+  cy.get('[data-cy="soumettre-preplainte"]').filter(":visible").first().click();
+});
+
 Then("le message {string} s'affiche sous le champ {string}", (message, champ) => {
   fieldRoot(champ).within(() => {
     cy.contains(message).should(bevisible);
@@ -213,12 +274,36 @@ Then("l'objet volé est enregistré", () => {
   cy.contains("Objet n° 1").should(bevisible);
 });
 
+Then("aucune erreur de champ obligatoire n'est affichée", () => {
+  cy.contains("Le champ est requis").should("not.exist");
+});
+
 Then("le bouton {string} est désactivé", (texte) => {
   cy.contains("button", texte).should(bedisabled);
 });
 
 Then("je vois l'étape {string}", (etape) => {
   cy.contains(etape).should(bevisible);
+});
+
+Then("le récapitulatif du parcours nominal est affiché", () => {
+  cy.contains("Validation").should(bevisible);
+  cy.contains("Martin").should(bevisible);
+  cy.contains("Anne").should(bevisible);
+  cy.contains("Sac à main").should(bevisible);
+  cy.contains("Poste PPEL").should(bevisible);
+});
+
+Then("la pré-plainte est soumise", () => {
+  cy.wait("@submitPrePlainte");
+});
+
+Then("le rendez-vous est créé", () => {
+  cy.wait("@createEsiriusAppointment");
+});
+
+Then("je vois la validation finale", () => {
+  cy.contains("Votre demande de pré-plainte a bien été reçue").should(bevisible);
 });
 
 Then("le bouton continuer des informations générales est désactivé", () => {

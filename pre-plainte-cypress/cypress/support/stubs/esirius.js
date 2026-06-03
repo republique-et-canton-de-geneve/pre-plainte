@@ -22,6 +22,7 @@ export const esiriusServiceVol = {
   key: "VOL-1",
   name: "Service vol",
   siteCode: "PPEL",
+  existAvailabilities: true,
 };
 
 export const esiriusAvailabilityVol = {
