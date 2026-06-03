@@ -12,6 +12,7 @@
     display-format="national"
     :guess-country="true"
     :invalid-message="invalidMessageFn"
+    :enable-searching-country="true"
     @update:model-value="onUpdate"
   />
 </template>
@@ -62,5 +63,10 @@ function invalidMessageFn({ example }: { label?: string; example?: string }) {
 .v-overlay-container .v-overlay__content:has(.v-phone-input__country__icon) .v-list {
   min-width: 500px;
   max-width: 500px;
+}
+
+.v-phone-input__country__input {
+  min-width: 95px !important;
+  max-width: 95px !important;
 }
 </style>
