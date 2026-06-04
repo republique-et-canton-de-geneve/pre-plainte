@@ -14,6 +14,7 @@ import { i18n } from "@/common/i18n";
 import { loadConfig } from "./config/config";
 import { RipolService } from "@/services/ripolService";
 import { useDocumentTitleSync } from "./composables/useDocumentTitleSync";
+import { VAutocomplete } from "vuetify/components";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -36,6 +37,8 @@ await registerVuetifyPlugin(app, {
   mode: 3,
   nonce: undefined,
 });
+
+app.component("VAutocomplete", VAutocomplete);
 
 const vPhoneInput = createVPhoneInput({
   countryIconMode: "svg",
