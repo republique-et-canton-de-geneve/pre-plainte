@@ -82,7 +82,7 @@ import { filterNationalities, sortRipolByLabelFr } from "@/utils/helpers/ripolHe
 import type { RipolSelection, Ripol } from "@/types/ripol.interface";
 import type { PrePlainteFormFields, VolObjetFormSnapshot } from "@/types/pre-plainte.interface";
 import BaseRadioGroup from "@/components/radio/BaseRadioGroup.vue";
-import { validerPlaqueVehicule } from "@/utils/helpers/volObjetVolHelpers";
+import { validerNumeroPlaque, validerPlaqueVehicule } from "@/utils/helpers/volObjetVolHelpers";
 
 const TEXTE_VIDE = "";
 const NUMERO_IMEI_REGEX = /^\d{15}$/;
@@ -138,7 +138,7 @@ const { value: dateAchat } = useField<string>("dateAchat");
 const { value: plaqueNumero, errorMessage: plaqueNumeroError } = useField<string>("plaqueNumero");
 const { value: plaqueInconnu } = useField<boolean>("plaqueInconnu");
 const { value: plaquePays, errorMessage: plaquePaysError } = useField<RipolSelection | null>("plaquePays");
-const { value: plaqueCanton } = useField<RipolSelection | null>("plaqueCanton");
+const { value: plaqueCanton, errorMessage: plaqueCantonError } = useField<RipolSelection | null>("plaqueCanton");
 
 const editingIndex = ref<number | null>(null);
 const draftPanelRef = ref<HTMLElement | null>(null);
@@ -479,11 +479,17 @@ const validerBrouillonObjetVole = (): boolean => {
       setFieldError("plaquePays", t("validation.champRequis"));
       return false;
     }
-    if (!chaineFormulaire(plaqueNumero.value).trim()) {
-      setFieldError("plaqueNumero", t("validation.champRequis"));
-      return false;
-    }
-    return true;
+    return validerNumeroPlaque(
+      {
+        sousCategorie: sousCategorie.value,
+        plaqueInconnu: plaqueInconnu.value,
+        plaqueNumero: plaqueNumero.value,
+        plaquePays: plaquePays.value,
+        plaqueCanton: plaqueCanton.value,
+      },
+      setFieldError as (field: string, message: string) => void,
+      t,
+    );
   }
 
   if (!typeObjet.value?.code) {
@@ -517,7 +523,7 @@ const validerBrouillonObjetVole = (): boolean => {
           plaquePays: plaquePays.value,
           plaqueCanton: plaqueCanton.value,
         },
-        setFieldError,
+        setFieldError as (field: string, message: string) => void,
         t,
       )
     ) {
@@ -669,6 +675,8 @@ const brouillon = reactive({
   plaqueNumeroError,
   plaquePays,
   plaquePaysError,
+  plaqueCanton,
+  plaqueCantonError,
   fetchFilteredNationalities,
   objetTypeKey,
   brandKey,
