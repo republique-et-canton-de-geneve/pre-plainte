@@ -19,3 +19,26 @@ Fonctionnalité: Informations personnelles
     Et je continue après les informations personnelles
     Alors aucune erreur de champ obligatoire n'est affichée
     Et je vois l'étape "Informations sur l'événement"
+
+  Scénario: BVA - date de naissance inférieure à 16 ans
+    Etant donné que je suis sur l'étape informations personnelles avec des données invalides "age inferieur a 16 ans"
+    Quand je continue après les informations personnelles
+    Alors le message "L'âge doit être entre 16 et 120 ans" s'affiche sous le champ "Date de naissance"
+    Et je reste sur l'étape informations personnelles
+
+  Scénario: BVA - nationalité non suisse sans titre de séjour
+    Etant donné que je suis sur l'étape informations personnelles avec des données invalides "nationalite etrangere sans titre de sejour"
+    Quand je continue après les informations personnelles
+    Alors le message "Le titre de séjour est requis" s'affiche sous le champ "Titre de séjour"
+    Et je reste sur l'étape informations personnelles
+
+  Scénario: BVA - numéro de document manquant
+    Etant donné que je suis sur l'étape informations personnelles avec des données invalides "numero de document manquant"
+    Quand je continue après les informations personnelles
+    Alors le message "Le numéro de document est requis" s'affiche sous le champ "Numéro de carte d'identité"
+    Et je reste sur l'étape informations personnelles
+
+  Scénario: BVA - emails différents dans les données persistées
+    Etant donné que je suis sur l'étape informations personnelles avec des données invalides "emails differents"
+    Quand je continue après les informations personnelles
+    Alors je reste sur l'étape informations personnelles
