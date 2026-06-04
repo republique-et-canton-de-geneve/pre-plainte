@@ -38,7 +38,7 @@ export function useVehicleDetailsRipol({ sousCategorie, activePrefixes }: UseVeh
 
   const { value: plaqueNumero, errorMessage: plaqueNumeroError } = useField<string>("plaqueNumero");
   const { value: plaqueInconnu } = useField<boolean>("plaqueInconnu");
-  const { value: plaquePays } = useField<RipolSelection | null>("plaquePays");
+  const { value: plaquePays, errorMessage: plaquePaysError } = useField<RipolSelection | null>("plaquePays");
   const { value: plaqueCanton, errorMessage: plaqueCantonError } = useField<RipolSelection | null>("plaqueCanton");
 
   const { value: assuranceAucune } = useField<boolean>("assuranceAucune");
@@ -242,6 +242,7 @@ export function useVehicleDetailsRipol({ sousCategorie, activePrefixes }: UseVeh
     plaqueNumeroError,
     plaqueInconnu,
     plaquePays,
+    plaquePaysError,
     plaqueCanton,
     plaqueCantonError,
     assuranceAucune,
