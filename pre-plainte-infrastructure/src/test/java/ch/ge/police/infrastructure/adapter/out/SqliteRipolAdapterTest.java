@@ -503,6 +503,44 @@ class SqliteRipolAdapterTest {
   }
 
   @Test
+  void getCodesByGroupType_shouldNotDuplicateWhenSeveralFrenchLocalizationsExist() throws Exception {
+    Path db = Files.createTempFile("ripol-dup-loc-", ".db");
+    db.toFile().deleteOnExit();
+    try (Connection conn = DriverManager.getConnection("jdbc:sqlite:" + db.toAbsolutePath());
+        Statement st = conn.createStatement()) {
+      st.execute("""
+          CREATE TABLE TBINCIDENTCODE (
+            ID INTEGER PRIMARY KEY, GROUPTYPE TEXT, CODEVALUE TEXT, TEXT TEXT,
+            MASTERTYPE TEXT, MASTERVALUE TEXT
+          )
+        """);
+      st.execute("""
+          CREATE TABLE TBLOCALIZATION (
+            PK INTEGER, GROUPTYPE TEXT, LOCALE_ID INTEGER, TRANSLATION TEXT
+          )
+        """);
+      st.execute("""
+          INSERT INTO TBINCIDENTCODE (ID, GROUPTYPE, CODEVALUE, TEXT, MASTERTYPE, MASTERVALUE)
+          VALUES (10, 'geschlechtISO', '1', 'Männlich', NULL, NULL)
+        """);
+      st.execute("""
+          INSERT INTO TBLOCALIZATION (PK, GROUPTYPE, LOCALE_ID, TRANSLATION) VALUES
+          (10, 'geschlechtISO', 3, 'Masculin'),
+          (10, 'geschlechtISO', 3, 'Masculin bis')
+        """);
+    }
+
+    SqliteRipolAdapter adapter = new SqliteRipolAdapter(
+      new SingleResourceLoader("classpath:bdd/dbppel3", new FileSystemResource(db.toFile())),
+      "bdd/dbppel3"
+    );
+
+    List<Ripol> sexes = adapter.getCodesByGroupType("geschlechtISO");
+    assertEquals(1, sexes.size());
+    assertEquals("1", sexes.getFirst().code());
+  }
+
+  @Test
   void warmUpCache_shouldPreloadConfiguredGroupTypesWithoutThrowing() throws Exception {
     SqliteRipolAdapter adapter = newAdapterPointingToTempDb();
 
