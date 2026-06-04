@@ -212,7 +212,8 @@ public class SqliteRipolAdapter implements RipolPort {
   private String sqlExcludeNumericOnlyLabels() {
     return """
        AND NOT (
-         length(trim(code.TEXT)) >= 10
+         code.TEXT IS NOT NULL
+         AND length(trim(code.TEXT)) >= 10
          AND trim(code.TEXT) NOT GLOB '*[^0-9]*'
        )""";
   }
