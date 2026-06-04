@@ -15,11 +15,11 @@ const defaultRipolData = {
   ],
   brands: [
     ripol("TOYOTA", "Toyota"),
-    ripol("AUTRE", "Autre (preciser)"),
+    ripol("AUTRE", "Autre (préciser)"),
   ],
   models: [
     ripol("COROLLA", "Corolla"),
-    ripol("AUTRE", "Autre (preciser)"),
+    ripol("AUTRE", "Autre (préciser)"),
   ],
   vehicleColours: [
     ripol("NOIR", "Noir"),
@@ -62,7 +62,9 @@ export const stubRipol = (overrides = {}) => {
 
   cy.intercept("GET", "**/api/ripol/vehicle-types*", data.vehicleTypes).as("getRipolVehicleTypes");
   cy.intercept("GET", "**/api/ripol/brands*", data.brands).as("getRipolBrands");
+  cy.intercept("GET", "**/api/ripol/vehicle-brands*", data.brands).as("getRipolVehicleBrands");
   cy.intercept("GET", "**/api/ripol/models*", data.models).as("getRipolModels");
+  cy.intercept("GET", "**/api/ripol/vehicle-models*", data.models).as("getRipolVehicleModels");
   cy.intercept("GET", "**/api/ripol/vehicle-colours*", data.vehicleColours).as("getRipolVehicleColours");
   cy.intercept("GET", "**/api/ripol/nationalities*", data.nationalities).as("getRipolNationalities");
   cy.intercept("GET", "**/api/ripol/location-types*", data.locationTypes).as("getRipolLocationTypes");
