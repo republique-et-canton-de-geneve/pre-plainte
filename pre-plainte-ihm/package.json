@@ -62,6 +62,9 @@
     "vitest": "^3.2.4",
     "vue-tsc": "^2.2.10"
   },
+  "optionalDependencies": {
+    "@rollup/rollup-linux-x64-gnu": "4.60.4"
+  },
   "overrides": {
     "@vue/devtools-core": "8.0.5",
     "@vue/devtools-kit": "8.0.5",
