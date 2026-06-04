@@ -1,4 +1,4 @@
-# 📚 Documentation projet
+# Documentation projet
 
 Ce module contient la documentation technique du projet.
 
@@ -17,7 +17,6 @@ Ce module contient la documentation technique du projet.
 - [Stockage S3](architecture/stockage-s3.md)
 - [Guide technique - Ajout d'un champ](guides/ajout-champ.md)
 - [Mapping des codes RIPOL vers MyABI](guides/mapping-codes-ripol-myabi.md)
-- [Règles métier - Déclaration de vol](guides/regles-metier-declaration-vol.md)
 - [Documentation Swagger / OpenAPI des routes backend](api/swagger-api.md)
 - [ADR 001 - Ajout d'un champ](adr/adr-001-ajout-champ.md)
 
