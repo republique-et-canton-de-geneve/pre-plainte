@@ -82,6 +82,7 @@ import { filterNationalities, sortRipolByLabelFr } from "@/utils/helpers/ripolHe
 import type { RipolSelection, Ripol } from "@/types/ripol.interface";
 import type { PrePlainteFormFields, VolObjetFormSnapshot } from "@/types/pre-plainte.interface";
 import BaseRadioGroup from "@/components/radio/BaseRadioGroup.vue";
+import { validerPlaqueVehicule } from "@/utils/helpers/volObjetVolHelpers";
 
 const TEXTE_VIDE = "";
 const NUMERO_IMEI_REGEX = /^\d{15}$/;
@@ -206,13 +207,13 @@ const fetchBrands = async () => {
   if (!typeObjet.value?.code) {
     return [];
   }
-  const masterType = selectedCategorie.value?.useVehicleTypes
-    ? RIPOL.MASTER_TYPE_VEHICULES
-    : RIPOL.MASTER_TYPE_OBJETS;
-  const results = await RipolService.search("brands", undefined, {
-    masterValue: typeObjet.value.code,
-    masterType,
-  });
+  const isVehicle = selectedCategorie.value?.useVehicleTypes === true;
+  const results = isVehicle
+    ? await RipolService.searchVehicleBrands(undefined, typeObjet.value.code)
+    : await RipolService.search("brands", undefined, {
+        masterValue: typeObjet.value.code,
+        masterType: RIPOL.MASTER_TYPE_OBJETS,
+      });
   hasBrands.value = results.length > 0;
   return results;
 };
@@ -226,11 +227,14 @@ const fetchModels = async () => {
   if (!fabricant.value?.code) {
     return [];
   }
+  const isVehicle = selectedCategorie.value?.useVehicleTypes === true;
   modelsLoading.value = true;
   try {
-    const results = await RipolService.search("models", undefined, {
-      masterValue: fabricant.value.code,
-    });
+    const results = isVehicle
+      ? await RipolService.searchVehicleModels(fabricant.value.code)
+      : await RipolService.search("models", undefined, {
+          masterValue: fabricant.value.code,
+        });
     hasModels.value = results.length > 0;
     return results;
   } finally {
@@ -502,6 +506,21 @@ const validerBrouillonObjetVole = (): boolean => {
     }
     if (modele.value.code === "AUTRE" && !chaineFormulaire(modeleAutre.value).trim()) {
       setFieldError("modeleAutre", t("validation.champRequis"));
+      return false;
+    }
+    if (
+      !validerPlaqueVehicule(
+        {
+          sousCategorie: sousCategorie.value,
+          plaqueInconnu: plaqueInconnu.value,
+          plaqueNumero: plaqueNumero.value,
+          plaquePays: plaquePays.value,
+          plaqueCanton: plaqueCanton.value,
+        },
+        setFieldError,
+        t,
+      )
+    ) {
       return false;
     }
   }

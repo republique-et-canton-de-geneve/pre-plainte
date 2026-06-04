@@ -28,6 +28,7 @@ public class ObjetIncident {
   private static final String CODE_TELEPHONE_MOBILE = "713103";
   private static final String CATEGORIE_VEHICULE = "vehicule";
   private static final String CATEGORIE_PLAQUE = "plaque";
+  private static final String CATEGORIE_DOCUMENTS = "documents";
   private static final String CODE_AUTRE = "AUTRE";
   private static final Pattern NUMERO_IMEI_PATTERN = Pattern.compile("\\d{15}");
 
@@ -61,6 +62,13 @@ public class ObjetIncident {
   private boolean plaqueInconnu;
   private RipolCode plaquePays;
   private RipolCode plaqueCanton;
+
+  private boolean assuranceAucune;
+  private RipolCode assureur;
+  private String assureurAutre;
+  private String numeroAssurance;
+  private String numeroVignette;
+  private String numeroMaster;
 
   public String getTypeCode() {
     return type != null ? type.code() : null;
@@ -118,12 +126,33 @@ public class ObjetIncident {
     return plaqueCanton != null ? plaqueCanton.label() : null;
   }
 
+  public String getAssureurCode() {
+    return assureur != null ? assureur.code() : null;
+  }
+
+  public String getAssureurLabel() {
+    return assureur != null ? assureur.label() : null;
+  }
+
+  public String resolveAssureurNom() {
+    if (assuranceAucune) {
+      return null;
+    }
+    if (assureurAutre != null && !assureurAutre.isBlank()) {
+      return assureurAutre.trim();
+    }
+    if (assureur != null && assureur.label() != null && !assureur.label().isBlank()) {
+      return assureur.label().trim();
+    }
+    return null;
+  }
+
   public boolean isTelephoneMobile() {
     return type != null && CODE_TELEPHONE_MOBILE.equals(type.code());
   }
 
   public boolean isVehicleType() {
-    if (CATEGORIE_PLAQUE.equals(categorieObjet)) {
+    if (CATEGORIE_PLAQUE.equals(categorieObjet) || CATEGORIE_DOCUMENTS.equals(categorieObjet)) {
       return false;
     }
     return isVehicle || CATEGORIE_VEHICULE.equals(categorieObjet);
