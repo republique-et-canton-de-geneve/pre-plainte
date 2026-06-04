@@ -28,7 +28,7 @@ class PrePlainteTest {
     info = new InformationsPersonnelles();
     info.setNom("Toure");
     info.setPrenom("Maka");
-    info.setGenre(new RipolCode("1", "Homme"));
+    info.setGenre(new RipolCode("1", "Masculin"));
     info.setNationalite(new RipolCode("8100", "Suisse"));
     info.setDateNaissance("1993-11-27");
     info.setAdresse(new Adresse("Rue du Rhône 10", "Genève", "1204", "CH", null, "Suisse", null));

@@ -1,10 +1,4 @@
-import { clearPrePlainteStorage, setPrePlainteStep } from "./helpers/local-storage";
-
-Cypress.Commands.add("nettoyerPrePlainteLocalStorage", () => {
-  cy.window({ log: false }).then(win => {
-    clearPrePlainteStorage(win.localStorage);
-  });
-});
+import { setPrePlainteStep } from "./helpers/local-storage";
 
 Cypress.Commands.add("demarrerPrePlainteAEtape", (step, data = {}, options = {}) => {
   const visitOptions = { ...(options.visitOptions ?? {}) };
