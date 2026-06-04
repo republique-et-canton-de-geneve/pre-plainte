@@ -9,6 +9,10 @@ const MIN_ADRESSE_EVENEMENT_TAILLE = 5;
 const VALIDATION_FORMAT_DATE_INVALIDE = "validation.formatDateInvalide";
 const VALIDATION_FORMAT_HEURE_INVALIDE = "validation.formatHeureInvalide";
 const NUMERO_IMEI_REGEX = /^\d{15}$/;
+const PLAQUE_SUISSE_PATTERN = /^[A-Z]{2}\s\d{1,6}$/;
+const PLAQUE_FRANCE_SIV_PATTERN = /^[A-Z]{2}-\d{3}-[A-Z]{2}$/;
+const PLAQUE_FRANCE_FNI_PATTERN = /^\d{1,4}\s[A-Z]{1,3}\s(2A|2B|\d{2,3})$/;
+const PLAQUE_INTERNATIONALE_PATTERN = /^[A-Z\d]{1,12}$/;
 
 const optionalStringFromForm = z.preprocess(
   v => (v === null || v === undefined ? "" : String(v)),
@@ -166,11 +170,27 @@ const validateIncidentRequirements = (data: Record<string, any>, ctx: z.Refineme
   });
 };
 
-const validateDommageConstatPolice = (data: Record<string, any>, ctx: z.RefinementCtx, t: ComposerTranslation) => {
+const validateDommageSpecificRules = (data: Record<string, any>, ctx: z.RefinementCtx, t: ComposerTranslation) =>  {
   if (data.typeIncident !== "degat-delit") {
     return;
   }
 
+  validateDommageConstatPolice(data, ctx, t);
+  if (Array.isArray(data.objetsDegradesValides) && data.objetsDegradesValides.length > 0) {
+    data.objetsDegradesValides.forEach((objet: unknown, index: number) => {
+      if (objet && typeof objet === "object") {
+        validateVehicleBrandAndModel(objet as Record<string, any>, ctx, t, ["objetsDegradesValides", index]);
+        validatePlaque(objet as Record<string, any>, ctx, t, ["objetsDegradesValides", index]);
+      }
+    });
+    return;
+  }
+
+    validateVehicleBrandAndModel(data, ctx, t);
+    validatePlaque(data, ctx, t);
+}
+
+const validateDommageConstatPolice = (data: Record<string, any>, ctx: z.RefinementCtx, t: ComposerTranslation) => {
   if (data.constatPresent === false) {
     addCustomIssue(ctx, "constatPresent", t("dommages.constatPoliceWarning"));
     return;
@@ -190,6 +210,7 @@ const validateVolSpecificRules = (data: Record<string, any>, ctx: z.RefinementCt
     data.objetsVolesValides.forEach((objet: unknown, index: number) => {
       if (objet && typeof objet === "object") {
         validateVehicleBrandAndModel(objet as Record<string, any>, ctx, t, ["objetsVolesValides", index]);
+        validatePlaque(objet as Record<string, any>, ctx, t, ["objetsVolesValides", index]);
       }
     });
     return;
@@ -213,6 +234,7 @@ const validateVolSpecificRules = (data: Record<string, any>, ctx: z.RefinementCt
   }
 
   validateVehicleBrandAndModel(data, ctx, t);
+  validatePlaque(data, ctx, t);
 };
 
 function validateRequiredDates(data: any, fields: string[][], ctx: any, t: any) {
@@ -332,6 +354,85 @@ function validateCoordonneesCommande(data: any, ctx: any, t: any) {
     addCustomIssue(ctx, "telephoneCommande", t("validation.telephoneCommandeRequis"));
   }
 }
+
+const shouldValidatePlaque = (data: Record<string, any>) =>
+  !data.plaqueInconnu &&
+  (data.categorieObjet === "plaque" ||
+  data.categorieObjet === "vehicule" ||
+  data.typeDommage === "vehicule");
+
+const validatePlaque = (
+  data: Record<string, any>,
+  ctx: z.RefinementCtx,
+  t: ComposerTranslation,
+  basePath: (string | number)[] = [],
+) => {
+  if (!shouldValidatePlaque(data)) {
+    return;
+  }
+
+  const pays = data.plaquePays?.code;
+  const numero = data.plaqueNumero?.trim();
+  const canton = data.plaqueCanton?.code;
+
+  if (!pays) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: [...basePath, "plaquePays"],
+      message: t("validation.champRequis"),
+    });
+  }
+
+  if (data.categorieObjet !== "plaque" && pays === RIPOL.PAYS_SUISSE && !canton) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: [...basePath, "plaqueCanton"],
+      message: t("validation.champRequis"),
+    });
+  }
+
+  if (!numero) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: [...basePath, "plaqueNumero"],
+      message: t("validation.champRequis"),
+    });
+  }
+
+  if (pays === RIPOL.PAYS_SUISSE) {
+    if (!PLAQUE_SUISSE_PATTERN.test(numero)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: [...basePath, "plaqueNumero"],
+        message: t("validation.numeroPlaqueSuisseInvalide"),
+      });
+    }
+    return;
+  }
+
+  if (pays === RIPOL.PAYS_FRANCE) {
+    const valid =
+      PLAQUE_FRANCE_SIV_PATTERN.test(numero) ||
+      PLAQUE_FRANCE_FNI_PATTERN.test(numero);
+
+    if (!valid) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: [...basePath, "plaqueNumero"],
+        message: t("validation.numeroPlaqueFranceInvalide"),
+      });
+    }
+    return;
+  }
+
+  if (!PLAQUE_INTERNATIONALE_PATTERN.test(numero)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: [...basePath, "plaqueNumero"],
+      message: t("validation.numeroPlaqueInternationaleInvalide"),
+    });
+  }
+};
 
 export const createEvenementInfoSchema = (t: ComposerTranslation) =>
   z
@@ -637,7 +738,7 @@ export const createEvenementInfoSchema = (t: ComposerTranslation) =>
     .superRefine((data, ctx) => {
       validateIncidentRequirements(data, ctx, t);
       validateVolSpecificRules(data, ctx, t);
-      validateDommageConstatPolice(data, ctx, t);
+      validateDommageSpecificRules(data, ctx, t);
     })
     .superRefine((data, ctx) => {
       if (data.typeCybercrime !== "commande-frauduleuse") {
