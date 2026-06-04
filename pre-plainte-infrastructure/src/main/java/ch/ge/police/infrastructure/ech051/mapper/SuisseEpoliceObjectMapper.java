@@ -26,6 +26,8 @@ import static ch.ge.police.infrastructure.ech051.Ech051Constants.RipolSourceTabl
 @Component
 public class SuisseEpoliceObjectMapper {
 
+  private static final String CATEGORIE_DOCUMENTS = "documents";
+  private static final String CATEGORIE_PLAQUE = "plaque";
   private static final int OBJECT_KEY_INDEX_OFFSET = 50;
   private static final int VEHICLE_KEY_INDEX_OFFSET = 60;
 
@@ -50,7 +52,7 @@ public class SuisseEpoliceObjectMapper {
     }
 
     List<ObjetIncident> nonVehicles = vol.getObjetsVoles().stream()
-        .filter(objet -> !objet.isVehicleType())
+        .filter(this::isStolenObjectForEch051)
         .toList();
     int n = nonVehicles.size();
     return IntStream.range(0, n)
@@ -80,7 +82,7 @@ public class SuisseEpoliceObjectMapper {
   private List<ObjectItem> buildObjectsFromDommage(DommageMateriel dommage) {
     if (dommage.getObjetDegrades() != null && !dommage.getObjetDegrades().isEmpty()) {
       List<ObjetIncident> nonVehicles = dommage.getObjetDegrades().stream()
-          .filter(objet -> !objet.isVehicleType())
+          .filter(this::isStolenObjectForEch051)
           .toList();
       if (!nonVehicles.isEmpty()) {
         int n = nonVehicles.size();
@@ -390,5 +392,13 @@ public class SuisseEpoliceObjectMapper {
       return null;
     }
     return value.trim();
+  }
+
+  private boolean isStolenObjectForEch051(ObjetIncident objet) {
+    String categorie = objet.getCategorieObjet();
+    if (CATEGORIE_DOCUMENTS.equals(categorie) || CATEGORIE_PLAQUE.equals(categorie)) {
+      return true;
+    }
+    return !objet.isVehicleType();
   }
 }
