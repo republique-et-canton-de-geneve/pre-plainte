@@ -4,6 +4,7 @@ import ch.ge.police.core.domain.model.ripol.Ripol;
 import ch.ge.police.core.port.out.RipolPort;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -70,9 +71,20 @@ public class SqliteRipolAdapter implements RipolPort {
   private static final String COL_TEXT_DE = "TEXT_DE";
   private static final String COL_GROUPTYPE = "GROUPTYPE";
   private static final String TRACE_ID = "traceId";
+  private static final int SQLITE_HEADER_PROBE_BYTES = 128;
+  private static final String SQLITE_MAGIC = "SQLite format 3";
+  private static final String GIT_LFS_POINTER_PREFIX = "version https://git-lfs.github.com";
   private static final int LOCALE_FR = 3;
   private static final String SQL_SELECT_TEXT_FR =
     "COALESCE(NULLIF(trim(loc.TRANSLATION), ''), code.TEXT) AS TEXT_FR\n";
+  private static final String SQL_JOIN_LOCALIZATION_FR =
+    """
+    LEFT JOIN TBLOCALIZATION loc ON loc.ROWID = (
+      SELECT MIN(l.ROWID)
+      FROM TBLOCALIZATION l
+      WHERE l.PK = code.ID AND l.LOCALE_ID = 3
+    )
+    """;
   private static final Set<String> DEDUPLICATE_BY_LABEL_GROUP_TYPES = Set.of(
     GROUP_TYPE_VEHICULE,
     GROUP_TYPE_VEHICLE_BRAND,
@@ -108,6 +120,7 @@ public class SqliteRipolAdapter implements RipolPort {
     try (InputStream in = resource.getInputStream()) {
       Files.copy(in, tempFile, StandardCopyOption.REPLACE_EXISTING);
     }
+    validateSqliteResource(tempFile, dbClasspathLocation);
 
     String jdbcUrl = "jdbc:sqlite:" + tempFile.toAbsolutePath();
 
@@ -132,6 +145,35 @@ public class SqliteRipolAdapter implements RipolPort {
       incidentCodeHasSelectableColumn
     );
     createSearchIndexes();
+  }
+
+  private static void validateSqliteResource(Path sqliteFile, String classpathLocation) throws IOException {
+    byte[] header;
+    try (InputStream in = Files.newInputStream(sqliteFile)) {
+      header = in.readNBytes(SQLITE_HEADER_PROBE_BYTES);
+    }
+    if (header.length < SQLITE_MAGIC.length()) {
+      throw new IllegalStateException(
+        "Fichier RIPOL invalide ou vide dans les ressources : "
+          + classpathLocation
+          + " ("
+          + header.length
+          + " octets). Vérifier que Git LFS a bien été récupéré (git lfs pull) avant le build."
+      );
+    }
+    String probe = new String(header, 0, Math.min(header.length, SQLITE_HEADER_PROBE_BYTES), StandardCharsets.US_ASCII);
+    if (probe.startsWith(GIT_LFS_POINTER_PREFIX)) {
+      throw new IllegalStateException(
+        "Le fichier "
+          + classpathLocation
+          + " est un pointeur Git LFS, pas la base SQLite. Exécuter « git lfs pull » avant le build Maven."
+      );
+    }
+    if (!probe.startsWith(SQLITE_MAGIC)) {
+      throw new IllegalStateException(
+        "Le fichier " + classpathLocation + " n'est pas une base SQLite valide (en-tête inattendu)."
+      );
+    }
   }
 
   private boolean incidentCodeHasColumn(String columnName) {
@@ -414,7 +456,7 @@ public class SqliteRipolAdapter implements RipolPort {
               code.TEXT AS TEXT_DE,
               """ + SQL_SELECT_TEXT_FR + """
           FROM TBINCIDENTCODE code
-          LEFT JOIN TBLOCALIZATION loc ON loc.PK = code.ID AND loc.LOCALE_ID = 3
+          """ + SQL_JOIN_LOCALIZATION_FR + """
           WHERE code.GROUPTYPE = ?
           """ + sqlAndUsableIncidentCodeFilter() + sqlExcludeUnusableRipolLabels() + """
           ORDER BY TEXT_FR ASC
@@ -446,7 +488,7 @@ public class SqliteRipolAdapter implements RipolPort {
               code.TEXT AS TEXT_DE,
               """ + SQL_SELECT_TEXT_FR + """
           FROM TBINCIDENTCODE code
-          LEFT JOIN TBLOCALIZATION loc ON loc.PK = code.ID AND loc.LOCALE_ID = 3
+          """ + SQL_JOIN_LOCALIZATION_FR + """
           WHERE code.GROUPTYPE = ?
             """ + sqlAndUsableIncidentCodeFilter() + sqlExcludeUnusableRipolLabels() + """
             AND (
@@ -490,7 +532,7 @@ public class SqliteRipolAdapter implements RipolPort {
               code.TEXT AS TEXT_DE,
               """ + SQL_SELECT_TEXT_FR + """
           FROM TBINCIDENTCODE code
-          LEFT JOIN TBLOCALIZATION loc ON loc.PK = code.ID AND loc.LOCALE_ID = 3
+          """ + SQL_JOIN_LOCALIZATION_FR + """
           WHERE code.MASTERTYPE = ?
             AND code.MASTERVALUE = ?
             """ + sqlAndUsableIncidentCodeFilter() + sqlExcludeUnusableRipolLabels() + """
@@ -525,7 +567,7 @@ public class SqliteRipolAdapter implements RipolPort {
               code.TEXT AS TEXT_DE,
               """ + SQL_SELECT_TEXT_FR + """
           FROM TBINCIDENTCODE code
-          LEFT JOIN TBLOCALIZATION loc ON loc.PK = code.ID AND loc.LOCALE_ID = 3
+          """ + SQL_JOIN_LOCALIZATION_FR + """
           WHERE code.MASTERTYPE = ?
             AND code.MASTERVALUE = ?
             """ + sqlAndUsableIncidentCodeFilter() + sqlExcludeUnusableRipolLabels() + """
@@ -560,7 +602,7 @@ public class SqliteRipolAdapter implements RipolPort {
               code.TEXT AS TEXT_DE,
               """ + SQL_SELECT_TEXT_FR + """
           FROM TBINCIDENTCODE code
-          LEFT JOIN TBLOCALIZATION loc ON loc.PK = code.ID AND loc.LOCALE_ID = 3
+          """ + SQL_JOIN_LOCALIZATION_FR + """
           WHERE code.MASTERTYPE = '185'
             AND code.MASTERVALUE = ?
             """ + sqlAndUsableIncidentCodeFilter() + sqlExcludeUnusableRipolLabels() + """
@@ -603,7 +645,7 @@ public class SqliteRipolAdapter implements RipolPort {
               code.TEXT AS TEXT_DE,
               """ + SQL_SELECT_TEXT_FR + """
           FROM TBINCIDENTCODE code
-          LEFT JOIN TBLOCALIZATION loc ON loc.PK = code.ID AND loc.LOCALE_ID = 3
+          """ + SQL_JOIN_LOCALIZATION_FR + """
           WHERE code.MASTERTYPE = '185'
             AND code.MASTERVALUE = ?
             """ + sqlAndUsableIncidentCodeFilter() + sqlExcludeUnusableRipolLabels() + """
