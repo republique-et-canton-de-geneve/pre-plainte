@@ -181,6 +181,7 @@ import DegatVehiculeEndommageDraftPanel from "./DegatVehiculeEndommageDraftPanel
 import DegatVehiculeEndommageResumeSheet from "./DegatVehiculeEndommageResumeSheet.vue";
 import { toTranslatedOptions } from "@/utils/helpers/traductionHelper";
 import { requiredLabel } from "@/utils/helpers/labelHelpers";
+import { validerPlaqueVehicule } from "@/utils/helpers/volObjetVolHelpers";
 
 const TEXTE_VIDE = "";
 
@@ -232,6 +233,11 @@ const { value: plaqueNumero } = useField<string>("plaqueNumero");
 const { value: plaqueInconnu } = useField<boolean>("plaqueInconnu");
 const { value: plaquePays } = useField<RipolSelection | null>("plaquePays");
 const { value: plaqueCanton } = useField<RipolSelection | null>("plaqueCanton");
+const { value: assuranceAucune } = useField<boolean>("assuranceAucune");
+const { value: assureurAutre } = useField<string>("assureurAutre");
+const { value: numeroAssurance } = useField<string>("numeroAssurance");
+const { value: numeroVignette } = useField<string>("numeroVignette");
+const { value: numeroMaster } = useField<string>("numeroMaster");
 const { value: isVehicle } = useField<boolean>("isVehicle");
 const { value: objetsDegradesValides } = useField<VolObjetFormSnapshot[]>("objetsDegradesValides");
 
@@ -301,6 +307,11 @@ const remplirBrouillonDepuisSnapshot = (obj: VolObjetFormSnapshot) => {
   plaqueInconnu.value = !!obj.plaqueInconnu;
   plaquePays.value = obj.plaquePays ? { ...obj.plaquePays } : null;
   plaqueCanton.value = obj.plaqueCanton ? { ...obj.plaqueCanton } : null;
+  assuranceAucune.value = !!obj.assuranceAucune;
+  assureurAutre.value = texteOuVide(obj.assureurAutre) || texteOuVide(obj.assureur?.label);
+  numeroAssurance.value = texteOuVide(obj.numeroAssurance);
+  numeroVignette.value = texteOuVide(obj.numeroVignette);
+  numeroMaster.value = texteOuVide(obj.numeroMaster);
 };
 
 const viderChampsVehiculeBrouillon = () => {
@@ -323,9 +334,24 @@ const viderChampsVehiculeBrouillon = () => {
   plaqueInconnu.value = false;
   plaquePays.value = null;
   plaqueCanton.value = null;
+  assuranceAucune.value = false;
+  assureurAutre.value = TEXTE_VIDE;
+  numeroAssurance.value = TEXTE_VIDE;
+  numeroVignette.value = TEXTE_VIDE;
+  numeroMaster.value = TEXTE_VIDE;
 };
 
-const CHAMPS_ERREUR_BROUILLON = ["typeObjet", "sousCategorie"] as const;
+const CHAMPS_ERREUR_BROUILLON = [
+  "typeObjet",
+  "sousCategorie",
+  "fabricant",
+  "fabricantAutre",
+  "modele",
+  "modeleAutre",
+  "plaqueNumero",
+  "plaquePays",
+  "plaqueCanton",
+] as const;
 
 const stopRestoringOnNextTick = () => {
   void nextTick(() => {
@@ -367,6 +393,12 @@ const buildSnapshotFromDraft = (): VolObjetFormSnapshot => ({
   plaqueInconnu: plaqueInconnu.value,
   plaquePays: cloneRipol(plaquePays.value),
   plaqueCanton: cloneRipol(plaqueCanton.value),
+  assuranceAucune: assuranceAucune.value,
+  assureur: null,
+  assureurAutre: chaineFormulaire(assureurAutre.value),
+  numeroAssurance: chaineFormulaire(numeroAssurance.value),
+  numeroVignette: chaineFormulaire(numeroVignette.value),
+  numeroMaster: chaineFormulaire(numeroMaster.value),
 });
 
 const mettreListe = (liste: VolObjetFormSnapshot[]) => {
@@ -389,6 +421,38 @@ const validerVehiculeDommage = () => {
 
   if (!typeObjet.value?.code) {
     setFieldError("typeObjet", t("validation.typeObjetRequis"));
+    return;
+  }
+
+  if (!fabricant.value?.code) {
+    setFieldError("fabricant", t("validation.fabricantRequis"));
+    return;
+  }
+  if (fabricant.value.code === "AUTRE" && !chaineFormulaire(fabricantAutre.value).trim()) {
+    setFieldError("fabricantAutre", t("validation.champRequis"));
+    return;
+  }
+  if (!modele.value?.code) {
+    setFieldError("modele", t("validation.modeleRequis"));
+    return;
+  }
+  if (modele.value.code === "AUTRE" && !chaineFormulaire(modeleAutre.value).trim()) {
+    setFieldError("modeleAutre", t("validation.champRequis"));
+    return;
+  }
+  if (
+    !validerPlaqueVehicule(
+      {
+        sousCategorie: sousCategorie.value,
+        plaqueInconnu: plaqueInconnu.value,
+        plaqueNumero: plaqueNumero.value,
+        plaquePays: plaquePays.value,
+        plaqueCanton: plaqueCanton.value,
+      },
+      (field, message) => setFieldError(field as any, message),
+      t,
+    )
+  ) {
     return;
   }
 

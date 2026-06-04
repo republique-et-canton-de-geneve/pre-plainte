@@ -659,6 +659,9 @@ public class Ech0051DocumentXml {
     @XmlAttribute(name = "modelOther", namespace = SepNamespaces.SEP_NS)
     private String modelOther;
 
+    @XmlAttribute(name = "vignetteNumber", namespace = SepNamespaces.SEP_NS)
+    private String vignetteNumber;
+
     @XmlElement(name = "vin", namespace = SepNamespaces.ECH_0051_NS)
     private String vin;
 
@@ -676,6 +679,9 @@ public class Ech0051DocumentXml {
 
     @XmlElement(name = "colourSecondary", namespace = SepNamespaces.SEP_NS)
     private RipolValueXml colourSecondary;
+
+    @XmlElement(name = "masterNumber", namespace = SepNamespaces.ECH_0051_NS)
+    private String masterNumber;
   }
 
   @Getter
@@ -1030,6 +1036,9 @@ public class Ech0051DocumentXml {
     public VehiclePersonLinkXml() {
       // JAXB requires an explicit no-arg constructor.
           }
+
+    @XmlAttribute(name = "insuranceNumber", namespace = SepNamespaces.SEP_NS)
+    private String insuranceNumber;
 
     @XmlElement(name = "vehicleRef", namespace = SepNamespaces.ECH_0051_NS)
     private String vehicleRef;

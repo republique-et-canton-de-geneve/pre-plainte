@@ -41,20 +41,21 @@
   />
 
   <RipolAutocomplete
-    v-if="typeObjet"
+    v-if="typeObjet && hasBrands"
     v-model="fabricant"
     :key="brandKey"
     :label="requiredLabel(t('incidentTypes.fabricant'))"
     :fetch-fn="fetchBrandsWithAutre"
     :error-messages="fabricantError"
     :hint="t('incidentTypes.hintFabricant')"
+    :loading="brandsLoading"
     :preload="true"
     :min-search-length="0"
     class="mb-2"
   />
 
   <v-text-field
-    v-if="isAutreFabricant"
+    v-if="typeObjet && (!hasBrands || isAutreFabricant)"
     v-model="fabricantAutre"
     :label="requiredLabel(t('incidentTypes.fabricantAutre'))"
     :error-messages="fabricantAutreError"
@@ -65,20 +66,21 @@
   />
 
   <RipolAutocomplete
-    v-if="fabricant"
+    v-if="fabricant && hasModels && !isAutreFabricant"
     v-model="modele"
     :key="modelKey"
     :label="requiredLabel(t('incidentTypes.modele'))"
     :fetch-fn="fetchModelsWithAutre"
     :error-messages="modeleError"
     :hint="t('incidentTypes.hintModele')"
+    :loading="modelsLoading"
     :preload="true"
     :min-search-length="0"
     class="mb-2"
   />
 
   <v-text-field
-    v-if="isAutreModele"
+    v-if="fabricant && (!hasModels || isAutreModele) && !isAutreFabricant"
     v-model="modeleAutre"
     :label="requiredLabel(t('incidentTypes.modeleAutre'))"
     :error-messages="modeleAutreError"
@@ -162,6 +164,58 @@
     @input="onDateAchatInput"
   />
 
+  <h5 class="mb-2 text-subtitle-1">{{ t("incidentTypes.assuranceVehicule") }}</h5>
+
+  <template v-if="!assuranceAucune">
+    <v-combobox
+      v-model="assureurAutre"
+      :items="vehicleInsurerSuggestions"
+      :label="t('incidentTypes.assureur')"
+      :error-messages="assureurAutreError"
+      :hint="t('incidentTypes.hintAssureur')"
+      variant="outlined"
+      persistent-hint
+      clearable
+      class="mb-2"
+    />
+  </template>
+
+  <v-checkbox
+    v-model="assuranceAucune"
+    :label="t('incidentTypes.assuranceAucune')"
+    class="mb-4"
+    hide-details
+  />
+
+  <template v-if="!assuranceAucune">
+    <v-text-field
+      v-model="numeroAssurance"
+      :label="t('incidentTypes.numeroAssurance')"
+      class="mb-4"
+      variant="outlined"
+      :hint="t('incidentTypes.hintNumeroAssurance')"
+      persistent-hint
+    />
+
+    <v-text-field
+      v-model="numeroVignette"
+      :label="t('incidentTypes.numeroVignette')"
+      class="mb-4"
+      variant="outlined"
+      :hint="t('incidentTypes.hintNumeroVignette')"
+      persistent-hint
+    />
+
+    <v-text-field
+      v-model="numeroMaster"
+      :label="t('incidentTypes.numeroMaster')"
+      class="mb-8"
+      variant="outlined"
+      :hint="t('incidentTypes.hintNumeroMaster')"
+      persistent-hint
+    />
+  </template>
+
   <template v-if="hasPlateNumber">
     <h5 class="mb-2 text-subtitle-1">{{ t("incidentTypes.plaqueImmatriculation") }}</h5>
     <RipolAutocomplete
@@ -212,7 +266,7 @@ import { useI18n } from "vue-i18n";
 import RipolAutocomplete from "@/components/ripol/RipolAutocomplete.vue";
 import { useVehicleDetailsRipol } from "@/composables/useVehicleDetailsRipol";
 import AccessibleVSelect from "@/components/accessibility/AccessibleVSelect.vue";
-import { CATEGORIES_OBJETS } from "@/constants/constant";
+import { CATEGORIES_OBJETS, VEHICLE_INSURER_SUGGESTIONS } from "@/constants/constant";
 import { applyDateMask } from "@/utils/helpers/dateHelpers.ts";
 import { filterNationalities } from "@/utils/helpers/ripolHelpers.ts";
 import { requiredLabel } from "@/utils/helpers/labelHelpers";
@@ -312,11 +366,21 @@ const {
   plaqueInconnu,
   plaquePays,
   plaqueCanton,
+  assuranceAucune,
+  assureurAutre,
+  assureurAutreError,
+  numeroAssurance,
+  numeroVignette,
+  numeroMaster,
 
   objetTypeKey,
   brandKey,
   modelKey,
   colourKey,
+  hasBrands,
+  hasModels,
+  brandsLoading,
+  modelsLoading,
   isAutreFabricant,
   isAutreModele,
   isSwissPlate,
