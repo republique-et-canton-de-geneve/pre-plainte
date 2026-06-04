@@ -42,6 +42,22 @@ const libellesChamps = {
   "Coordonnées du tiers concerné": "Coordonnées du tiers",
 };
 
+const donneesInformationsPersonnellesInvalides = {
+  "age inferieur a 16 ans": {
+    dateNaissance: "01.01.2015",
+  },
+  "nationalite etrangere sans titre de sejour": {
+    nationalite: ripolSelection("2500", "France"),
+    titreSejour: "",
+  },
+  "numero de document manquant": {
+    numeroDocumentIdentite: "",
+  },
+  "emails differents": {
+    confirmationEmail: "autre.email@example.org",
+  },
+};
+
 Given("je démarre un parcours nominal complet", () => {
   stubRipol({
     objectTypes: [ripol("713100", "Téléphone mobile")],
@@ -73,6 +89,21 @@ Given("je suis sur la section vol de véhicule", () => {
 Given("je suis sur l'étape informations personnelles", () => {
   stubRipol();
   cy.demarrerPrePlainteAEtape(3, donneesEmailVerifie, { emailChallengeKey: "challenge-cypress" });
+});
+
+Given("je suis sur l'étape informations personnelles avec des données invalides {string}", (casValidation) => {
+  const surcharge = donneesInformationsPersonnellesInvalides[casValidation];
+
+  expect(surcharge, `cas de validation ${casValidation}`).to.exist;
+  stubRipol();
+  cy.demarrerPrePlainteAEtape(
+    3,
+    {
+      ...declarantSuisseValide,
+      ...surcharge,
+    },
+    { emailChallengeKey: "challenge-cypress" },
+  );
 });
 
 Given("que je sélectionne {string} dans le type de personne", (type) => {
@@ -260,6 +291,12 @@ Then("aucune erreur de champ obligatoire n'est affichée", () => {
 
 Then("je vois l'étape {string}", (etape) => {
   cy.contains(etape).should(bevisible);
+});
+
+Then("je reste sur l'étape informations personnelles", () => {
+  cy.contains("Informations personnelles").should(bevisible);
+  cy.get('[data-cy="continuer-informations-personnelles"]').filter(":visible").first().should(bevisible);
+  cy.window().its("localStorage").invoke("getItem", "pp-step").should("eq", "3");
 });
 
 Then("le récapitulatif du parcours nominal est affiché", () => {
