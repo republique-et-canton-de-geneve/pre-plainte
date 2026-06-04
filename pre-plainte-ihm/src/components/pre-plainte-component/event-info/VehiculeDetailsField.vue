@@ -227,6 +227,7 @@
       :preload="true"
       :min-search-length="0"
       class="mb-4"
+      :error-messages="plaquePaysError"
     />
 
     <RipolAutocomplete
@@ -377,6 +378,7 @@ const {
   plaqueNumeroError,
   plaqueInconnu,
   plaquePays,
+  plaquePaysError,
   plaqueCanton,
   plaqueCantonError,
   assuranceAucune,

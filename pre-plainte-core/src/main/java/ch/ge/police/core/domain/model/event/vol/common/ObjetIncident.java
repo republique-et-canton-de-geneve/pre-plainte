@@ -167,9 +167,7 @@ public class ObjetIncident {
 
   public void champsObligatoire() {
     if (CATEGORIE_PLAQUE.equals(categorieObjet)) {
-      if (plaquePays == null || !plaquePays.hasCode()) {
-        throw new ValidationMetierException("Le pays de la plaque est obligatoire.");
-      }
+      validatePlaquePays();
       validatePlaqueNumero();
       return;
     }
@@ -183,7 +181,11 @@ public class ObjetIncident {
       validateAutreValue(fabricant, fabricantAutre, "La marque du vehicule doit etre precisee.");
       validateRipolSelection(modele, "Le modele du vehicule est obligatoire.");
       validateAutreValue(modele, modeleAutre, "Le modele du vehicule doit etre precise.");
-      validatePlaqueNumero();
+      if (!plaqueInconnu) {
+        validatePlaquePays();
+        validatePlaqueCanton();
+        validatePlaqueNumero();
+      }
     }
 
     if (isTelephoneMobile() && !numeroIMEIInconnu && (numeroIMEI == null || numeroIMEI.isBlank())) {
@@ -192,6 +194,20 @@ public class ObjetIncident {
 
     if (numeroIMEI != null && !numeroIMEI.isBlank() && !NUMERO_IMEI_PATTERN.matcher(numeroIMEI).matches()) {
       throw new ValidationMetierException("Le numéro IMEI doit contenir exactement 15 chiffres.");
+    }
+  }
+
+  private void validatePlaquePays() {
+    if (plaquePays == null || !plaquePays.hasCode()) {
+      throw new ValidationMetierException("Le pays de la plaque est obligatoire.");
+    }
+  }
+
+  private void validatePlaqueCanton() {
+    String paysCode = getPlaquePaysCode();
+
+    if (CODE_PAYS_SUISSE.equals(paysCode) && (plaqueCanton == null || !plaqueCanton.hasCode())) {
+      throw new ValidationMetierException("Le canton de la plaque est obligatoire pour le pays Suisse.");
     }
   }
 
