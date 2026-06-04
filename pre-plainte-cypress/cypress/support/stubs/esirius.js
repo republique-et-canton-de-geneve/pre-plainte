@@ -54,10 +54,3 @@ export const stubEsiriusOk = (options = {}) => {
   }).as("getEsiriusAvailabilities");
   cy.intercept("POST", "**/api/esirius/appointments", appointment).as("createEsiriusAppointment");
 };
-
-export const stubEsiriusAppointmentConflict = () => {
-  cy.intercept("POST", "**/api/esirius/appointments", {
-    statusCode: 409,
-    body: { message: "Creneau indisponible" },
-  }).as("createEsiriusAppointmentConflict");
-};

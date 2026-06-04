@@ -11,7 +11,7 @@ export const declarantSuisseValide = {
   telephone: "+41791234567",
   nom: "Martin",
   prenom: "Anne",
-  genre: ripolSelection("2", "Femme"),
+  genre: ripolSelection("2", "Féminin"),
   nationalite: ripolSelection("8100", "Suisse"),
   dateNaissance: "15.04.1985",
   pays: "8100",

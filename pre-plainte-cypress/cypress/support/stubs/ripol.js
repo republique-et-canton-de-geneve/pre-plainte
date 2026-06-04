@@ -32,8 +32,8 @@ const defaultRipolData = {
     ripol("RUE", "Rue"),
   ],
   sexes: [
-    ripol("2", "Femme"),
-    ripol("1", "Homme"),
+    ripol("2", "Féminin"),
+    ripol("1", "Masculin"),
   ],
   documentTypes: [
     ripol("carte_identite", "Carte d'identite"),
