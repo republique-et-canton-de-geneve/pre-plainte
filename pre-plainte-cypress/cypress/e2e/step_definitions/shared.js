@@ -53,8 +53,8 @@ const donneesInformationsPersonnellesInvalides = {
   "numero de document manquant": {
     numeroDocumentIdentite: "",
   },
-  "emails differents": {
-    confirmationEmail: "autre.email@example.org",
+  "telephone invalide": {
+    telephone: "abc",
   },
 };
 

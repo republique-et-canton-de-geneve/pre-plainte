@@ -38,7 +38,8 @@ Fonctionnalité: Informations personnelles
     Alors le message "Le numéro de document est requis" s'affiche sous le champ "Numéro de carte d'identité"
     Et je reste sur l'étape informations personnelles
 
-  Scénario: BVA - emails différents dans les données persistées
-    Etant donné que je suis sur l'étape informations personnelles avec des données invalides "emails differents"
+  Scénario: BVA - numéro de téléphone invalide
+    Etant donné que je suis sur l'étape informations personnelles avec des données invalides "telephone invalide"
     Quand je continue après les informations personnelles
-    Alors je reste sur l'étape informations personnelles
+    Alors le message "Veuillez saisir un numéro valide (ex: 078 905 44 34)" s'affiche sous le champ "Numéro de téléphone"
+    Et je reste sur l'étape informations personnelles
