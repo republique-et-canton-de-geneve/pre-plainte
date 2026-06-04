@@ -5,10 +5,3 @@ export const stubSoumissionPrePlainteOk = (demandeId = "PPL-2026-0001") => {
     body: demandeId,
   }).as("submitPrePlainte");
 };
-
-export const stubSoumissionPrePlainteError = (statusCode = 500, body = { message: "Erreur de soumission" }) => {
-  cy.intercept("POST", "**/api/preplainte/soumission", {
-    statusCode,
-    body,
-  }).as("submitPrePlainteError");
-};

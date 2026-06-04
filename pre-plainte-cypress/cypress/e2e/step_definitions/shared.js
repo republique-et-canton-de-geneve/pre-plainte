@@ -1,5 +1,5 @@
 import { Given, Then, When } from "@badeball/cypress-cucumber-preprocessor";
-import { clearField, fieldInput, fieldRoot, fillField, selectAutocomplete, selectNative } from "../../support/helpers/vuetify";
+import { fieldInput, fieldRoot, fillField, selectAutocomplete } from "../../support/helpers/vuetify";
 import { ripol, ripolSelection, stubRipol } from "../../support/stubs/ripol";
 import { stubEmailChallengeVerificationOk } from "../../support/stubs/email-challenge";
 import { stubEsiriusOk } from "../../support/stubs/esirius";
@@ -7,7 +7,6 @@ import { stubSoumissionPrePlainteOk } from "../../support/stubs/pre-plainte";
 import { declarantSuisseValide, donneesEmailVerifie } from "../../support/data/pre-plainte";
 
 const bevisible = "be.visible";
-const notbevisible = "not.be.visible";
 const bedisabled = "be.disabled";
 const beenabled = "be.enabled";
 
@@ -35,8 +34,6 @@ const donneesEvenementVolVehicule = {
 };
 
 const valeursTypePersonne = {
-  "Moi-même": "MOI_MEME",
-  "Moi-meme": "MOI_MEME",
   Tiers: "TIERS",
   Entreprise: "ENTREPRISE",
 };
@@ -44,19 +41,6 @@ const valeursTypePersonne = {
 const libellesChamps = {
   "Coordonnées du tiers concerné": "Coordonnées du tiers",
 };
-
-const choisirRadio = (question, option) => {
-  cy.contains("legend", question)
-    .parents("fieldset")
-    .first()
-    .contains(".v-label", option)
-    .click({ force: true });
-};
-
-Given("je suis sur le formulaire", () => {
-  stubRipol();
-  cy.visit("/");
-});
 
 Given("je démarre un parcours nominal complet", () => {
   stubRipol({
@@ -76,11 +60,6 @@ Given("je suis sur l'étape informations générales", () => {
   cy.demarrerPrePlainteAEtape(1);
 });
 
-Given("je suis sur l'etape informations generales", () => {
-  stubRipol();
-  cy.demarrerPrePlainteAEtape(1);
-});
-
 Given("je suis sur la section vol de véhicule", () => {
   stubRipol({
     objectTypes: [],
@@ -91,34 +70,9 @@ Given("je suis sur la section vol de véhicule", () => {
   cy.contains("Ajouter un objet volé").should(bevisible);
 });
 
-Given("je suis sur l'étape {int}", (etape) => {
-  stubRipol();
-  cy.demarrerPrePlainteAEtape(etape);
-});
-
-Given("je suis sur l'étape {int} avec les données", (etape, dataTable) => {
-  stubRipol();
-  cy.demarrerPrePlainteAEtape(etape, dataTable.rowsHash());
-});
-
 Given("je suis sur l'étape informations personnelles", () => {
   stubRipol();
   cy.demarrerPrePlainteAEtape(3, donneesEmailVerifie, { emailChallengeKey: "challenge-cypress" });
-});
-
-Given("je suis sur l'etape informations personnelles", () => {
-  stubRipol();
-  cy.demarrerPrePlainteAEtape(3, donneesEmailVerifie, { emailChallengeKey: "challenge-cypress" });
-});
-
-Given("je suis sur l'étape informations personnelles avec un déclarant suisse valide", () => {
-  stubRipol();
-  cy.demarrerPrePlainteAEtape(3, declarantSuisseValide, { emailChallengeKey: "challenge-cypress" });
-});
-
-Given("je suis sur l'etape informations personnelles avec un declarant suisse valide", () => {
-  stubRipol();
-  cy.demarrerPrePlainteAEtape(3, declarantSuisseValide, { emailChallengeKey: "challenge-cypress" });
 });
 
 Given("que je sélectionne {string} dans le type de personne", (type) => {
@@ -145,10 +99,6 @@ Given("je coche la confirmation de situation", () => {
   cy.get('[data-cy="confirmation-situation"]').click("topRight", { force: true });
 });
 
-Then("je vois {string} dans la page", (texte) => {
-  cy.contains(texte).should(bevisible);
-});
-
 Then("les champs {string} sont affichés", (liste) => {
   liste.split(",").forEach(champ => {
     const libelle = champ.trim();
@@ -162,23 +112,21 @@ Then("les champs {string} sont masqués", (liste) => {
   });
 });
 
-When("je saisis {string} dans le champ {string}*", (valeur, champ) => {
-  fillField(champ, valeur);
-});
-
 When("je saisis {string} dans le champ {string}", (valeur, champ) => {
   fillField(champ, valeur);
 });
 
 When("je renseigne le type de véhicule {string}", (typeVehicule) => {
+  const input = fieldInput("Type de l'objet");
+
   cy.get(".css-fallback-native-select")
     .contains("label", "Sous-catégorie")
     .parent()
     .find("select")
     .select("voitures", { force: true });
-  fieldInput("Type de l'objet").click({ force: true });
-  fieldInput("Type de l'objet").clear({ force: true });
-  fieldInput("Type de l'objet").type(typeVehicule, { force: true });
+  input.click({ force: true });
+  input.clear({ force: true });
+  input.type(typeVehicule, { force: true });
   cy.contains(".v-list-item-title", typeVehicule).click({ force: true });
 });
 
@@ -188,14 +136,6 @@ When("je sélectionne {string} dans l'autocomplétion {string}", (valeur, champ)
 
 When("je valide l'objet volé", () => {
   cy.get('[data-cy="objet-vole-valider"]').click();
-});
-
-When("je laisse vide le champ {string}*", (champ) => {
-  clearField(champ);
-});
-
-When("je clique sur {string}", (texte) => {
-  cy.contains("button", texte).click();
 });
 
 When("je clique sur le bouton continuer des informations générales", () => {
@@ -318,10 +258,6 @@ Then("aucune erreur de champ obligatoire n'est affichée", () => {
   cy.contains("Le champ est requis").should("not.exist");
 });
 
-Then("le bouton {string} est désactivé", (texte) => {
-  cy.contains("button", texte).should(bedisabled);
-});
-
 Then("je vois l'étape {string}", (etape) => {
   cy.contains(etape).should(bevisible);
 });
@@ -352,16 +288,4 @@ Then("le bouton continuer des informations générales est désactivé", () => {
 
 Then("le bouton continuer des informations générales est actif", () => {
   cy.get('[data-cy="continuer-informations-generales"]').filter(":visible").first().should(beenabled);
-});
-
-Given("que je renseigne tous les champs obligatoires avec des valeurs valides", (dataTable) => {
-  dataTable.hashes().forEach(({ Champ, Valeur }) => {
-    cy.contains("label", Champ).parent().find("input, textarea, select").clear({ force: true });
-    cy.contains("label", Champ).parent().find("input, textarea, select").type(Valeur, { force: true });
-  });
-});
-
-Given("que j'ai des champs en erreur", () => {
-  cy.contains("label", "Nom").parent().find("input").clear({ force: true });
-  cy.contains("label", "Nom").parent().find("input").type("A", { force: true });
 });
