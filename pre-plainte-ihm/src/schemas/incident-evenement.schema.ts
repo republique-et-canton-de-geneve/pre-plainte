@@ -171,11 +171,19 @@ const validateIncidentRequirements = (data: Record<string, any>, ctx: z.Refineme
   });
 };
 
-const validateDommageConstatPolice = (data: Record<string, any>, ctx: z.RefinementCtx, t: ComposerTranslation) => {
+const validateDommageSpecificRules = (data: Record<string, any>, ctx: z.RefinementCtx, t: ComposerTranslation) => {
   if (data.typeIncident !== "degat-delit") {
     return;
   }
 
+  validateDommageConstatPolice(data, ctx, t);
+
+  if (data.categorieObjet === "vehicule") {
+    validateNumeroPlaque(data, ctx, t);
+  }
+};
+
+const validateDommageConstatPolice = (data: Record<string, any>, ctx: z.RefinementCtx, t: ComposerTranslation) => {
   if (data.constatPresent === false) {
     addCustomIssue(ctx, "constatPresent", t("dommages.constatPoliceWarning"));
     return;
@@ -233,7 +241,6 @@ const validateVolSpecificRules = (data: Record<string, any>, ctx: z.RefinementCt
   if (data.typeIncident !== "vol") {
     return;
   }
-
 
   if (hasObjetsVolesEnregistres(data)) {
     data.objetsVolesValides.forEach((objet: unknown, index: number) => {
@@ -697,7 +704,7 @@ export const createEvenementInfoSchema = (t: ComposerTranslation) =>
     .superRefine((data, ctx) => {
       validateIncidentRequirements(data, ctx, t);
       validateVolSpecificRules(data, ctx, t);
-      validateDommageConstatPolice(data, ctx, t);
+      validateDommageSpecificRules(data, ctx, t);
     })
     .superRefine((data, ctx) => {
       if (data.typeCybercrime !== "commande-frauduleuse") {
