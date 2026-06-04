@@ -77,7 +77,6 @@ public class SqliteRipolAdapter implements RipolPort {
   private static final int LOCALE_FR = 3;
   private static final String SQL_SELECT_TEXT_FR =
     "COALESCE(NULLIF(trim(loc.TRANSLATION), ''), code.TEXT) AS TEXT_FR\n";
-  /** Une seule ligne FR par PK (évite les doublons si MyABI a plusieurs TBLOCALIZATION pour le même code). */
   private static final String SQL_JOIN_LOCALIZATION_FR =
     """
     LEFT JOIN TBLOCALIZATION loc ON loc.ROWID = (
