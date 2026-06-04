@@ -148,16 +148,13 @@ When("je saisis {string} dans le champ {string}", (valeur, champ) => {
 });
 
 When("je renseigne le type de véhicule {string}", (typeVehicule) => {
-  const input = fieldInput("Type de l'objet");
-
   cy.get(".css-fallback-native-select")
     .contains("label", "Sous-catégorie")
     .parent()
     .find("select")
     .select("voitures", { force: true });
-  input.click({ force: true });
-  input.clear({ force: true });
-  input.type(typeVehicule, { force: true });
+  fieldInput("Type de l'objet").click({ force: true });
+  fieldInput("Type de l'objet").type(`{selectall}${typeVehicule}`, { force: true });
   cy.contains(".v-list-item-title", typeVehicule).click({ force: true });
 });
 
