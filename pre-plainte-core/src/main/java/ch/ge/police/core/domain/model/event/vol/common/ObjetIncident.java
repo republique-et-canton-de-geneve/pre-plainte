@@ -28,6 +28,7 @@ public class ObjetIncident {
   private static final String CODE_TELEPHONE_MOBILE = "713103";
   private static final String CATEGORIE_VEHICULE = "vehicule";
   private static final String CATEGORIE_PLAQUE = "plaque";
+  private static final String CATEGORIE_DOCUMENTS = "documents";
   private static final String CODE_AUTRE = "AUTRE";
   private static final Pattern NUMERO_IMEI_PATTERN = Pattern.compile("\\d{15}");
 
@@ -151,7 +152,7 @@ public class ObjetIncident {
   }
 
   public boolean isVehicleType() {
-    if (CATEGORIE_PLAQUE.equals(categorieObjet)) {
+    if (CATEGORIE_PLAQUE.equals(categorieObjet) || CATEGORIE_DOCUMENTS.equals(categorieObjet)) {
       return false;
     }
     return isVehicle || CATEGORIE_VEHICULE.equals(categorieObjet);
