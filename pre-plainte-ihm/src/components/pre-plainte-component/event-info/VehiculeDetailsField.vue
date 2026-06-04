@@ -169,7 +169,7 @@
   <template v-if="!assuranceAucune">
     <v-combobox
       v-model="assureurAutre"
-      :items="vehicleInsurerSuggestions"
+      :items=VEHICLE_INSURER_SUGGESTIONS
       :label="t('incidentTypes.assureur')"
       :error-messages="assureurAutreError"
       :hint="t('incidentTypes.hintAssureur')"
@@ -238,6 +238,7 @@
       :preload="true"
       :min-search-length="0"
       class="mb-8"
+      :error-messages="plaqueCantonError"
     />
 
     <v-text-field
@@ -377,6 +378,7 @@ const {
   plaqueInconnu,
   plaquePays,
   plaqueCanton,
+  plaqueCantonError,
   assuranceAucune,
   assureurAutre,
   assureurAutreError,
