@@ -1,9 +1,11 @@
 package ch.ge.police.core.domain.model.event.dommagematerial;
 
 import ch.ge.police.core.domain.model.common.Adresse;
+import ch.ge.police.core.domain.model.common.RipolCode;
 import ch.ge.police.core.domain.model.common.error.ValidationMetierException;
 import ch.ge.police.core.domain.model.event.dommagematerial.common.NatureDommage;
 import ch.ge.police.core.domain.model.event.dommagematerial.common.TypeDommage;
+import ch.ge.police.core.domain.model.event.vol.common.ObjetIncident;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -94,6 +96,48 @@ class DommageMaterielTest {
   void shouldPassWhenConstatIsFalseAndDateConstatNotRequired() {
     dommage.setConstatPresent(false);
     dommage.setDateConstat(null);
+
+    assertDoesNotThrow(dommage::champsObligatoireIncident);
+  }
+
+  @Test
+  void shouldPassWhenObjetDegradesAreValid() {
+    ObjetIncident objet = ObjetIncident.builder()
+      .type(new RipolCode("713103", "Telephone mobile"))
+      .numeroIMEI("123456789012345")
+      .build();
+
+    dommage.setObjetDegrades(List.of(objet));
+
+    assertDoesNotThrow(dommage::champsObligatoireIncident);
+  }
+
+  @Test
+  void shouldThrowWhenOneObjetDegradeIsInvalid() {
+    ObjetIncident invalidObjet = ObjetIncident.builder()
+      .type(null)
+      .build();
+
+    dommage.setObjetDegrades(List.of(invalidObjet));
+
+    Exception ex = assertThrows(
+      ValidationMetierException.class,
+      dommage::champsObligatoireIncident
+    );
+
+    assertEquals("Le type d'objet volé est obligatoire.", ex.getMessage());
+  }
+
+  @Test
+  void shouldIgnoreEmptyObjetDegradesList() {
+    dommage.setObjetDegrades(List.of());
+
+    assertDoesNotThrow(dommage::champsObligatoireIncident);
+  }
+
+  @Test
+  void shouldIgnoreNullObjetDegradesList() {
+    dommage.setObjetDegrades(null);
 
     assertDoesNotThrow(dommage::champsObligatoireIncident);
   }

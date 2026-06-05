@@ -6,6 +6,11 @@ import {
 } from "@/constants/constant";
 import type { PrePlainteFormFields, VolObjetFormSnapshot } from "@/types/pre-plainte.interface";
 
+const PLAQUE_SUISSE_REGEX = /^[A-Z]{2}\s\d{1,6}$/;
+const PLAQUE_FRANCE_SIV_REGEX = /^[A-Z]{2}-\d{3}-[A-Z]{2}$/;
+const PLAQUE_FRANCE_FNI_REGEX = /^\d{1,4}\s[A-Z]{1,3}\s(\d{2,3}|2A|2B)$/;
+const PLAQUE_INTERNATIONALE_REGEX = /^[A-Z\d]{1,12}$/;
+
 export type VolObjetVolTranslate = (key: string, ...args: unknown[]) => string;
 
 export function hasImeiPourSnapshotVol(obj: VolObjetFormSnapshot): boolean {
@@ -103,13 +108,59 @@ export function validerPlaqueVehicule(
     setFieldError("plaquePays", t("validation.champRequis"));
     return false;
   }
-  if (!champs.plaqueNumero?.trim()) {
-    setFieldError("plaqueNumero", t("validation.champRequis"));
-    return false;
-  }
   if (champs.plaquePays.code === RIPOL.PAYS_SUISSE && !champs.plaqueCanton?.code) {
     setFieldError("plaqueCanton", t("validation.champRequis"));
     return false;
   }
-  return true;
+  return validerNumeroPlaque(champs, setFieldError, t);
+
+}
+
+export function validerNumeroPlaque(
+  champs: any,
+  setFieldError: (field: string, message: string) => void,
+  t: VolObjetVolTranslate,
+): boolean {
+  if (!champs.plaqueNumero?.trim()) {
+    setFieldError("plaqueNumero", t("validation.champRequis"));
+    return false;
+  } else {
+    const numeroPlaque = champs.plaqueNumero
+      .trim()
+      .toUpperCase()
+      .replace(/\s+/g, " ");
+
+    const paysCode = champs.plaquePays?.code;
+
+    if (paysCode === RIPOL.PAYS_SUISSE) {
+      if (!PLAQUE_SUISSE_REGEX.test(numeroPlaque)) {
+        setFieldError(
+          "plaqueNumero",
+          t("validation.numeroPlaqueSuisseInvalide"),
+        );
+        return false;
+      }
+    } else if (paysCode === RIPOL.PAYS_FRANCE) {
+      const isFrenchPlateValid =
+        PLAQUE_FRANCE_SIV_REGEX.test(numeroPlaque) ||
+        PLAQUE_FRANCE_FNI_REGEX.test(numeroPlaque);
+
+      if (!isFrenchPlateValid) {
+        setFieldError(
+          "plaqueNumero",
+          t("validation.numeroPlaqueFranceInvalide"),
+        );
+        return false;
+      }
+    } else {
+      if (!PLAQUE_INTERNATIONALE_REGEX.test(numeroPlaque)) {
+        setFieldError(
+          "plaqueNumero",
+          t("validation.numeroPlaqueInternationaleInvalide"),
+        );
+        return false;
+      }
+    }
+    return true;
+  }
 }
