@@ -169,7 +169,7 @@
   <template v-if="!assuranceAucune">
     <v-combobox
       v-model="assureurAutre"
-      :items="vehicleInsurerSuggestions"
+      :items=VEHICLE_INSURER_SUGGESTIONS
       :label="t('incidentTypes.assureur')"
       :error-messages="assureurAutreError"
       :hint="t('incidentTypes.hintAssureur')"
@@ -227,6 +227,7 @@
       :preload="true"
       :min-search-length="0"
       class="mb-4"
+      :error-messages="plaquePaysError"
     />
 
     <RipolAutocomplete
@@ -238,13 +239,16 @@
       :preload="true"
       :min-search-length="0"
       class="mb-8"
+      :error-messages="plaqueCantonError"
     />
 
     <v-text-field
       :label="isPlaqueObligatoire ? requiredLabel(t('incidentTypes.plaqueNumero')) : t('incidentTypes.plaqueNumero')"
-      v-model="plaqueNumero"
+      :model-value="plaqueNumero"
+      @update:model-value="onPlaqueInput"
       :disabled="plaqueInconnu"
       class="mb-2"
+      :error-messages="plaqueNumeroError"
       variant="outlined"
       :hint="isPlaqueObligatoire ? t('incidentTypes.hintPlaqueNumeroObligatoire') : t('incidentTypes.hintPlaqueNumero')"
       persistent-hint
@@ -270,6 +274,7 @@ import { CATEGORIES_OBJETS, VEHICLE_INSURER_SUGGESTIONS } from "@/constants/cons
 import { applyDateMask } from "@/utils/helpers/dateHelpers.ts";
 import { filterNationalities } from "@/utils/helpers/ripolHelpers.ts";
 import { requiredLabel } from "@/utils/helpers/labelHelpers";
+import { formatLicensePlate } from "@/composables/useLicencePlate.ts";
 
 const { t } = useI18n();
 
@@ -340,6 +345,13 @@ const fetchFilteredNationalities = async (search?: string) => {
   return filterNationalities(data);
 };
 
+const onPlaqueInput = (value: string) => {
+  plaqueNumero.value = formatLicensePlate(
+    value,
+    plaquePays.value?.code,
+  );
+};
+
 const {
   typeObjet,
   typeObjetError,
@@ -363,9 +375,12 @@ const {
   dateAchat,
   dateAchatError,
   plaqueNumero,
+  plaqueNumeroError,
   plaqueInconnu,
   plaquePays,
+  plaquePaysError,
   plaqueCanton,
+  plaqueCantonError,
   assuranceAucune,
   assureurAutre,
   assureurAutreError,
