@@ -119,6 +119,7 @@
       v-model="numeroCadre"
       :disabled="numeroCadreInconnu"
       class="mb-2"
+      :error-messages="numeroCadreError"
       variant="outlined"
       :hint="t('incidentTypes.hintNumeroCadre')"
       persistent-hint
@@ -145,6 +146,7 @@
     :label="t('incidentTypes.velofinderId')"
     v-model="velofinderId"
     class="mb-8"
+    :error-messages="velofinderIdError"
     variant="outlined"
     :hint="t('incidentTypes.hintVelofinderId')"
     persistent-hint
@@ -367,11 +369,13 @@ const {
   couleurError,
   couleurSecondaire,
   numeroCadre,
+  numeroCadreError,
   numeroCadreInconnu,
   vin,
   vinError,
   vinInconnu,
   velofinderId,
+  velofinderIdError,
   dateAchat,
   dateAchatError,
   plaqueNumero,

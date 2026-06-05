@@ -73,7 +73,14 @@ import { computed, nextTick, reactive, ref, watch, onMounted, toRaw } from "vue"
 import { useField, useFormContext } from "vee-validate";
 import { useI18n } from "vue-i18n";
 import { useDisplay } from "vuetify";
-import { AUTRE_OPTION, CATEGORIES_OBJETS, EMPTY_VALUE_EM_DASH, RIPOL, VOL_OBJET_CATEGORIE } from "@/constants/constant";
+import {
+  AUTRE_OPTION,
+  CATEGORIES_OBJETS,
+  EMPTY_VALUE_EM_DASH,
+  NUMERO_IMEI_MAX_LENGTH,
+  RIPOL,
+  VOL_OBJET_CATEGORIE
+} from "@/constants/constant";
 import VolObjetVoleResumeSheet from "./VolObjetVoleResumeSheet.vue";
 import VolObjetVoleDraftPanel from "./VolObjetVoleDraftPanel.vue";
 import type { VolObjetVoleDraftBrouillon } from "@/types/volObjetVoleBrouillon.types";
@@ -115,18 +122,18 @@ const afficherFicheSaisieNouvelObjet = ref((objetsVolesValides.value?.length ?? 
 
 const { value: typeObjet, errorMessage: typeObjetError } = useField<RipolSelection | null>("typeObjet");
 const { value: fabricant, errorMessage: fabricantError } = useField<RipolSelection | null>("fabricant");
-const { value: fabricantAutre } = useField<string>("fabricantAutre");
+const { value: fabricantAutre, errorMessage: fabricantAutreError } = useField<string>("fabricantAutre");
 const { value: modele, errorMessage: modeleError } = useField<RipolSelection | null>("modele");
-const { value: modeleAutre } = useField<string>("modeleAutre");
+const { value: modeleAutre, errorMessage: modeleAutreError } = useField<string>("modeleAutre");
 const { value: couleur, errorMessage: couleurError } = useField<RipolSelection | null>("couleur");
 const { value: couleurSecondaire } = useField<RipolSelection | null>("couleurSecondaire");
 const { value: valeurReelle, errorMessage: valeurReelleError } = useField<string>("valeurReelle");
-const { value: gravure } = useField<string>("gravure");
+const { value: gravure, errorMessage: gravureError } = useField<string>("gravure");
 const { value: numeroSerie, errorMessage: numeroSerieError } = useField("numeroSerie");
 const { value: numeroSerieInconnu } = useField<boolean>("numeroSerieInconnu");
 const { value: numeroIMEI, errorMessage: numeroIMEIError } = useField("numeroIMEI");
 const { value: numeroIMEIInconnu } = useField<boolean>("numeroIMEIInconnu");
-const { value: justificationAbsenceIMEI } = useField<string>("justificationAbsenceIMEI");
+const { value: justificationAbsenceIMEI, errorMessage: justificationAbsenceIMEIError } = useField<string>("justificationAbsenceIMEI");
 const { value: isVehicle } = useField<boolean>("isVehicle");
 
 const { value: numeroCadre } = useField<string>("numeroCadre");
@@ -537,7 +544,7 @@ const validerBrouillonObjetVole = (): boolean => {
   }
 
   if (numeroIMEIRequis.value && !chaineFormulaire(numeroIMEI.value).trim()) {
-    setFieldError("numeroIMEI", t("validation.numeroIMEIRequis"));
+    setFieldError("numeroIMEI", t("validation.numeroIMEIRequis", { max: NUMERO_IMEI_MAX_LENGTH }));
     return false;
   }
 
@@ -654,15 +661,18 @@ const brouillon = reactive({
   fabricant,
   fabricantError,
   fabricantAutre,
+  fabricantAutreError,
   modele,
   modeleError,
   modeleAutre,
+  modeleAutreError,
   couleur,
   couleurError,
   couleurSecondaire,
   valeurReelle,
   valeurReelleError,
   gravure,
+  gravureError,
   numeroSerie,
   numeroSerieError,
   numeroSerieInconnu,
@@ -671,6 +681,7 @@ const brouillon = reactive({
   numeroIMEIError,
   numeroIMEIInconnu,
   justificationAbsenceIMEI,
+  justificationAbsenceIMEIError,
   plaqueNumero,
   plaqueNumeroError,
   plaquePays,
