@@ -62,9 +62,10 @@ class SuisseEpoliceObjectMapperTest {
     assertNotNull(item.getCouleur());
     assertNotNull(item.getCouleurSecondaire());
     assertNotNull(item.getIdentification());
-    assertTrue(item.getAdditionalInformation().contains("Numéro de cadre inconnu"));
-    assertTrue(item.getAdditionalInformation().contains("VIN inconnu"));
-    assertFalse(item.getAdditionalInformation().contains("Numéro de plaque inconnu"));
+    assertTrue(item.getAdditionalInformation().startsWith("Autre indications;"));
+    assertTrue(item.getAdditionalInformation().contains("Numéro de cadre inconnu: oui"));
+    assertTrue(item.getAdditionalInformation().contains("Numéro de châssis (VIN) inconnu: oui"));
+    assertFalse(item.getAdditionalInformation().contains("Numéro de plaque"));
   }
 
   @Test
@@ -75,6 +76,8 @@ class SuisseEpoliceObjectMapperTest {
     when(o2.isVehicleType()).thenReturn(false);
     when(o2.getTypeCode()).thenReturn("TYPE2");
     when(o2.getTypeLabel()).thenReturn("Type 2");
+    when(o2.isNumeroSerieInconnu()).thenReturn(false);
+    when(o2.getNumeroSerie()).thenReturn("SER456");
     when(vol.getObjetsVoles()).thenReturn(List.of(o1, o2));
 
     List<ObjectItem> result = mapper.buildObjectsFromIncident(vol);
@@ -140,6 +143,44 @@ class SuisseEpoliceObjectMapperTest {
   }
 
   @Test
+  void shouldExcludeNonVehicleObjectWithoutIdentificationFromMyAbiForVol() {
+    ObjetIncident laptop = objetSansIdentification();
+    Vol vol = mockVolWith(laptop);
+
+    assertTrue(mapper.buildObjectsFromIncident(vol).isEmpty());
+    assertTrue(mapper.buildVehiclesFromIncident(vol).isEmpty());
+  }
+
+  @Test
+  void shouldExcludeNonVehicleObjectWithoutIdentificationFromMyAbiForDommage() {
+    ObjetIncident laptop = objetSansIdentification();
+    DommageMateriel dommage = mock(DommageMateriel.class);
+    when(dommage.getObjetDegrades()).thenReturn(List.of(laptop));
+
+    assertTrue(mapper.buildObjectsFromIncident(dommage).isEmpty());
+    assertTrue(mapper.buildVehiclesFromIncident(dommage).isEmpty());
+  }
+
+  @Test
+  void shouldNotUseDommageFallbackWhenDegradedObjectsExistButLackIdentification() {
+    DommageMateriel dommage = mock(DommageMateriel.class);
+    when(dommage.getObjetDegrades()).thenReturn(List.of(objetSansIdentification()));
+
+    assertTrue(mapper.buildObjectsFromIncident(dommage).isEmpty());
+  }
+
+  private static ObjetIncident objetSansIdentification() {
+    return ObjetIncident.builder()
+        .categorieObjet("objet")
+        .type(new RipolCode("713103", "Ordinateur portable"))
+        .fabricant(new RipolCode("4865", "Apple"))
+        .modele(new RipolCode("224124", "MacBook Pro"))
+        .numeroSerieInconnu(true)
+        .numeroIMEIInconnu(true)
+        .build();
+  }
+
+  @Test
   void shouldBuildPlateTheftAsObjectAndNotVehicle() {
     ObjetIncident plaque = ObjetIncident.builder()
         .categorieObjet("plaque")
@@ -152,7 +193,7 @@ class SuisseEpoliceObjectMapperTest {
 
     assertEquals(1, objects.size());
     assertTrue(vehicles.isEmpty());
-    assertTrue(objects.get(0).getAdditionalInformation().contains("Numéro de plaque: GE123456"));
+    assertTrue(objects.get(0).getAdditionalInformation().contains("Autre indications; Numéro de plaque: GE123456"));
   }
 
   @Test
@@ -199,7 +240,7 @@ class SuisseEpoliceObjectMapperTest {
     assertEquals(1, result.size());
     ObjectItem item = result.get(0);
     assertEquals(Ech051Constants.OBJECT_KEY_TIERS, item.getKey());
-    assertEquals("Vitre brisée", item.getAdditionalInformation());
+    assertEquals("Autre indications; Description du dommage: Vitre brisée", item.getAdditionalInformation());
     assertNotNull(item.getTypeOfObject());
     assertEquals(Ech051Constants.TYPE_OF_OBJECT_DOMMAGE_CODE, item.getTypeOfObject().getCode());
     assertEquals(Ech051Constants.TYPE_OF_OBJECT_DOMMAGE_LABEL, item.getTypeOfObject().getLabel());
@@ -331,9 +372,10 @@ class SuisseEpoliceObjectMapperTest {
     String result = mapper.buildObjectAdditionalInfo(objet);
 
     assertNotNull(result);
-    assertTrue(result.contains("Numéro de cadre inconnu"));
-    assertTrue(result.contains("VIN inconnu"));
-    assertFalse(result.contains("IMEI inconnu"));
+    assertTrue(result.startsWith("Autre indications; "));
+    assertTrue(result.contains("Numéro de cadre inconnu: oui"));
+    assertTrue(result.contains("Numéro de châssis (VIN) inconnu: oui"));
+    assertFalse(result.contains("Numéro IMEI inconnu"));
     assertFalse(result.contains("Numéro de série inconnu"));
     assertEquals(result, mapper.buildVehicleAdditionalInfo(objet));
   }
@@ -342,6 +384,7 @@ class SuisseEpoliceObjectMapperTest {
   void shouldOmitIdentificationFieldsFromMyAbiWhenAbsent() {
     ObjetIncident nonVehicle = mock(ObjetIncident.class);
     when(nonVehicle.isVehicleType()).thenReturn(false);
+    when(nonVehicle.getCategorieObjet()).thenReturn("documents");
     when(nonVehicle.isNumeroIMEIInconnu()).thenReturn(true);
     when(nonVehicle.isNumeroSerieInconnu()).thenReturn(true);
     when(nonVehicle.getNumeroSerie()).thenReturn("SER123");
@@ -351,6 +394,8 @@ class SuisseEpoliceObjectMapperTest {
 
     ObjetIncident vehicle = mock(ObjetIncident.class);
     when(vehicle.isVehicleType()).thenReturn(true);
+    when(vehicle.isVinInconnu()).thenReturn(false);
+    when(vehicle.getVin()).thenReturn("VIN123");
     when(vehicle.isPlaqueInconnu()).thenReturn(true);
     when(vehicle.getPlaqueNumero()).thenReturn("GE123456");
     when(vehicle.getTypeCode()).thenReturn("TYPE1");
@@ -411,6 +456,10 @@ class SuisseEpoliceObjectMapperTest {
   void shouldReturnNullNumberPlateWhenPlateNumberMissing() {
     ObjetIncident objet = mock(ObjetIncident.class);
     when(objet.isVehicleType()).thenReturn(true);
+    when(objet.isVinInconnu()).thenReturn(false);
+    when(objet.getVin()).thenReturn("VIN123");
+    when(objet.getTypeCode()).thenReturn("TYPE1");
+    when(objet.getTypeLabel()).thenReturn("Vélo");
     when(objet.getPlaqueNumero()).thenReturn(" ");
 
     List<VehicleItem> result = mapper.buildVehiclesFromIncident(mockVolWith(objet));
