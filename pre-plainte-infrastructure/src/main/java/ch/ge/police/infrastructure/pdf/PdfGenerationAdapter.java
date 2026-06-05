@@ -114,6 +114,10 @@ public class PdfGenerationAdapter implements PdfGenerationUseCase {
     DateTimeFormatter.ofPattern("dd.MM.yyyy 'à' HH:mm");
 
   public static final String RIPOL_AUTRE = "AUTRE";
+  private static final String CATEGORIE_DOCUMENTS = "documents";
+  private static final String CATEGORIE_PLAQUE = "plaque";
+  private static final String PDF_NON_STRUCTURED_OBJECTS_LABEL = "Objets sans identification";
+  private static final String PDF_NON_STRUCTURED_OBJECTS_CHAIN_SEPARATOR = " - ";
 
   @Override
   public byte[] generatePdf(final PrePlainte prePlainte) {
@@ -336,21 +340,7 @@ public class PdfGenerationAdapter implements PdfGenerationUseCase {
     addBooleanOuiNonPdf(rows, "Les objets ont-ils été volés dans une voiture ou sur un véhicule ?",
       v.getVolDansVehicule());
 
-    if (v.getObjetsVoles() != null && !v.getObjetsVoles().isEmpty()) {
-      List<ObjetIncident> objets = v.getObjetsVoles();
-      int n = objets.size();
-      IntStream.range(0, n)
-          .mapToObj(i -> Map.entry(i, objets.get(i)))
-          .forEach(e -> {
-            int i = e.getKey();
-            ObjetIncident o = e.getValue();
-            if (n > 1) {
-              rows.add(new String[]{"Objet volé (" + (i + 1) + ")", ""});
-            }
-            addObjetIncident(rows, o);
-            addObjetVol(rows, o);
-          });
-    }
+    addIncidentObjectsToPdf(rows, v.getObjetsVoles(), "Objet volé", true);
 
     addBooleanOuiNonPdf(rows, "Avez-vous constaté des dégradations liées à ce vol ?", v.getAvezVousDegradation());
 
@@ -385,7 +375,122 @@ public class PdfGenerationAdapter implements PdfGenerationUseCase {
     addObjetVehicleInsurance(rows, o);
   }
 
-  private static String formatObjetDescriptifLigne(ObjetIncident o) {
+  private void addIncidentObjectsToPdf(
+      List<String[]> rows,
+      List<ObjetIncident> objets,
+      String structuredObjectLabelPrefix,
+      boolean includeVolFields
+  ) {
+    if (objets == null || objets.isEmpty()) {
+      return;
+    }
+
+    List<ObjetIncident> structuredObjects = objets.stream()
+        .filter(this::isStructuredObjectForPdf)
+        .toList();
+    List<ObjetIncident> nonStructuredObjects = objets.stream()
+        .filter(obj -> !isStructuredObjectForPdf(obj))
+        .toList();
+
+    int structuredCount = structuredObjects.size();
+    IntStream.range(0, structuredCount)
+        .mapToObj(i -> Map.entry(i, structuredObjects.get(i)))
+        .forEach(e -> {
+          int index = e.getKey();
+          ObjetIncident objet = e.getValue();
+          if (structuredCount > 1) {
+            rows.add(new String[]{structuredObjectLabelPrefix + " (" + (index + 1) + ")", ""});
+          }
+          addObjetIncident(rows, objet);
+          if (includeVolFields) {
+            addObjetVol(rows, objet);
+          }
+        });
+
+    addIfNotNull(rows, PDF_NON_STRUCTURED_OBJECTS_LABEL, formatChainedNonStructuredObjects(nonStructuredObjects));
+  }
+
+  private String formatChainedNonStructuredObjects(List<ObjetIncident> objects) {
+    if (objects == null || objects.isEmpty()) {
+      return null;
+    }
+    return objects.stream()
+        .map(this::formatNonStructuredObjectSegment)
+        .filter(segment -> segment != null && !segment.isBlank())
+        .reduce((left, right) -> left + PDF_NON_STRUCTURED_OBJECTS_CHAIN_SEPARATOR + right)
+        .orElse(null);
+  }
+
+  private String formatNonStructuredObjectSegment(ObjetIncident objet) {
+    List<String> parts = new ArrayList<>();
+    String descriptif = formatObjetDescriptifLigne(objet);
+    if (descriptif != null) {
+      parts.add(descriptif);
+    }
+    if (objet.getCouleurLabel() != null && !objet.getCouleurLabel().isBlank()) {
+      parts.add(objet.getCouleurLabel().trim());
+    }
+    return parts.isEmpty() ? null : String.join(" ", parts);
+  }
+
+  private boolean isStructuredObjectForPdf(ObjetIncident objet) {
+    if (objet.isVehicleType()) {
+      return hasVehicleIdentificationForPdf(objet);
+    }
+    return isNonVehicleStructuredObjectForPdf(objet);
+  }
+
+  private boolean isNonVehicleStructuredObjectForPdf(ObjetIncident objet) {
+    String categorie = objet.getCategorieObjet();
+    if (CATEGORIE_DOCUMENTS.equals(categorie) || CATEGORIE_PLAQUE.equals(categorie)) {
+      return true;
+    }
+    return hasObjectIdentificationForPdf(objet);
+  }
+
+  private boolean hasObjectIdentificationForPdf(ObjetIncident objet) {
+    return hasImeiForPdf(objet) || hasNumeroSerieForPdf(objet) || hasGravureForPdf(objet);
+  }
+
+  private boolean hasVehicleIdentificationForPdf(ObjetIncident objet) {
+    if (!objet.isVinInconnu() && objet.getVin() != null && !objet.getVin().isBlank()) {
+      return true;
+    }
+    if (!objet.isNumeroCadreInconnu() && objet.getNumeroCadre() != null && !objet.getNumeroCadre().isBlank()) {
+      return true;
+    }
+    if (objet.getVelofinderId() != null && !objet.getVelofinderId().isBlank()) {
+      return true;
+    }
+    if (hasPlaqueNumeroForPdf(objet)) {
+      return true;
+    }
+    return hasObjectIdentificationForPdf(objet);
+  }
+
+  private static boolean hasNumeroSerieForPdf(ObjetIncident objet) {
+    return !objet.isNumeroSerieInconnu()
+        && objet.getNumeroSerie() != null
+        && !objet.getNumeroSerie().isBlank();
+  }
+
+  private static boolean hasGravureForPdf(ObjetIncident objet) {
+    return objet.getGravure() != null && !objet.getGravure().isBlank();
+  }
+
+  private static boolean hasImeiForPdf(ObjetIncident objet) {
+    return !objet.isNumeroIMEIInconnu()
+        && objet.getNumeroIMEI() != null
+        && !objet.getNumeroIMEI().isBlank();
+  }
+
+  private static boolean hasPlaqueNumeroForPdf(ObjetIncident objet) {
+    return !objet.isPlaqueInconnu()
+        && objet.getPlaqueNumero() != null
+        && !objet.getPlaqueNumero().isBlank();
+  }
+
+  static String formatObjetDescriptifLigne(ObjetIncident o) {
     if (o == null) {
       return null;
     }
@@ -424,20 +529,7 @@ public class PdfGenerationAdapter implements PdfGenerationUseCase {
         .map(TypeDommage::getLabel)
         .orElse(null));
 
-    if (d.getObjetDegrades() != null && !d.getObjetDegrades().isEmpty()) {
-      List<ObjetIncident> objets = d.getObjetDegrades();
-      int n = objets.size();
-      IntStream.range(0, n)
-          .mapToObj(i -> Map.entry(i, objets.get(i)))
-          .forEach(e -> {
-            int i = e.getKey();
-            ObjetIncident o = e.getValue();
-            if (n > 1) {
-              rows.add(new String[]{"Véhicule / objet endommagé (" + (i + 1) + ")", ""});
-            }
-            addObjetIncident(rows, o);
-          });
-    }
+    addIncidentObjectsToPdf(rows, d.getObjetDegrades(), "Véhicule / objet endommagé", false);
 
     addIfNotNull(rows, "Montant estimé",
       d.getMontantEstime() != null
