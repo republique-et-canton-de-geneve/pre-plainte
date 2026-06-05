@@ -368,13 +368,7 @@ public class PdfGenerationAdapter implements PdfGenerationUseCase {
   }
 
   private void addObjetIncident(List<String[]> rows, ObjetIncident o) {
-    addIfNotNull(rows, "Type de l'objet", o.getTypeLabel());
-
-    String marque = RIPOL_AUTRE.equals(o.getFabricantCode()) ? o.getFabricantAutre() : o.getFabricantLabel();
-    addIfNotNull(rows, "Marque", marque);
-
-    String modele = RIPOL_AUTRE.equals(o.getModeleCode()) ? o.getModeleAutre() : o.getModeleLabel();
-    addIfNotNull(rows, "Modèle", modele);
+    addIfNotNull(rows, "Type de l'objet", formatObjetDescriptifLigne(o));
 
     addIfNotNull(rows, "Couleur", o.getCouleurLabel());
     addIfNotNull(rows, "Couleur secondaire", o.getCouleurSecondaireLabel());
@@ -389,6 +383,25 @@ public class PdfGenerationAdapter implements PdfGenerationUseCase {
     addIfNotNull(rows, "Pays de la plaque", o.getPlaquePaysLabel());
     addIfNotNull(rows, "Canton de la plaque", o.getPlaqueCantonLabel());
     addObjetVehicleInsurance(rows, o);
+  }
+
+  private static String formatObjetDescriptifLigne(ObjetIncident o) {
+    if (o == null) {
+      return null;
+    }
+    List<String> parts = new ArrayList<>();
+    if (o.getTypeLabel() != null && !o.getTypeLabel().isBlank()) {
+      parts.add(o.getTypeLabel().trim());
+    }
+    String marque = RIPOL_AUTRE.equals(o.getFabricantCode()) ? o.getFabricantAutre() : o.getFabricantLabel();
+    if (marque != null && !marque.isBlank()) {
+      parts.add(marque.trim());
+    }
+    String modele = RIPOL_AUTRE.equals(o.getModeleCode()) ? o.getModeleAutre() : o.getModeleLabel();
+    if (modele != null && !modele.isBlank()) {
+      parts.add(modele.trim());
+    }
+    return parts.isEmpty() ? null : String.join(" ", parts);
   }
 
   private void addObjetVehicleInsurance(List<String[]> rows, ObjetIncident o) {
