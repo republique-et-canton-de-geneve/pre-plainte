@@ -200,7 +200,6 @@
         class="mt-2"
         variant="outlined"
         rows="4"
-        auto-grow
       />
     </div>
     <AccessibleVSelect
@@ -347,7 +346,6 @@
         class="mt-2 mb-4"
         variant="outlined"
         rows="4"
-        auto-grow
       />
     </div>
     <BaseRadioGroup

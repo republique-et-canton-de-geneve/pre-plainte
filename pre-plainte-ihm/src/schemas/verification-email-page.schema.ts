@@ -1,6 +1,6 @@
 import { z } from "zod";
 import type { ComposerTranslation } from "vue-i18n";
-import { EMAIL_FIELD_MAX_LENGTH } from "@/constants/constant.ts";
+import { TEXT_FIELD_MAX_LENGTH } from "@/constants/constant.ts";
 
 export const createVerificationEmailPageSchema = (t: ComposerTranslation) =>
   z.object({
@@ -9,7 +9,7 @@ export const createVerificationEmailPageSchema = (t: ComposerTranslation) =>
       z
         .string()
         .min(1, t("validation.emailRequis"))
-        .max(EMAIL_FIELD_MAX_LENGTH, t("validation.emailTropLong"))
+        .max(TEXT_FIELD_MAX_LENGTH, t("validation.emailTropLong", { max: TEXT_FIELD_MAX_LENGTH}))
         .email(t("validation.emailInvalide")),
     ),
     confirmationEmail: z.string().optional(),

@@ -82,6 +82,7 @@
     <v-text-field
       :label="t('dommages.montantEstime')"
       v-model="montantEstime"
+      type="number"
       :error-messages="montantEstimeError"
       class="mb-8"
       variant="outlined"

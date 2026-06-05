@@ -39,6 +39,7 @@ export interface VolObjetVoleDraftBrouillon {
   fetchColours: () => Promise<Ripol[]>;
   couleurSecondaire: RipolSelection | null;
   gravure: string;
+  gravureError?: string;
   isBijouxCategory: boolean;
   valeurReelle: string;
   valeurReelleError?: string;
@@ -51,6 +52,7 @@ export interface VolObjetVoleDraftBrouillon {
   numeroIMEIError?: string;
   numeroIMEIInconnu: boolean;
   justificationAbsenceIMEI: string;
+  justificationAbsenceIMEIError?: string;
   plaqueNumero: string;
   plaqueNumeroError?: string;
   plaquePays: RipolSelection | null;

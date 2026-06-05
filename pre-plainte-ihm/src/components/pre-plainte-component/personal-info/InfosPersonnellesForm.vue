@@ -28,7 +28,6 @@
       variant="outlined"
       :hint="t('informationsPersonnelles.hintNom')"
       persistent-hint
-      :maxlength="TEXT_FIELD_MAX_LENGTH"
     />
     <v-text-field
       :label="t('informationsPersonnelles.nomNaissance')"
@@ -38,7 +37,6 @@
       variant="outlined"
       :hint="t('informationsPersonnelles.hintNomNaissance')"
       persistent-hint
-      :maxlength="TEXT_FIELD_MAX_LENGTH"
     />
     <v-text-field
       :label="requiredLabel(t('informationsPersonnelles.prenom'))"
@@ -48,7 +46,6 @@
       variant="outlined"
       :hint="t('informationsPersonnelles.hintPrenom')"
       persistent-hint
-      :maxlength="TEXT_FIELD_MAX_LENGTH"
     />
 
     <RipolAutocomplete
@@ -137,7 +134,6 @@
       variant="outlined"
       :hint="adresseHint"
       persistent-hint
-      :maxlength="TEXT_FIELD_MAX_LENGTH"
     />
     <v-text-field
       :label="t('informationsPersonnelles.adressePostale')"
@@ -149,7 +145,6 @@
       variant="outlined"
       :hint="adressePostaleHint"
       persistent-hint
-      :maxlength="TEXT_FIELD_MAX_LENGTH"
     />
     <v-text-field
       :label="requiredLabel(t('informationsPersonnelles.npa'))"
@@ -161,7 +156,6 @@
       variant="outlined"
       :hint="npaHint"
       persistent-hint
-      :maxlength="TEXT_FIELD_MAX_LENGTH"
     />
     <v-text-field
       :label="requiredLabel(t('informationsPersonnelles.localite'))"
@@ -173,7 +167,6 @@
       variant="outlined"
       :hint="localiteHint"
       persistent-hint
-      :maxlength="TEXT_FIELD_MAX_LENGTH"
     />
 
     <h4 class="mb-8 mb-md-4 mt-4 mt-md-6 text-h4 text-md-h4 font-weight-bold">
@@ -206,7 +199,6 @@
           : t('informationsPersonnelles.hintNumeroPasseport')
       "
       persistent-hint
-      :maxlength="TEXT_FIELD_MAX_LENGTH"
     />
 
   </div>
@@ -220,7 +212,7 @@ import {
   GENRE_LABEL_KEYS,
   TITRES_SEJOUR,
   TYPES_DOCUMENT_IDENTITE,
-  RIPOL, TEXT_FIELD_MAX_LENGTH,
+  RIPOL,
 } from "@/constants/constant";
 import { toTranslatedOptions } from "@/utils/helpers/traductionHelper";
 import AddressLookup from "@/components/adresse/AddressLookup.vue";

@@ -27,13 +27,13 @@ export function useVehicleDetailsRipol({ sousCategorie, activePrefixes }: UseVeh
   const { value: couleur, errorMessage: couleurError } = useField<RipolSelection | null>("couleur");
   const { value: couleurSecondaire } = useField<RipolSelection | null>("couleurSecondaire");
 
-  const { value: numeroCadre } = useField<string>("numeroCadre");
+  const { value: numeroCadre, errorMessage: numeroCadreError } = useField<string>("numeroCadre");
   const { value: numeroCadreInconnu } = useField<boolean>("numeroCadreInconnu");
 
   const { value: vin, errorMessage: vinError } = useField<string>("vin");
   const { value: vinInconnu } = useField<boolean>("vinInconnu");
 
-  const { value: velofinderId } = useField<string>("velofinderId");
+  const { value: velofinderId, errorMessage: velofinderIdError } = useField<string>("velofinderId");
   const { value: dateAchat, errorMessage: dateAchatError } = useField<string>("dateAchat");
 
   const { value: plaqueNumero, errorMessage: plaqueNumeroError } = useField<string>("plaqueNumero");
@@ -231,11 +231,13 @@ export function useVehicleDetailsRipol({ sousCategorie, activePrefixes }: UseVeh
     couleurError,
     couleurSecondaire,
     numeroCadre,
+    numeroCadreError,
     numeroCadreInconnu,
     vin,
     vinError,
     vinInconnu,
     velofinderId,
+    velofinderIdError,
     dateAchat,
     dateAchatError,
     plaqueNumero,
