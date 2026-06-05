@@ -579,6 +579,19 @@ class PdfGenerationAdapterTest {
   }
 
   @Test
+  void formatObjetDescriptifLigne_shouldJoinTypeBrandAndModelOnOneLine() throws Exception {
+    var method = PdfGenerationAdapter.class.getDeclaredMethod("formatObjetDescriptifLigne", ObjetIncident.class);
+    method.setAccessible(true);
+    ObjetIncident objet = ObjetIncident.builder()
+        .type(new RipolCode("713103", "Ordinateur portable"))
+        .fabricant(new RipolCode("4865", "Apple"))
+        .modele(new RipolCode("224124", "MacBook Pro"))
+        .build();
+
+    assertEquals("Ordinateur portable Apple MacBook Pro", method.invoke(null, objet));
+  }
+
+  @Test
   void shouldReturnFalseWhenAllFieldsAreNull() {
     Adresse a = adresse(null, null, null, null, null);
     assertFalse(PdfGenerationAdapter.adresseHasAnyField(a));
