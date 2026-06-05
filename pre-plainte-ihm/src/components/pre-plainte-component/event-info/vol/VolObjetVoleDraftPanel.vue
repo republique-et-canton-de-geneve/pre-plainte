@@ -107,6 +107,7 @@
           v-if="brouillon.isAutreFabricant"
           v-model="brouillon.fabricantAutre"
           :label="t('incidentTypes.fabricantAutre')"
+          :error-messages="brouillon.fabricantAutreError"
           :hint="t('incidentTypes.hintFabricantAutre')"
           variant="outlined"
           persistent-hint
@@ -131,6 +132,7 @@
           v-if="brouillon.isAutreModele"
           v-model="brouillon.modeleAutre"
           :label="t('incidentTypes.modeleAutre')"
+          :error-messages="brouillon.modeleAutreError"
           :hint="t('incidentTypes.hintModeleAutre')"
           variant="outlined"
           persistent-hint
@@ -163,6 +165,7 @@
         v-if="brouillon.categorieObjet && brouillon.isBijouxCategory"
         v-model="brouillon.gravure"
         :label="t('incidentTypes.gravure')"
+        :error-messages="brouillon.gravureError"
         :hint="t('incidentTypes.hintGravure')"
         variant="outlined"
         persistent-hint
@@ -215,7 +218,7 @@
             variant="outlined"
             :hint="t('incidentTypes.hintNumeroImei')"
             persistent-hint
-            maxlength="15"
+            :maxlength=NUMERO_IMEI_MAX_LENGTH
             inputmode="numeric"
           >
             <template #append-inner>
@@ -245,6 +248,7 @@
               v-model="brouillon.justificationAbsenceIMEI"
               :label="t('incidentTypes.justificationAbsenceIMEI')"
               :hint="t('incidentTypes.hintJustificationAbsenceIMEI')"
+              :error-messages="brouillon.justificationAbsenceIMEIError"
               variant="outlined"
               persistent-hint
               class="my-4"
@@ -266,7 +270,7 @@
 <script setup lang="ts">
 import { useI18n } from "vue-i18n";
 import { useDisplay } from "vuetify/framework";
-import { VOL_OBJET_CATEGORIE } from "@/constants/constant";
+import { NUMERO_IMEI_MAX_LENGTH, VOL_OBJET_CATEGORIE } from "@/constants/constant";
 import AccessibleVSelect from "@/components/accessibility/AccessibleVSelect.vue";
 import RipolAutocomplete from "@/components/ripol/RipolAutocomplete.vue";
 import VehiculeDetailsField from "@/components/pre-plainte-component/event-info/VehiculeDetailsField.vue";

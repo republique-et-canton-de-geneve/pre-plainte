@@ -78,6 +78,8 @@
     <v-text-field
       :label="requiredLabel(t('cybercrime.montantDemande'))"
       v-model="montantDemande"
+      type="number"
+      min="0"
       :error-messages="montantDemandeError"
       class="mb-8"
       variant="outlined"
