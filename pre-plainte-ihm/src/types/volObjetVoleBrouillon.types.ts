@@ -55,6 +55,8 @@ export interface VolObjetVoleDraftBrouillon {
   plaqueNumeroError?: string;
   plaquePays: RipolSelection | null;
   plaquePaysError?: string;
+  plaqueCanton?: RipolSelection | null;
+  plaqueCantonError?: string;
   fetchFilteredNationalities: (search?: string) => Promise<Ripol[]>;
   objetsVolesValides?: VolObjetFormSnapshot[] | null;
   validerObjetVole: () => void;
