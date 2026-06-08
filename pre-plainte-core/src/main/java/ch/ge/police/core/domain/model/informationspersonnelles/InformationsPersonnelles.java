@@ -12,6 +12,10 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 
+import static ch.ge.police.core.domain.util.validation.ChampValidator.verifierChampObligatoire;
+import static ch.ge.police.core.domain.util.validation.ChampValidator.verifierLongueurMax;
+import static ch.ge.police.core.domain.util.validation.ValidationConstants.TEXT_FIELD_MAX_LENGTH;
+
 /**
  * Représente les informations personnelles du déclarant,
  * pouvant inclure :
@@ -50,7 +54,6 @@ public class InformationsPersonnelles extends InfosPersonne {
    * Les validations sont strictement liées à la logique du domaine.
    */
   public void validate() {
-
     verifierChampObligatoire(lienAvecPersonne, "Le lien avec la personne concernée est obligatoire.");
     super.validateBasicInfo();
 
@@ -60,15 +63,19 @@ public class InformationsPersonnelles extends InfosPersonne {
         "La langue de correspondance est obligatoire si la personne ne parle pas français."
       );
     }
+    verifierLongueurMax(langueCorrespondance, TEXT_FIELD_MAX_LENGTH, "langueCorrespondance");
+
     if (hasTiers()) {
       verifierChampObligatoire(tiers, "Les informations du tiers sont obligatoires.");
       verifierChampObligatoire(typeRepresentation, "Le type de représentation est obligatoire.");
+      verifierLongueurMax(typeRepresentation, TEXT_FIELD_MAX_LENGTH, "typeRepresentation");
       tiers.validateBasicInfo();
     }
 
     if (hasOrganisation()) {
       verifierChampObligatoire(organisation, "Les informations de l’organisation sont obligatoires.");
       verifierChampObligatoire(postePersonneMorale, "Le poste ou fonction est obligatoire.");
+      verifierLongueurMax(postePersonneMorale, TEXT_FIELD_MAX_LENGTH, "postePersonneMorale");
       organisation.validateOrganisationInfo();
     }
   }

@@ -1,6 +1,5 @@
 package ch.ge.police.core.domain.model.event.vol;
 
-import ch.ge.police.core.domain.model.common.error.ValidationMetierException;
 import ch.ge.police.core.domain.model.event.IncidentBase;
 import ch.ge.police.core.domain.model.event.common.TypeIncident;
 import ch.ge.police.core.domain.model.event.vol.common.ObjetIncident;
@@ -13,6 +12,9 @@ import lombok.experimental.SuperBuilder;
 
 import java.util.List;
 
+import static ch.ge.police.core.domain.util.validation.ChampValidator.verifierChampObligatoire;
+import static ch.ge.police.core.domain.util.validation.ChampValidator.verifierCollectionNonVide;
+
 @Data
 @SuperBuilder
 @NoArgsConstructor
@@ -22,7 +24,6 @@ import java.util.List;
 public class Vol extends IncidentBase {
 
   private Boolean volDansVehicule;
-  private String categorieObjet;
   private List<ObjetIncident> objetsVoles;
   private Boolean avezVousDegradation;
 
@@ -35,24 +36,18 @@ public class Vol extends IncidentBase {
   public void champsObligatoireIncident() {
     super.champsObligatoireIncident();
 
-    validateurChampsObligatoires(getDateDebutEvent(), "La date de début d'événement est obligatoire.");
-    validateurChampsObligatoires(getDateFinEvent(), "La date de fin d'événement est obligatoire.");
-
-    champsObligatoireVol(volDansVehicule, "Veuillez renseigner si le vol s'est deroulé dans un véhicule ou non");
-    if (objetsVoles == null || objetsVoles.isEmpty()) {
-      throw new ValidationMetierException("Au moins un objet doit être renseigné");
-    }
-    champsObligatoireVol(avezVousDegradation, "Veuillez renseigner si il y a eu des dégradations ou non");
+    verifierChampsObligatoires();
     objetsVoles.forEach(ObjetIncident::champsObligatoire);
   }
 
+  @Override
+  protected void verifierChampsObligatoires() {
+    super.verifierChampsObligatoires();
 
-  public void champsObligatoireVol(Object value, String messageErreur) {
-    if (value == null) {
-      throw new ValidationMetierException(messageErreur);
-    }
-    if (value instanceof String valueStr && valueStr.isBlank()) {
-      throw new ValidationMetierException(messageErreur);
-    }
+    verifierChampObligatoire(getDateDebutEvent(), "La date de début d'événement est obligatoire.");
+    verifierChampObligatoire(getDateFinEvent(), "La date de fin d'événement est obligatoire.");
+    verifierChampObligatoire(volDansVehicule, "Veuillez renseigner si le vol s'est deroulé dans un véhicule ou non");
+    verifierChampObligatoire(avezVousDegradation, "Veuillez renseigner si il y a eu des dégradations ou non");
+    verifierCollectionNonVide(objetsVoles, "Au moins un objet doit être renseigné");
   }
 }
