@@ -39,6 +39,7 @@ class PrePlainteTest {
     info.setLienAvecPersonne(LienAvecPersonne.MOI_MEME);
     info.setTypeDocumentIdentite(TypeDocumentIdentite.PASSEPORT);
     info.setNumeroDocumentIdentite("X1234567");
+    info.setParlesFrancais(true);
 
 
     DommageMateriel dommage = new DommageMateriel();
