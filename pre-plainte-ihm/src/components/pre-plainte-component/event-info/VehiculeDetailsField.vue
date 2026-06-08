@@ -193,6 +193,7 @@
     <v-text-field
       v-model="numeroAssurance"
       :label="t('incidentTypes.numeroAssurance')"
+      :error-messages="numeroAssuranceError"
       class="mb-4"
       variant="outlined"
       :hint="t('incidentTypes.hintNumeroAssurance')"
@@ -202,6 +203,7 @@
     <v-text-field
       v-model="numeroVignette"
       :label="t('incidentTypes.numeroVignette')"
+      :error-messages="numeroVignetteError"
       class="mb-4"
       variant="outlined"
       :hint="t('incidentTypes.hintNumeroVignette')"
@@ -211,6 +213,7 @@
     <v-text-field
       v-model="numeroMaster"
       :label="t('incidentTypes.numeroMaster')"
+      :error-messages="numeroMasterError"
       class="mb-8"
       variant="outlined"
       :hint="t('incidentTypes.hintNumeroMaster')"
@@ -389,8 +392,11 @@ const {
   assureurAutre,
   assureurAutreError,
   numeroAssurance,
+  numeroAssuranceError,
   numeroVignette,
+  numeroVignetteError,
   numeroMaster,
+  numeroMasterError,
 
   objetTypeKey,
   brandKey,

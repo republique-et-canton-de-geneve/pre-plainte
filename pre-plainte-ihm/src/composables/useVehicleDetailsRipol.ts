@@ -43,9 +43,9 @@ export function useVehicleDetailsRipol({ sousCategorie, activePrefixes }: UseVeh
 
   const { value: assuranceAucune } = useField<boolean>("assuranceAucune");
   const { value: assureurAutre, errorMessage: assureurAutreError } = useField<string>("assureurAutre");
-  const { value: numeroAssurance } = useField<string>("numeroAssurance");
-  const { value: numeroVignette } = useField<string>("numeroVignette");
-  const { value: numeroMaster } = useField<string>("numeroMaster");
+  const { value: numeroAssurance, errorMessage: numeroAssuranceError } = useField<string>("numeroAssurance");
+  const { value: numeroVignette, errorMessage: numeroVignetteError } = useField<string>("numeroVignette");
+  const { value: numeroMaster, errorMessage: numeroMasterError } = useField<string>("numeroMaster");
 
   const objetTypeKey = computed(() => `vehicule-objets-${sousCategorie.value}`);
   const brandKey = computed(() => `vehicule-brand-${typeObjet.value?.code ?? ""}`);
@@ -251,8 +251,11 @@ export function useVehicleDetailsRipol({ sousCategorie, activePrefixes }: UseVeh
     assureurAutre,
     assureurAutreError,
     numeroAssurance,
+    numeroAssuranceError,
     numeroVignette,
+    numeroVignetteError,
     numeroMaster,
+    numeroMasterError,
 
     objetTypeKey,
     brandKey,
