@@ -1,6 +1,5 @@
 package ch.ge.police.core.domain.model.event.dommagematerial;
 
-import ch.ge.police.core.domain.model.common.error.ValidationMetierException;
 import ch.ge.police.core.domain.model.event.IncidentBase;
 import ch.ge.police.core.domain.model.event.common.TypeIncident;
 import ch.ge.police.core.domain.model.event.dommagematerial.common.NatureDommage;
@@ -10,6 +9,13 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.util.List;
+
+import static ch.ge.police.core.domain.util.validation.ChampValidator.verifierChampObligatoire;
+import static ch.ge.police.core.domain.util.validation.ChampValidator.verifierCollectionNonVide;
+import static ch.ge.police.core.domain.util.validation.ChampValidator.verifierLongueurMax;
+import static ch.ge.police.core.domain.util.validation.ValidationConstants.TEXTAREA_MAX_LENGTH;
+import static ch.ge.police.core.domain.util.validation.ValidationConstants.TEXT_FIELD_MAX_LENGTH;
+
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class DommageMateriel extends IncidentBase {
@@ -32,35 +38,39 @@ public class DommageMateriel extends IncidentBase {
   public void champsObligatoireIncident() {
     super.champsObligatoireIncident();
 
-    validateurChampsObligatoires(getDateDebutEvent(), "La date de début d'événement est obligatoire.");
-    validateurChampsObligatoires(getDateFinEvent(), "La date de fin d'événement est obligatoire.");
-
-    verifier(typeDommage != null, "Le type de dommage doit être sélectionné.");
-    verifier(!isBlank(devise), "La devise est obligatoire.");
-    verifier(!isEmpty(naturesDommage), "Au moins une nature de dommage doit être sélectionnée.");
-    verifier(!isBlank(description), "La description du dommage est obligatoire.");
-    verifier(constatPresent != null, "L'indication de constat est obligatoire.");
-
-    if (Boolean.TRUE.equals(constatPresent)) {
-      verifier(!isBlank(dateConstat), "La date du constat est obligatoire si un constat est présent.");
-    }
+    verifierChampsObligatoires();
 
     if (objetDegrades != null && !objetDegrades.isEmpty()) {
       objetDegrades.forEach(ObjetIncident::champsObligatoire);
     }
+
+    verifierLongueurs();
   }
 
-  private void verifier(boolean condition, String messageErreur) {
-    if (!condition) {
-      throw new ValidationMetierException(messageErreur);
+  @Override
+  protected void verifierChampsObligatoires() {
+    super.verifierChampsObligatoires();
+
+    verifierChampObligatoire(getDateDebutEvent(), "La date de début d'événement est obligatoire.");
+    verifierChampObligatoire(getDateFinEvent(), "La date de fin d'événement est obligatoire.");
+
+    verifierChampObligatoire(typeDommage, "Le type de dommage doit être sélectionné.");
+    verifierChampObligatoire(devise, "La devise est obligatoire.");
+    verifierCollectionNonVide(naturesDommage, "Au moins une nature de dommage doit être sélectionnée.");
+    verifierChampObligatoire(description, "La description du dommage est obligatoire.");
+    verifierChampObligatoire(constatPresent, "L'indication de constat est obligatoire.");
+
+    if (Boolean.TRUE.equals(constatPresent)) {
+      verifierChampObligatoire(dateConstat,"La date du constat est obligatoire si un constat est présent.");
     }
   }
 
-  private boolean isEmpty(List<?> list) {
-    return list == null || list.isEmpty();
-  }
+  @Override
+  protected void verifierLongueurs() {
+    super.verifierLongueurs();
 
-  private boolean isBlank(String value) {
-    return value == null || value.isBlank();
+    verifierLongueurMax(devise, TEXT_FIELD_MAX_LENGTH, "devise");
+    verifierLongueurMax(description, TEXTAREA_MAX_LENGTH, "description");
+    verifierLongueurMax(dateConstat, TEXT_FIELD_MAX_LENGTH, "dateConstat");
   }
 }
