@@ -9,6 +9,7 @@ import ch.ge.police.core.domain.model.informationspersonnelles.common.LienAvecPe
 import ch.ge.police.core.domain.model.event.common.Incident;
 import ch.ge.police.core.domain.model.event.dommagematerial.DommageMateriel;
 import ch.ge.police.core.domain.model.informationspersonnelles.common.TypeDocumentIdentite;
+import ch.ge.police.core.domain.model.rendezvous.CreneauRendezVous;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -21,6 +22,7 @@ class PrePlainteTest {
 
   private InformationsPersonnelles info;
   private Incident incident;
+  private CreneauRendezVous creneau;
 
   @BeforeEach
   void setUp() {
@@ -37,7 +39,6 @@ class PrePlainteTest {
     info.setLienAvecPersonne(LienAvecPersonne.MOI_MEME);
     info.setTypeDocumentIdentite(TypeDocumentIdentite.PASSEPORT);
     info.setNumeroDocumentIdentite("X1234567");
-    info.setParlesFrancais(true);
 
 
     DommageMateriel dommage = new DommageMateriel();
@@ -52,11 +53,21 @@ class PrePlainteTest {
     dommage.setConstatPresent(false);
 
     incident = Incident.of(dommage);
+
+    creneau = new CreneauRendezVous(
+      "rdv-123",
+      "2026-06-10",
+      "09:00",
+      "09:30",
+      "Genève",
+      "RDV01"
+    );
   }
 
   @Test
   void shouldValidateSuccessfully() {
     PrePlainte prePlainte = new PrePlainte("id", info, incident);
+    prePlainte.setCreneauRendezVous(creneau);
     assertDoesNotThrow(prePlainte::validateChampsPresPlainte);
   }
 

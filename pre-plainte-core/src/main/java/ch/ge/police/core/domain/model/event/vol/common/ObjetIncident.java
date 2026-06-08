@@ -12,6 +12,10 @@ import lombok.experimental.SuperBuilder;
 
 import java.util.regex.Pattern;
 
+import static ch.ge.police.core.domain.util.validation.ChampValidator.verifierLongueurMax;
+import static ch.ge.police.core.domain.util.validation.ValidationConstants.TEXTAREA_MAX_LENGTH;
+import static ch.ge.police.core.domain.util.validation.ValidationConstants.TEXT_FIELD_MAX_LENGTH;
+
 /**
  * Représente un objet volé ou un véhicule volé.
  * Certains champs sont spécifiques à un type d'objet (ex: IMEI pour téléphone).
@@ -166,6 +170,8 @@ public class ObjetIncident {
   }
 
   public void champsObligatoire() {
+    verifierLongueurs();
+
     if (CATEGORIE_PLAQUE.equals(categorieObjet)) {
       validatePlaquePays();
       validatePlaqueNumero();
@@ -251,5 +257,31 @@ public class ObjetIncident {
     if (value != null && CODE_AUTRE.equals(value.code()) && (autreValue == null || autreValue.isBlank())) {
       throw new ValidationMetierException(message);
     }
+  }
+
+  private void verifierLongueurs() {
+    verifierLongueurMax(categorieObjet, TEXT_FIELD_MAX_LENGTH, "categorieObjet");
+    verifierLongueurMax(sousCategorie, TEXT_FIELD_MAX_LENGTH, "sousCategorie");
+
+    verifierLongueurMax(fabricantAutre, TEXT_FIELD_MAX_LENGTH, "fabricantAutre");
+    verifierLongueurMax(modeleAutre, TEXT_FIELD_MAX_LENGTH, "modeleAutre");
+
+    verifierLongueurMax(numeroSerie, TEXT_FIELD_MAX_LENGTH, "numeroSerie");
+    verifierLongueurMax(numeroCadre, TEXT_FIELD_MAX_LENGTH, "numeroCadre");
+
+    verifierLongueurMax(justificationAbsenceIMEI, TEXTAREA_MAX_LENGTH, "justificationAbsenceIMEI");
+
+    verifierLongueurMax(gravure, TEXT_FIELD_MAX_LENGTH, "gravure");
+    verifierLongueurMax(realValue, TEXT_FIELD_MAX_LENGTH, "realValue");
+
+    verifierLongueurMax(purchaseDate, TEXT_FIELD_MAX_LENGTH, "purchaseDate");
+
+    verifierLongueurMax(vin, TEXT_FIELD_MAX_LENGTH, "vin");
+    verifierLongueurMax(velofinderId, TEXT_FIELD_MAX_LENGTH, "velofinderId");
+
+    verifierLongueurMax(assureurAutre, TEXT_FIELD_MAX_LENGTH, "assureurAutre");
+    verifierLongueurMax(numeroAssurance, TEXT_FIELD_MAX_LENGTH, "numeroAssurance");
+    verifierLongueurMax(numeroVignette, TEXT_FIELD_MAX_LENGTH, "numeroVignette");
+    verifierLongueurMax(numeroMaster, TEXT_FIELD_MAX_LENGTH, "numeroMaster");
   }
 }
