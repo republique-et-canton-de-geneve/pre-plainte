@@ -164,3 +164,7 @@ export function validerNumeroPlaque(
     return true;
   }
 }
+
+export function checkLength(value: unknown, max: number) {
+  return !(value && String(value).length > max);
+}

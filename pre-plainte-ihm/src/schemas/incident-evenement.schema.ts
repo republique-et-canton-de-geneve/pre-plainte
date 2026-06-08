@@ -4,7 +4,7 @@ import {
   isCybercrimeTypeWithoutDetailFields,
   NUMERO_IMEI_MAX_LENGTH,
   RIPOL,
-  TEXT_FIELD_MAX_LENGTH, TEXTAREA_MAX_LENGTH
+  TEXT_FIELD_MAX_LENGTH, TEXTAREA_MAX_LENGTH, VEHICULE_CATEGORIES_AVEC_PLAQUE
 } from "@/constants/constant";
 import { isValidBoundedDate, parseDate, parseTime } from "@/utils/helpers/dateHelpers.ts";
 import { validateAchatNonRecuCybercrime } from "@/schemas/incident-evenement-achat-non-recu-refine";
@@ -366,8 +366,8 @@ function validateCoordonneesCommande(data: any, ctx: any, t: any) {
 const shouldValidatePlaque = (data: Record<string, any>) =>
   !data.plaqueInconnu &&
   (data.categorieObjet === "plaque" ||
-  data.categorieObjet === "vehicule" ||
-  data.typeDommage === "vehicule");
+  (data.categorieObjet === "vehicule" && VEHICULE_CATEGORIES_AVEC_PLAQUE.includes(data.sousCategorie)) ||
+  (data.typeDommage === "vehicule" && VEHICULE_CATEGORIES_AVEC_PLAQUE.includes(data.sousCategorie)));
 
 const validatePlaque = (
   data: Record<string, any>,
@@ -524,6 +524,11 @@ export const createEvenementInfoSchema = (t: ComposerTranslation) =>
       plaqueInconnu: z.boolean().optional(),
       plaquePays: optionalRipolSelectionSchema,
       plaqueCanton: optionalRipolSelectionSchema,
+      assuranceAucune: z.boolean().optional(),
+      assuranceAutre: z.string().max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH })).optional(),
+      numeroAssurance: z.string().max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH })).optional(),
+      numeroVignette: z.string().max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH })).optional(),
+      numeroMaster: z.string().max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH })).optional(),
       avezVousDegradation: z.boolean().nullish(),
       montantEstime: optionalStringFromForm(t),
       devise: z.string().optional(),

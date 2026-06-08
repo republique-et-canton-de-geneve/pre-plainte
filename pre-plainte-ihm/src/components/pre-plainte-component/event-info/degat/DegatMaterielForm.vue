@@ -170,7 +170,7 @@ import {
   DEVISES,
   CATEGORIES_OBJETS,
   VOL_OBJET_CATEGORIE,
-  EMPTY_VALUE_EM_DASH,
+  EMPTY_VALUE_EM_DASH, TEXT_FIELD_MAX_LENGTH,
 } from "@/constants/constant";
 import AccessibleVSelect from "@/components/accessibility/AccessibleVSelect.vue";
 import { applyDateMask } from "@/utils/helpers/dateHelpers.ts";
@@ -182,7 +182,7 @@ import DegatVehiculeEndommageDraftPanel from "./DegatVehiculeEndommageDraftPanel
 import DegatVehiculeEndommageResumeSheet from "./DegatVehiculeEndommageResumeSheet.vue";
 import { toTranslatedOptions } from "@/utils/helpers/traductionHelper";
 import { requiredLabel } from "@/utils/helpers/labelHelpers";
-import { validerPlaqueVehicule } from "@/utils/helpers/volObjetVolHelpers";
+import { checkLength, validerPlaqueVehicule } from "@/utils/helpers/volObjetVolHelpers";
 
 const TEXTE_VIDE = "";
 
@@ -433,14 +433,18 @@ const validerVehiculeDommage = () => {
     setFieldError("fabricantAutre", t("validation.champRequis"));
     return;
   }
-  if (!modele.value?.code) {
-    setFieldError("modele", t("validation.modeleRequis"));
-    return;
+
+  if (fabricant.value.code !== "AUTRE") {
+    if (!modele.value?.code) {
+      setFieldError("modele", t("validation.modeleRequis"));
+      return;
+    }
+    if (modele.value.code === "AUTRE" && !chaineFormulaire(modeleAutre.value).trim()) {
+      setFieldError("modeleAutre", t("validation.champRequis"));
+      return;
+    }
   }
-  if (modele.value.code === "AUTRE" && !chaineFormulaire(modeleAutre.value).trim()) {
-    setFieldError("modeleAutre", t("validation.champRequis"));
-    return;
-  }
+
   if (
     !validerPlaqueVehicule(
       {
@@ -454,6 +458,51 @@ const validerVehiculeDommage = () => {
       t,
     )
   ) {
+    return;
+  }
+
+  if (!checkLength(fabricantAutre.value, TEXT_FIELD_MAX_LENGTH)) {
+    setFieldError("fabricantAutre", t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH }));
+    return;
+  }
+
+  if (!checkLength(modeleAutre.value, TEXT_FIELD_MAX_LENGTH)) {
+    setFieldError("modeleAutre", t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH }));
+    return;
+  }
+
+  if (!checkLength(vin.value, TEXT_FIELD_MAX_LENGTH)) {
+    setFieldError("vin", t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH }));
+    return;
+  }
+
+  if (!checkLength(numeroCadre.value, TEXT_FIELD_MAX_LENGTH)) {
+    setFieldError("numeroCadre", t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH }));
+    return;
+  }
+
+  if (!checkLength(velofinderId.value, TEXT_FIELD_MAX_LENGTH)) {
+    setFieldError("velofinderId", t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH }));
+    return;
+  }
+
+  if (!checkLength(assureurAutre.value, TEXT_FIELD_MAX_LENGTH)) {
+    setFieldError("assureurAutre", t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH }));
+    return;
+  }
+
+  if (!checkLength(numeroAssurance.value, TEXT_FIELD_MAX_LENGTH)) {
+    setFieldError("numeroAssurance", t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH }));
+    return;
+  }
+
+  if (!checkLength(numeroVignette.value, TEXT_FIELD_MAX_LENGTH)) {
+    setFieldError("numeroVignette", t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH }));
+    return;
+  }
+
+  if (!checkLength(numeroMaster.value, TEXT_FIELD_MAX_LENGTH)) {
+    setFieldError("numeroMaster", t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH }));
     return;
   }
 
