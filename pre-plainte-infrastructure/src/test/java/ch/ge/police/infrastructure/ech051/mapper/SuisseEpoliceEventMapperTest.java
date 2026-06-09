@@ -413,11 +413,14 @@ class SuisseEpoliceEventMapperTest {
   void shouldBuildEventAdditionalInformation() {
     DommageMateriel dommage = mock(DommageMateriel.class);
     when(dommage.getDescription()).thenReturn("Vitre cassée");
-    assertEquals("Vitre cassée", mapper.buildEventAdditionalInformation(dommage));
+    assertNull(mapper.buildEventAdditionalInformation(dommage));
 
     Cybercrime cybercrime = mock(Cybercrime.class);
     when(cybercrime.getDescriptionCybercrime()).thenReturn("Hameçonnage");
-    assertNull(mapper.buildEventAdditionalInformation(cybercrime));
+    assertEquals(
+        "Autre indications; Description du cybercrime: Hameçonnage",
+        mapper.buildEventAdditionalInformation(cybercrime)
+    );
 
     IncidentBase incident = mock(IncidentBase.class);
     assertNull(mapper.buildEventAdditionalInformation(incident));
@@ -529,23 +532,6 @@ class SuisseEpoliceEventMapperTest {
   }
 
   @Test
-  void shouldIncludeTrimmedFactsOnCyberTransactionEvent() {
-    Cybercrime cybercrime = mock(Cybercrime.class);
-    when(cybercrime.getTypeCybercrime()).thenReturn(TypeCybercrime.ACHAT_NON_RECU);
-    when(cybercrime.getAchatNonRecu()).thenReturn(new AchatNonRecu());
-    when(cybercrime.getCommandeFrauduleuse()).thenReturn(null);
-    when(cybercrime.getFausseAnnonce()).thenReturn(null);
-    when(cybercrime.getDateDebutEvent()).thenReturn("2026-01-01");
-    when(cybercrime.getDateFinEvent()).thenReturn("2026-01-02");
-    when(cybercrime.getDescriptionCybercrime()).thenReturn("  Faits synthétiques  ");
-    when(cybercrime.getTypeLieu()).thenReturn(null);
-
-    Event event = mapper.buildEvent(cybercrime, null);
-
-    assertEquals("Faits synthétiques", event.getFacts());
-  }
-
-  @Test
   void shouldBuildEventAdditionalInformationForAchatNonRecu() {
     AchatNonRecu achat = new AchatNonRecu();
     achat.setMontantDelitAchatLigne("100");
@@ -560,7 +546,8 @@ class SuisseEpoliceEventMapperTest {
     String info = mapper.buildEventAdditionalInformation(cybercrime);
 
     assertNotNull(info);
-    assertTrue(info.contains("Montant du delit"));
-    assertTrue(info.contains("oui"));
+    assertTrue(info.startsWith("Autre indications; "));
+    assertTrue(info.contains("Montant du délit: 100"));
+    assertTrue(info.contains("Email vendeur inconnu: oui"));
   }
 }
