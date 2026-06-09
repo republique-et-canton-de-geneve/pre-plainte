@@ -579,6 +579,67 @@ class PdfGenerationAdapterTest {
   }
 
   @Test
+  void shouldChainNonStructuredObjectsAndKeepStructuredObjectsDetailedInVolPdf() throws Exception {
+    ObjetIncident structured = ObjetIncident.builder()
+        .categorieObjet("objet")
+        .type(new RipolCode("713103", "Téléphone mobile"))
+        .fabricant(new RipolCode("4865", "Apple"))
+        .modele(new RipolCode("224124", "iPhone 14"))
+        .couleur(new RipolCode("1300", "Noir"))
+        .numeroSerie("SER123")
+        .build();
+    ObjetIncident laptop = ObjetIncident.builder()
+        .categorieObjet("objet")
+        .type(new RipolCode("713103", "Ordinateur portable"))
+        .fabricant(new RipolCode("4865", "Apple"))
+        .modele(new RipolCode("224124", "MacBook Pro"))
+        .couleur(new RipolCode("1300", "Noir"))
+        .numeroSerieInconnu(true)
+        .numeroIMEIInconnu(true)
+        .build();
+    ObjetIncident bag = ObjetIncident.builder()
+        .categorieObjet("objet")
+        .type(new RipolCode("200100", "Sac à main"))
+        .fabricant(new RipolCode("9999", "Louis Vuitton"))
+        .modele(new RipolCode("224124", "Neverfull"))
+        .couleur(new RipolCode("1900", "Marron"))
+        .numeroSerieInconnu(true)
+        .numeroIMEIInconnu(true)
+        .build();
+
+    Vol vol = new Vol();
+    vol.setObjetsVoles(List.of(structured, laptop, bag));
+
+    List<String[]> rows = new ArrayList<>();
+    var handleVol = PdfGenerationAdapter.class.getDeclaredMethod("handleVol", List.class, Vol.class);
+    handleVol.setAccessible(true);
+    handleVol.invoke(adapter, rows, vol);
+
+    assertTrue(rows.stream().anyMatch(row ->
+        "Type de l'objet".equals(row[0]) && "Téléphone mobile Apple iPhone 14".equals(row[1])));
+    assertTrue(rows.stream().anyMatch(row ->
+        "Numéro de série".equals(row[0]) && "SER123".equals(row[1])));
+    assertTrue(rows.stream().anyMatch(row ->
+        "Objets sans identification".equals(row[0])
+            && "Ordinateur portable Apple MacBook Pro Noir - Sac à main Louis Vuitton Neverfull Marron".equals(row[1])));
+    assertFalse(rows.stream().anyMatch(row ->
+        row[0] != null && row[0].startsWith("Objet volé (2)")));
+  }
+
+  @Test
+  void formatObjetDescriptifLigne_shouldJoinTypeBrandAndModelOnOneLine() throws Exception {
+    var method = PdfGenerationAdapter.class.getDeclaredMethod("formatObjetDescriptifLigne", ObjetIncident.class);
+    method.setAccessible(true);
+    ObjetIncident objet = ObjetIncident.builder()
+        .type(new RipolCode("713103", "Ordinateur portable"))
+        .fabricant(new RipolCode("4865", "Apple"))
+        .modele(new RipolCode("224124", "MacBook Pro"))
+        .build();
+
+    assertEquals("Ordinateur portable Apple MacBook Pro", method.invoke(null, objet));
+  }
+
+  @Test
   void shouldReturnFalseWhenAllFieldsAreNull() {
     Adresse a = adresse(null, null, null, null, null);
     assertFalse(PdfGenerationAdapter.adresseHasAnyField(a));

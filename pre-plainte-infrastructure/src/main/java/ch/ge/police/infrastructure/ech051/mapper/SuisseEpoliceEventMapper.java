@@ -6,12 +6,14 @@ import ch.ge.police.core.domain.model.event.common.TypeIncident;
 import ch.ge.police.core.domain.model.event.cybercrime.Cybercrime;
 import ch.ge.police.core.domain.model.event.cybercrime.common.AchatNonRecu;
 import ch.ge.police.core.domain.model.event.cybercrime.common.CommandeFrauduleuse;
+import ch.ge.police.core.domain.model.event.cybercrime.common.FausseAnnonce;
 import ch.ge.police.core.domain.model.event.cybercrime.common.TypeCybercrime;
 import ch.ge.police.core.domain.model.event.dommagematerial.DommageMateriel;
 import ch.ge.police.core.domain.model.event.dommagematerial.common.NatureDommage;
 import ch.ge.police.core.domain.model.event.vol.Vol;
 import ch.ge.police.core.domain.model.informationspersonnelles.InformationsPersonnelles;
 import ch.ge.police.infrastructure.ech051.Ech051Constants;
+import ch.ge.police.infrastructure.ech051.MyAbiAdditionalInformationFormatter;
 import ch.ge.police.infrastructure.ech051.dto.Ech0051DocumentPayload.ActionPeriod;
 import ch.ge.police.infrastructure.ech051.dto.Ech0051DocumentPayload.ActionPlace;
 import ch.ge.police.infrastructure.ech051.dto.Ech0051DocumentPayload.Event;
@@ -22,7 +24,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
-import java.util.StringJoiner;
+import java.util.List;
 
 import static ch.ge.police.infrastructure.ech051.Ech051Constants.RipolSourceTables.MODUS_OPERANDI;
 import static ch.ge.police.infrastructure.ech051.Ech051Constants.RipolSourceTables.TYPE_CRIME;
@@ -123,7 +125,6 @@ public class SuisseEpoliceEventMapper {
       .locality(buildLocalityReference(incident))
       .modeOperandi(buildModeOperandiReference(incident))
       .typeOfCrime(buildTypeOfCrimeReference(incident))
-      .facts(buildEventFacts(incident))
       .additionalInformation(buildEventAdditionalInformation(incident))
       .build();
   }
@@ -140,7 +141,6 @@ public class SuisseEpoliceEventMapper {
         .locality(buildLocalityReference(incident))
         .modeOperandi(buildModeOperandiReference(incident))
         .typeOfCrime(buildTypeOfCrimeReference(incident))
-        .facts(buildEventFacts(incident))
         .additionalInformation(buildEventAdditionalInformation(incident))
         .build();
   }
@@ -362,74 +362,93 @@ public class SuisseEpoliceEventMapper {
     return extractIncidentTypeValue(incident.getTypeIncident());
   }
 
-  private String buildEventFacts(IncidentBase incident) {
-    if (incident instanceof Cybercrime cybercrime) {
-      String description = cybercrime.getDescriptionCybercrime();
-      if (description != null && !description.isBlank()) {
-        return description.strip();
-      }
-    }
-    return null;
-  }
-
   /**
    * Construit les informations additionnelles de l'événement.
    */
   public String buildEventAdditionalInformation(IncidentBase incident) {
-    if (incident == null) {
-      return null;
-    }
-
-    if (incident instanceof DommageMateriel dommage) {
-      String description = dommage.getDescription();
-      if (description != null && !description.isBlank()) {
-        return description;
-      }
-    }
-
     if (incident instanceof Cybercrime cybercrime) {
-      if (!isCyberAchatNonRecu(cybercrime)) {
-        return null;
-      }
-      return buildAchatNonRecuAdditionalInformation(cybercrime.getAchatNonRecu());
+      return buildCybercrimeAdditionalInformation(cybercrime);
     }
-
     return null;
   }
 
-  private String buildAchatNonRecuAdditionalInformation(AchatNonRecu achat) {
-    if (achat == null) {
+  private String buildCybercrimeAdditionalInformation(Cybercrime cybercrime) {
+    if (cybercrime == null) {
       return null;
     }
 
-    StringJoiner details = new StringJoiner(" | ");
-    addIfNotBlank(details, "Montant du delit", achat.getMontantDelitAchatLigne());
-    addIfNotBlank(details, "Article non livre", achat.getArticleNonLivreDescription());
-    addIfNotBlank(details, "Email vendeur inconnu", formatBoolean(achat.getEmailVendeurInconnu()));
-    addIfNotBlank(details, "Achat via place de marche", formatBoolean(achat.getAchatViaPlaceMarche()));
-    addIfNotBlank(details, "ID plateforme", achat.getPlateformeId());
-    addIfNotBlank(details, "Nom entreprise vendeur", achat.getNomEntrepriseVendeur());
-    addIfNotBlank(details, "Site web entreprise vendeur", achat.getSiteWebEntrepriseVendeur());
-    addIfNotBlank(details, "Annonce indisponible", formatBoolean(achat.getAnnonceDocumentIndisponible()));
-    addIfNotBlank(details, "Raison absence annonce", achat.getRaisonAbsenceAnnonce());
-    addIfNotBlank(details, "IBAN beneficiaire", achat.getIbanBeneficiaire());
-    addIfNotBlank(details, "Compte PayPal beneficiaire", achat.getComptePaypalBeneficiaire());
-    addIfNotBlank(details, "Numero Twint beneficiaire", achat.getNumeroTwintBeneficiaire());
-    addIfNotBlank(details, "Adresse wallet crypto", achat.getAdresseWalletCrypto());
-    addIfNotBlank(details, "Hash transaction crypto", achat.getHashTransactionCrypto());
-    addIfNotBlank(details, "Preuve paiement indisponible", formatBoolean(achat.getPreuvePaiementIndisponible()));
-    addIfNotBlank(details, "Raison absence preuve paiement", achat.getRaisonAbsencePreuvePaiement());
-    addIfNotBlank(details, "Copie identite transmise a l'auteur", formatBoolean(achat.getCopieIdentiteTransmiseAuteur()));
-    addIfNotBlank(details, "Copie identite auteur transmise", formatBoolean(achat.getCopieIdentiteAuteurTransmise()));
+    List<String> details = MyAbiAdditionalInformationFormatter.builder();
+    MyAbiAdditionalInformationFormatter.addLabeled(
+        details, "Description du cybercrime", cybercrime.getDescriptionCybercrime());
 
-    String value = details.toString();
-    return value.isBlank() ? null : value;
+    if (isCyberAchatNonRecu(cybercrime)) {
+      appendAchatNonRecuDetails(details, cybercrime.getAchatNonRecu());
+    } else if (isCyberCommandeFrauduleuse(cybercrime)) {
+      appendCommandeFrauduleuseDetails(details, cybercrime.getCommandeFrauduleuse());
+    } else if (isCyberFausseAnnonce(cybercrime)) {
+      appendFausseAnnonceDetails(details, cybercrime.getFausseAnnonce());
+    }
+
+    return MyAbiAdditionalInformationFormatter.format(details);
   }
 
-  private void addIfNotBlank(StringJoiner details, String label, String value) {
-    if (value != null && !value.isBlank()) {
-      details.add(label + ": " + value);
+  private void appendAchatNonRecuDetails(List<String> details, AchatNonRecu achat) {
+    if (achat == null) {
+      return;
     }
+    MyAbiAdditionalInformationFormatter.addLabeled(details, "Montant du délit", achat.getMontantDelitAchatLigne());
+    MyAbiAdditionalInformationFormatter.addLabeled(details, "Article non livré", achat.getArticleNonLivreDescription());
+    MyAbiAdditionalInformationFormatter.addLabeled(details, "Email vendeur inconnu", formatBoolean(achat.getEmailVendeurInconnu()));
+    MyAbiAdditionalInformationFormatter.addLabeled(details, "Achat via place de marché", formatBoolean(achat.getAchatViaPlaceMarche()));
+    MyAbiAdditionalInformationFormatter.addLabeled(details, "ID plateforme", achat.getPlateformeId());
+    MyAbiAdditionalInformationFormatter.addLabeled(details, "Nom entreprise vendeur", achat.getNomEntrepriseVendeur());
+    MyAbiAdditionalInformationFormatter.addLabeled(details, "Site web entreprise vendeur", achat.getSiteWebEntrepriseVendeur());
+    MyAbiAdditionalInformationFormatter.addLabeled(details, "Annonce indisponible", formatBoolean(achat.getAnnonceDocumentIndisponible()));
+    MyAbiAdditionalInformationFormatter.addLabeled(details, "Raison absence annonce", achat.getRaisonAbsenceAnnonce());
+    MyAbiAdditionalInformationFormatter.addLabeled(details, "IBAN bénéficiaire", achat.getIbanBeneficiaire());
+    MyAbiAdditionalInformationFormatter.addLabeled(details, "Compte PayPal bénéficiaire", achat.getComptePaypalBeneficiaire());
+    MyAbiAdditionalInformationFormatter.addLabeled(details, "Numéro Twint bénéficiaire", achat.getNumeroTwintBeneficiaire());
+    MyAbiAdditionalInformationFormatter.addLabeled(details, "Adresse wallet crypto", achat.getAdresseWalletCrypto());
+    MyAbiAdditionalInformationFormatter.addLabeled(details, "Hash transaction crypto", achat.getHashTransactionCrypto());
+    MyAbiAdditionalInformationFormatter.addLabeled(details, "Preuve paiement indisponible", formatBoolean(achat.getPreuvePaiementIndisponible()));
+    MyAbiAdditionalInformationFormatter.addLabeled(details, "Raison absence preuve paiement", achat.getRaisonAbsencePreuvePaiement());
+    MyAbiAdditionalInformationFormatter.addLabeled(details, "Copie identité transmise à l'auteur", formatBoolean(achat.getCopieIdentiteTransmiseAuteur()));
+    MyAbiAdditionalInformationFormatter.addLabeled(details, "Copie identité auteur transmise", formatBoolean(achat.getCopieIdentiteAuteurTransmise()));
+  }
+
+  private void appendCommandeFrauduleuseDetails(List<String> details, CommandeFrauduleuse commande) {
+    if (commande == null) {
+      return;
+    }
+    MyAbiAdditionalInformationFormatter.addLabeled(details, "Prestataire", commande.getPrestataire());
+    MyAbiAdditionalInformationFormatter.addLabeled(details, "Date de découverte", commande.getDateDecouverte());
+    if (commande.getMontant() != null) {
+      MyAbiAdditionalInformationFormatter.addLabeled(details, "Montant", commande.getMontant().toString());
+    }
+    MyAbiAdditionalInformationFormatter.addLabeled(details, "Assurance", formatBoolean(commande.getAssurance()));
+    MyAbiAdditionalInformationFormatter.addLabeled(details, "Email commande inconnu", formatBoolean(commande.getEmailCommandeInconnu()));
+    MyAbiAdditionalInformationFormatter.addLabeled(details, "Email commande", commande.getEmailCommande());
+    MyAbiAdditionalInformationFormatter.addLabeled(details, "Téléphone commande inconnu", formatBoolean(commande.getTelephoneCommandeInconnu()));
+    MyAbiAdditionalInformationFormatter.addLabeled(details, "Téléphone commande", commande.getTelephoneCommande());
+    MyAbiAdditionalInformationFormatter.addLabeled(details, "Livraison adresse lésée", formatBoolean(commande.getLivraisonAdresseLesee()));
+  }
+
+  private void appendFausseAnnonceDetails(List<String> details, FausseAnnonce annonce) {
+    if (annonce == null) {
+      return;
+    }
+    MyAbiAdditionalInformationFormatter.addLabeled(details, "URL complète", annonce.getUrlComplete());
+    MyAbiAdditionalInformationFormatter.addLabeled(details, "Titre de l'annonce", annonce.getTitreAnnonce());
+    MyAbiAdditionalInformationFormatter.addLabeled(details, "Nom du bailleur", annonce.getNomBailleur());
+    MyAbiAdditionalInformationFormatter.addLabeled(details, "Email bailleur inconnu", formatBoolean(annonce.getEmailBailleurInconnu()));
+    MyAbiAdditionalInformationFormatter.addLabeled(details, "Email bailleur", annonce.getEmailBailleur());
+    MyAbiAdditionalInformationFormatter.addLabeled(details, "Téléphone bailleur inconnu", formatBoolean(annonce.getTelephoneBailleurInconnu()));
+    MyAbiAdditionalInformationFormatter.addLabeled(details, "Téléphone bailleur", annonce.getTelephoneBailleur());
+    MyAbiAdditionalInformationFormatter.addLabeled(details, "Adresse du bien immobilier", annonce.getAdresseBienImmobilier());
+    if (annonce.getMontantDemande() != null) {
+      MyAbiAdditionalInformationFormatter.addLabeled(details, "Montant demandé", annonce.getMontantDemande().toString());
+    }
+    MyAbiAdditionalInformationFormatter.addLabeled(details, "Mode de paiement demandé", annonce.getModePaiementDemande());
   }
 
   private String formatBoolean(Boolean value) {

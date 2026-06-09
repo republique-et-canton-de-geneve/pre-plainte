@@ -7,12 +7,19 @@ import java.util.Set;
 
 public final class VehicleBrandCategoryFilter {
 
+  private static final int MIN_MOTOR_VEHICLE_CODE_LENGTH = 2;
+
+  private static final Set<String> MOTOR_VEHICLE_PREFIXES = Set.of(
+    "010", "011", "020", "030", "031",
+    "032", "060", "061", "062", "064", "070"
+  );
+
   private static final Set<String> KNOWN_CAR_MANUFACTURERS = Set.of(
-      "AUDI", "BMW", "MERCEDES", "MERCEDES-BENZ", "VOLKSWAGEN", "VW", "FORD", "TOYOTA", "HONDA",
-      "PEUGEOT", "RENAULT", "CITROEN", "OPEL", "FIAT", "PORSCHE", "SEAT", "SKODA", "VOLVO",
-      "MAZDA", "NISSAN", "HYUNDAI", "KIA", "LEXUS", "JAGUAR", "LAND ROVER", "MINI", "SMART",
-      "ALFA ROMEO", "JEEP", "CHRYSLER", "DACIA", "SUZUKI", "SUBARU", "MITSUBISHI", "TESLA",
-      "LAMBORGHINI", "FERRARI", "MASERATI", "BENTLEY", "ROLLS-ROYCE", "ASTON MARTIN"
+    "AUDI", "BMW", "MERCEDES", "MERCEDES-BENZ", "VOLKSWAGEN", "VW", "FORD", "TOYOTA", "HONDA",
+    "PEUGEOT", "RENAULT", "CITROEN", "OPEL", "FIAT", "PORSCHE", "SEAT", "SKODA", "VOLVO",
+    "MAZDA", "NISSAN", "HYUNDAI", "KIA", "LEXUS", "JAGUAR", "LAND ROVER", "MINI", "SMART",
+    "ALFA ROMEO", "JEEP", "CHRYSLER", "DACIA", "SUZUKI", "SUBARU", "MITSUBISHI", "TESLA",
+    "LAMBORGHINI", "FERRARI", "MASERATI", "BENTLEY", "ROLLS-ROYCE", "ASTON MARTIN"
   );
 
   private VehicleBrandCategoryFilter() {}
@@ -54,20 +61,11 @@ public final class VehicleBrandCategoryFilter {
   }
 
   private static boolean isMotorVehicleTypeCode(String code) {
-    if (code == null || code.length() < 2) {
+    if (code == null || code.length() < MIN_MOTOR_VEHICLE_CODE_LENGTH) {
       return false;
     }
-    return code.startsWith("010")
-        || code.startsWith("011")
-        || code.startsWith("020")
-        || code.startsWith("030")
-        || code.startsWith("031")
-        || code.startsWith("032")
-        || code.startsWith("060")
-        || code.startsWith("061")
-        || code.startsWith("062")
-        || code.startsWith("064")
-        || code.startsWith("070");
+    return MOTOR_VEHICLE_PREFIXES.stream()
+      .anyMatch(code::startsWith);
   }
 
   private static boolean isBikeVehicleTypeCode(String code) {
@@ -79,10 +77,7 @@ public final class VehicleBrandCategoryFilter {
     if (upper.contains("BIKE") || upper.contains("BICYCLE") || upper.contains("FAHRRAD")) {
       return true;
     }
-    if (upper.contains("VELO") && !upper.contains("VOLVO") && !upper.contains("CARAVELLE")) {
-      return true;
-    }
-    return false;
+    return upper.contains("VELO") && !upper.contains("VOLVO") && !upper.contains("CARAVELLE");
   }
 
   private static boolean isKnownCarManufacturer(String label) {

@@ -11,6 +11,7 @@ import ch.ge.police.infrastructure.ech051.dto.Ech0051DocumentPayload.RipolLocati
 import ch.ge.police.infrastructure.ech051.dto.Ech0051DocumentPayload.RipolReference;
 import ch.ge.police.infrastructure.ech051.dto.Ech0051DocumentPayload.VehicleItem;
 import ch.ge.police.infrastructure.ech051.Ech051Constants;
+import ch.ge.police.infrastructure.ech051.MyAbiAdditionalInformationFormatter;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -52,7 +53,7 @@ public class SuisseEpoliceObjectMapper {
     }
 
     List<ObjetIncident> nonVehicles = vol.getObjetsVoles().stream()
-        .filter(this::isStolenObjectForEch051)
+        .filter(this::isObjectEligibleForMyAbi)
         .toList();
     int n = nonVehicles.size();
     return IntStream.range(0, n)
@@ -81,15 +82,14 @@ public class SuisseEpoliceObjectMapper {
 
   private List<ObjectItem> buildObjectsFromDommage(DommageMateriel dommage) {
     if (dommage.getObjetDegrades() != null && !dommage.getObjetDegrades().isEmpty()) {
-      List<ObjetIncident> nonVehicles = dommage.getObjetDegrades().stream()
-          .filter(this::isStolenObjectForEch051)
+      List<ObjetIncident> eligible = dommage.getObjetDegrades().stream()
+          .filter(obj -> !obj.isVehicleType())
+          .filter(this::isObjectEligibleForMyAbi)
           .toList();
-      if (!nonVehicles.isEmpty()) {
-        int n = nonVehicles.size();
-        return IntStream.range(0, n)
-            .mapToObj(i -> buildObjectItem(nonVehicles.get(i), objectXmlKey(i, n)))
-            .toList();
-      }
+      int n = eligible.size();
+      return IntStream.range(0, n)
+          .mapToObj(i -> buildObjectItem(eligible.get(i), objectXmlKey(i, n)))
+          .toList();
     }
 
     ObjectItem item = ObjectItem.builder()
@@ -101,7 +101,7 @@ public class SuisseEpoliceObjectMapper {
                 TYPE_OBJET
             )
         )
-        .additionalInformation(dommage.getDescription())
+        .additionalInformation(buildDommageFallbackAdditionalInfo(dommage))
         .build();
 
     return List.of(item);
@@ -117,6 +117,7 @@ public class SuisseEpoliceObjectMapper {
       }
       List<ObjetIncident> vehicles = vol.getObjetsVoles().stream()
           .filter(ObjetIncident::isVehicleType)
+          .filter(this::hasVehicleIdentificationForMyAbi)
           .toList();
       int n = vehicles.size();
       return IntStream.range(0, n)
@@ -130,6 +131,7 @@ public class SuisseEpoliceObjectMapper {
       }
       List<ObjetIncident> vehicles = dommage.getObjetDegrades().stream()
           .filter(ObjetIncident::isVehicleType)
+          .filter(this::hasVehicleIdentificationForMyAbi)
           .toList();
       int n = vehicles.size();
       return IntStream.range(0, n)
@@ -305,17 +307,22 @@ public class SuisseEpoliceObjectMapper {
     return null;
   }
 
-  /**
-   * Construit les informations additionnelles d'un objet.
-   * Chaîne la description avec les justifications et informations complémentaires.
-   */
   public String buildObjectAdditionalInfo(ObjetIncident objet) {
-    List<String> details = new ArrayList<>();
-    addIfTrue(details, objet.isNumeroCadreInconnu(), "Numéro de cadre inconnu");
-    addIfTrue(details, objet.isVinInconnu(), "VIN inconnu");
+    List<String> details = MyAbiAdditionalInformationFormatter.builder();
+    MyAbiAdditionalInformationFormatter.addLabeled(
+        details, "Justification de l'absence de numéro IMEI", objet.getJustificationAbsenceIMEI());
+    MyAbiAdditionalInformationFormatter.addBoolean(details, "Numéro de cadre inconnu", objet.isNumeroCadreInconnu());
+    MyAbiAdditionalInformationFormatter.addBoolean(details, "Numéro de châssis (VIN) inconnu", objet.isVinInconnu());
+    MyAbiAdditionalInformationFormatter.addBoolean(details, "Numéro de série inconnu", objet.isNumeroSerieInconnu());
+    MyAbiAdditionalInformationFormatter.addBoolean(details, "Numéro IMEI inconnu", objet.isNumeroIMEIInconnu());
     addPlaqueNumeroForMyAbi(details, objet);
+    return MyAbiAdditionalInformationFormatter.format(details);
+  }
 
-    return details.isEmpty() ? null : String.join(" | ", details);
+  private String buildDommageFallbackAdditionalInfo(DommageMateriel dommage) {
+    List<String> details = MyAbiAdditionalInformationFormatter.builder();
+    MyAbiAdditionalInformationFormatter.addLabeled(details, "Description du dommage", dommage.getDescription());
+    return MyAbiAdditionalInformationFormatter.format(details);
   }
 
   /**
@@ -325,15 +332,9 @@ public class SuisseEpoliceObjectMapper {
     return buildObjectAdditionalInfo(objet);
   }
 
-  private void addIfTrue(List<String> details, boolean condition, String value) {
-    if (condition) {
-      details.add(value);
-    }
-  }
-
   private void addPlaqueNumeroForMyAbi(List<String> details, ObjetIncident objet) {
     if (!objet.isVehicleType() && hasPlaqueNumeroForMyAbi(objet)) {
-      details.add("Numéro de plaque: " + objet.getPlaqueNumero().trim());
+      MyAbiAdditionalInformationFormatter.addLabeled(details, "Numéro de plaque", objet.getPlaqueNumero());
     }
   }
 
@@ -394,11 +395,34 @@ public class SuisseEpoliceObjectMapper {
     return value.trim();
   }
 
-  private boolean isStolenObjectForEch051(ObjetIncident objet) {
+  private boolean isObjectEligibleForMyAbi(ObjetIncident objet) {
     String categorie = objet.getCategorieObjet();
     if (CATEGORIE_DOCUMENTS.equals(categorie) || CATEGORIE_PLAQUE.equals(categorie)) {
       return true;
     }
-    return !objet.isVehicleType();
+    if (objet.isVehicleType()) {
+      return false;
+    }
+    return hasIdentificationForMyAbi(objet);
+  }
+
+  private boolean hasIdentificationForMyAbi(ObjetIncident objet) {
+    return hasImeiForMyAbi(objet) || hasNumeroSerieForMyAbi(objet) || hasGravureForMyAbi(objet);
+  }
+
+  private boolean hasVehicleIdentificationForMyAbi(ObjetIncident objet) {
+    if (!objet.isVinInconnu() && objet.getVin() != null && !objet.getVin().isBlank()) {
+      return true;
+    }
+    if (!objet.isNumeroCadreInconnu() && objet.getNumeroCadre() != null && !objet.getNumeroCadre().isBlank()) {
+      return true;
+    }
+    if (objet.getVelofinderId() != null && !objet.getVelofinderId().isBlank()) {
+      return true;
+    }
+    if (hasPlaqueNumeroForMyAbi(objet)) {
+      return true;
+    }
+    return hasIdentificationForMyAbi(objet);
   }
 }
