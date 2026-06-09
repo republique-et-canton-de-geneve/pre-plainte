@@ -1,7 +1,14 @@
 import { Given, Then, When } from "@badeball/cypress-cucumber-preprocessor";
-import { fieldInput, fieldRoot, fillField, selectAutocomplete } from "../../support/helpers/vuetify";
+import {
+  fieldInput,
+  fieldRoot,
+  fillField,
+  selectAutocomplete,
+  selectNative,
+  selectRadio,
+} from "../../support/helpers/vuetify";
 import { ripol, ripolSelection, stubRipol } from "../../support/stubs/ripol";
-import { stubEmailChallengeVerificationOk } from "../../support/stubs/email-challenge";
+import { stubEmailChallengeOk } from "../../support/stubs/email-challenge";
 import { stubEsiriusOk } from "../../support/stubs/esirius";
 import { stubSoumissionPrePlainteOk } from "../../support/stubs/pre-plainte";
 import { declarantSuisseValide, donneesEmailVerifie } from "../../support/data/pre-plainte";
@@ -60,12 +67,12 @@ const donneesInformationsPersonnellesInvalides = {
 
 Given("je démarre un parcours nominal complet", () => {
   stubRipol({
-    objectTypes: [ripol("713100", "Téléphone mobile")],
+    objectTypes: [ripol("722100", "Ordinateur portable")],
     brands: [],
     models: [],
     objectColours: [ripol("NOIR", "Noir")],
   });
-  stubEmailChallengeVerificationOk();
+  stubEmailChallengeOk();
   stubEsiriusOk();
   stubSoumissionPrePlainteOk();
   cy.demarrerPrePlainteAEtape(1);
@@ -170,8 +177,20 @@ When("je clique sur le bouton continuer des informations générales", () => {
   cy.get('[data-cy="continuer-informations-generales"]').filter(":visible").first().click();
 });
 
-When("le challenge email est considéré comme vérifié", () => {
-  cy.demarrerPrePlainteAEtape(3, donneesEmailVerifie, { emailChallengeKey: "challenge-cypress" });
+When("je renseigne et je vérifie mon adresse e-mail", () => {
+  cy.get('[data-cy="verification-email"]').filter(":visible").first().type(donneesEmailVerifie.email);
+  cy.get('[data-cy="envoyer-code-email"]').filter(":visible").first().click();
+  cy.wait("@requestEmailChallenge");
+  cy.get('[data-cy="email-otp"]')
+    .filter(":visible")
+    .first()
+    .find("input")
+    .should("have.length", donneesEmailVerifie.confirmationEmail.length)
+    .each(($input, index) => {
+      cy.wrap($input).type(donneesEmailVerifie.confirmationEmail[index]);
+    });
+  cy.get('[data-cy="continuer-verification-email"]').filter(":visible").first().click();
+  cy.wait("@verifyEmailChallenge");
 });
 
 When("je renseigne les informations personnelles nominales pour moi-même", () => {
@@ -195,50 +214,20 @@ When("je continue après les informations personnelles", () => {
 });
 
 When("je renseigne un vol simple nominal", () => {
-  cy.window().then(win => {
-    const data = JSON.parse(win.localStorage.getItem("pp-data") ?? "{}");
-    win.localStorage.setItem("pp-data", JSON.stringify({
-      ...data,
-      ...declarantSuisseValide,
-      typeIncident: "vol",
-      dateDebutEvenement: "20.05.2026",
-      heureDebutEvenement: "10:00",
-      dateFinEvenement: "20.05.2026",
-      heureFinEvenement: "11:00",
-      volDansVehicule: false,
-      avezVousDegradation: false,
-      adresseLesee: true,
-      adresseEvenement: declarantSuisseValide.adresse,
-      adressePostaleEvenement: declarantSuisseValide.adressePostale,
-      npaEvenement: declarantSuisseValide.npa,
-      localiteEvenement: declarantSuisseValide.localite,
-      paysEvenement: declarantSuisseValide.pays,
-      objetsVolesValides: [
-        {
-          categorieObjet: "telephone",
-          sousCategorie: "telephone_mobile",
-          typeObjet: ripolSelection("713100", "Téléphone mobile"),
-          fabricant: null,
-          fabricantAutre: "",
-          modele: null,
-          modeleAutre: "",
-          couleur: null,
-          couleurSecondaire: null,
-          gravure: "",
-          valeurReelle: "250",
-          numeroSerie: "SN123456",
-          numeroSerieInconnu: false,
-          numeroIMEI: "",
-          numeroIMEIInconnu: true,
-          justificationAbsenceIMEI: "Non disponible",
-          isVehicle: false,
-        },
-      ],
-    }));
-  });
-  cy.reload();
-  cy.contains("Informations sur l'événement").should(bevisible);
-  cy.contains("Téléphone mobile").should(bevisible);
+  cy.get('[data-cy="type-incident-native"]').select("vol", { force: true });
+  selectRadio("Certains objets que vous allez déclarer", "Non");
+  selectNative("Catégorie d'objet", "informatique");
+  cy.wait("@getRipolObjectTypes");
+  fieldInput("Type de l'objet").should("have.value", "Ordinateur portable");
+  fillField("Numéro de série", "SN123456");
+  cy.get('[data-cy="objet-vole-valider"]').click();
+  selectRadio("Avez-vous constaté des dégradations", "Non");
+  fillField("Date de début de l'événement", "20.05.2026");
+  fillField("Heure de début de l'événement", "10:00");
+  fillField("Date de fin de l'événement", "20.05.2026");
+  fillField("Heure de fin de l'événement", "11:00");
+  selectRadio("L'adresse correspond à", "L'adresse de la personne lesée");
+  cy.contains("Ordinateur portable").should(bevisible);
   cy.get('[data-cy="continuer-evenement"]').filter(":visible").first().click();
 });
 
@@ -300,11 +289,12 @@ Then("le récapitulatif du parcours nominal est affiché", () => {
   cy.contains("#recap-title", "Validation").should(bevisible);
   cy.contains("MARTIN").should(bevisible);
   cy.contains("Anne").should(bevisible);
-  cy.contains("Téléphone mobile").should(bevisible);
+  cy.contains("Ordinateur portable").should(bevisible);
   cy.contains("Poste PPEL").should(bevisible);
 });
 
 Then("la pré-plainte est soumise", () => {
+  cy.wait("@verifyEmailChallenge");
   cy.wait("@submitPrePlainte");
 });
 
