@@ -52,6 +52,7 @@ public class Ech051Builder {
       DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
   private static final DateTimeFormatter ACTION_PERIOD_NAIVE_TIME =
       DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm");
+  private static final int ACTION_PERIOD_NAIVE_TIME_LENGTH = 16;
 
   private final SuisseEpoliceMapperForPPL mapper;
 
@@ -497,8 +498,8 @@ public class Ech051Builder {
       return OffsetDateTime.parse(value, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
           .atZoneSameInstant(ZONE_EUROPE_ZURICH);
     } catch (DateTimeParseException ignored) {
-      LocalDateTime localDateTime = value.length() == 16
-          ? LocalDateTime.parse(value, ACTION_PERIOD_NAIVE_TIME)
+      LocalDateTime localDateTime = value.length() == ACTION_PERIOD_NAIVE_TIME_LENGTH
+        ? LocalDateTime.parse(value, ACTION_PERIOD_NAIVE_TIME)
           : LocalDateTime.parse(value, DateTimeFormatter.ISO_DATE_TIME);
       return localDateTime.atZone(ZONE_EUROPE_ZURICH);
     }
