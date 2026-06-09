@@ -1,11 +1,19 @@
 import { RIPOL } from "@/constants/constant";
 
+const SIV_LETTERS1_START = 0;
+const SIV_LETTERS1_END = 2;
+const SIV_NUMBERS_START = 2;
+const SIV_NUMBERS_END = 5;
+const SIV_LETTERS2_START = 5;
+const SIV_LETTERS1_LENGTH = SIV_LETTERS1_END - SIV_LETTERS1_START;
+const SIV_NUMBERS_LENGTH = SIV_NUMBERS_END - SIV_NUMBERS_START;
+
 const clean = (value: string) =>
-  value.toUpperCase().replace(/[^A-Z\d]/g, "");
+  value.toUpperCase().replaceAll(/[^A-Z\d]/g, "");
 
 const formatSwiss = (value: string) => {
   const compact = clean(value);
-  const match = compact.match(/^([A-Z]{1,2})(\d*)$/);
+  const match = (/^([A-Z]{1,2})(\d*)$/).exec(compact);
   if (!match) {
     return compact;
   }
@@ -16,19 +24,19 @@ const formatSwiss = (value: string) => {
 const formatSiv = (value: string) => {
   const compact = clean(value);
 
-  const letters1 = compact.slice(0, 2);
-  const numbers = compact.slice(2, 5);
-  const letters2 = compact.slice(5);
+  const letters1 = compact.slice(SIV_LETTERS1_START, SIV_LETTERS1_END);
+  const numbers = compact.slice(SIV_NUMBERS_START, SIV_NUMBERS_END);
+  const letters2 = compact.slice(SIV_LETTERS2_START);
 
   let result = letters1;
 
-  if (letters1.length === 2 && numbers.length > 0) {
+  if (letters1.length === SIV_LETTERS1_LENGTH && numbers.length > 0) {
     result += `-${numbers}`;
   } else {
     result += numbers;
   }
 
-  if (numbers.length === 3 && letters2.length > 0) {
+  if (numbers.length === SIV_NUMBERS_LENGTH && letters2.length > 0) {
     result += `-${letters2}`;
   } else {
     result += letters2;
@@ -40,7 +48,7 @@ const formatSiv = (value: string) => {
 const formatFni = (value: string) => {
   const compact = clean(value);
 
-  const match = compact.match(/^(\d*)([A-Z]*)([\dA-Z]*)$/);
+  const match = (/^(\d*)([A-Z]+)?([A-Z\d]*)$/).exec(compact);
   if (!match) {
     return compact;
   }
