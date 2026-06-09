@@ -44,6 +44,10 @@ public class DommageMateriel extends IncidentBase {
     if (Boolean.TRUE.equals(constatPresent)) {
       verifier(!isBlank(dateConstat), "La date du constat est obligatoire si un constat est présent.");
     }
+
+    if (objetDegrades != null && !objetDegrades.isEmpty()) {
+      objetDegrades.forEach(ObjetIncident::champsObligatoire);
+    }
   }
 
   private void verifier(boolean condition, String messageErreur) {

@@ -21,6 +21,8 @@ import org.springframework.stereotype.Component;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.List;
@@ -45,7 +47,12 @@ import static ch.ge.police.infrastructure.ech051.Ech051Constants.CommunicationUs
 public class Ech051Builder {
 
   private static final String RIPOL_SOURCE = "RIPOL";
-  private static final DateTimeFormatter SEP_LOCAL_DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS");
+  private static final ZoneId ZONE_EUROPE_ZURICH = ZoneId.of("Europe/Zurich");
+  private static final DateTimeFormatter SEP_ACTION_PERIOD_FORMATTER =
+      DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
+  private static final DateTimeFormatter ACTION_PERIOD_NAIVE_TIME =
+      DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm");
+  private static final int ACTION_PERIOD_NAIVE_TIME_LENGTH = 16;
 
   private final SuisseEpoliceMapperForPPL mapper;
 
@@ -478,19 +485,23 @@ public class Ech051Builder {
     String value = dateTime.strip();
     try {
       if (value.contains("T")) {
-        return parseActionPeriodDateTime(value).format(SEP_LOCAL_DATE_TIME_FORMATTER);
+        return toZurichActionPeriod(value).format(SEP_ACTION_PERIOD_FORMATTER);
       }
-      return LocalDate.parse(value).atStartOfDay().format(SEP_LOCAL_DATE_TIME_FORMATTER);
+      return LocalDate.parse(value).atStartOfDay(ZONE_EUROPE_ZURICH).format(SEP_ACTION_PERIOD_FORMATTER);
     } catch (Exception e) {
       return dateTime;
     }
   }
 
-  private LocalDateTime parseActionPeriodDateTime(String value) {
+  private ZonedDateTime toZurichActionPeriod(String value) {
     try {
-      return OffsetDateTime.parse(value, DateTimeFormatter.ISO_OFFSET_DATE_TIME).toLocalDateTime();
+      return OffsetDateTime.parse(value, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+          .atZoneSameInstant(ZONE_EUROPE_ZURICH);
     } catch (DateTimeParseException ignored) {
-      return LocalDateTime.parse(value, DateTimeFormatter.ISO_DATE_TIME);
+      LocalDateTime localDateTime = value.length() == ACTION_PERIOD_NAIVE_TIME_LENGTH
+        ? LocalDateTime.parse(value, ACTION_PERIOD_NAIVE_TIME)
+          : LocalDateTime.parse(value, DateTimeFormatter.ISO_DATE_TIME);
+      return localDateTime.atZone(ZONE_EUROPE_ZURICH);
     }
   }
 
