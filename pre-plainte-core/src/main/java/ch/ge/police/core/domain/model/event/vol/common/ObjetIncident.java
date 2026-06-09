@@ -34,10 +34,10 @@ public class ObjetIncident {
   private static final String CODE_PAYS_FRANCE = "8212";
   private static final Pattern NUMERO_IMEI_PATTERN = Pattern.compile("\\d{15}");
 
-  private static final Pattern PLAQUE_SUISSE_PATTERN = Pattern.compile("^[A-Z]{2}\\s\\d{1,6}$");
-  private static final Pattern PLAQUE_FRANCE_SIV_PATTERN = Pattern.compile("^[A-Z]{2}-\\d{3}-[A-Z]{2}$");
-  private static final Pattern PLAQUE_FRANCE_FNI_PATTERN = Pattern.compile("^\\d{1,4}\\s[A-Z]{1,3}\\s(\\d{2,3}|2A|2B)$");
-  private static final Pattern PLAQUE_INTERNATIONALE_PATTERN = Pattern.compile("^[A-Z\\d]{1,12}$");
+  private static final Pattern PLAQUE_SUISSE_PATTERN = Pattern.compile("^[A-Z]{2}\\s\\d{1,6}$", Pattern.UNICODE_CHARACTER_CLASS);
+  private static final Pattern PLAQUE_FRANCE_SIV_PATTERN = Pattern.compile("^[A-Z]{2}-\\d{3}-[A-Z]{2}$", Pattern.UNICODE_CHARACTER_CLASS);
+  private static final Pattern PLAQUE_FRANCE_FNI_PATTERN = Pattern.compile("^\\d{1,4}\\s[A-Z]{1,3}\\s(\\d{2,3}|2A|2B)$", Pattern.UNICODE_CHARACTER_CLASS);
+  private static final Pattern PLAQUE_INTERNATIONALE_PATTERN = Pattern.compile("^[A-Z\\d]{1,12}$", Pattern.UNICODE_CHARACTER_CLASS);
 
   private String categorieObjet;
   private String sousCategorie;

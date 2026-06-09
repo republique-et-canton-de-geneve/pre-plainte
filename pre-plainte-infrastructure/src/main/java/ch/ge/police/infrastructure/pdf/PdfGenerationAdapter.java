@@ -395,19 +395,20 @@ public class PdfGenerationAdapter implements PdfGenerationUseCase {
     int structuredCount = structuredObjects.size();
     IntStream.range(0, structuredCount)
         .mapToObj(i -> Map.entry(i, structuredObjects.get(i)))
-        .forEach(e -> {
-          int index = e.getKey();
-          ObjetIncident objet = e.getValue();
-          if (structuredCount > 1) {
-            rows.add(new String[]{structuredObjectLabelPrefix + " (" + (index + 1) + ")", ""});
-          }
-          addObjetIncident(rows, objet);
-          if (includeVolFields) {
-            addObjetVol(rows, objet);
-          }
-        });
-
+        .forEach(e -> addStructuredObjectToPdf(rows, structuredObjectLabelPrefix, includeVolFields, e, structuredCount));
     addIfNotNull(rows, PDF_NON_STRUCTURED_OBJECTS_LABEL, formatChainedNonStructuredObjects(nonStructuredObjects));
+  }
+
+  private void addStructuredObjectToPdf(List<String[]> rows, String structuredObjectLabelPrefix, boolean includeVolFields, Map.Entry<Integer, ObjetIncident> e, int structuredCount) {
+    int index = e.getKey();
+    ObjetIncident objet = e.getValue();
+    if (structuredCount > 1) {
+      rows.add(new String[]{structuredObjectLabelPrefix + " (" + (index + 1) + ")", ""});
+    }
+    addObjetIncident(rows, objet);
+    if (includeVolFields) {
+      addObjetVol(rows, objet);
+    }
   }
 
   private String formatChainedNonStructuredObjects(List<ObjetIncident> objects) {
