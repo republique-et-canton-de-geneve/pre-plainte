@@ -7,8 +7,9 @@ Fonctionnalité: Parcours nominal complet
     Et je coche la confirmation de situation
     Et je clique sur le bouton continuer des informations générales
     Alors je vois l'étape "Vérification de votre adresse e-mail"
-    Quand le challenge email est considéré comme vérifié
-    Et je renseigne les informations personnelles nominales pour moi-même
+    Quand je renseigne et je vérifie mon adresse e-mail
+    Alors je vois l'étape "Informations personnelles"
+    Quand je renseigne les informations personnelles nominales pour moi-même
     Et je continue après les informations personnelles
     Alors je vois l'étape "Informations sur l'événement"
     Quand je renseigne un vol simple nominal
