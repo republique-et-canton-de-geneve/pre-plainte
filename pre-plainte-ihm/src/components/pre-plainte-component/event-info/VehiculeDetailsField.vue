@@ -275,7 +275,7 @@ import { useI18n } from "vue-i18n";
 import RipolAutocomplete from "@/components/ripol/RipolAutocomplete.vue";
 import { useVehicleDetailsRipol } from "@/composables/useVehicleDetailsRipol";
 import AccessibleVSelect from "@/components/accessibility/AccessibleVSelect.vue";
-import { CATEGORIES_OBJETS, VEHICLE_INSURER_SUGGESTIONS } from "@/constants/constant";
+import { CATEGORIES_OBJETS, VEHICLE_INSURER_SUGGESTIONS, VEHICULE_CATEGORIES_AVEC_PLAQUE } from "@/constants/constant";
 import { applyDateMask } from "@/utils/helpers/dateHelpers.ts";
 import { filterNationalities } from "@/utils/helpers/ripolHelpers.ts";
 import { requiredLabel } from "@/utils/helpers/labelHelpers";
@@ -290,6 +290,7 @@ type SubCatOption = {
 };
 
 const props = defineProps({
+  typeIncident: { type: String, required: true },
   sousCategorie: { type: String, required: true },
   sousCategorieError: { type: String },
   categorieObjet: { type: String, default: "vehicule" },
@@ -319,13 +320,25 @@ const selectedCategorie = computed(() => CATEGORIES_OBJETS.find(cat => cat.value
 
 const computedSubCategorieOptions = computed<SubCatOption[]>(() => {
   if (props.subCategorieOptions && props.subCategorieOptions.length > 0) {
-    return props.subCategorieOptions;
+    if (props.typeIncident === 'vol') {
+      return props.subCategorieOptions.filter(
+        sub => !VEHICULE_CATEGORIES_AVEC_PLAQUE.includes(sub.value)
+      );
+    } else {
+      return props.subCategorieOptions;
+    }
   }
+
   const cat = selectedCategorie.value;
   if (!cat?.subCategories) {
     return [];
   }
-  return cat.subCategories.map(sub => ({
+
+  const subCategories = props.typeIncident === "vol"
+    ? cat.subCategories.filter(sub => !VEHICULE_CATEGORIES_AVEC_PLAQUE.includes(sub.value))
+    : cat.subCategories;
+
+  return subCategories.map(sub => ({
     value: sub.value,
     label: t(sub.labelKey),
     prefixes: sub.prefixes,
