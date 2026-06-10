@@ -57,9 +57,9 @@ const { step, isLoading } = storeToRefs(store);
 const successMessage = ref("");
 const { t } = useI18n();
 const modificationSteps = computed(() => [
-  { title: t("modification.etapes.code") },
-  { title: t("modification.etapes.creneau") },
-  { title: t("modification.etapes.validation") },
+  { titleKey: t("modification.etapes.code") },
+  { titleKey: t("modification.etapes.creneau") },
+  { titleKey: t("modification.etapes.validation") },
 ]);
 
 const handleCodeVerified = () => {

@@ -119,6 +119,7 @@
       v-model="numeroCadre"
       :disabled="numeroCadreInconnu"
       class="mb-2"
+      :error-messages="numeroCadreError"
       variant="outlined"
       :hint="t('incidentTypes.hintNumeroCadre')"
       persistent-hint
@@ -145,6 +146,7 @@
     :label="t('incidentTypes.velofinderId')"
     v-model="velofinderId"
     class="mb-8"
+    :error-messages="velofinderIdError"
     variant="outlined"
     :hint="t('incidentTypes.hintVelofinderId')"
     persistent-hint
@@ -191,6 +193,7 @@
     <v-text-field
       v-model="numeroAssurance"
       :label="t('incidentTypes.numeroAssurance')"
+      :error-messages="numeroAssuranceError"
       class="mb-4"
       variant="outlined"
       :hint="t('incidentTypes.hintNumeroAssurance')"
@@ -200,6 +203,7 @@
     <v-text-field
       v-model="numeroVignette"
       :label="t('incidentTypes.numeroVignette')"
+      :error-messages="numeroVignetteError"
       class="mb-4"
       variant="outlined"
       :hint="t('incidentTypes.hintNumeroVignette')"
@@ -209,6 +213,7 @@
     <v-text-field
       v-model="numeroMaster"
       :label="t('incidentTypes.numeroMaster')"
+      :error-messages="numeroMasterError"
       class="mb-8"
       variant="outlined"
       :hint="t('incidentTypes.hintNumeroMaster')"
@@ -367,11 +372,13 @@ const {
   couleurError,
   couleurSecondaire,
   numeroCadre,
+  numeroCadreError,
   numeroCadreInconnu,
   vin,
   vinError,
   vinInconnu,
   velofinderId,
+  velofinderIdError,
   dateAchat,
   dateAchatError,
   plaqueNumero,
@@ -385,8 +392,11 @@ const {
   assureurAutre,
   assureurAutreError,
   numeroAssurance,
+  numeroAssuranceError,
   numeroVignette,
+  numeroVignetteError,
   numeroMaster,
+  numeroMasterError,
 
   objetTypeKey,
   brandKey,
