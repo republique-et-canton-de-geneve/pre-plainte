@@ -48,7 +48,7 @@ const formatSiv = (value: string) => {
 const formatFni = (value: string) => {
   const compact = clean(value);
 
-  const match = (/^(\d*)([A-Z]+)?([A-Z\d]*)$/).exec(compact);
+  const match = (/^(\d+)([A-Z]+)?([A-Z\d]+)$/).exec(compact);
   if (!match) {
     return compact;
   }

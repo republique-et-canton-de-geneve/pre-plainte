@@ -181,13 +181,14 @@ export const CATEGORIES_OBJETS = [
       { value: "avions", labelKey: "sousCategories.avions", prefixes: ["400", "401", "403"] },
     ],
   },
+/* La catégorie plaque ne doit pas être disponible pour la V1 mais sera certainement demandée par la suite
   {
     value: "plaque",
     labelKey: "categoriesObjets.plaque",
     prefixes: [],
     useVehicleTypes: false,
     subCategories: [],
-  },
+  },*/
   {
     value: "vetements",
     labelKey: "categoriesObjets.vetements",
