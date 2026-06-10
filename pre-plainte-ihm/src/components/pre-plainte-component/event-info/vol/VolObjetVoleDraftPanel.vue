@@ -22,6 +22,7 @@
 
       <VehiculeDetailsField
         v-if="brouillon.categorieObjet === VOL_OBJET_CATEGORIE.VEHICULE"
+        type-incident="vol"
         v-model:sous-categorie="brouillon.sousCategorie"
         :sous-categorie-error="brouillon.sousCategorieError"
         :categorie-objet="VOL_OBJET_CATEGORIE.VEHICULE"
