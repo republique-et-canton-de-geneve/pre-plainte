@@ -1,6 +1,6 @@
 import { z } from "zod";
 import type { ComposerTranslation } from "vue-i18n";
-import { VALIDATION_LIMITS } from "@/constants/constant";
+import { TEXT_FIELD_MAX_LENGTH, VALIDATION_LIMITS } from "@/constants/constant";
 import { validateInternationalPhone } from "@/utils/validations/phoneValidation";
 import { calculateAge, parseDate } from "@/utils/helpers/dateHelpers.ts";
 
@@ -46,17 +46,25 @@ export const createInfosPersonnellesSchema = (t: ComposerTranslation) => {
 
       justificatifPersonneMorale: z.array(z.instanceof(File)).optional(),
 
-      nom: z.string().min(VALIDATION_LIMITS.NOM_MIN, t("validation.nomMin", { min: VALIDATION_LIMITS.NOM_MIN })),
+      nom: z
+        .string()
+        .min(VALIDATION_LIMITS.NOM_MIN, t("validation.nomMin", { min: VALIDATION_LIMITS.NOM_MIN }))
+        .max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH })),
 
-      nomNaissance: z.string().optional(),
+      nomNaissance: z
+        .string()
+        .max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH }))
+        .optional(),
 
       prenom: z
         .string()
-        .min(VALIDATION_LIMITS.PRENOM_MIN, t("validation.prenomMin", { min: VALIDATION_LIMITS.PRENOM_MIN })),
+        .min(VALIDATION_LIMITS.PRENOM_MIN, t("validation.prenomMin", { min: VALIDATION_LIMITS.PRENOM_MIN }))
+        .max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH })),
 
       adresse: z
         .string()
-        .min(VALIDATION_LIMITS.ADRESSE_MIN, t("validation.adresseMin", { min: VALIDATION_LIMITS.ADRESSE_MIN })),
+        .min(VALIDATION_LIMITS.ADRESSE_MIN, t("validation.adresseMin", { min: VALIDATION_LIMITS.ADRESSE_MIN }))
+        .max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH })),
 
       pays: z.string().min(1, t("validation.paysRequis")),
 
@@ -69,14 +77,18 @@ export const createInfosPersonnellesSchema = (t: ComposerTranslation) => {
       adressePostale: z
         .string()
         .trim()
+        .max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH }))
         .regex(/^[a-zA-Z0-9\s]*$/, t("validation.numeroPostalFormat")),
 
       npa: z
         .string()
         .min(1, t("validation.npaMin"))
+        .max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH }))
         .refine(val => /^\d+$/.test(val), t("validation.npaFormat")),
 
-      localite: z.string().min(2, t("validation.localiteRequise")),
+      localite: z
+        .string().min(2, t("validation.localiteRequise"))
+        .max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH })),
 
       dateNaissance: z
         .string()
@@ -110,39 +122,45 @@ export const createInfosPersonnellesSchema = (t: ComposerTranslation) => {
 
       numeroDocumentIdentite: z.preprocess(
         val => (val == null ? val : String(val).trim()),
-        z.string().optional(),
+        z
+          .string()
+          .max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH }))
+          .optional(),
       ),
 
       tiersTypeDocumentIdentite: z.string().optional(),
 
       tiersNumeroDocumentIdentite: z.preprocess(
         val => (val == null ? val : String(val).trim()),
-        z.string().optional(),
+        z
+          .string()
+          .max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH }))
+          .optional(),
       ),
 
-      tiersNom: z.string().optional(),
-      tiersPrenom: z.string().optional(),
+      tiersNom: z.string().max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH })).optional(),
+      tiersPrenom: z.string().max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH })).optional(),
       tiersGenre: optionalRipolSelectionSchema,
       tiersNationalite: optionalRipolSelectionSchema,
       tiersDateNaissance: z.string().optional(),
-      tiersAdresse: z.string().optional(),
-      tiersAdressePostale: z.string().optional(),
-      tiersNpa: z.string().optional(),
-      tiersLocalite: z.string().optional(),
+      tiersAdresse: z.string().max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH })).optional(),
+      tiersAdressePostale: z.string().max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH })).optional(),
+      tiersNpa: z.string().max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH })).optional(),
+      tiersLocalite: z.string().max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH })).optional(),
       tiersPays: z.string().optional(),
       tiersTelephone: z.string().optional(),
-      tiersEmail: z.string().optional(),
-      tiersConfirmationEmail: z.string().optional(),
+      tiersEmail: z.string().max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH })).optional(),
+      tiersConfirmationEmail: z.string().max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH })).optional(),
 
-      organisationNom: z.string().optional(),
-      organisationAdresse: z.string().optional(),
-      organisationAdressePostale: z.string().optional(),
-      organisationNpa: z.string().optional(),
-      organisationLocalite: z.string().optional(),
+      organisationNom: z.string().max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH })).optional(),
+      organisationAdresse: z.string().max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH })).optional(),
+      organisationAdressePostale: z.string().max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH })).optional(),
+      organisationNpa: z.string().max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH })).optional(),
+      organisationLocalite: z.string().max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH })).optional(),
       organisationPays: z.string().optional(),
       organisationTelephone: z.string().optional(),
-      organisationEmail: z.string().optional(),
-      organisationConfirmationEmail: z.string().optional(),
+      organisationEmail: z.string().max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH })).optional(),
+      organisationConfirmationEmail: z.string().max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH })).optional(),
     })
     .refine(
       data => {

@@ -2,11 +2,14 @@ package ch.ge.police.core.domain.model.informationspersonnelles.common;
 
 import ch.ge.police.core.domain.model.common.Adresse;
 import ch.ge.police.core.domain.model.common.RipolCode;
-import ch.ge.police.core.domain.model.common.error.ValidationMetierException;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
+
+import static ch.ge.police.core.domain.util.validation.ChampValidator.verifierChampObligatoire;
+import static ch.ge.police.core.domain.util.validation.ChampValidator.verifierLongueurMax;
+import static ch.ge.police.core.domain.util.validation.ValidationConstants.TEXT_FIELD_MAX_LENGTH;
 
 /**
  * Informations de base d'une personne physique.
@@ -55,24 +58,16 @@ public class InfosPersonne {
     return lieuOrigine != null ? lieuOrigine.label() : null;
   }
 
-  /**
-   * Méthode interne de validation générique.
-   * Vérifie qu'une valeur (String ou Object) n'est pas nulle
-   * et, dans le cas d'une chaîne, non vide ou blanche.
-   */
-  protected void verifierChampObligatoire(Object value, String messageErreur) {
-    if (value == null) {
-      throw new ValidationMetierException(messageErreur);
-    }
-    if (value instanceof String valueStr && valueStr.isBlank()) {
-      throw new ValidationMetierException(messageErreur);
-    }
-    if (value instanceof RipolCode rc && !rc.hasCode()) {
-      throw new ValidationMetierException(messageErreur);
+  public void validateBasicInfo() {
+    verifierChampsObligatoires();
+    verifierLongueurs();
+
+    if (adresse != null) {
+      adresse.validate();
     }
   }
 
-  public void validateBasicInfo() {
+  private void verifierChampsObligatoires() {
     verifierChampObligatoire(nom, "Le nom est obligatoire.");
     verifierChampObligatoire(prenom, "Le prénom est obligatoire.");
     verifierChampObligatoire(genre, "Le genre est obligatoire.");
@@ -82,8 +77,22 @@ public class InfosPersonne {
     verifierChampObligatoire(telephone, "Le numéro de téléphone est obligatoire.");
     verifierChampObligatoire(email, "L'adresse e-mail est obligatoire.");
     verifierChampObligatoire(typeDocumentIdentite, "Le type de document d'identité est obligatoire.");
+
     if (typeDocumentIdentite != TypeDocumentIdentite.DOCUMENTS_VOLES_PERDUS) {
-      verifierChampObligatoire(numeroDocumentIdentite, "Le numéro de document d'identité est obligatoire.");
+      verifierChampObligatoire(
+        numeroDocumentIdentite,
+        "Le numéro de document d'identité est obligatoire."
+      );
     }
+  }
+
+  private void verifierLongueurs() {
+    verifierLongueurMax(nom, TEXT_FIELD_MAX_LENGTH, "nom");
+    verifierLongueurMax(nomNaissance, TEXT_FIELD_MAX_LENGTH, "nomNaissance");
+    verifierLongueurMax(prenom, TEXT_FIELD_MAX_LENGTH, "prenom");
+    verifierLongueurMax(dateNaissance, TEXT_FIELD_MAX_LENGTH, "dateNaissance");
+    verifierLongueurMax(telephone, TEXT_FIELD_MAX_LENGTH, "telephone");
+    verifierLongueurMax(email, TEXT_FIELD_MAX_LENGTH, "email");
+    verifierLongueurMax(numeroDocumentIdentite, TEXT_FIELD_MAX_LENGTH, "numeroDocumentIdentite");
   }
 }

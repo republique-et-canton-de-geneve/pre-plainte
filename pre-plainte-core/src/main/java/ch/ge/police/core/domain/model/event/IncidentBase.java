@@ -2,7 +2,6 @@ package ch.ge.police.core.domain.model.event;
 
 import ch.ge.police.core.domain.model.common.Adresse;
 import ch.ge.police.core.domain.model.common.RipolCode;
-import ch.ge.police.core.domain.model.common.error.ValidationMetierException;
 import ch.ge.police.core.domain.model.event.common.TypeIncident;
 import ch.ge.police.core.domain.model.fichier.Fichier;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -14,6 +13,10 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
 import java.util.List;
+
+import static ch.ge.police.core.domain.util.validation.ChampValidator.verifierChampObligatoire;
+import static ch.ge.police.core.domain.util.validation.ChampValidator.verifierLongueurMax;
+import static ch.ge.police.core.domain.util.validation.ValidationConstants.TEXT_FIELD_MAX_LENGTH;
 
 /**
  * Classe de base pour tout incident.
@@ -37,7 +40,6 @@ import java.util.List;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public abstract class IncidentBase {
 
-
   private String dateDebutEvent;
   private String dateFinEvent;
   private Adresse adresseIncident;
@@ -49,18 +51,26 @@ public abstract class IncidentBase {
   private Boolean isTrajet;
   private List<Fichier> fichiers;
 
-  public String getTypeLieuLabel() {
-    return typeLieu != null ? typeLieu.label() : null;
-  }
-
-  protected void validateurChampsObligatoires(Object valeur, String messageErreur) {
-    if (valeur == null || (valeur instanceof String s && s.isBlank())) {
-      throw new ValidationMetierException(messageErreur);
-    }
-  }
-
   public void champsObligatoireIncident() {
-    validateurChampsObligatoires(adresseIncident, "L’adresse de l’incident est obligatoire.");
+    verifierChampsObligatoires();
+
+    adresseIncident.validate();
+
+    if (adresseIncidentSecondaire != null) {
+      adresseIncidentSecondaire.validate();
+    }
+
+    verifierLongueurs();
+  }
+
+  protected void verifierChampsObligatoires() {
+    verifierChampObligatoire(adresseIncident, "L’adresse de l’incident est obligatoire.");
+  }
+
+  protected void verifierLongueurs() {
+    verifierLongueurMax(dateDebutEvent, TEXT_FIELD_MAX_LENGTH, "dateDebutEvent");
+    verifierLongueurMax(dateFinEvent, TEXT_FIELD_MAX_LENGTH, "dateFinEvent");
+    verifierLongueurMax(lieuOrigine, TEXT_FIELD_MAX_LENGTH, "lieuOrigine");
   }
 
   /** Chaque sous-classe doit définir le type de l’incident */
