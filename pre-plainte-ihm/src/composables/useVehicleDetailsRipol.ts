@@ -27,13 +27,13 @@ export function useVehicleDetailsRipol({ sousCategorie, activePrefixes }: UseVeh
   const { value: couleur, errorMessage: couleurError } = useField<RipolSelection | null>("couleur");
   const { value: couleurSecondaire } = useField<RipolSelection | null>("couleurSecondaire");
 
-  const { value: numeroCadre } = useField<string>("numeroCadre");
+  const { value: numeroCadre, errorMessage: numeroCadreError } = useField<string>("numeroCadre");
   const { value: numeroCadreInconnu } = useField<boolean>("numeroCadreInconnu");
 
   const { value: vin, errorMessage: vinError } = useField<string>("vin");
   const { value: vinInconnu } = useField<boolean>("vinInconnu");
 
-  const { value: velofinderId } = useField<string>("velofinderId");
+  const { value: velofinderId, errorMessage: velofinderIdError } = useField<string>("velofinderId");
   const { value: dateAchat, errorMessage: dateAchatError } = useField<string>("dateAchat");
 
   const { value: plaqueNumero, errorMessage: plaqueNumeroError } = useField<string>("plaqueNumero");
@@ -43,9 +43,9 @@ export function useVehicleDetailsRipol({ sousCategorie, activePrefixes }: UseVeh
 
   const { value: assuranceAucune } = useField<boolean>("assuranceAucune");
   const { value: assureurAutre, errorMessage: assureurAutreError } = useField<string>("assureurAutre");
-  const { value: numeroAssurance } = useField<string>("numeroAssurance");
-  const { value: numeroVignette } = useField<string>("numeroVignette");
-  const { value: numeroMaster } = useField<string>("numeroMaster");
+  const { value: numeroAssurance, errorMessage: numeroAssuranceError } = useField<string>("numeroAssurance");
+  const { value: numeroVignette, errorMessage: numeroVignetteError } = useField<string>("numeroVignette");
+  const { value: numeroMaster, errorMessage: numeroMasterError } = useField<string>("numeroMaster");
 
   const objetTypeKey = computed(() => `vehicule-objets-${sousCategorie.value}`);
   const brandKey = computed(() => `vehicule-brand-${typeObjet.value?.code ?? ""}`);
@@ -231,11 +231,13 @@ export function useVehicleDetailsRipol({ sousCategorie, activePrefixes }: UseVeh
     couleurError,
     couleurSecondaire,
     numeroCadre,
+    numeroCadreError,
     numeroCadreInconnu,
     vin,
     vinError,
     vinInconnu,
     velofinderId,
+    velofinderIdError,
     dateAchat,
     dateAchatError,
     plaqueNumero,
@@ -249,8 +251,11 @@ export function useVehicleDetailsRipol({ sousCategorie, activePrefixes }: UseVeh
     assureurAutre,
     assureurAutreError,
     numeroAssurance,
+    numeroAssuranceError,
     numeroVignette,
+    numeroVignetteError,
     numeroMaster,
+    numeroMasterError,
 
     objetTypeKey,
     brandKey,
