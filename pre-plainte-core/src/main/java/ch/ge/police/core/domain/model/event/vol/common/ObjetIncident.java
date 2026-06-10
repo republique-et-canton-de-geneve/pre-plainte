@@ -189,8 +189,10 @@ public class ObjetIncident {
     if (isVehicleType()) {
       validateRipolSelection(fabricant, "La marque du vehicule est obligatoire.");
       validateAutreValue(fabricant, fabricantAutre, "La marque du vehicule doit etre precisee.");
-      validateRipolSelection(modele, "Le modele du vehicule est obligatoire.");
-      validateAutreValue(modele, modeleAutre, "Le modele du vehicule doit etre precise.");
+      if (!CODE_AUTRE.equals(fabricant.code())) {
+        validateRipolSelection(modele, "Le modele du vehicule est obligatoire.");
+        validateAutreValue(modele, modeleAutre, "Le modele du vehicule doit etre precise.");
+      }
       if (!plaqueInconnu && VEHICULE_CATEGORIES_AVEC_PLAQUE.contains(sousCategorie)) {
         validatePlaquePays();
         validatePlaqueCanton();
