@@ -48,7 +48,7 @@ const formatSiv = (value: string) => {
 const formatFni = (value: string) => {
   const compact = clean(value);
 
-  const match = (/^(\d+)([A-Z]+)?([A-Z\d]+)$/).exec(compact);
+  const match = /^(\d{1,4})([A-Z]{1,3})(.*)$/.exec(compact);
   if (!match) {
     return compact;
   }
@@ -83,7 +83,7 @@ export const formatLicensePlate = (
   if (countryCode === RIPOL.PAYS_FRANCE) {
     const compact = clean(upper);
 
-    const isSiv = /^[A-Z]{0,2}\d{0,3}[A-Z]{0,2}$/.test(compact);
+    const isSiv = /^[A-Z]/.test(compact);
 
     return isSiv ? formatSiv(upper) : formatFni(upper);
   }
