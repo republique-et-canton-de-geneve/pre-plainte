@@ -202,6 +202,7 @@ class ObjetIncidentTest {
   void shouldAcceptVehicleWithBrandAndModel() {
     ObjetIncident objet = ObjetIncident.builder()
       .categorieObjet("vehicule")
+      .sousCategorie("voitures")
       .isVehicle(true)
       .type(new RipolCode("200", "Velo"))
       .fabricant(new RipolCode("TREK", "Trek"))
@@ -233,6 +234,7 @@ class ObjetIncidentTest {
   void shouldAcceptVehicleWithOtherBrandAndModelPrecision() {
     ObjetIncident objet = ObjetIncident.builder()
       .categorieObjet("vehicule")
+      .sousCategorie("voitures")
       .isVehicle(true)
       .type(new RipolCode("200", "Velo"))
       .fabricant(new RipolCode("AUTRE", "Autre"))

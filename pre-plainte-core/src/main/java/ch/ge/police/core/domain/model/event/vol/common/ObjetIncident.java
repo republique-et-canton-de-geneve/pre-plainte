@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 
+import java.util.List;
 import java.util.regex.Pattern;
 
 import static ch.ge.police.core.domain.util.validation.ChampValidator.verifierLongueurMax;
@@ -33,11 +34,14 @@ public class ObjetIncident {
   private static final String CATEGORIE_VEHICULE = "vehicule";
   private static final String CATEGORIE_PLAQUE = "plaque";
   private static final String CATEGORIE_DOCUMENTS = "documents";
+
+  private static final List<String> VEHICULE_CATEGORIES_AVEC_PLAQUE = List.of("motos", "voitures", "camions");
+
   private static final String CODE_AUTRE = "AUTRE";
   private static final String CODE_PAYS_SUISSE = "8100";
   private static final String CODE_PAYS_FRANCE = "8212";
-  private static final Pattern NUMERO_IMEI_PATTERN = Pattern.compile("\\d{15}");
 
+  private static final Pattern NUMERO_IMEI_PATTERN = Pattern.compile("\\d{15}");
   private static final Pattern PLAQUE_SUISSE_PATTERN = Pattern.compile("^[A-Z]{2}\\s\\d{1,6}$");
   private static final Pattern PLAQUE_FRANCE_SIV_PATTERN = Pattern.compile("^[A-Z]{2}-\\d{3}-[A-Z]{2}$");
   private static final Pattern PLAQUE_FRANCE_FNI_PATTERN = Pattern.compile("^\\d{1,4}\\s[A-Z]{1,3}\\s(\\d{2,3}|2A|2B)$");
@@ -187,7 +191,7 @@ public class ObjetIncident {
       validateAutreValue(fabricant, fabricantAutre, "La marque du vehicule doit etre precisee.");
       validateRipolSelection(modele, "Le modele du vehicule est obligatoire.");
       validateAutreValue(modele, modeleAutre, "Le modele du vehicule doit etre precise.");
-      if (!plaqueInconnu) {
+      if (!plaqueInconnu && VEHICULE_CATEGORIES_AVEC_PLAQUE.contains(sousCategorie)) {
         validatePlaquePays();
         validatePlaqueCanton();
         validatePlaqueNumero();
