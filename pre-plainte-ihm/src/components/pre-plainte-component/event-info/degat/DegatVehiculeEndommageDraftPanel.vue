@@ -7,6 +7,7 @@
       </p>
 
       <VehiculeDetailsField
+        type-incident="degat-delit"
         :sous-categorie="sousCategorie"
         @update:sous-categorie="emit('update:sousCategorie', $event)"
         :sous-categorie-error="sousCategorieError"
