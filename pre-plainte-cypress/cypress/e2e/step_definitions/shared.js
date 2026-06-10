@@ -254,6 +254,8 @@ When("je continue après le rendez-vous", () => {
 
 When("je soumets la pré-plainte", () => {
   cy.get('[data-cy="soumettre-preplainte"]').filter(":visible").first().click();
+  cy.wait("@verifyEmailChallenge");
+  cy.wait("@submitPrePlainte");
 });
 
 Then("le message {string} s'affiche sous le champ {string}", (message, champ) => {
@@ -291,11 +293,6 @@ Then("le récapitulatif du parcours nominal est affiché", () => {
   cy.contains("Anne").should(bevisible);
   cy.contains("Ordinateur portable").should(bevisible);
   cy.contains("Poste PPEL").should(bevisible);
-});
-
-Then("la pré-plainte est soumise", () => {
-  cy.wait("@verifyEmailChallenge");
-  cy.wait("@submitPrePlainte");
 });
 
 Then("le rendez-vous est créé", () => {
