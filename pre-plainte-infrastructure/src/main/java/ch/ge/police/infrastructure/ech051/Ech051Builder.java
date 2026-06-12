@@ -298,10 +298,6 @@ public class Ech051Builder {
     return ripolXml;
   }
 
-  /**
-   * myABI n'accepte pas {@code sep:colourSecondary} : chaque couleur est un élément
-   * {@code eCH-0051:colour} distinct (entrée « Matière » séparée).
-   */
   private List<Ech0051DocumentXml.RipolValueXml> buildColourElements(
       Ech0051DocumentPayload.RipolReference primary,
       Ech0051DocumentPayload.RipolReference secondary
