@@ -675,10 +675,7 @@ public class Ech0051DocumentXml {
     private RipolValueXml modelType;
 
     @XmlElement(name = "colour", namespace = SepNamespaces.ECH_0051_NS)
-    private RipolValueXml colour;
-
-    @XmlElement(name = "colourSecondary", namespace = SepNamespaces.SEP_NS)
-    private RipolValueXml colourSecondary;
+    private List<RipolValueXml> colours = new ArrayList<>();
 
     @XmlElement(name = "masterNumber", namespace = SepNamespaces.ECH_0051_NS)
     private String masterNumber;
@@ -747,10 +744,7 @@ public class Ech0051DocumentXml {
     private MarkedValueXml material;
 
     @XmlElement(name = "colour", namespace = SepNamespaces.ECH_0051_NS)
-    private RipolValueXml colour;
-
-    @XmlElement(name = "colourSecondary", namespace = SepNamespaces.SEP_NS)
-    private RipolValueXml colourSecondary;
+    private List<RipolValueXml> colours = new ArrayList<>();
 
     @XmlElement(name = "realValue", namespace = SepNamespaces.ECH_0051_NS)
     private RealValueXml realValue;
