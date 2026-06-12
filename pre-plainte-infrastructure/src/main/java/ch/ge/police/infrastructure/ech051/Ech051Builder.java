@@ -25,6 +25,7 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -297,6 +298,26 @@ public class Ech051Builder {
     return ripolXml;
   }
 
+  /**
+   * myABI n'accepte pas {@code sep:colourSecondary} : chaque couleur est un élément
+   * {@code eCH-0051:colour} distinct (entrée « Matière » séparée).
+   */
+  private List<Ech0051DocumentXml.RipolValueXml> buildColourElements(
+      Ech0051DocumentPayload.RipolReference primary,
+      Ech0051DocumentPayload.RipolReference secondary
+  ) {
+    List<Ech0051DocumentXml.RipolValueXml> colours = new ArrayList<>(2);
+    Ech0051DocumentXml.RipolValueXml primaryXml = mapRipolValue(primary);
+    if (primaryXml != null) {
+      colours.add(primaryXml);
+    }
+    Ech0051DocumentXml.RipolValueXml secondaryXml = mapRipolValue(secondary);
+    if (secondaryXml != null) {
+      colours.add(secondaryXml);
+    }
+    return colours;
+  }
+
   private Ech0051DocumentXml.MarkingWithLangXml buildMarkingWithLang(String value) {
     if (value == null) {
       return null;
@@ -520,8 +541,7 @@ public class Ech051Builder {
     if (dto.getMaterial() != null) {
       definitionXml.setMaterial(buildMarkedValue(dto.getMaterial()));
     }
-    definitionXml.setColour(mapRipolValue(dto.getCouleur()));
-    definitionXml.setColourSecondary(mapRipolValue(dto.getCouleurSecondaire()));
+    definitionXml.setColours(buildColourElements(dto.getCouleur(), dto.getCouleurSecondaire()));
     if (dto.getRealValue() != null) {
       Ech0051DocumentXml.RealValueXml realValueXml = new Ech0051DocumentXml.RealValueXml();
       realValueXml.setAmount(dto.getRealValue());
@@ -565,12 +585,7 @@ public class Ech051Builder {
     if (dto.getModelType() != null) {
       definitionXml.setModelType(mapRipolValue(dto.getModelType()));
     }
-    if (dto.getColour() != null) {
-      definitionXml.setColour(mapRipolValue(dto.getColour()));
-    }
-    if (dto.getColourSecondary() != null) {
-      definitionXml.setColourSecondary(mapRipolValue(dto.getColourSecondary()));
-    }
+    definitionXml.setColours(buildColourElements(dto.getColour(), dto.getColourSecondary()));
     vehicleXml.setDefinition(definitionXml);
 
     if (dto.getNumberPlate() != null) {
