@@ -148,12 +148,14 @@
     "intro1": "Die Online-Voranzeige",
     "intro2": "darf nicht verwendet werden",
     "intro3": "in folgenden Situationen:",
-    "condition1": "Sie kennen die mutmassliche Täterin oder den mutmasslichen Täter",
-    "condition2": "Sie möchten Schäden melden, die durch ein anderes Fahrzeug verursacht wurden",
-    "condition3": "Sie waren Opfer eines Carjackings (Fahrzeugdiebstahl unter Gewaltanwendung oder Bedrohung)",
+    "condition1": "Sie kennen die Identität der mutmasslichen Täterin oder des mutmasslichen Täters.",
+    "condition2": "Ihre Situation betrifft den Diebstahl eines eingelösten Fahrzeugs.",
+    "condition3": "Ihre Situation betrifft den Diebstahl eines Kontrollschilds.",
     "avantConfirmation": "Bevor Sie fortfahren, bestätigen Sie bitte, dass Ihre Situation keinem der oben genannten Fälle entspricht:",
     "confirmeIdentite": "Ich bestätige, dass ich die Identität der mutmasslichen Täterin oder des mutmasslichen Täters nicht kenne.",
-    "confirmeSituation": "Ich bestätige, dass es sich bei meiner Situation weder um ein Carjacking noch um einen Verkehrsunfall handelt."
+    "confirmeSituation": "Ich bestätige, dass meine Situation weder den Diebstahl eines eingelösten Fahrzeugs noch eines Kontrollschilds betrifft.",
+    "casNonTrouve": "Wenn Sie Ihren Fall nicht finden,",
+    "prendreRendezVousPoste": "vereinbaren Sie direkt einen Termin bei einem Polizeiposten."
   },
   "informationsPersonnelles": {
     "titre": "Persönliche Informationen",
