@@ -20,7 +20,6 @@
             :key="captchaKey"
             v-model="captchaToken"
             :sitekey="captchaSiteKey"
-            api-endpoint="https://eu.frcapi.com/api/v2"
             @reset="resetCaptcha"
           />
         </div>
