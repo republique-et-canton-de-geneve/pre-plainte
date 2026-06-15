@@ -235,8 +235,8 @@ const fetchBrands = async () => {
   if (!typeObjet.value?.code) {
     return [];
   }
-  const isVehicle = selectedCategorie.value?.useVehicleTypes === true;
-  const results = isVehicle
+  const isVehicleType = selectedCategorie.value?.useVehicleTypes === true;
+  const results = isVehicleType
     ? await RipolService.searchVehicleBrands(undefined, typeObjet.value.code)
     : await RipolService.search("brands", undefined, {
         masterValue: typeObjet.value.code,
@@ -255,10 +255,10 @@ const fetchModels = async () => {
   if (!fabricant.value?.code) {
     return [];
   }
-  const isVehicle = selectedCategorie.value?.useVehicleTypes === true;
+  const isVehicleType = selectedCategorie.value?.useVehicleTypes === true;
   modelsLoading.value = true;
   try {
-    const results = isVehicle
+    const results = isVehicleType
       ? await RipolService.searchVehicleModels(fabricant.value.code)
       : await RipolService.search("models", undefined, {
           masterValue: fabricant.value.code,

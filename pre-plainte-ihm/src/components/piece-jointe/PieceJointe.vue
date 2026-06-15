@@ -258,11 +258,11 @@ async function collectFilesFromSelection(selectedFiles: File[]): Promise<{ accep
         rejected.push(t("pieceJointe.tailleMaxCustom", { nom: fileToAdd.name, max: maxFileSizeMo.value }));
       } else if (currentTotal + fileToAdd.size > props.maxTotalSize) {
         rejected.push(t("pieceJointe.tailleTotaleDepassee", { nom: fileToAdd.name }));
-      } else if (!(await hasValidSignature(fileToAdd))) {
-        rejected.push(t("pieceJointe.pdfInvalide", { nom: fileToAdd.name }));
-      } else {
+      } else if (await hasValidSignature(fileToAdd)) {
         accepted.push(fileToAdd);
         currentTotal += fileToAdd.size;
+      } else {
+        rejected.push(t("pieceJointe.pdfInvalide", { nom: fileToAdd.name }));
       }
     }
   }
