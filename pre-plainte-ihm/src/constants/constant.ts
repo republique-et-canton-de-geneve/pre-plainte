@@ -343,6 +343,8 @@ export const TYPES_DOMMAGE = [
   { value: "autre", labelKey: "typesDommage.autre" },
 ] as const;
 
+export const FRIENDLY_CAPTCHA_API_ENDPOINT = "eu";
+
 export const DEVISES = [
   { value: "CHF", labelKey: "incidentTypes.chf" },
   { value: "EUR", labelKey: "incidentTypes.euro" },
