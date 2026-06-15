@@ -52,7 +52,7 @@
 
       <v-alert type="info" class="mb-6" density="comfortable" :icon="mobile ? false : undefined">
         {{ t("disclaimer.casNonTrouve") }}
-        <a :href="postesPoliceUrl" target="_blank" rel="noopener noreferrer">
+        <a :href="POSTES_POLICE_URL" target="_blank" rel="noopener noreferrer">
           {{ t("disclaimer.prendreRendezVousPoste") }}
         </a>
       </v-alert>
@@ -161,7 +161,7 @@ import Captcha from "@/components/captcha/Captcha.vue";
 import { storeToRefs } from "pinia";
 import ExitActionsForm from "@/components/actions/ExitActionsForm.vue";
 import AccessibleVSelect from "@/components/accessibility/AccessibleVSelect.vue";
-import { TYPES_DOMMAGE } from "@/constants/constant.ts";
+import { POSTES_POLICE_URL, TYPES_DOMMAGE } from "@/constants/constant.ts";
 import { toTranslatedOptions } from "@/utils/helpers/traductionHelper.ts";
 
 const { t } = useI18n();
@@ -175,8 +175,6 @@ const emit = defineEmits<{ continue: [] }>();
 const { captchaToken } = storeToRefs(store);
 const captchaSiteKey = getCaptchaSitekey() || "";
 const captchaEnabled = isCaptchaEnabled();
-const postesPoliceUrl = "https://app2.ge.ch/tergeoportal/apps/instant/sidebar/index.html?appid=7e0a80479c7744eba90795bc97c8ccd4";
-
 const form = useForm<PrePlainteFormFields>({
   initialValues: store.userFormData,
 });
