@@ -1,19 +1,5 @@
 <template>
   <div class="inputs-fields">
-    <AccessibleVSelect
-      :label="t('dommages.typeDommage')"
-      required
-      v-model="typeDommage"
-      :items="typeDommageOptions"
-      :error-messages="typeDommageError"
-      :multiple="false"
-      item-title="label"
-      item-value="value"
-      class="mb-8"
-      persistent-hint
-      :hint="t('dommages.hintTypeDommage')"
-    />
-
     <BaseRadioGroup
       v-model="constatPresent"
       :label="t('dommages.constat')"
@@ -166,7 +152,6 @@ import { computed, nextTick, ref, watch, onMounted, toRaw } from "vue";
 import { useField, useFormContext } from "vee-validate";
 import { useI18n } from "vue-i18n";
 import {
-  TYPES_DOMMAGE,
   DEVISES,
   CATEGORIES_OBJETS,
   VOL_OBJET_CATEGORIE,
@@ -201,7 +186,7 @@ const { t } = useI18n();
 const libelleResumeChampAbsent = computed(() => EMPTY_VALUE_EM_DASH);
 const { setFieldValue, setFieldError } = useFormContext<PrePlainteFormFields>();
 
-const { value: typeDommage, errorMessage: typeDommageError } = useField<string>("typeDommage", undefined, {
+const { value: typeDommage } = useField<string>("typeDommage", undefined, {
   keepValueOnUnmount: true,
 });
 const { value: montantEstime, errorMessage: montantEstimeError } = useField("montantEstime");
@@ -247,7 +232,6 @@ const draftPanelRef = ref<HTMLElement | null>(null);
 const editingIndex = ref<number | null>(null);
 const isRestoring = ref(false);
 
-const typeDommageOptions = computed(() => toTranslatedOptions(TYPES_DOMMAGE, t));
 const deviseOptions = computed(() => toTranslatedOptions(DEVISES, t));
 const natureDommageOptions = computed(() => [
   { label: t("dommages.degradations"), value: "degradations" },

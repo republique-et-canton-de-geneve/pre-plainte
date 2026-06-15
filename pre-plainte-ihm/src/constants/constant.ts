@@ -343,6 +343,8 @@ export const TYPES_DOMMAGE = [
   { value: "autre", labelKey: "typesDommage.autre" },
 ] as const;
 
+export const POSTES_POLICE_URL =
+  "https://app2.ge.ch/tergeoportal/apps/instant/sidebar/index.html?appid=7e0a80479c7744eba90795bc97c8ccd4";
 export const FRIENDLY_CAPTCHA_API_ENDPOINT = "eu";
 
 export const DEVISES = [
