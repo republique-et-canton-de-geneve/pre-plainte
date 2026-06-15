@@ -3,40 +3,10 @@
     <h1 class="mb-4 text-h1 text-md-h2 d-none d-md-block">{{ t("titreApplication.prePlainte") }}</h1>
     <v-card class="pa-2 pa-md-6 mb-4">
       <h2 class="pre-plainte-main-card-title mb-4 text-h2">{{ t("informationsEvenement.titre") }}</h2>
-      <h3>{{ t("informationsEvenement.typeIncident") }}</h3>
-      <AccessibleVSelect
-        v-model="typeIncident"
-        :label="t('informationsEvenement.typeIncident')"
-        required
-        :items="[
-          { label: t('incidentTypes.vol'), value: 'vol' },
-          { label: t('dommages.titre'), value: 'degat-delit' },
-          { label: t('cybercrime.titre'), value: 'cybercrime' },
-        ]"
-        :error-messages="typeIncidentError"
-        :hint="t('informationsEvenement.hintTypeIncident')"
-        persistent-hint
-        clearable
-        class="mb-8 mt-5"
-      />
       <VolForm v-if="typeIncident === 'vol'" />
       <DegatMaterielForm v-if="typeIncident === 'degat-delit'" />
 
       <div v-if="typeIncident === 'cybercrime'" class="inputs-fields">
-        <AccessibleVSelect
-          v-model="typeCybercrime"
-          :items="typeCybercrimeOptions"
-          item-title="label"
-          item-value="value"
-          :label="t('cybercrime.type')"
-          required
-          :error-messages="typeCybercrimeError"
-          variant="outlined"
-          class="mb-8"
-          :hint="t('cybercrime.hintType')"
-          persistent-hint
-          clearable
-        />
         <v-textarea
           v-if="showCybercrimeUrlDescriptionAndPieces"
           clearable
@@ -60,12 +30,6 @@
         <div class="mb-8">
           <PieceJointe v-model="autresDocuments" :label="t('cybercrime.autresDocuments')" />
         </div>
-      </div>
-
-      <div v-if="typeIncidentError" class="mb-4">
-        <v-alert type="error" variant="tonal" class="mb-8" :icon="mobile ? false : undefined">
-          {{ typeIncidentError }}
-        </v-alert>
       </div>
 
       <template v-if="typeIncident === 'vol' || typeIncident === 'degat-delit' || typeCybercrime === TYPE_CYBERCRIME_COMMANDE_FRAUDULEUSE">
@@ -254,7 +218,6 @@ import VolForm from "@/components/pre-plainte-component/event-info/vol/VolForm.v
 import DegatMaterielForm from "@/components/pre-plainte-component/event-info/degat/DegatMaterielForm.vue";
 import AdresseEvent from "@/components/adresse/AdresseEvent.vue";
 import PieceJointe from "@/components/piece-jointe/PieceJointe.vue";
-import AccessibleVSelect from "@/components/accessibility/AccessibleVSelect.vue";
 import { applyDateMask, applyTimeMask } from "@/utils/helpers/dateHelpers.ts";
 import ExitActionsForm from "@/components/actions/ExitActionsForm.vue";
 import { isCybercrimeTypeWithoutDetailFields } from "@/constants/constant";
@@ -279,7 +242,7 @@ const form = useForm<PrePlainteFormFields>({
 
 const { handleSubmit, setFieldValue, values } = form;
 
-const { value: typeIncident, errorMessage: typeIncidentError } = useField<string>("typeIncident");
+const { value: typeIncident } = useField<string>("typeIncident");
 
 const openFromRecap = localStorage.getItem("pp-open-section");
 
@@ -311,7 +274,7 @@ const { value: heureDernierContact, errorMessage: heureDernierContactError } = u
 const selectedEventAddress = ref<AddressResult | null>(null);
 const eventSearchText = ref("");
 
-const { value: typeCybercrime, errorMessage: typeCybercrimeError } = useField<string>("typeCybercrime");
+const { value: typeCybercrime } = useField<string>("typeCybercrime");
 const { value: descriptionCybercrime, errorMessage: descriptionCybercrimeError } = useField("descriptionCybercrime");
 const { value: fichiers } = useField<File[]>("fichiers");
 const { value: justificatifsPaiement } = useField<File[]>("justificatifsPaiement");
@@ -346,139 +309,140 @@ useFormReset(form, resetConditions.eventInfo, () => {
   eventSearchText.value = "";
 });
 
-watch(typeCybercrime, cybercrimeType => {
-  if (isCybercrimeTypeWithoutDetailFields(cybercrimeType)) {
-    setFieldValue("descriptionCybercrime", "");
-    setFieldValue("justificatifsPaiement", []);
-    setFieldValue("copiesEcran", []);
-    setFieldValue("autresDocuments", []);
-  }
+watch(
+  typeCybercrime,
+  cybercrimeType => {
+    if (isCybercrimeTypeWithoutDetailFields(cybercrimeType)) {
+      setFieldValue("descriptionCybercrime", "");
+      setFieldValue("justificatifsPaiement", []);
+      setFieldValue("copiesEcran", []);
+      setFieldValue("autresDocuments", []);
+    }
 
-  if (cybercrimeType !== TYPE_CYBERCRIME_ACHAT_NON_RECU && cybercrimeType !== TYPE_CYBERCRIME_FAUSSE_ANNONCE) {
-    setFieldValue("datePremierContact", "");
-    setFieldValue("heurePremierContact", "");
-    setFieldValue("dateDernierContact", "");
-    setFieldValue("heureDernierContact", "");
-  }
+    if (cybercrimeType !== TYPE_CYBERCRIME_ACHAT_NON_RECU && cybercrimeType !== TYPE_CYBERCRIME_FAUSSE_ANNONCE) {
+      setFieldValue("datePremierContact", "");
+      setFieldValue("heurePremierContact", "");
+      setFieldValue("dateDernierContact", "");
+      setFieldValue("heureDernierContact", "");
+    }
 
-  if (cybercrimeType !== TYPE_CYBERCRIME_COMMANDE_FRAUDULEUSE) {
-    setFieldValue("dateDebutEvenement", "");
-    setFieldValue("heureDebutEvenement", "");
-    setFieldValue("dateFinEvenement", "");
-    setFieldValue("heureFinEvenement", "");
-    setFieldValue("prestataire", "");
-    setFieldValue("dateDecouverte", "");
-    setFieldValue("montant", "");
-    setFieldValue("assurance", null);
-    setFieldValue("emailCommandeInconnu", false);
-    setFieldValue("emailCommande", "");
-    setFieldValue("telephoneCommandeInconnu", false);
-    setFieldValue("telephoneCommande", "");
-    setFieldValue("livraisonAdresseLesee", null);
-    setFieldValue("livraisonAdresse", "");
-    setFieldValue("livraisonAdressePostale", "");
-    setFieldValue("livraisonNpa", "");
-    setFieldValue("livraisonLocalite", "");
-    setFieldValue("livraisonLocaliteCode", "");
-    setFieldValue("livraisonPays", "");
-  }
+    if (cybercrimeType !== TYPE_CYBERCRIME_COMMANDE_FRAUDULEUSE) {
+      setFieldValue("dateDebutEvenement", "");
+      setFieldValue("heureDebutEvenement", "");
+      setFieldValue("dateFinEvenement", "");
+      setFieldValue("heureFinEvenement", "");
+      setFieldValue("prestataire", "");
+      setFieldValue("dateDecouverte", "");
+      setFieldValue("montant", "");
+      setFieldValue("assurance", null);
+      setFieldValue("emailCommandeInconnu", false);
+      setFieldValue("emailCommande", "");
+      setFieldValue("telephoneCommandeInconnu", false);
+      setFieldValue("telephoneCommande", "");
+      setFieldValue("livraisonAdresseLesee", null);
+      setFieldValue("livraisonAdresse", "");
+      setFieldValue("livraisonAdressePostale", "");
+      setFieldValue("livraisonNpa", "");
+      setFieldValue("livraisonLocalite", "");
+      setFieldValue("livraisonLocaliteCode", "");
+      setFieldValue("livraisonPays", "");
+    }
 
-  if (cybercrimeType !== TYPE_CYBERCRIME_ACHAT_NON_RECU) {
-    setFieldValue("montantDelitAchatLigne", "");
-    setFieldValue("articleNonLivreDescription", "");
-    setFieldValue("prenomVendeur", "");
-    setFieldValue("nomVendeur", "");
-    setFieldValue("telephoneVendeurInconnu", false);
-    setFieldValue("telephoneVendeur", "");
-    setFieldValue("emailVendeurInconnu", false);
-    setFieldValue("emailVendeur", "");
-    setFieldValue("adresseVendeurInconnue", false);
-    setFieldValue("vendeurAdresse", "");
-    setFieldValue("vendeurAdressePostale", "");
-    setFieldValue("vendeurNpa", "");
-    setFieldValue("vendeurLocalite", "");
-    setFieldValue("vendeurLocaliteCode", "");
-    setFieldValue("vendeurPays", "");
-    setFieldValue("achatViaPlaceMarche", null);
-    setFieldValue("plateforme", "");
-    setFieldValue("plateformeAutre", "");
-    setFieldValue("plateformeId", "");
-    setFieldValue("nomEntrepriseVendeur", "");
-    setFieldValue("siteWebEntrepriseVendeur", "");
-    setFieldValue("annonceDocument", []);
-    setFieldValue("annonceDocumentIndisponible", false);
-    setFieldValue("raisonAbsenceAnnonce", "");
-    setFieldValue("moyenPaiement", "");
-    setFieldValue("moyenPaiementAutre", "");
-    setFieldValue("ibanBeneficiaire", "");
-    setFieldValue("comptePaypalBeneficiaire", "");
-    setFieldValue("numeroTwintBeneficiaire", "");
-    setFieldValue("adresseWalletCrypto", "");
-    setFieldValue("hashTransactionCrypto", "");
-    setFieldValue("societeBeneficiaire", "");
-    setFieldValue("nomBeneficiaire", "");
-    setFieldValue("prenomBeneficiaire", "");
-    setFieldValue("dateOperation", "");
-    setFieldValue("preuvePaiementDocument", []);
-    setFieldValue("preuvePaiementIndisponible", false);
-    setFieldValue("raisonAbsencePreuvePaiement", "");
-    setFieldValue("copieIdentiteTransmiseAuteur", null);
-    setFieldValue("copieIdentiteTransmiseAuteurDocument", []);
-    setFieldValue("copieIdentiteAuteurTransmise", null);
-    setFieldValue("copieIdentiteAuteurDocument", []);
-  }
+    if (cybercrimeType !== TYPE_CYBERCRIME_ACHAT_NON_RECU) {
+      setFieldValue("montantDelitAchatLigne", "");
+      setFieldValue("articleNonLivreDescription", "");
+      setFieldValue("prenomVendeur", "");
+      setFieldValue("nomVendeur", "");
+      setFieldValue("telephoneVendeurInconnu", false);
+      setFieldValue("telephoneVendeur", "");
+      setFieldValue("emailVendeurInconnu", false);
+      setFieldValue("emailVendeur", "");
+      setFieldValue("adresseVendeurInconnue", false);
+      setFieldValue("vendeurAdresse", "");
+      setFieldValue("vendeurAdressePostale", "");
+      setFieldValue("vendeurNpa", "");
+      setFieldValue("vendeurLocalite", "");
+      setFieldValue("vendeurLocaliteCode", "");
+      setFieldValue("vendeurPays", "");
+      setFieldValue("achatViaPlaceMarche", null);
+      setFieldValue("plateforme", "");
+      setFieldValue("plateformeAutre", "");
+      setFieldValue("plateformeId", "");
+      setFieldValue("nomEntrepriseVendeur", "");
+      setFieldValue("siteWebEntrepriseVendeur", "");
+      setFieldValue("annonceDocument", []);
+      setFieldValue("annonceDocumentIndisponible", false);
+      setFieldValue("raisonAbsenceAnnonce", "");
+      setFieldValue("moyenPaiement", "");
+      setFieldValue("moyenPaiementAutre", "");
+      setFieldValue("ibanBeneficiaire", "");
+      setFieldValue("comptePaypalBeneficiaire", "");
+      setFieldValue("numeroTwintBeneficiaire", "");
+      setFieldValue("adresseWalletCrypto", "");
+      setFieldValue("hashTransactionCrypto", "");
+      setFieldValue("societeBeneficiaire", "");
+      setFieldValue("nomBeneficiaire", "");
+      setFieldValue("prenomBeneficiaire", "");
+      setFieldValue("dateOperation", "");
+      setFieldValue("preuvePaiementDocument", []);
+      setFieldValue("preuvePaiementIndisponible", false);
+      setFieldValue("raisonAbsencePreuvePaiement", "");
+      setFieldValue("copieIdentiteTransmiseAuteur", null);
+      setFieldValue("copieIdentiteTransmiseAuteurDocument", []);
+      setFieldValue("copieIdentiteAuteurTransmise", null);
+      setFieldValue("copieIdentiteAuteurDocument", []);
+    }
 
-  if (cybercrimeType !== TYPE_CYBERCRIME_FAUSSE_ANNONCE) {
-    setFieldValue("urlComplete", "");
-    setFieldValue("titreAnnonce", "");
-    setFieldValue("nomBailleur", "");
-    setFieldValue("emailBailleurInconnu", false);
-    setFieldValue("emailBailleur", "");
-    setFieldValue("telephoneBailleurInconnu", false);
-    setFieldValue("telephoneBailleur", "");
-    setFieldValue("adresseBienImmobilier", "");
-    setFieldValue("montantDemande", "");
-    setFieldValue("modePaiementDemande", "");
-  }
-});
+    if (cybercrimeType !== TYPE_CYBERCRIME_FAUSSE_ANNONCE) {
+      setFieldValue("urlComplete", "");
+      setFieldValue("titreAnnonce", "");
+      setFieldValue("nomBailleur", "");
+      setFieldValue("emailBailleurInconnu", false);
+      setFieldValue("emailBailleur", "");
+      setFieldValue("telephoneBailleurInconnu", false);
+      setFieldValue("telephoneBailleur", "");
+      setFieldValue("adresseBienImmobilier", "");
+      setFieldValue("montantDemande", "");
+      setFieldValue("modePaiementDemande", "");
+    }
+  },
+  { immediate: true },
+);
 
-watch(typeIncident, incident => {
-  if (incident !== "cybercrime") {
-    setFieldValue("typeCybercrime", "");
-    setFieldValue("descriptionCybercrime", "");
-  }
+watch(
+  typeIncident,
+  incident => {
+    if (incident !== "cybercrime") {
+      setFieldValue("typeCybercrime", "");
+      setFieldValue("descriptionCybercrime", "");
+    }
 
-  if (incident !== "vol") {
-    setFieldValue("volDansVehicule", null);
-    setFieldValue("typeObjet", null);
-    setFieldValue("fabricant", null);
-    setFieldValue("modele", null);
-    setFieldValue("numeroSerie", "");
-    setFieldValue("numeroIMEI", "");
-    setFieldValue("avezVousDegradation", null);
-  }
+    if (incident !== "vol") {
+      setFieldValue("volDansVehicule", null);
+      setFieldValue("typeObjet", null);
+      setFieldValue("fabricant", null);
+      setFieldValue("modele", null);
+      setFieldValue("numeroSerie", "");
+      setFieldValue("numeroIMEI", "");
+      setFieldValue("avezVousDegradation", null);
+    }
 
-  if (incident !== "degat-delit") {
-    setFieldValue("typeDommage", "");
-    setFieldValue("montantEstime", "");
-    setFieldValue("devise", "");
-    setFieldValue("naturesDommage", []);
-    setFieldValue("description", "");
-    setFieldValue("dateConstat", "");
-    setFieldValue("constatPresent", null);
-  }
-});
+    if (incident !== "degat-delit") {
+      setFieldValue("typeDommage", "");
+      setFieldValue("montantEstime", "");
+      setFieldValue("devise", "");
+      setFieldValue("naturesDommage", []);
+      setFieldValue("description", "");
+      setFieldValue("dateConstat", "");
+      setFieldValue("constatPresent", null);
+    }
+  },
+  { immediate: true },
+);
 
 watch(locale, () => {
   form.validate();
 });
-
-/** Types proposés à la saisie (hors cyberharcèlement, rançongiciel, autre — non disponibles pour l’instant). */
-const typeCybercrimeOptions = computed(() => [
-  { label: t("cybercrime.commandeFrauduleuse"), value: TYPE_CYBERCRIME_COMMANDE_FRAUDULEUSE },
-  { label: t("cybercrime.achatNonRecu"), value: TYPE_CYBERCRIME_ACHAT_NON_RECU },
-  { label: t("cybercrime.fausseAnnonce"), value: TYPE_CYBERCRIME_FAUSSE_ANNONCE },
-]);
 
 watch(
   () => [typeIncident.value, typeCybercrime.value] as const,
