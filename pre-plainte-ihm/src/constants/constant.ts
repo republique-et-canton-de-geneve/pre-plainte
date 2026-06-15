@@ -21,6 +21,8 @@ export const STEPS = [
 
 export const TOTAL_STEPS = 7;
 
+export const STEP_UPDATE_APPOINTMENT_VALIDATION = 3;
+
 export const LIENS_AVEC_PERSONNE = [
   {
     value: "MOI_MEME",

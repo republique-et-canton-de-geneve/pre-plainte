@@ -51,6 +51,7 @@ import ModifierRendezVousForm from "@/components/ModifierRendezVousForm.vue";
 import { computed, onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import ExitActionsForm from "@/components/actions/ExitActionsForm.vue";
+import { STEP_UPDATE_APPOINTMENT_VALIDATION } from "@/constants/constant.ts";
 
 const store = useCreatePrePlainteStore();
 const { step, isLoading } = storeToRefs(store);
@@ -67,13 +68,13 @@ const handleCodeVerified = () => {
 };
 
 const handleCreneauSelected = () => {
-  store.setStep(3);
+  store.setStep(STEP_UPDATE_APPOINTMENT_VALIDATION);
 };
 
 const handleUpdated = (message: string) => {
   successMessage.value = message;
   isLoading.value = false;
-  store.setStep(3);
+  store.setStep(STEP_UPDATE_APPOINTMENT_VALIDATION);
 };
 
 const handleCancel = () => {

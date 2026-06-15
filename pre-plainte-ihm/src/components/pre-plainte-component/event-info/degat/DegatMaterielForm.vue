@@ -189,6 +189,7 @@ import { checkLength, validerPlaqueVehicule } from "@/utils/helpers/volObjetVolH
 import { RipolService } from "@/services/ripolService.ts";
 
 const TEXTE_VIDE = "";
+const CHAMP_REQUIS_ERREUR = "validation.champRequis";
 
 const chaineFormulaire = (v: unknown) => String(v ?? TEXTE_VIDE);
 const texteOuVide = (v: string | undefined | null) => v ?? TEXTE_VIDE;
@@ -541,6 +542,7 @@ const validerVehiculeDommage = async (): Promise<boolean> => {
   } else {
     next.push(snapshot);
   }
+
   mettreListe(next);
   editingIndex.value = null;
   clearDraftApresValidation();
