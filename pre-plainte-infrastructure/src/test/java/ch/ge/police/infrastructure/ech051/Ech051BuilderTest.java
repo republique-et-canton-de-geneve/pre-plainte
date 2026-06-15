@@ -318,6 +318,28 @@ class Ech051BuilderTest {
         .build();
   }
 
+  private Ech0051DocumentPayload.ObjectItem sampleObject() {
+    return Ech0051DocumentPayload.ObjectItem.builder()
+        .key("OBJ-SAMPLE")
+        .typeOfObject(ripolRef("713103", "Téléphone mobile", "RIPOL", "sacheBezeichnung"))
+        .fabricant(ripolRef("4865", "Apple", "RIPOL", "sacheMarke"))
+        .modele(ripolRef("224124", "iPhone XS Max", "RIPOL", "sacheModell"))
+        .couleur(ripolRef("1101", "beige-brun", "RIPOL", "sacheFarbe"))
+        .couleurSecondaire(ripolRef("1102", "noir", "RIPOL", "sacheFarbe"))
+        .build();
+  }
+
+  private Ech0051DocumentPayload.VehicleItem sampleVehicle() {
+    return Ech0051DocumentPayload.VehicleItem.builder()
+        .key("VEH-SAMPLE")
+        .typeOfVehicle(ripolRef("BIKE", "Vélo", "RIPOL", "vehicleTypeTable"))
+        .mark(ripolRef("TREK", "Trek", "RIPOL", "vehicleBrandTable"))
+        .modelType(ripolRef("DOMANE", "Domane", "RIPOL", "vehicleModelTable"))
+        .colour(ripolRef("BLUE", "Bleu", "RIPOL", "vehicleColourTable"))
+        .colourSecondary(ripolRef("BLACK", "Noir", "RIPOL", "vehicleColourSecondaryTable"))
+        .build();
+  }
+
   private Ech0051DocumentPayload.RipolReference ripolRef(String code, String label, String source, String sourceTable) {
     return Ech0051DocumentPayload.RipolReference.builder().code(code).label(label).source(source).sourceTable(sourceTable).build();
   }
