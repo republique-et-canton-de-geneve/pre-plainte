@@ -148,12 +148,14 @@
     "intro1": "Online pre-complaint",
     "intro2": "must not be used",
     "intro3": "in the following situations:",
-    "condition1": "You know the presumed perpetrator",
-    "condition2": "You wish to report damage caused by another vehicle",
-    "condition3": "You have been the victim of carjacking (vehicle theft with violence or threats)",
+    "condition1": "You know the identity of the presumed perpetrator.",
+    "condition2": "Your situation concerns the theft of a registered vehicle.",
+    "condition3": "Your situation concerns the theft of a registration plate.",
     "avantConfirmation": "Before continuing, please confirm that your situation does not correspond to any of the cases mentioned above:",
     "confirmeIdentite": "I confirm that I do not know the identity of the person who committed the acts.",
-    "confirmeSituation": "I confirm that my situation does not concern either carjacking or a road accident."
+    "confirmeSituation": "I confirm that my situation does not concern the theft of a registered vehicle or a registration plate.",
+    "casNonTrouve": "If you cannot find your case,",
+    "prendreRendezVousPoste": "make an appointment directly at a police station."
   },
   "informationsPersonnelles": {
     "titre": "Personal information",

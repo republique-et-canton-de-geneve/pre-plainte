@@ -148,12 +148,14 @@
     "intro1": "A pré-queixa online",
     "intro2": "não deve ser utilizada",
     "intro3": "nas seguintes situações:",
-    "condition1": "Conhece a presumível autora ou o presumível autor dos factos",
-    "condition2": "Pretende declarar danos causados por outro veículo",
-    "condition3": "Foi vítima de carjacking (roubo de veículo com violência ou ameaça)",
+    "condition1": "Conhece a identidade da presumível autora ou do presumível autor dos factos.",
+    "condition2": "A sua situação diz respeito ao roubo de um veículo matriculado.",
+    "condition3": "A sua situação diz respeito ao roubo de uma matrícula.",
     "avantConfirmation": "Antes de continuar, confirme que a sua situação não corresponde a nenhum dos casos acima mencionados:",
     "confirmeIdentite": "Confirmo que não conheço a identidade da autora ou do autor dos factos.",
-    "confirmeSituation": "Confirmo que a minha situação não diz respeito nem a carjacking nem a acidente rodoviário."
+    "confirmeSituation": "Confirmo que a minha situação não diz respeito ao roubo de um veículo matriculado ou de uma matrícula.",
+    "casNonTrouve": "Se não encontrar o seu caso,",
+    "prendreRendezVousPoste": "marque diretamente uma consulta num posto de polícia."
   },
   "informationsPersonnelles": {
     "titre": "Informações pessoais",

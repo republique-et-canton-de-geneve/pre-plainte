@@ -3,6 +3,60 @@
     <h1 class="mb-5 text-h1 text-md-h2 d-none d-md-block">{{ t("titreApplication.prePlainte") }}</h1>
     <v-card class="pa-2 pa-md-8" elevation="1">
       <h2 class="pre-plainte-main-card-title text-h2 mb-4">{{ t("steps.informationsGenerales") }}</h2>
+      <h3>{{ t("informationsEvenement.typeIncident") }}</h3>
+      <AccessibleVSelect
+        v-model="typeIncident"
+        :label="t('informationsEvenement.typeIncident')"
+        required
+        :items="[
+          { label: t('incidentTypes.vol'), value: 'vol' },
+          { label: t('dommages.titre'), value: 'degat-delit' },
+          { label: t('cybercrime.titre'), value: 'cybercrime' },
+        ]"
+        :error-messages="typeIncidentError"
+        :hint="t('informationsEvenement.hintTypeIncident')"
+        persistent-hint
+        clearable
+        class="mb-8 mt-5"
+      />
+
+      <AccessibleVSelect
+        v-if="typeIncident === 'degat-delit'"
+        v-model="typeDommage"
+        :label="t('dommages.typeDommage')"
+        required
+        :items="typeDommageOptions"
+        :error-messages="typeDommageError"
+        item-title="label"
+        item-value="value"
+        :hint="t('dommages.hintTypeDommage')"
+        persistent-hint
+        class="mb-8"
+      />
+
+      <AccessibleVSelect
+        v-if="typeIncident === 'cybercrime'"
+        v-model="typeCybercrime"
+        :items="typeCybercrimeOptions"
+        item-title="label"
+        item-value="value"
+        :label="t('cybercrime.type')"
+        required
+        :error-messages="typeCybercrimeError"
+        variant="outlined"
+        class="mb-8"
+        :hint="t('cybercrime.hintType')"
+        persistent-hint
+        clearable
+      />
+
+      <v-alert type="info" class="mb-6" density="comfortable" :icon="mobile ? false : undefined">
+        {{ t("disclaimer.casNonTrouve") }}
+        <a :href="postesPoliceUrl" target="_blank" rel="noopener noreferrer">
+          {{ t("disclaimer.prendreRendezVousPoste") }}
+        </a>
+      </v-alert>
+
       <v-alert type="info" class="mb-6" density="comfortable" :icon="mobile ? false : undefined">
         <div class="text-body-2 text-md-body-1">
           {{ t("disclaimer.intro1") }}
@@ -95,7 +149,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { useDisplay } from "vuetify/framework";
 import { useTheme } from "vuetify";
@@ -106,6 +160,9 @@ import { getCaptchaSitekey, isCaptchaEnabled } from "@/config/config.ts";
 import Captcha from "@/components/captcha/Captcha.vue";
 import { storeToRefs } from "pinia";
 import ExitActionsForm from "@/components/actions/ExitActionsForm.vue";
+import AccessibleVSelect from "@/components/accessibility/AccessibleVSelect.vue";
+import { TYPES_DOMMAGE } from "@/constants/constant.ts";
+import { toTranslatedOptions } from "@/utils/helpers/traductionHelper.ts";
 
 const { t } = useI18n();
 const { mobile } = useDisplay();
@@ -118,28 +175,65 @@ const emit = defineEmits<{ continue: [] }>();
 const { captchaToken } = storeToRefs(store);
 const captchaSiteKey = getCaptchaSitekey() || "";
 const captchaEnabled = isCaptchaEnabled();
+const postesPoliceUrl = "https://app2.ge.ch/tergeoportal/apps/instant/sidebar/index.html?appid=7e0a80479c7744eba90795bc97c8ccd4";
 
 const form = useForm<PrePlainteFormFields>({
   initialValues: store.userFormData,
 });
 
-const { handleSubmit } = form;
+const { handleSubmit, setFieldError, setFieldValue } = form;
 
 const { value: confirmeIdentite } = useField("confirmeIdentite");
 const { value: confirmeSituation } = useField("confirmeSituation");
+const { value: typeIncident, errorMessage: typeIncidentError } = useField<string>("typeIncident");
+const { value: typeDommage, errorMessage: typeDommageError } = useField<string>("typeDommage");
+const { value: typeCybercrime, errorMessage: typeCybercrimeError } = useField<string>("typeCybercrime");
+
+const typeDommageOptions = computed(() => toTranslatedOptions(TYPES_DOMMAGE, t));
+const typeCybercrimeOptions = computed(() => [
+  { label: t("cybercrime.commandeFrauduleuse"), value: "commande-frauduleuse" },
+  { label: t("cybercrime.achatNonRecu"), value: "achat-non-recu" },
+  { label: t("cybercrime.fausseAnnonce"), value: "fausse-annonce" },
+]);
 
 const canContinue = computed(
   () =>
+    Boolean(typeIncident.value) &&
+    (typeIncident.value !== "degat-delit" || Boolean(typeDommage.value)) &&
+    (typeIncident.value !== "cybercrime" || Boolean(typeCybercrime.value)) &&
     confirmeIdentite.value &&
     confirmeSituation.value &&
     (!captchaEnabled || Boolean(captchaToken.value)),
 );
 
 const onSubmit = handleSubmit(formValues => {
+  setFieldError("typeIncident", typeIncident.value ? undefined : t("validation.typeIncidentRequis"));
+  setFieldError(
+    "typeDommage",
+    typeIncident.value === "degat-delit" && !typeDommage.value ? t("validation.typeDommageRequis") : undefined,
+  );
+  setFieldError(
+    "typeCybercrime",
+    typeIncident.value === "cybercrime" && !typeCybercrime.value ? t("validation.typeCybercrimeRequis") : undefined,
+  );
+
+  if (!canContinue.value) {
+    return;
+  }
+
   if (captchaEnabled && !captchaToken.value) {
     return;
   }
   store.setUserFormData(formValues);
   emit("continue");
+});
+
+watch(typeIncident, incident => {
+  if (incident !== "degat-delit") {
+    setFieldValue("typeDommage", "");
+  }
+  if (incident !== "cybercrime") {
+    setFieldValue("typeCybercrime", "");
+  }
 });
 </script>

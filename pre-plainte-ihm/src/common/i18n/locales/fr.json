@@ -148,12 +148,14 @@
     "intro1": "La pré-plainte en ligne",
     "intro2": "ne doit pas être utilisée",
     "intro3": "dans les situations suivantes :",
-    "condition1": "Vous connaissez la personne autrice présumée des faits",
-    "condition2": "Vous souhaitez déclarer des dommages causés par un autre véhicule",
-    "condition3": "Vous avez été victime de carjacking (vol de véhicule avec violence ou menace)",
+    "condition1": "Vous connaissez l’identité de la personne autrice présumée des faits.",
+    "condition2": "Votre situation concerne le vol d'un véhicule immatriculé.",
+    "condition3": "Votre situation concerne le vol de plaque d'immatriculation.",
     "avantConfirmation": "Avant de poursuivre, veuillez confirmer que votre situation ne correspond à aucun des cas mentionnés ci-dessus :",
     "confirmeIdentite": "Je confirme que je ne connais pas l'identité de l'autrice ou de l'auteur des faits.",
-    "confirmeSituation": "Je confirme que ma situation ne concerne ni un carjacking ni un accident de la route."
+    "confirmeSituation": "Je confirme que ma situation ne concerne pas le vol d'un véhicule immatriculé ou de plaque.",
+    "casNonTrouve": "Si vous ne trouvez pas votre cas,",
+    "prendreRendezVousPoste": "prenez directement rendez-vous dans un poste de police."
   },
   "informationsPersonnelles": {
     "titre": "Informations personnelles",
