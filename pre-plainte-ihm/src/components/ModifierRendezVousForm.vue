@@ -140,6 +140,7 @@ import type {Service} from "@/composables/useLeafletMap";
 import type {AlertType, Availability, IncidentType, SelectedCreneau} from "@/types/rendez-vous-interface";
 import { buildUpdateAppointmentPayload } from "@/utils/helpers/esiriusFormatBuilder";
 import { getCaptchaSitekey } from "@/config/config.ts";
+import { STEP_UPDATE_APPOINTMENT_VALIDATION } from "@/constants/constant.ts";
 
 const props = defineProps<{
   currentStep: number;
@@ -156,6 +157,8 @@ const DAY_START = 6;
 const DAY_END = 8;
 const TIME_START = 9;
 const DATE_PARTS_COUNT = 3;
+const MINIMUM_PARTS_COUNT = 3;
+const MESSAGE_ERREUR = "modification.messageErreur";
 
 const emit = defineEmits<{
   "code-verified": [];
@@ -212,7 +215,7 @@ const formattedCurrentAppointment = computed(() => {
   const beginTime = appointment.beginTime;
 
   const dateParts = beginDate.split("-");
-  const formattedDate = dateParts.length === 3 ? `${dateParts[2]}.${dateParts[1]}.${dateParts[0]}` : beginDate;
+  const formattedDate = dateParts.length === DATE_PARTS_COUNT ? `${dateParts[2]}.${dateParts[1]}.${dateParts[0]}` : beginDate;
 
   const formattedTime = beginTime || "";
 
@@ -256,7 +259,7 @@ const onSubmitCode = handleSubmitCode(async (formValues: { rdvCode: string }) =>
 
 const extractIncidentType = (personalIdentity: string): IncidentType | null => {
   const parts = personalIdentity.split("-");
-  const eventTypeChar = parts.length >= 3 ? parts[2].toLowerCase() : "";
+  const eventTypeChar = parts.length >= MINIMUM_PARTS_COUNT ? parts[2].toLowerCase() : "";
   if (eventTypeChar === "c") {
     return "cyber";
   }
@@ -448,7 +451,7 @@ const onSelectCreneau = () => {
 
   const c = creneauxPagines.value[creneauPrefere.value];
   if (!c) {
-    showAlert(t("modification.messageErreur"), "error");
+    showAlert(t(MESSAGE_ERREUR), "error");
     return;
   }
 
@@ -520,7 +523,7 @@ const formatDateTimeFrench = (dateString: string): string => {
 
 const handleUpdateAppointment = async (): Promise<void> => {
   if (!currentAppointment.value || !selectedCreneau.value) {
-    showAlert(t("modification.messageErreur"), "error");
+    showAlert(t(MESSAGE_ERREUR), "error");
     return;
   }
 
@@ -544,10 +547,10 @@ const handleUpdateAppointment = async (): Promise<void> => {
     prePlainteIsLoading.value = false;
     prePlainteStore.isLoading = false;
     await nextTick();
-    prePlainteStore.setStep(3);
+    prePlainteStore.setStep(STEP_UPDATE_APPOINTMENT_VALIDATION);
     emit("updated", message);
   } catch (error: unknown) {
-    const errorMsg = error instanceof Error ? error.message : t("modification.messageErreur");
+    const errorMsg = error instanceof Error ? error.message : t(MESSAGE_ERREUR);
     showAlert(errorMsg, "error");
     isUpdating.value = false;
     prePlainteIsLoading.value = false;

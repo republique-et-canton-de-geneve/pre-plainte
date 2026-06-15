@@ -1887,73 +1887,52 @@ const formatTypeDocumentIdentite = (val?: string) => {
   }
 };
 
-const formatPostePersonneMorale = (val?: string) => {
-  switch (val) {
-    case "administratrice_administrateur":
-      return t("typePersonneMorale.administratriceAdministrateur");
-    case "associee_associe":
-      return t("typePersonneMorale.associeeAssocie");
-    case "avocate_avocat":
-      return t("typePersonneMorale.avocateAvocat");
-    case "chargee_affaires_charge_affaires":
-      return t("typePersonneMorale.chargeeAffairesChargeAffaires");
-    case "chargee_communication_charge_communication":
-      return t("typePersonneMorale.chargeeCommunicationChargeCommunication");
-    case "chef_projet":
-      return t("typePersonneMorale.chefProjet");
-    case "collaboratrice_collaborateur":
-      return t("typePersonneMorale.collaboratriceCollaborateur");
-    case "commercante_commercant":
-      return t("typePersonneMorale.commercanteCommercant");
-    case "consultante_consultant":
-      return t("typePersonneMorale.consultanteConsultant");
-    case "directrice_directeur":
-      return t("typePersonneMorale.directriceDirecteur");
-    case "employee_employe":
-      return t("typePersonneMorale.employeeEmploye");
-    case "experte_comptable_expert_comptable":
-      return t("typePersonneMorale.experteComptableExpertComptable");
-    case "fiduciaire":
-      return t("typePersonneMorale.fiduciaire");
-    case "fondatrice_fondateur":
-      return t("typePersonneMorale.fondatriceFondateur");
-    case "gerante_gerant":
-      return t("typePersonneMorale.geranteGerant");
-    case "mandataire":
-      return t("typePersonneMorale.mandataire");
-    case "membre_comite":
-      return t("typePersonneMorale.membreComite");
-    case "membre_direction":
-      return t("typePersonneMorale.membreDirection");
-    case "notaire":
-      return t("typePersonneMorale.notaire");
-    case "presidente_president":
-      return t("typePersonneMorale.presidentePresident");
-    case "proprietaire":
-      return t("typePersonneMorale.proprietaire");
-    case "representante_legale_representant_legal":
-      return t("typePersonneMorale.representanteLegaleRepresentantLegal");
-    case "responsable_administratif_administrative":
-      return t("typePersonneMorale.responsableAdministratifAdministrative");
-    case "responsable_service":
-      return t("typePersonneMorale.responsableService");
-    case "responsable_juridique":
-      return t("typePersonneMorale.responsableJuridique");
-    case "responsable_rh":
-      return t("typePersonneMorale.responsableRh");
-    case "responsable_technique":
-      return t("typePersonneMorale.responsableTechnique");
-    case "secretaire":
-      return t("typePersonneMorale.secretaire");
-    case "stagiaire":
-      return t("typePersonneMorale.stagiaire");
-    case "tresoriere_tresorier":
-      return t("typePersonneMorale.tresoriereTresorier");
-    case "vice_presidente_vice_president":
-      return t("typePersonneMorale.vicePresidenteVicePresident");
-    default:
-      return val || "";
+const POSTE_PERSONNE_MORALE_KEYS: Record<string, string> = {
+  administratrice_administrateur: "typePersonneMorale.administratriceAdministrateur",
+  associee_associe: "typePersonneMorale.associeeAssocie",
+  avocate_avocat: "typePersonneMorale.avocateAvocat",
+  chargee_affaires_charge_affaires: "typePersonneMorale.chargeeAffairesChargeAffaires",
+  chargee_communication_charge_communication:
+    "typePersonneMorale.chargeeCommunicationChargeCommunication",
+  chef_projet: "typePersonneMorale.chefProjet",
+  collaboratrice_collaborateur: "typePersonneMorale.collaboratriceCollaborateur",
+  commercante_commercant: "typePersonneMorale.commercanteCommercant",
+  consultante_consultant: "typePersonneMorale.consultanteConsultant",
+  directrice_directeur: "typePersonneMorale.directriceDirecteur",
+  employee_employe: "typePersonneMorale.employeeEmploye",
+  experte_comptable_expert_comptable:
+    "typePersonneMorale.experteComptableExpertComptable",
+  fiduciaire: "typePersonneMorale.fiduciaire",
+  fondatrice_fondateur: "typePersonneMorale.fondatriceFondateur",
+  gerante_gerant: "typePersonneMorale.geranteGerant",
+  mandataire: "typePersonneMorale.mandataire",
+  membre_comite: "typePersonneMorale.membreComite",
+  membre_direction: "typePersonneMorale.membreDirection",
+  notaire: "typePersonneMorale.notaire",
+  presidente_president: "typePersonneMorale.presidentePresident",
+  proprietaire: "typePersonneMorale.proprietaire",
+  representante_legale_representant_legal:
+    "typePersonneMorale.representanteLegaleRepresentantLegal",
+  responsable_administratif_administrative:
+    "typePersonneMorale.responsableAdministratifAdministrative",
+  responsable_service: "typePersonneMorale.responsableService",
+  responsable_juridique: "typePersonneMorale.responsableJuridique",
+  responsable_rh: "typePersonneMorale.responsableRh",
+  responsable_technique: "typePersonneMorale.responsableTechnique",
+  secretaire: "typePersonneMorale.secretaire",
+  stagiaire: "typePersonneMorale.stagiaire",
+  tresoriere_tresorier: "typePersonneMorale.tresoriereTresorier",
+  vice_presidente_vice_president: "typePersonneMorale.vicePresidenteVicePresident",
+};
+
+const formatPostePersonneMorale = (val?: string): string => {
+  if (!val) {
+    return "";
   }
+
+  const translationKey = POSTE_PERSONNE_MORALE_KEYS[val];
+
+  return translationKey ? t(translationKey) : val;
 };
 
 const formatTypeRepresentation = (val?: string) => {
@@ -2108,20 +2087,25 @@ const onResendCodeFromRecap = async () => {
   }
 };
 
-const hasAdresseEvenementPrincipale = computed(
-  () =>
-    !!data.value.adresseEvenement ||
-    !!data.value.adressePostaleEvenement ||
-    !!data.value.npaEvenement ||
-    !!data.value.localiteEvenement,
+const hasAnyValue = (...values: unknown[]): boolean =>
+  values.some(Boolean);
+
+const hasAdresseEvenementPrincipale = computed(() =>
+  hasAnyValue(
+    data.value.adresseEvenement,
+    data.value.adressePostaleEvenement,
+    data.value.npaEvenement,
+    data.value.localiteEvenement,
+  ),
 );
 
-const hasAdresseEvenementSecondaire = computed(
-  () =>
-    !!data.value.adresseEvenementSecondaire ||
-    !!data.value.adressePostaleEvenementSecondaire ||
-    !!data.value.npaEvenementSecondaire ||
-    !!data.value.localiteEvenementSecondaire,
+const hasAdresseEvenementSecondaire = computed(() =>
+  hasAnyValue(
+    data.value.adresseEvenementSecondaire,
+    data.value.adressePostaleEvenementSecondaire,
+    data.value.npaEvenementSecondaire,
+    data.value.localiteEvenementSecondaire,
+  ),
 );
 
 const isTrajetRenseigne = computed(() => hasAdresseEvenementPrincipale.value && hasAdresseEvenementSecondaire.value);
