@@ -137,9 +137,7 @@ const emit = defineEmits<{ cancel: []; continue: [] }>();
 
 type VerificationStepFields = Pick<PrePlainteFormFields, "email" | "confirmationEmail">;
 
-const verificationEmailPageSchema = computed(() => {
-  return createVerificationEmailPageSchema(t);
-});
+const verificationEmailPageSchema = computed(() => createVerificationEmailPageSchema(t));
 
 const validationSchema = computed(() => toTypedSchema(verificationEmailPageSchema.value));
 
@@ -308,7 +306,7 @@ async function submitEmailVerification(values: VerificationStepFields) {
   verifyError.value = "";
 
   const emailTrim = (values.email ?? "").trim();
-  let confirmation = sanitizeEmailChallengeCodeInput(values.confirmationEmail ?? "");
+  const confirmation = sanitizeEmailChallengeCodeInput(values.confirmationEmail ?? "");
 
   if (devBypassEmail) {
     ensureDevBypassKeyChallenge();
