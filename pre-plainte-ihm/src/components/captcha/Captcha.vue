@@ -4,7 +4,13 @@
       {{ t("common.descriptionCaptcha") }}
     </p>
 
-    <div ref="captchaContainer" class="frc-captcha" :data-test="dataTest" :aria-describedby="descId" />
+    <div
+      ref="captchaContainer"
+      class="frc-captcha"
+      :data-api-endpoint="FRIENDLY_CAPTCHA_API_ENDPOINT"
+      :data-test="dataTest"
+      :aria-describedby="descId"
+    />
   </div>
 </template>
 
@@ -18,20 +24,19 @@ import {
   type FRCWidgetErrorEventData,
   type FRCWidgetStateChangeEventData,
 } from "@friendlycaptcha/sdk";
+import { FRIENDLY_CAPTCHA_API_ENDPOINT } from "@/constants/constant.ts";
 
 const { t } = useI18n();
 const descId = "captcha-desc";
 
 interface Props {
   sitekey: string;
-  apiEndpoint?: string;
   modelValue?: string;
   hidden?: boolean;
   dataTest?: string;
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  apiEndpoint: "https://eu.frcapi.com/api/v2",
   modelValue: "",
   hidden: false,
 });
@@ -56,7 +61,7 @@ onMounted(() => {
   widget.value = sdk.createWidget({
     element: captchaContainer.value,
     sitekey: props.sitekey,
-    apiEndpoint: props.apiEndpoint,
+    apiEndpoint: FRIENDLY_CAPTCHA_API_ENDPOINT,
   });
 
   captchaContainer.value.addEventListener("frc:widget.complete", e => {
@@ -71,7 +76,7 @@ onMounted(() => {
     console.error("[PPL captcha] Erreur widget FriendlyCaptcha", {
       error: err instanceof Error ? err.message : err,
       sitekeyPresent: Boolean(props.sitekey),
-      apiEndpoint: props.apiEndpoint,
+      apiEndpoint: FRIENDLY_CAPTCHA_API_ENDPOINT,
     });
     emit("error", detail?.error);
   });
