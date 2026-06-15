@@ -325,7 +325,7 @@ export const MOYEN_PAIEMENT = {
 /** Non proposés dans le select « type de cybercrime » (parcours IHM à venir). */
 export const CYBERCRIME_TYPES_WITHOUT_DETAIL_FIELDS = ["cyberharcelement", "rancongiciel", "autre"] as const;
 
-export function isCybercrimeTypeWithoutDetailFields(code: string | undefined | null | unknown): boolean {
+export function isCybercrimeTypeWithoutDetailFields(code: string | undefined | null): boolean {
   const c = code == null || code === "" ? "" : String(code).trim().toLowerCase();
   if (!c) {
     return false;

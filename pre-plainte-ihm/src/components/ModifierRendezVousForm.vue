@@ -145,7 +145,17 @@ const props = defineProps<{
   currentStep: number;
 }>();
 
+const RDV_CODE_MIN_LENGTH = 6;
 const RENDEZ_VOUS_DATE_WINDOW_DAYS = 15;
+
+const YEAR_START = 0;
+const YEAR_END = 4;
+const MONTH_START = 4;
+const MONTH_END = 6;
+const DAY_START = 6;
+const DAY_END = 8;
+const TIME_START = 9;
+const DATE_PARTS_COUNT = 3;
 
 const emit = defineEmits<{
   "code-verified": [];
@@ -163,7 +173,7 @@ const { currentAppointment, isLoading: prePlainteIsLoading } = storeToRefs(prePl
 const form = useForm({
   validationSchema: toTypedSchema(
     z.object({
-      rdvCode: z.string().min(6, { message: t("modification.codeObligatoire") }),
+      rdvCode: z.string().min(RDV_CODE_MIN_LENGTH, { message: t("modification.codeObligatoire") }),
     }),
   ),
 });
@@ -302,8 +312,8 @@ const datesDisponibles = computed(() => {
   const allAvail = esiriusStore.allAvailabilities.flatMap(s => s.availabilities || []);
   const validDates = allAvail
     .filter(a => a?.beginDateTime && isInRollingAppointmentWindow(parseCreneauDate(a.beginDateTime)))
-    .map(a => a.beginDateTime.slice(0, 8));
-  return Array.from(new Set(validDates)).map(d => `${d.slice(0, 4)}-${d.slice(4, 6)}-${d.slice(6, 8)}`);
+    .map(a => a.beginDateTime.slice(YEAR_START, DAY_END));
+  return Array.from(new Set(validDates)).map(d => `${d.slice(YEAR_START, YEAR_END)}-${d.slice(MONTH_START, MONTH_END)}-${d.slice(DAY_START, DAY_END)}`);
 });
 
 const premiereDateDispo = computed(() => formatIsoDate(addDays(new Date(), 0)));
@@ -339,7 +349,7 @@ const creneauxFiltres = computed(() => {
       return false;
     }
 
-    const dateStr = `${c.beginDateTime.slice(0, 4)}-${c.beginDateTime.slice(4, 6)}-${c.beginDateTime.slice(6, 8)}T${c.beginDateTime.slice(9)}:00`;
+    const dateStr = `${c.beginDateTime.slice(YEAR_START, YEAR_END)}-${c.beginDateTime.slice(MONTH_START, MONTH_END)}-${c.beginDateTime.slice(DAY_START, DAY_END)}T${c.beginDateTime.slice(TIME_START)}:00`;
     const dateCreneau = new Date(dateStr);
     if (dateCreneau <= minDateTime) {
       return false;
@@ -349,7 +359,7 @@ const creneauxFiltres = computed(() => {
       return false;
     }
 
-    const dateCreneauJour = `${c.beginDateTime.slice(0, 4)}-${c.beginDateTime.slice(4, 6)}-${c.beginDateTime.slice(6, 8)}`;
+    const dateCreneauJour = `${c.beginDateTime.slice(YEAR_START, YEAR_END)}-${c.beginDateTime.slice(MONTH_START, MONTH_END)}-${c.beginDateTime.slice(DAY_START, DAY_END)}`;
     if (dateSouhaitee.value && dateCreneauJour !== dateSouhaitee.value) {
       return false;
     }
@@ -398,7 +408,7 @@ function parseCreneauDate(beginDateTime?: string): Date | null {
     return null;
   }
 
-  const dateStr = `${beginDateTime.slice(0, 4)}-${beginDateTime.slice(4, 6)}-${beginDateTime.slice(6, 8)}T${beginDateTime.slice(9)}:00`;
+  const dateStr = `${beginDateTime.slice(YEAR_START, YEAR_END)}-${beginDateTime.slice(MONTH_START, MONTH_END)}-${beginDateTime.slice(DAY_START, DAY_END)}T${beginDateTime.slice(TIME_START)}:00`;
   const date = new Date(dateStr);
   return Number.isNaN(date.getTime()) ? null : date;
 }
@@ -442,9 +452,9 @@ const onSelectCreneau = () => {
     return;
   }
 
-  const rawDate = `${c.beginDateTime.slice(0, 4)}-${c.beginDateTime.slice(4, 6)}-${c.beginDateTime.slice(6, 8)}`;
-  const heureDebut = c.beginDateTime.substring(9).trim();
-  const heureFin = c.endDateTime.substring(9).trim();
+  const rawDate = `${c.beginDateTime.slice(YEAR_START, YEAR_END)}-${c.beginDateTime.slice(MONTH_START, MONTH_END)}-${c.beginDateTime.slice(DAY_START, DAY_END)}`;
+  const heureDebut = c.beginDateTime.substring(TIME_START).trim();
+  const heureFin = c.endDateTime.substring(TIME_START).trim();
 
   pendingCreneau.value = {
     id: Date.now().toString(),
@@ -479,6 +489,7 @@ const handleConfirm = async () => {
   } catch (error) {
     isUpdating.value = false;
     prePlainteIsLoading.value = false;
+    throw error;
   }
 };
 const formatDateTimeFrench = (dateString: string): string => {
@@ -488,7 +499,7 @@ const formatDateTimeFrench = (dateString: string): string => {
   try {
     const dateParts = dateString.split("-");
     let date: Date;
-    if (dateParts.length === 3) {
+    if (dateParts.length === DATE_PARTS_COUNT) {
       const [year, month, day] = dateParts.map(Number);
       date = new Date(year, month - 1, day);
     } else {

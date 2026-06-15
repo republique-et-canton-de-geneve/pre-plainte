@@ -80,7 +80,7 @@ const { value: dateSouhaitee, errorMessage: dateSouhaiteeError } = useField<stri
 
 const dateSouhaiteeSelection = computed({
   get: () => dateSouhaitee.value || "",
-  set: (value: string | null) => {
+  set: (value: string | null = "") => {
     const nextValue = value || "";
     dateSouhaitee.value = nextValue;
     emit("update:dateSouhaitee", nextValue);

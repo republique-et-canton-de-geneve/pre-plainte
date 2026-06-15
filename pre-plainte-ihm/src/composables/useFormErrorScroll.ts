@@ -74,7 +74,7 @@ export function useFormErrorScroll() {
           });
         }
 
-        const inputElement = formElement.querySelector("input, textarea, select") as HTMLElement;
+        const inputElement = formElement.querySelector("input, textarea, select") as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement | null;
         if (inputElement && typeof inputElement.focus === "function") {
           setTimeout(() => {
             inputElement.focus();
@@ -181,7 +181,7 @@ export function useFormErrorScroll() {
           });
         }
 
-        const inputElement = element.querySelector("input, textarea, select") as HTMLElement;
+        const inputElement = element.querySelector("input, textarea, select") as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement | null;
         if (inputElement && typeof inputElement.focus === "function") {
           setTimeout(() => {
             inputElement.focus();

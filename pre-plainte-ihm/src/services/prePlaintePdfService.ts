@@ -36,7 +36,7 @@ export async function downloadPrePlaintePdf(payload: Record<string, any>) {
   link.download = filename;
   document.body.appendChild(link);
   link.click();
-  document.body.removeChild(link);
+  link.remove();
 
   globalThis.URL.revokeObjectURL(url);
 }
