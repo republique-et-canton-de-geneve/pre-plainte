@@ -122,7 +122,6 @@
         <Captcha
           :model-value="captchaToken"
           :sitekey="captchaSiteKey"
-          api-endpoint="https://eu.frcapi.com/api/v2"
           @solved="store.setCaptchaToken"
           @reset="store.resetCaptchaToken"
           class="mb-6 mt-6"
