@@ -75,7 +75,7 @@ const props = withDefaults(defineProps<Props>(), {
 });
 
 const emit = defineEmits<{
-  [EMIT_UPDATE_MODEL_VALUE]: [value: RipolSelection | null];
+  "update:modelValue": [value: RipolSelection | null];
 }>();
 
 const items = ref<RipolSelection[]>(props.modelValue ? [props.modelValue] : []);
