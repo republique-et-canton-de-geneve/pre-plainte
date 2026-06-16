@@ -117,7 +117,7 @@ public class PdfGenerationAdapter implements PdfGenerationUseCase {
   private static final String CATEGORIE_DOCUMENTS = "documents";
   private static final String CATEGORIE_PLAQUE = "plaque";
   private static final String PDF_NON_STRUCTURED_OBJECTS_LABEL = "Objets sans identification";
-  private static final String PDF_NON_STRUCTURED_OBJECTS_CHAIN_SEPARATOR = " - ";
+  private static final String PDF_NON_STRUCTURED_OBJECTS_BULLET_PREFIX = "- ";
 
   @Override
   public byte[] generatePdf(final PrePlainte prePlainte) {
@@ -396,7 +396,7 @@ public class PdfGenerationAdapter implements PdfGenerationUseCase {
     IntStream.range(0, structuredCount)
         .mapToObj(i -> Map.entry(i, structuredObjects.get(i)))
         .forEach(e -> addStructuredObjectToPdf(rows, structuredObjectLabelPrefix, includeVolFields, e, structuredCount));
-    addIfNotNull(rows, PDF_NON_STRUCTURED_OBJECTS_LABEL, formatChainedNonStructuredObjects(nonStructuredObjects));
+    addIfNotNull(rows, PDF_NON_STRUCTURED_OBJECTS_LABEL, formatBulletedNonStructuredObjects(nonStructuredObjects));
   }
 
   private void addStructuredObjectToPdf(List<String[]> rows, String structuredObjectLabelPrefix, boolean includeVolFields, Map.Entry<Integer, ObjetIncident> e, int structuredCount) {
@@ -411,15 +411,17 @@ public class PdfGenerationAdapter implements PdfGenerationUseCase {
     }
   }
 
-  private String formatChainedNonStructuredObjects(List<ObjetIncident> objects) {
+  private String formatBulletedNonStructuredObjects(List<ObjetIncident> objects) {
     if (objects == null || objects.isEmpty()) {
       return null;
     }
-    return objects.stream()
+    String formatted = objects.stream()
         .map(this::formatNonStructuredObjectSegment)
         .filter(segment -> segment != null && !segment.isBlank())
-        .reduce((left, right) -> left + PDF_NON_STRUCTURED_OBJECTS_CHAIN_SEPARATOR + right)
+        .map(segment -> PDF_NON_STRUCTURED_OBJECTS_BULLET_PREFIX + segment)
+        .reduce((left, right) -> left + "\n" + right)
         .orElse(null);
+    return formatted == null || formatted.isBlank() ? null : formatted;
   }
 
   private String formatNonStructuredObjectSegment(ObjetIncident objet) {
