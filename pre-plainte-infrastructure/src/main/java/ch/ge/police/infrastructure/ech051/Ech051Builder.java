@@ -398,43 +398,69 @@ public class Ech051Builder {
     if (dto == null || personXml == null) {
       return;
     }
-    boolean isLegalPerson = personXml.getLegal() != null;
-    boolean isOrganisationLikeLegalPerson = isLegalPerson && personXml.getAddress() != null;
+    appendContactChannelsCommunication(personXml, dto, isOrganisationLikeLegalPerson(personXml));
+    appendUriCommunication(personXml, dto);
+  }
+
+  private static boolean isOrganisationLikeLegalPerson(Ech0051DocumentXml.PersonXml personXml) {
+    return personXml.getLegal() != null && personXml.getAddress() != null;
+  }
+
+  private void appendContactChannelsCommunication(
+      Ech0051DocumentXml.PersonXml personXml,
+      Ech0051DocumentPayload.Communication dto,
+      boolean organisationLikeLegalPerson
+  ) {
     boolean hasEmail = isNotBlank(dto.getEmail());
     boolean hasMobile = isNotBlank(dto.getMobile());
     boolean hasPhone = isNotBlank(dto.getPhone());
-    if (hasEmail || hasMobile || hasPhone) {
-      Ech0051DocumentXml.CommunicationXml commXml = new Ech0051DocumentXml.CommunicationXml();
-      if (hasEmail) {
-        Ech0051DocumentXml.EmailXml emailXml = new Ech0051DocumentXml.EmailXml();
-        if (isOrganisationLikeLegalPerson) {
-          emailXml.setUsage(buildUsage(EMAIL_BUSINESS, EMAIL_BUSINESS_CODE));
-        } else {
-          emailXml.setUsage(buildUsage(EMAIL, EMAIL_CODE));
-        }
-        emailXml.setEmailAddress(dto.getEmail().strip());
-        commXml.setEmail(emailXml);
-      }
-      if (hasMobile) {
-        commXml.setMobile(buildPhone(dto.getMobile().strip(), MOBILE, MOBILE_CODE));
-      }
-      if (hasPhone) {
-        if (isOrganisationLikeLegalPerson) {
-          commXml.setPhone(buildPhone(dto.getPhone().strip(), TELEPHONE_BUSINESS, TELEPHONE_BUSINESS_CODE));
-        } else {
-          commXml.setPhone(buildPhone(dto.getPhone().strip(), PHONE, PHONE_CODE));
-        }
-      }
-      personXml.getCommunications().add(commXml);
+    if (!hasEmail && !hasMobile && !hasPhone) {
+      return;
     }
-    if (isNotBlank(dto.getUri())) {
-      Ech0051DocumentXml.CommunicationXml commXml = new Ech0051DocumentXml.CommunicationXml();
-      Ech0051DocumentXml.UriXml uriXml = new Ech0051DocumentXml.UriXml();
-      uriXml.setUsage(buildUsageWithoutSource(URI));
-      uriXml.setUri(dto.getUri().strip());
-      commXml.setUri(uriXml);
-      personXml.getCommunications().add(commXml);
+    Ech0051DocumentXml.CommunicationXml commXml = new Ech0051DocumentXml.CommunicationXml();
+    if (hasEmail) {
+      commXml.setEmail(buildEmailXml(dto.getEmail().strip(), organisationLikeLegalPerson));
     }
+    if (hasMobile) {
+      commXml.setMobile(buildPhone(dto.getMobile().strip(), MOBILE, MOBILE_CODE));
+    }
+    if (hasPhone) {
+      commXml.setPhone(buildLandlinePhoneXml(dto.getPhone().strip(), organisationLikeLegalPerson));
+    }
+    personXml.getCommunications().add(commXml);
+  }
+
+  private Ech0051DocumentXml.EmailXml buildEmailXml(String email, boolean organisationLikeLegalPerson) {
+    Ech0051DocumentXml.EmailXml emailXml = new Ech0051DocumentXml.EmailXml();
+    if (organisationLikeLegalPerson) {
+      emailXml.setUsage(buildUsage(EMAIL_BUSINESS, EMAIL_BUSINESS_CODE));
+    } else {
+      emailXml.setUsage(buildUsage(EMAIL, EMAIL_CODE));
+    }
+    emailXml.setEmailAddress(email);
+    return emailXml;
+  }
+
+  private Ech0051DocumentXml.PhoneXml buildLandlinePhoneXml(String phone, boolean organisationLikeLegalPerson) {
+    if (organisationLikeLegalPerson) {
+      return buildPhone(phone, TELEPHONE_BUSINESS, TELEPHONE_BUSINESS_CODE);
+    }
+    return buildPhone(phone, PHONE, PHONE_CODE);
+  }
+
+  private void appendUriCommunication(
+      Ech0051DocumentXml.PersonXml personXml,
+      Ech0051DocumentPayload.Communication dto
+  ) {
+    if (!isNotBlank(dto.getUri())) {
+      return;
+    }
+    Ech0051DocumentXml.CommunicationXml commXml = new Ech0051DocumentXml.CommunicationXml();
+    Ech0051DocumentXml.UriXml uriXml = new Ech0051DocumentXml.UriXml();
+    uriXml.setUsage(buildUsageWithoutSource(URI));
+    uriXml.setUri(dto.getUri().strip());
+    commXml.setUri(uriXml);
+    personXml.getCommunications().add(commXml);
   }
 
   private static boolean isNotBlank(String s) {
