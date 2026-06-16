@@ -579,7 +579,7 @@ class PdfGenerationAdapterTest {
   }
 
   @Test
-  void shouldChainNonStructuredObjectsAndKeepStructuredObjectsDetailedInVolPdf() throws Exception {
+  void shouldListNonStructuredObjectsWithBulletsAndKeepStructuredObjectsDetailedInVolPdf() throws Exception {
     ObjetIncident structured = ObjetIncident.builder()
         .categorieObjet("objet")
         .type(new RipolCode("713103", "Téléphone mobile"))
@@ -621,7 +621,7 @@ class PdfGenerationAdapterTest {
         "Numéro de série".equals(row[0]) && "SER123".equals(row[1])));
     assertTrue(rows.stream().anyMatch(row ->
         "Objets sans identification".equals(row[0])
-            && "Ordinateur portable Apple MacBook Pro Noir - Sac à main Louis Vuitton Neverfull Marron".equals(row[1])));
+            && "- Ordinateur portable Apple MacBook Pro Noir\n- Sac à main Louis Vuitton Neverfull Marron".equals(row[1])));
     assertFalse(rows.stream().anyMatch(row ->
         row[0] != null && row[0].startsWith("Objet volé (2)")));
   }
