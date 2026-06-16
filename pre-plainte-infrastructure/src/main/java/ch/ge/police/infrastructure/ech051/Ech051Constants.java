@@ -146,10 +146,14 @@ public final class Ech051Constants {
 
     public static final String EMAIL = "e-mail privé";
     public static final String EMAIL_CODE = "7";
+    public static final String EMAIL_BUSINESS = "e-mail bureau";
+    public static final String EMAIL_BUSINESS_CODE = "10";
     public static final String MOBILE = "téléphone mobile";
     public static final String MOBILE_CODE = "4";
     public static final String PHONE = "téléphone fixe";
     public static final String PHONE_CODE = "1";
+    public static final String TELEPHONE_BUSINESS = "téléphone bureau";
+    public static final String TELEPHONE_BUSINESS_CODE = "5";
     public static final String URI = "quality_assurance_link";
     public static final String SOURCE_TABLE = "ART_TEL_FAX";
   }
