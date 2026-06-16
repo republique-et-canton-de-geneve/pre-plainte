@@ -51,7 +51,7 @@ class SuisseEpoliceBusinessCaseMapperTest {
   @Test
   void buildBusinessCase_individualUsesDefaultKey() {
     PrePlainte p = new PrePlainte("D-1", baseInfos(), Incident.of(minimalVol()));
-    BusinessCase bc = mapper.buildBusinessCase(p, DeclarationType.INDIVIDUAL);
+    BusinessCase bc = mapper.buildBusinessCase(p, DeclarationType.INDIVIDUAL, false);
     assertEquals(Ech051Constants.BUSINESS_CASE_KEY, bc.getKey());
     assertEquals("D-1", bc.getCaseNumber());
     assertNotNull(bc.getFile());
@@ -60,21 +60,28 @@ class SuisseEpoliceBusinessCaseMapperTest {
   @Test
   void buildBusinessCase_tiersUsesTiersKey() {
     PrePlainte p = new PrePlainte("D-2", baseInfos(), Incident.of(minimalVol()));
-    BusinessCase bc = mapper.buildBusinessCase(p, DeclarationType.TIERS);
+    BusinessCase bc = mapper.buildBusinessCase(p, DeclarationType.TIERS, false);
     assertEquals(Ech051Constants.BUSINESS_CASE_KEY_TIERS, bc.getKey());
   }
 
   @Test
   void buildBusinessCase_entrepriseUsesEntrepriseKey() {
     PrePlainte p = new PrePlainte("D-3", baseInfos(), Incident.of(minimalVol()));
-    BusinessCase bc = mapper.buildBusinessCase(p, DeclarationType.ENTREPRISE);
+    BusinessCase bc = mapper.buildBusinessCase(p, DeclarationType.ENTREPRISE, false);
     assertEquals(Ech051Constants.BUSINESS_CASE_KEY_ENTREPRISE, bc.getKey());
+  }
+
+  @Test
+  void buildBusinessCase_individualWithVehicleUsesTiersKey() {
+    PrePlainte p = new PrePlainte("D-VEH", baseInfos(), Incident.of(minimalVol()));
+    BusinessCase bc = mapper.buildBusinessCase(p, DeclarationType.INDIVIDUAL, true);
+    assertEquals(Ech051Constants.BUSINESS_CASE_KEY_TIERS, bc.getKey());
   }
 
   @Test
   void buildBusinessCase_nullDemandeIdFallsBackToPpl() {
     PrePlainte p = new PrePlainte(null, baseInfos(), Incident.of(minimalVol()));
-    BusinessCase bc = mapper.buildBusinessCase(p, DeclarationType.INDIVIDUAL);
+    BusinessCase bc = mapper.buildBusinessCase(p, DeclarationType.INDIVIDUAL, false);
     assertEquals("PPL", bc.getCaseNumber());
   }
 
@@ -93,7 +100,7 @@ class SuisseEpoliceBusinessCaseMapperTest {
     cyber.setFichiersCybercrime(List.of(new Fichier("cyber.pdf", "application/pdf", "QkM=")));
 
     PrePlainte p = new PrePlainte("D-CYB", ip, Incident.of(cyber));
-    BusinessCase bc = mapper.buildBusinessCase(p, DeclarationType.TIERS);
+    BusinessCase bc = mapper.buildBusinessCase(p, DeclarationType.TIERS, false);
 
     assertEquals(1, bc.getFile().getFirst().getAttachment().size());
     assertTrue(bc.getFile().getFirst().getAttachment().stream().anyMatch(a -> "cyber.pdf".equals(a.getFilename())));

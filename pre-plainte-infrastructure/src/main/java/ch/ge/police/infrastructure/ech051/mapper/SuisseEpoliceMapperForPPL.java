@@ -88,7 +88,7 @@ public class SuisseEpoliceMapperForPPL {
     List<Event> events = incident == null
         ? List.of()
         : List.of(eventMapper.buildEvent(incident, infos));
-    BusinessCase businessCase = businessCaseMapper.buildBusinessCase(prePlainte, declarationType);
+    BusinessCase businessCase = businessCaseMapper.buildBusinessCase(prePlainte, declarationType, hasVehicles);
 
     Relations relations = relationsMapper.buildRelations(
         persons, events, objects, vehicles, businessCase, declarationType, incident

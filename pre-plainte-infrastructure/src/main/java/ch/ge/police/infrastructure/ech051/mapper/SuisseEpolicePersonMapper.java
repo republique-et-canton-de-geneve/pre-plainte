@@ -32,9 +32,11 @@ public class SuisseEpolicePersonMapper {
   /**
    * Construit la liste complète des personnes selon le type de déclaration.
    *
-   * MOI_MEME : 1 personne (déclarant = lésé, key=4) ou 2 si véhicule (+assurance key=3)
-   * TIERS : 3 personnes (tiers = lésé key=4, déclarant = représentant key=7, assurance key=2)
-   * ENTREPRISE : 4 personnes (organisation key=4, déclarant key=6, informant key=8, assurance key=3)
+   * MOI_MEME sans véhicule : 1 personne (lésé key=4, identity=3)
+   * MOI_MEME avec véhicule (réf. Suisse ePolice) : lésé key=4, représentant key=6, informant key=8, assurance key=3
+   * TIERS sans véhicule : lésé key=4, représentant key=7, assurance key=2
+   * TIERS avec véhicule : lésé key=5, représentant key=8, assurance key=3
+   * ENTREPRISE : organisation key=4, déclarant key=6, informant key=8, assurance key=3
    */
   public List<Person> buildPersons(InformationsPersonnelles infos, boolean hasVehicles, String insurerName) {
     List<Person> persons = new ArrayList<>();
@@ -46,7 +48,7 @@ public class SuisseEpolicePersonMapper {
     if (infos.hasOrganisation() && infos.getOrganisation() != null) {
       buildEntreprisePersons(infos, persons, insurerName);
     } else if (infos.hasTiers() && infos.getTiers() != null) {
-      buildTiersPersons(infos, persons, insurerName);
+      buildTiersPersons(infos, persons, insurerName, hasVehicles);
     } else {
       buildIndividualPerson(infos, persons, hasVehicles, insurerName);
     }
@@ -56,26 +58,38 @@ public class SuisseEpolicePersonMapper {
 
   /**
    * Construit les personnes pour une déclaration individuelle (MOI_MEME).
-   * Si hasVehicles=true : utilise les keys véhicule et ajoute personne assurance.
+   * Sans véhicule : lésé naturel key=4.
+   * Avec véhicule : même schéma que Suisse ePolice (lésé 4, représentant 6, informant 8, assurance 3).
    */
   private void buildIndividualPerson(InformationsPersonnelles infos, List<Person> persons, boolean hasVehicles,
                                      String insurerName) {
     if (hasVehicles) {
-      persons.add(buildNaturalPerson(
-          Ech051Constants.PERSON_KEY_VEHICLE,
-          Ech051Constants.IDENTITY_KEY_VEHICLE,
-          infos,
-          null
-      ));
-      persons.add(buildInsurancePerson(Ech051Constants.INSURER_KEY_VEHICLE, insurerName));
-    } else {
       persons.add(buildNaturalPerson(
           Ech051Constants.PERSON_KEY_TIERS,
           Ech051Constants.IDENTITY_KEY_TIERS,
           infos,
           null
       ));
+      persons.add(buildNaturalPerson(
+          Ech051Constants.PERSON_KEY_DECLARANT_ENTREPRISE,
+          Ech051Constants.IDENTITY_KEY_DECLARANT_ENTREPRISE,
+          infos,
+          null
+      ));
+      persons.add(buildSimplifiedInformant(
+          Ech051Constants.PERSON_KEY_INFORMANT,
+          Ech051Constants.IDENTITY_KEY_INFORMANT,
+          infos
+      ));
+      persons.add(buildInsurancePerson(Ech051Constants.INSURER_KEY_VEHICLE, insurerName));
+      return;
     }
+    persons.add(buildNaturalPerson(
+        Ech051Constants.PERSON_KEY_TIERS,
+        Ech051Constants.IDENTITY_KEY_TIERS,
+        infos,
+        null
+    ));
   }
 
   /**
@@ -83,9 +97,27 @@ public class SuisseEpolicePersonMapper {
    * Ordre selon declarer-pour-une-personne.xml :
    * 1. Tiers (natural, lésé) - key=4
    * 2. Déclarant (natural, représentant) - key=7
-   * 3. Assurance "aucune" (legal) - key=2
+   * TIERS sans véhicule : lésé key=4, représentant key=7, assurance key=2
+   * TIERS avec véhicule (réf. Suisse ePolice) : lésé key=5, représentant key=8, assurance key=3
    */
-  private void buildTiersPersons(InformationsPersonnelles infos, List<Person> persons, String insurerName) {
+  private void buildTiersPersons(InformationsPersonnelles infos, List<Person> persons, String insurerName,
+                                 boolean hasVehicles) {
+    if (hasVehicles) {
+      persons.add(buildNaturalPerson(
+          Ech051Constants.PERSON_KEY_VEHICLE,
+          Ech051Constants.IDENTITY_KEY_VEHICLE,
+          infos.getTiers(),
+          null
+      ));
+      persons.add(buildNaturalPerson(
+          Ech051Constants.PERSON_KEY_INFORMANT,
+          Ech051Constants.IDENTITY_KEY_INFORMANT,
+          infos,
+          null
+      ));
+      persons.add(buildInsurancePerson(Ech051Constants.INSURER_KEY_VEHICLE, insurerName));
+      return;
+    }
     persons.add(buildNaturalPerson(
         Ech051Constants.PERSON_KEY_TIERS,
         Ech051Constants.IDENTITY_KEY_TIERS,

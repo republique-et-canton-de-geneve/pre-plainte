@@ -48,6 +48,104 @@ class Ech051BuilderTest {
   }
 
   @Test
+  void generateEch051Xml_shouldGroupEmailAndPhoneInSingleMeansOfCommunicationBlock() {
+    PrePlainte prePlainte = mock(PrePlainte.class);
+    when(mapper.toDocument(prePlainte)).thenReturn(buildCompletePayload());
+
+    String xml = builder.generateEch051Xml(prePlainte, false);
+
+    int personStart = xml.indexOf("<eCH-0051:person key=\"PER-1\">");
+    int personEnd = xml.indexOf("</eCH-0051:person>", personStart);
+    String personXml = xml.substring(personStart, personEnd);
+
+    assertThat(personXml.split("<eCH-0051:meansOfCommunication>", -1).length - 1).isEqualTo(2);
+    assertThat(personXml)
+        .contains("<eCH-0051:eMail>john.doe@test.ch</eCH-0051:eMail>")
+        .contains("<eCH-0051:mobile>+41791234567</eCH-0051:mobile>")
+        .contains("<eCH-0051:phone>+41221234567</eCH-0051:phone>");
+  }
+
+  @Test
+  void generateEch051Xml_shouldUseBusinessEmailAndTelephoneUsageForLegalPerson() {
+    PrePlainte prePlainte = mock(PrePlainte.class);
+    Ech0051DocumentPayload payload = Ech0051DocumentPayload.builder()
+        .processData(Ech0051DocumentPayload.ProcessData.builder()
+            .deliveryDate("2026-06-16")
+            .sourceId(Ech051Constants.SourceIds.VOL)
+            .processingStatus("GREEN")
+            .build())
+        .persons(List.of(
+            Ech0051DocumentPayload.Person.builder()
+                .key("PER-LEGAL-1")
+                .legalIdentity(Ech0051DocumentPayload.LegalIdentity.builder().currentName("UBS banque").build())
+                .address(Ech0051DocumentPayload.Address.builder().street("Route").build())
+                .communication(Ech0051DocumentPayload.Communication.builder()
+                    .email("contact@ubs.ch")
+                    .phone("+41789055439")
+                    .build())
+                .build()
+        ))
+        .relations(Ech0051DocumentPayload.Relations.builder().build())
+        .build();
+
+    when(mapper.toDocument(prePlainte)).thenReturn(payload);
+
+    String xml = builder.generateEch051Xml(prePlainte, false);
+
+    int personStart = xml.indexOf("<eCH-0051:person key=\"PER-LEGAL-1\">");
+    int personEnd = xml.indexOf("</eCH-0051:person>", personStart);
+    String personXml = xml.substring(personStart, personEnd);
+
+    assertThat(personXml)
+        .contains("<eCH-0051:currentName>UBS banque</eCH-0051:currentName>")
+        .contains("<eCH-0051:eMailAddress>contact@ubs.ch</eCH-0051:eMailAddress>")
+        .contains("<eCH-0051:telephone>")
+        .contains("<eCH-0051:marking xml:lang=\"fr\">téléphone bureau</eCH-0051:marking>")
+        .contains("<eCH-0051:sourceID source=\"RIPOL\" sourceTable=\"ART_TEL_FAX\">5</eCH-0051:sourceID>")
+        .contains("<eCH-0051:marking xml:lang=\"fr\">e-mail bureau</eCH-0051:marking>")
+        .contains("<eCH-0051:sourceID source=\"RIPOL\" sourceTable=\"ART_TEL_FAX\">10</eCH-0051:sourceID>");
+  }
+
+  @Test
+  void generateEch051Xml_shouldKeepGenericEmailAndPhoneUsageForLegalPersonWithoutAddress() {
+    PrePlainte prePlainte = mock(PrePlainte.class);
+    Ech0051DocumentPayload payload = Ech0051DocumentPayload.builder()
+        .processData(Ech0051DocumentPayload.ProcessData.builder()
+            .deliveryDate("2026-06-16")
+            .sourceId(Ech051Constants.SourceIds.VOL)
+            .processingStatus("GREEN")
+            .build())
+        .persons(List.of(
+            Ech0051DocumentPayload.Person.builder()
+                .key("PER-LEGAL-INS")
+                .legalIdentity(Ech0051DocumentPayload.LegalIdentity.builder().currentName("AXA").build())
+                .communication(Ech0051DocumentPayload.Communication.builder()
+                    .email("support@axa.test")
+                    .phone("+41220000000")
+                    .build())
+                .build()
+        ))
+        .relations(Ech0051DocumentPayload.Relations.builder().build())
+        .build();
+
+    when(mapper.toDocument(prePlainte)).thenReturn(payload);
+
+    String xml = builder.generateEch051Xml(prePlainte, false);
+
+    int personStart = xml.indexOf("<eCH-0051:person key=\"PER-LEGAL-INS\">");
+    int personEnd = xml.indexOf("</eCH-0051:person>", personStart);
+    String personXml = xml.substring(personStart, personEnd);
+
+    assertThat(personXml)
+        .contains("<eCH-0051:currentName>AXA</eCH-0051:currentName>")
+        .contains("<eCH-0051:eMailAddress>support@axa.test</eCH-0051:eMailAddress>")
+        .contains("<eCH-0051:marking xml:lang=\"fr\">e-mail privé</eCH-0051:marking>")
+        .contains("<eCH-0051:sourceID source=\"RIPOL\" sourceTable=\"ART_TEL_FAX\">7</eCH-0051:sourceID>")
+        .contains("<eCH-0051:marking xml:lang=\"fr\">téléphone fixe</eCH-0051:marking>")
+        .contains("<eCH-0051:sourceID source=\"RIPOL\" sourceTable=\"ART_TEL_FAX\">1</eCH-0051:sourceID>");
+  }
+
+  @Test
   void generateEch051Xml_shouldEmitMultipleColourElementsInsteadOfColourSecondary() {
     PrePlainte prePlainte = mock(PrePlainte.class);
     Ech0051DocumentPayload payload = Ech0051DocumentPayload.builder()

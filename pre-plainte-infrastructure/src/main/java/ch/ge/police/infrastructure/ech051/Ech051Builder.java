@@ -31,11 +31,15 @@ import java.util.Objects;
 import java.util.Optional;
 
 import static ch.ge.police.infrastructure.ech051.Ech051Constants.CommunicationUsageLabels.EMAIL;
+import static ch.ge.police.infrastructure.ech051.Ech051Constants.CommunicationUsageLabels.EMAIL_BUSINESS;
+import static ch.ge.police.infrastructure.ech051.Ech051Constants.CommunicationUsageLabels.EMAIL_BUSINESS_CODE;
 import static ch.ge.police.infrastructure.ech051.Ech051Constants.CommunicationUsageLabels.EMAIL_CODE;
 import static ch.ge.police.infrastructure.ech051.Ech051Constants.CommunicationUsageLabels.MOBILE;
 import static ch.ge.police.infrastructure.ech051.Ech051Constants.CommunicationUsageLabels.MOBILE_CODE;
 import static ch.ge.police.infrastructure.ech051.Ech051Constants.CommunicationUsageLabels.PHONE;
 import static ch.ge.police.infrastructure.ech051.Ech051Constants.CommunicationUsageLabels.PHONE_CODE;
+import static ch.ge.police.infrastructure.ech051.Ech051Constants.CommunicationUsageLabels.TELEPHONE_BUSINESS;
+import static ch.ge.police.infrastructure.ech051.Ech051Constants.CommunicationUsageLabels.TELEPHONE_BUSINESS_CODE;
 import static ch.ge.police.infrastructure.ech051.Ech051Constants.CommunicationUsageLabels.URI;
 
 /**
@@ -384,7 +388,8 @@ public class Ech051Builder {
   }
 
   /**
-   * Un bloc {@code meansOfCommunication} par canal renseigné (aligné sur les exemples eCH-0051 / SEP).
+   * Email, mobile et téléphone dans un seul bloc {@code meansOfCommunication}
+   * (aligné sur les exports Suisse ePolice / myABI).
    */
   private void appendMeansOfCommunicationFromDto(
       Ech0051DocumentXml.PersonXml personXml,
@@ -393,22 +398,33 @@ public class Ech051Builder {
     if (dto == null || personXml == null) {
       return;
     }
-    if (isNotBlank(dto.getEmail())) {
+    boolean isLegalPerson = personXml.getLegal() != null;
+    boolean isOrganisationLikeLegalPerson = isLegalPerson && personXml.getAddress() != null;
+    boolean hasEmail = isNotBlank(dto.getEmail());
+    boolean hasMobile = isNotBlank(dto.getMobile());
+    boolean hasPhone = isNotBlank(dto.getPhone());
+    if (hasEmail || hasMobile || hasPhone) {
       Ech0051DocumentXml.CommunicationXml commXml = new Ech0051DocumentXml.CommunicationXml();
-      Ech0051DocumentXml.EmailXml emailXml = new Ech0051DocumentXml.EmailXml();
-      emailXml.setUsage(buildUsage(EMAIL, EMAIL_CODE));
-      emailXml.setEmailAddress(dto.getEmail().strip());
-      commXml.setEmail(emailXml);
-      personXml.getCommunications().add(commXml);
-    }
-    if (isNotBlank(dto.getMobile())) {
-      Ech0051DocumentXml.CommunicationXml commXml = new Ech0051DocumentXml.CommunicationXml();
-      commXml.setMobile(buildPhone(dto.getMobile().strip(), MOBILE, MOBILE_CODE));
-      personXml.getCommunications().add(commXml);
-    }
-    if (isNotBlank(dto.getPhone())) {
-      Ech0051DocumentXml.CommunicationXml commXml = new Ech0051DocumentXml.CommunicationXml();
-      commXml.setPhone(buildPhone(dto.getPhone().strip(), PHONE, PHONE_CODE));
+      if (hasEmail) {
+        Ech0051DocumentXml.EmailXml emailXml = new Ech0051DocumentXml.EmailXml();
+        if (isOrganisationLikeLegalPerson) {
+          emailXml.setUsage(buildUsage(EMAIL_BUSINESS, EMAIL_BUSINESS_CODE));
+        } else {
+          emailXml.setUsage(buildUsage(EMAIL, EMAIL_CODE));
+        }
+        emailXml.setEmailAddress(dto.getEmail().strip());
+        commXml.setEmail(emailXml);
+      }
+      if (hasMobile) {
+        commXml.setMobile(buildPhone(dto.getMobile().strip(), MOBILE, MOBILE_CODE));
+      }
+      if (hasPhone) {
+        if (isOrganisationLikeLegalPerson) {
+          commXml.setPhone(buildPhone(dto.getPhone().strip(), TELEPHONE_BUSINESS, TELEPHONE_BUSINESS_CODE));
+        } else {
+          commXml.setPhone(buildPhone(dto.getPhone().strip(), PHONE, PHONE_CODE));
+        }
+      }
       personXml.getCommunications().add(commXml);
     }
     if (isNotBlank(dto.getUri())) {

@@ -401,7 +401,7 @@ public class Ech0051DocumentXml {
     @XmlElement(name = "mobile", namespace = SepNamespaces.ECH_0051_NS)
     private PhoneXml mobile;
 
-    @XmlElement(name = "phone", namespace = SepNamespaces.ECH_0051_NS)
+    @XmlElement(name = "telephone", namespace = SepNamespaces.ECH_0051_NS)
     private PhoneXml phone;
 
     @XmlElement(name = "uri", namespace = SepNamespaces.ECH_0051_NS)
