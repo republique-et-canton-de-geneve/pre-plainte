@@ -27,7 +27,7 @@ public class SuisseEpoliceBusinessCaseMapper {
   /**
    * Construit le BusinessCase avec tous les fichiers attachés.
    */
-  public BusinessCase buildBusinessCase(PrePlainte prePlainte, DeclarationType declarationType) {
+  public BusinessCase buildBusinessCase(PrePlainte prePlainte, DeclarationType declarationType, boolean hasVehicles) {
     List<Attachment> attachments = Stream.of(
         Optional.ofNullable(prePlainte.getIncident())
           .map(Incident::getDetails)
@@ -55,7 +55,7 @@ public class SuisseEpoliceBusinessCaseMapper {
       .build();
 
     return BusinessCase.builder()
-      .key(resolveBusinessCaseKey(declarationType))
+      .key(resolveBusinessCaseKey(declarationType, hasVehicles))
       .caseNumber(prePlainte.getDemandeId() != null ? prePlainte.getDemandeId() : "PPL")
       .file(List.of(file))
       .build();
@@ -64,10 +64,11 @@ public class SuisseEpoliceBusinessCaseMapper {
   /**
    * Détermine la clé du BusinessCase selon le type de déclaration.
    */
-  private String resolveBusinessCaseKey(DeclarationType declarationType) {
+  private String resolveBusinessCaseKey(DeclarationType declarationType, boolean hasVehicles) {
     return switch (declarationType) {
       case TIERS -> Ech051Constants.BUSINESS_CASE_KEY_TIERS;
       case ENTREPRISE -> Ech051Constants.BUSINESS_CASE_KEY_ENTREPRISE;
+      case INDIVIDUAL when hasVehicles -> Ech051Constants.BUSINESS_CASE_KEY_TIERS;
       default -> Ech051Constants.BUSINESS_CASE_KEY;
     };
   }
