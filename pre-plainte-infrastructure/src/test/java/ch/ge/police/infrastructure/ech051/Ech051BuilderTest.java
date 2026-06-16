@@ -54,15 +54,14 @@ class Ech051BuilderTest {
 
     String xml = builder.generateEch051Xml(prePlainte, false);
 
-    int personStart = xml.indexOf("<eCH-0051:person key=\"PER-1\">");
-    int personEnd = xml.indexOf("</eCH-0051:person>", personStart);
-    String personXml = xml.substring(personStart, personEnd);
+    String personXml = extractPersonXml(xml, "PER-1");
 
     assertThat(personXml.split("<eCH-0051:meansOfCommunication>", -1).length - 1).isEqualTo(2);
     assertThat(personXml)
-        .contains("<eCH-0051:eMail>john.doe@test.ch</eCH-0051:eMail>")
-        .contains("<eCH-0051:mobile>+41791234567</eCH-0051:mobile>")
-        .contains("<eCH-0051:phone>+41221234567</eCH-0051:phone>");
+        .contains("<eCH-0051:eMailAddress>john.doe@test.ch</eCH-0051:eMailAddress>")
+        .contains("<eCH-0051:phoneNumberInternational>+41791234567</eCH-0051:phoneNumberInternational>")
+        .contains("<eCH-0051:telephone>")
+        .contains("<eCH-0051:phoneNumberInternational>+41221234567</eCH-0051:phoneNumberInternational>");
   }
 
   @Test
@@ -92,9 +91,7 @@ class Ech051BuilderTest {
 
     String xml = builder.generateEch051Xml(prePlainte, false);
 
-    int personStart = xml.indexOf("<eCH-0051:person key=\"PER-LEGAL-1\">");
-    int personEnd = xml.indexOf("</eCH-0051:person>", personStart);
-    String personXml = xml.substring(personStart, personEnd);
+    String personXml = extractPersonXml(xml, "PER-LEGAL-1");
 
     assertThat(personXml)
         .contains("<eCH-0051:currentName>UBS banque</eCH-0051:currentName>")
@@ -132,9 +129,7 @@ class Ech051BuilderTest {
 
     String xml = builder.generateEch051Xml(prePlainte, false);
 
-    int personStart = xml.indexOf("<eCH-0051:person key=\"PER-LEGAL-INS\">");
-    int personEnd = xml.indexOf("</eCH-0051:person>", personStart);
-    String personXml = xml.substring(personStart, personEnd);
+    String personXml = extractPersonXml(xml, "PER-LEGAL-INS");
 
     assertThat(personXml)
         .contains("<eCH-0051:currentName>AXA</eCH-0051:currentName>")
@@ -436,6 +431,15 @@ class Ech051BuilderTest {
         .colour(ripolRef("BLUE", "Bleu", "RIPOL", "vehicleColourTable"))
         .colourSecondary(ripolRef("BLACK", "Noir", "RIPOL", "vehicleColourSecondaryTable"))
         .build();
+  }
+
+  private static String extractPersonXml(String xml, String personKey) {
+    String keyMarker = "<eCH-0051:key>" + personKey + "</eCH-0051:key>";
+    int keyIndex = xml.indexOf(keyMarker);
+    assertThat(keyIndex).isGreaterThanOrEqualTo(0);
+    int personStart = xml.lastIndexOf("<eCH-0051:person", keyIndex);
+    int personEnd = xml.indexOf("</eCH-0051:person>", keyIndex);
+    return xml.substring(personStart, personEnd);
   }
 
   private Ech0051DocumentPayload.RipolReference ripolRef(String code, String label, String source, String sourceTable) {
