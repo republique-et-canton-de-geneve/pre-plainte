@@ -68,8 +68,9 @@ public class SuisseEpoliceBusinessCaseMapper {
     return switch (declarationType) {
       case TIERS -> Ech051Constants.BUSINESS_CASE_KEY_TIERS;
       case ENTREPRISE -> Ech051Constants.BUSINESS_CASE_KEY_ENTREPRISE;
-      case INDIVIDUAL when hasVehicles -> Ech051Constants.BUSINESS_CASE_KEY_TIERS;
-      default -> Ech051Constants.BUSINESS_CASE_KEY;
+      case INDIVIDUAL -> hasVehicles
+          ? Ech051Constants.BUSINESS_CASE_KEY_TIERS
+          : Ech051Constants.BUSINESS_CASE_KEY;
     };
   }
 
