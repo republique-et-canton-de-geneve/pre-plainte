@@ -197,13 +197,17 @@ const form = useForm<PrePlainteFormFields>({
 
 const { handleSubmit, setFieldError, setFieldValue } = form;
 
+const DEGAT_DELIT_INCIDENT = "degat-delit";
+const CYBERCRIME_INCIDENT = "cybercrime";
+const TYPE_CYBERCRIME_AUTRE = "autre";
+
 const { value: confirmeIdentite } = useField("confirmeIdentite");
 const { value: confirmeSituation } = useField("confirmeSituation");
 const { value: typeIncident, errorMessage: typeIncidentError } = useField<string>("typeIncident");
 const { value: typeDommage, errorMessage: typeDommageError } = useField<string>("typeDommage");
 const { value: typeCybercrime, errorMessage: typeCybercrimeError } = useField<string>("typeCybercrime");
 
-const TYPE_CYBERCRIME_AUTRE = "autre";
+
 const typeDommageOptions = computed(() => toTranslatedOptions(TYPES_DOMMAGE, t));
 const typeCybercrimeOptions = computed(() => [
   { label: t("cybercrime.commandeFrauduleuse"), value: "commande-frauduleuse" },
@@ -212,26 +216,51 @@ const typeCybercrimeOptions = computed(() => [
   { label: t("cybercrime.autre"), value: TYPE_CYBERCRIME_AUTRE },
 ]);
 
-const canContinue = computed(
+const isDegatDelit = computed(() => typeIncident.value === DEGAT_DELIT_INCIDENT);
+const isCybercrime = computed(() => typeIncident.value === CYBERCRIME_INCIDENT);
+
+const isDamageTypeValid = computed(
+  () => !isDegatDelit.value || Boolean(typeDommage.value),
+);
+
+const isCybercrimeTypeValid = computed(
+  () => (!isCybercrime.value || Boolean(typeCybercrime.value)) &&
+    typeCybercrime.value !== TYPE_CYBERCRIME_AUTRE,
+);
+
+const isCaptchaValid = computed(
+  () => !captchaEnabled || Boolean(captchaToken.value),
+);
+
+const isIncidentValid = computed(
   () =>
     Boolean(typeIncident.value) &&
-    (typeIncident.value !== "degat-delit" || Boolean(typeDommage.value)) &&
-    (typeIncident.value !== "cybercrime" || Boolean(typeCybercrime.value)) &&
-    typeCybercrime.value !== TYPE_CYBERCRIME_AUTRE &&
+    isDamageTypeValid.value &&
+    isCybercrimeTypeValid.value,
+);
+
+const isConfirmationValid = computed(
+  () =>
     confirmeIdentite.value &&
-    confirmeSituation.value &&
-    (!captchaEnabled || Boolean(captchaToken.value)),
+    confirmeSituation.value,
+);
+
+const canContinue = computed(
+  () =>
+    isIncidentValid.value &&
+    isConfirmationValid.value &&
+    isCaptchaValid.value,
 );
 
 const onSubmit = handleSubmit(formValues => {
   setFieldError("typeIncident", typeIncident.value ? undefined : t("validation.typeIncidentRequis"));
   setFieldError(
     "typeDommage",
-    typeIncident.value === "degat-delit" && !typeDommage.value ? t("validation.typeDommageRequis") : undefined,
+    typeIncident.value === DEGAT_DELIT_INCIDENT && !typeDommage.value ? t("validation.typeDommageRequis") : undefined,
   );
   setFieldError(
     "typeCybercrime",
-    typeIncident.value === "cybercrime" && !typeCybercrime.value ? t("validation.typeCybercrimeRequis") : undefined,
+    typeIncident.value === CYBERCRIME_INCIDENT && !typeCybercrime.value ? t("validation.typeCybercrimeRequis") : undefined,
   );
 
   if (!canContinue.value) {
@@ -246,10 +275,10 @@ const onSubmit = handleSubmit(formValues => {
 });
 
 watch(typeIncident, incident => {
-  if (incident !== "degat-delit") {
+  if (incident !== DEGAT_DELIT_INCIDENT) {
     setFieldValue("typeDommage", "");
   }
-  if (incident !== "cybercrime") {
+  if (incident !== CYBERCRIME_INCIDENT) {
     setFieldValue("typeCybercrime", "");
   }
 });
