@@ -379,6 +379,14 @@ export const VUETIFY_CARD_ELEVATION_DEFAULT = 1;
 export const VUETIFY_CARD_ELEVATION_DARK = 2;
 export const VUETIFY_CARD_ELEVATION_DRAG_ACTIVE = 6;
 
+export const YEAR_START = 0;
+export const YEAR_END = 4;
+export const MONTH_START = 4;
+export const MONTH_END = 6;
+export const DAY_START = 6;
+export const DAY_END = 8;
+export const TIME_START = 9;
+
 export const RIPOL = {
   CODE_TELEPHONE_MOBILE: "713103",
   PREFIX_TELEPHONE_MOBILE: "7131",
@@ -451,16 +459,27 @@ export const POLICE_STATION_NAME_VARIATIONS: { [key: string]: string[] } = {
 export const LATITUDE_GE = 46.2044;
 export const LONGITUDE_GE = 6.1432;
 
-export const MAX_FILE_SIZE = 10 * BYTES_PER_MEGABYTE;
-export const MAX_TOTAL_SIZE_20_MO = 20 * BYTES_PER_MEGABYTE;
-const MAX_TOTAL_SIZE_UPLOAD_MO = 70;
-export const MAX_TOTAL_SIZE_70_MO = MAX_TOTAL_SIZE_UPLOAD_MO * BYTES_PER_MEGABYTE;
+const MAX_TOTAL_SIZE_UPLOAD_10_MO = 10;
+export const MAX_FILE_SIZE = MAX_TOTAL_SIZE_UPLOAD_10_MO * BYTES_PER_MEGABYTE;
+
+const MAX_TOTAL_SIZE_UPLOAD_20_MO = 20;
+export const MAX_TOTAL_SIZE_20_MO = MAX_TOTAL_SIZE_UPLOAD_20_MO * BYTES_PER_MEGABYTE;
+
+const MAX_TOTAL_SIZE_UPLOAD_70_MO = 70;
+export const MAX_TOTAL_SIZE_70_MO = MAX_TOTAL_SIZE_UPLOAD_70_MO * BYTES_PER_MEGABYTE;
 export const MAX_FILES = 10;
+
+const PDF = { B1: 0x25, B2: 0x50, B3: 0x44, B4: 0x46 } as const;
+const PNG = { B1: 0x89, B2: 0x50, B3: 0x4e, B4: 0x47,} as const;
+const JPG = { B1: 0xff, B2: 0xd8 } as const;
+const TIFF_LE = { B1: 0x49, B2: 0x49 } as const;
+const TIFF_BE = { B1: 0x4d, B2: 0x4d } as const;
+
 export const VALID_SIGNATURES_FILES = {
-  pdf: [0x25, 0x50, 0x44, 0x46],
-  png: [0x89, 0x50, 0x4e, 0x47],
-  jpg: [0xff, 0xd8],
-  jpeg: [0xff, 0xd8],
-  tif_le: [0x49, 0x49],
-  tif_be: [0x4d, 0x4d],
+  pdf: [PDF.B1, PDF.B2, PDF.B3, PDF.B4],
+  png: [PNG.B1, PNG.B2, PNG.B3, PNG.B4],
+  jpg: [JPG.B1, JPG.B2],
+  jpeg: [JPG.B1, JPG.B2],
+  tif_le: [TIFF_LE.B1, TIFF_LE.B2],
+  tif_be: [TIFF_BE.B1, TIFF_BE.B2],
 };

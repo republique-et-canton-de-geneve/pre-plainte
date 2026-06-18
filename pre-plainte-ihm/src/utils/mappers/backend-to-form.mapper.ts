@@ -19,6 +19,13 @@ type IncidentContext = {
   isCyber: boolean;
 };
 
+type IncidentCommonInfoData = {
+  debutEvenement: ReturnType<typeof splitIsoDateTime>;
+  finEvenement: ReturnType<typeof splitIsoDateTime>;
+  addrEvent: ReturnType<typeof AdresseMapper.fromBackendAdresse>;
+  addrEventSecondaire: ReturnType<typeof AdresseMapper.fromBackendAdresse>;
+};
+
 /**
  * Mapper inverse : Backend DTO vers Frontend Form.
  * Structure découpée (vol/dommage/cyber + adresse événement) comme sur dev,
@@ -45,6 +52,13 @@ export class ReverseMapper {
     const addrEvent = AdresseMapper.fromBackendAdresse(det?.adresseIncident);
     const addrEventSecondaire = AdresseMapper.fromBackendAdresse(det?.adresseIncidentSecondaire);
 
+    const incidentData = {
+      debutEvenement,
+      finEvenement,
+      addrEvent,
+      addrEventSecondaire,
+    };
+
     return {
       ...base,
       ...this.mapIdentityInfo(infos, base, addrPers),
@@ -55,10 +69,7 @@ export class ReverseMapper {
         base,
         typeIncident,
         context,
-        debutEvenement,
-        finEvenement,
-        addrEvent,
-        addrEventSecondaire,
+        incidentData,
       ),
       ...this.mapIncidentSpecificFields(det, base, context),
       ...this.mapRendezVousInfo(base),
@@ -118,38 +129,75 @@ export class ReverseMapper {
     base: PrePlainteFormFields,
     typeIncident: IncidentFormType,
     context: IncidentContext,
-    debutEvenement: ReturnType<typeof splitIsoDateTime>,
-    finEvenement: ReturnType<typeof splitIsoDateTime>,
-    addrEvent: ReturnType<typeof AdresseMapper.fromBackendAdresse>,
-    addrEventSecondaire: ReturnType<typeof AdresseMapper.fromBackendAdresse>,
+    data: IncidentCommonInfoData,
   ) {
     const incidentAddressSource = context.isVol || context.isDom;
 
     return {
       typeIncident,
-      dateDebutEvenement: toSafeString(debutEvenement.date, base.dateDebutEvenement),
-      heureDebutEvenement: toSafeString(debutEvenement.heure, base.heureDebutEvenement),
-      dateFinEvenement: toSafeString(finEvenement.date, base.dateFinEvenement),
-      heureFinEvenement: toSafeString(finEvenement.heure, base.heureFinEvenement),
-      adresseLesee: incidentAddressSource ? det?.adresseLesee : base.adresseLesee,
-      typeLieu: incidentAddressSource ? det?.typeLieu : base.typeLieu,
-      adresseConnue: incidentAddressSource ? det?.adresseConnue : base.adresseConnue,
-      isTrajet: incidentAddressSource ? det?.isTrajet : base.isTrajet,
-      adresseEvenement: incidentAddressSource ? addrEvent.adresse : base.adresseEvenement,
-      adressePostaleEvenement: incidentAddressSource ? addrEvent.adressePostale : base.adressePostaleEvenement,
-      npaEvenement: incidentAddressSource ? addrEvent.npa : base.npaEvenement,
-      localiteEvenement: incidentAddressSource ? addrEvent.localite : base.localiteEvenement,
-      paysEvenement: incidentAddressSource ? addrEvent.pays : base.paysEvenement,
-      lieuOrigine: incidentAddressSource ? det?.lieuOrigine : base.lieuOrigine,
-      adresseEvenementSecondaire: incidentAddressSource ? addrEventSecondaire.adresse : base.adresseEvenementSecondaire,
-      adressePostaleEvenementSecondaire: incidentAddressSource
-        ? addrEventSecondaire.adressePostale
-        : base.adressePostaleEvenementSecondaire,
-      npaEvenementSecondaire: incidentAddressSource ? addrEventSecondaire.npa : base.npaEvenementSecondaire,
-      localiteEvenementSecondaire: incidentAddressSource
-        ? addrEventSecondaire.localite
-        : base.localiteEvenementSecondaire,
-      paysEvenementSecondaire: incidentAddressSource ? addrEventSecondaire.pays : base.paysEvenementSecondaire,
+      ...this.mapIncidentDates(base, data.debutEvenement, data.finEvenement),
+      ...this.mapIncidentMainAddress(det, base, data.addrEvent, incidentAddressSource),
+      ...this.mapIncidentSecondaryAddress(
+        base,
+        data.addrEventSecondaire,
+        incidentAddressSource,
+      ),
+    };
+  }
+
+  private static mapIncidentDates(
+    base: PrePlainteFormFields,
+    debut: ReturnType<typeof splitIsoDateTime>,
+    fin: ReturnType<typeof splitIsoDateTime>,
+  ) {
+    return {
+      dateDebutEvenement: toSafeString(debut.date, base.dateDebutEvenement),
+      heureDebutEvenement: toSafeString(debut.heure, base.heureDebutEvenement),
+      dateFinEvenement: toSafeString(fin.date, base.dateFinEvenement),
+      heureFinEvenement: toSafeString(fin.heure, base.heureFinEvenement),
+    };
+  }
+
+  private static mapIncidentMainAddress(
+    det: any,
+    base: PrePlainteFormFields,
+    addrEvent: ReturnType<typeof AdresseMapper.fromBackendAdresse>,
+    source: boolean,
+  ) {
+    const value = <T>(a: T, b: T) => (source ? a : b);
+
+    return {
+      adresseLesee: value(det?.adresseLesee, base.adresseLesee),
+      typeLieu: value(det?.typeLieu, base.typeLieu),
+      adresseConnue: value(det?.adresseConnue, base.adresseConnue),
+      isTrajet: value(det?.isTrajet, base.isTrajet),
+
+      adresseEvenement: value(addrEvent.adresse, base.adresseEvenement),
+      adressePostaleEvenement: value(addrEvent.adressePostale, base.adressePostaleEvenement),
+      npaEvenement: value(addrEvent.npa, base.npaEvenement),
+      localiteEvenement: value(addrEvent.localite, base.localiteEvenement),
+      paysEvenement: value(addrEvent.pays, base.paysEvenement),
+
+      lieuOrigine: value(det?.lieuOrigine, base.lieuOrigine),
+    };
+  }
+
+  private static mapIncidentSecondaryAddress(
+    base: PrePlainteFormFields,
+    addrEventSecondaire: ReturnType<typeof AdresseMapper.fromBackendAdresse>,
+    source: boolean,
+  ) {
+    const value = <T>(a: T, b: T) => (source ? a : b);
+
+    return {
+      adresseEvenementSecondaire: value(addrEventSecondaire.adresse, base.adresseEvenementSecondaire),
+      adressePostaleEvenementSecondaire: value(
+        addrEventSecondaire.adressePostale,
+        base.adressePostaleEvenementSecondaire,
+      ),
+      npaEvenementSecondaire: value(addrEventSecondaire.npa, base.npaEvenementSecondaire),
+      localiteEvenementSecondaire: value(addrEventSecondaire.localite, base.localiteEvenementSecondaire),
+      paysEvenementSecondaire: value(addrEventSecondaire.pays, base.paysEvenementSecondaire),
     };
   }
 

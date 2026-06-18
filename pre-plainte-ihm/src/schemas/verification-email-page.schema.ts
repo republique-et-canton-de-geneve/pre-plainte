@@ -5,7 +5,7 @@ import { TEXT_FIELD_MAX_LENGTH } from "@/constants/constant.ts";
 export const createVerificationEmailPageSchema = (t: ComposerTranslation) =>
   z.object({
     email: z.preprocess(
-      val => (val == null ? "" : String(val).trim()),
+      val => (typeof val === "string" ? val.trim() : ""),
       z
         .string()
         .min(1, t("validation.emailRequis"))

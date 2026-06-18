@@ -140,7 +140,7 @@ import type {Service} from "@/composables/useLeafletMap";
 import type {AlertType, Availability, IncidentType, SelectedCreneau} from "@/types/rendez-vous-interface";
 import { buildUpdateAppointmentPayload } from "@/utils/helpers/esiriusFormatBuilder";
 import { getCaptchaSitekey } from "@/config/config.ts";
-import { STEP_UPDATE_APPOINTMENT_VALIDATION } from "@/constants/constant.ts";
+import { DAY_END, DAY_START, MONTH_END, MONTH_START, TIME_START, YEAR_END, YEAR_START, STEP_UPDATE_APPOINTMENT_VALIDATION } from "@/constants/constant.ts";
 
 const props = defineProps<{
   currentStep: number;
@@ -149,13 +149,6 @@ const props = defineProps<{
 const RDV_CODE_MIN_LENGTH = 6;
 const RENDEZ_VOUS_DATE_WINDOW_DAYS = 15;
 
-const YEAR_START = 0;
-const YEAR_END = 4;
-const MONTH_START = 4;
-const MONTH_END = 6;
-const DAY_START = 6;
-const DAY_END = 8;
-const TIME_START = 9;
 const DATE_PARTS_COUNT = 3;
 const MINIMUM_PARTS_COUNT = 3;
 const MESSAGE_ERREUR = "modification.messageErreur";

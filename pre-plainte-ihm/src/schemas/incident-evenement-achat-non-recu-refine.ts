@@ -49,6 +49,14 @@ function validateEmailIfPresent(
 }
 
 function validatePlateformeIdIfPresent(value: unknown, ctx: z.RefinementCtx, path: string, invalidMessage: string): void {
+  return validateOptionalUrlField(value, ctx, path, invalidMessage);
+}
+
+function validateSiteWebEntreprise(value: unknown, ctx: z.RefinementCtx, path: string, invalidMessage: string): void {
+  return validateOptionalUrlField(value, ctx, path, invalidMessage);
+}
+
+function validateOptionalUrlField(value: unknown, ctx: z.RefinementCtx, path: string, invalidMessage: string,): void {
   const raw = typeof value === "string" ? value.trim() : "";
   if (!raw) {
     return;
@@ -66,16 +74,6 @@ function requireNonEmptyFileArray(
 ): void {
   if (!Array.isArray(value) || value.length === 0) {
     addPathIssue(ctx, [path], message);
-  }
-}
-
-function validateSiteWebEntreprise(value: unknown, ctx: z.RefinementCtx, path: string, invalidMessage: string): void {
-  const raw = typeof value === "string" ? value.trim() : "";
-  if (!raw) {
-    return;
-  }
-  if (!isUrlWebAvecDomaine(raw)) {
-    addPathIssue(ctx, [path], invalidMessage);
   }
 }
 
@@ -136,27 +134,27 @@ function validateAchatNonRecuPlateforme(data: Record<string, any>, ctx: z.Refine
 }
 
 function validateAchatNonRecuDocuments(data: Record<string, any>, ctx: z.RefinementCtx, t: ComposerTranslation): void {
-  if (!data.annonceDocumentIndisponible) {
-    requireNonEmptyFileArray(data.annonceDocument, ctx, "annonceDocument", t("validation.annonceDocumentRequis"));
-  } else {
+  if (data.annonceDocumentIndisponible) {
     requireTrimmedString(data, ctx, "raisonAbsenceAnnonce", t("validation.raisonAbsenceAnnonceRequise"));
+  } else {
+    requireNonEmptyFileArray(data.annonceDocument, ctx, "annonceDocument", t("validation.annonceDocumentRequis"));
   }
 
   requireTrimmedString(data, ctx, "dateOperation", t("validation.dateOperationRequise"));
 
-  if (!data.preuvePaiementIndisponible) {
-    requireNonEmptyFileArray(
-      data.preuvePaiementDocument,
-      ctx,
-      "preuvePaiementDocument",
-      t("validation.preuvePaiementDocumentRequis"),
-    );
-  } else {
+  if (data.preuvePaiementIndisponible) {
     requireTrimmedString(
       data,
       ctx,
       "raisonAbsencePreuvePaiement",
       t("validation.raisonAbsencePreuvePaiementRequise"),
+    );
+  } else {
+    requireNonEmptyFileArray(
+      data.preuvePaiementDocument,
+      ctx,
+      "preuvePaiementDocument",
+      t("validation.preuvePaiementDocumentRequis"),
     );
   }
 }
