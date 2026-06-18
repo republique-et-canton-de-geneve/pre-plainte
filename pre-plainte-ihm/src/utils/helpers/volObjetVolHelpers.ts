@@ -11,6 +11,8 @@ const PLAQUE_FRANCE_SIV_REGEX = /^[A-Z]{2}-\d{3}-[A-Z]{2}$/;
 const PLAQUE_FRANCE_FNI_REGEX = /^\d{1,4}\s[A-Z]{1,3}\s(\d{2,3}|2A|2B)$/;
 const PLAQUE_INTERNATIONALE_REGEX = /^[A-Z\d]{1,12}$/;
 
+const VALIDATION_CHAMP_REQUIS = "validation.champRequis";
+
 export type VolObjetVolTranslate = (key: string, ...args: unknown[]) => string;
 
 export function hasImeiPourSnapshotVol(obj: VolObjetFormSnapshot): boolean {
@@ -37,13 +39,10 @@ export function getObjetsVolesEffectifs(data: VolAvecObjetsEffectifs): VolObjetA
 }
 
 export function isObjetVoleVehiculeAvecPlaque(objet: VolObjetAvecPlaque): boolean {
-  return (
-    (objet.isVehicle === true || objet.categorieObjet === "vehicule") &&
-    !!objet.sousCategorie &&
-    VEHICULE_CATEGORIES_AVEC_PLAQUE.includes(objet.sousCategorie) &&
-    objet.plaqueInconnu !== true &&
-    !!objet.plaqueNumero?.trim()
-  );
+  const isVehicle = objet.isVehicle === true || objet.categorieObjet === "vehicule";
+  const isPlaqueCategory = !!objet.sousCategorie && VEHICULE_CATEGORIES_AVEC_PLAQUE.includes(objet.sousCategorie);
+  const hasValidPlaque = objet.plaqueInconnu !== true && !!objet.plaqueNumero?.trim();
+  return isVehicle && isPlaqueCategory && hasValidPlaque;
 }
 
 export function hasVehiculeVoleAvecPlaque(data: VolAvecObjetsEffectifs): boolean {
@@ -105,11 +104,11 @@ export function validerPlaqueVehicule(
     return true;
   }
   if (!champs.plaquePays?.code) {
-    setFieldError("plaquePays", t("validation.champRequis"));
+    setFieldError("plaquePays", t(VALIDATION_CHAMP_REQUIS));
     return false;
   }
   if (champs.plaquePays.code === RIPOL.PAYS_SUISSE && !champs.plaqueCanton?.code) {
-    setFieldError("plaqueCanton", t("validation.champRequis"));
+    setFieldError("plaqueCanton", t(VALIDATION_CHAMP_REQUIS));
     return false;
   }
   return validerNumeroPlaque(champs, setFieldError, t);
@@ -121,10 +120,7 @@ export function validerNumeroPlaque(
   setFieldError: (field: string, message: string) => void,
   t: VolObjetVolTranslate,
 ): boolean {
-  if (!champs.plaqueNumero?.trim()) {
-    setFieldError("plaqueNumero", t("validation.champRequis"));
-    return false;
-  } else {
+  if (champs.plaqueNumero?.trim()) {
     const numeroPlaque = champs.plaqueNumero
       .trim()
       .toUpperCase()
@@ -152,19 +148,20 @@ export function validerNumeroPlaque(
         );
         return false;
       }
-    } else {
-      if (!PLAQUE_INTERNATIONALE_REGEX.test(numeroPlaque)) {
-        setFieldError(
-          "plaqueNumero",
-          t("validation.numeroPlaqueInternationaleInvalide"),
-        );
-        return false;
-      }
+    } else if (!PLAQUE_INTERNATIONALE_REGEX.test(numeroPlaque)) {
+      setFieldError(
+        "plaqueNumero",
+        t("validation.numeroPlaqueInternationaleInvalide"),
+      );
+      return false;
     }
     return true;
+  } else {
+    setFieldError("plaqueNumero", t(VALIDATION_CHAMP_REQUIS));
+    return false;
   }
 }
 
-export function checkLength(value: unknown, max: number) {
-  return !(value && String(value).length > max);
+export function checkLength(value: unknown, max: number): boolean {
+  return typeof value !== "string" || value.length <= max;
 }

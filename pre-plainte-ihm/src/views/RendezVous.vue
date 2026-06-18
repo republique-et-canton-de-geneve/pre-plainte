@@ -107,14 +107,8 @@ import { useFormErrorScroll } from "@/composables/useFormErrorScroll.ts";
 import { useDisplay } from "vuetify/framework";
 import ExitActionsForm from "@/components/actions/ExitActionsForm.vue";
 import { hasVehiculeVoleAvecPlaque } from "@/utils/helpers/volObjetVolHelpers.ts";
+import { DAY_END, DAY_START, MONTH_END, MONTH_START, TIME_START, YEAR_END, YEAR_START } from "@/constants/constant.ts";
 
-const YEAR_START = 0;
-const YEAR_END = 4;
-const MONTH_START = 4;
-const MONTH_END = 6;
-const DAY_START = 6;
-const DAY_END = 8;
-const HOUR_MINUTE_START = 9;
 const VEHICULE_PLAQUE_MAX_RENDEZ_VOUS_HOURS = 24;
 const RENDEZ_VOUS_DATE_WINDOW_DAYS = 15;
 const SCROLL_AFTER_SELECT_DELAY_MS = 300;
@@ -304,7 +298,7 @@ function parseCreneauDate(beginDateTime?: string): Date | null {
     return null;
   }
 
-  const dateStr = `${beginDateTime.slice(YEAR_START, YEAR_END)}-${beginDateTime.slice(MONTH_START, MONTH_END)}-${beginDateTime.slice(DAY_START, DAY_END)}T${beginDateTime.slice(HOUR_MINUTE_START)}:00`;
+  const dateStr = `${beginDateTime.slice(YEAR_START, YEAR_END)}-${beginDateTime.slice(MONTH_START, MONTH_END)}-${beginDateTime.slice(DAY_START, DAY_END)}T${beginDateTime.slice(TIME_START)}:00`;
 
   const date = new Date(dateStr);
   return Number.isNaN(date.getTime()) ? null : date;
@@ -466,8 +460,8 @@ const onSubmit = handleSubmit(
     showCreneauError.value = false;
 
     const rawDate = `${c.beginDateTime.slice(YEAR_START, YEAR_END)}-${c.beginDateTime.slice(MONTH_START, MONTH_END)}-${c.beginDateTime.slice(DAY_START, DAY_END)}`;
-    const heureDebut = c.beginDateTime.substring(HOUR_MINUTE_START).trim();
-    const heureFin = c.endDateTime.substring(HOUR_MINUTE_START).trim();
+    const heureDebut = c.beginDateTime.substring(TIME_START).trim();
+    const heureFin = c.endDateTime.substring(TIME_START).trim();
     const dateAffichee = `${rawDate.split("-").reverse().join(".")}`;
 
     const selectedCreneau = {

@@ -3,6 +3,8 @@ import type { ComposerTranslation } from "vue-i18n";
 import { VALIDATION_LIMITS } from "@/constants/constant";
 import { validateInternationalPhone } from "@/utils/validations/phoneValidation";
 
+const AGE_MAX = 120;
+
 const ripolSelectionSchema = (errorMessage: string) =>
   z
     .object({
@@ -48,7 +50,7 @@ export const createInfosTiersSchema = (t: ComposerTranslation) =>
             const dayDiff = today.getDate() - birthDate.getDate();
             const actualAge = monthDiff < 0 || (monthDiff === 0 && dayDiff < 0) ? age - 1 : age;
 
-            return actualAge >= 10 && actualAge <= 120;
+            return actualAge >= 10 && actualAge <= AGE_MAX;
           },
           {
             message: t("validation.ageInvalideTiers"),

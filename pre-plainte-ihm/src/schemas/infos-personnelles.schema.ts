@@ -10,6 +10,16 @@ const INFORMATIONS_PERSONNELLES_MON_ENTREPRISE = "ENTREPRISE";
 const AGE_MIN = 16;
 const AGE_MAX = 120;
 
+const VALIDATION_LONGUEUR_MAX = "validation.longueurMax";
+const VALIDATION_NUMERO_POSTAL_FORMAT = "validation.numeroPostalFormat";
+const VALIDATION_NPA_MIN = "validation.npaMin";
+const VALIDATION_LOCALITE_REQUISE = "validation.localiteRequise";
+const VALIDATION_TELEPHONE_FORMAT = "validation.telephoneFormat";
+const VALIDATION_SELECTION_DOCUMENT = "validation.selectionnerDocument";
+const VALIDATION_NOM_MIN = "validation.nomMin";
+const VALIDATION_ADRESSE_MIN = "validation.adresseMin";
+const VALIDATION_EMAIL_INVALIDE = "validation.emailInvalide";
+
 const ripolSelectionSchema = (errorMessage: string) =>
   z
     .object({
@@ -27,44 +37,51 @@ const optionalRipolSelectionSchema = z
   .nullable()
   .optional();
 
-const hasValue = (value: unknown) =>
-  Array.isArray(value) ? value.length > 0 : typeof value === "string" ? value.trim().length > 0 : !!value;
+const hasValue = (value: unknown) => {
+  if (Array.isArray(value)) {
+    return value.length > 0;
+  }
+  if (typeof value === "string") {
+    return value.trim().length > 0;
+  }
+  return !!value;
+};
+
+const addCustomIssue = (ctx: z.RefinementCtx, path: string, message: string) => {
+  ctx.addIssue({
+    code: z.ZodIssueCode.custom,
+    path: [path],
+    message,
+  });
+};
 
 export const createInfosPersonnellesSchema = (t: ComposerTranslation) => {
-  const isTiers = (lienAvecPersonne?: string) => lienAvecPersonne === INFORMATIONS_PERSONNELLES_TIERS;
-
-  const isRequiredWhenTiers = (lienAvecPersonne: string | undefined, value: unknown) =>
-    !isTiers(lienAvecPersonne) || hasValue(value);
-
   return z
     .object({
       lienAvecPersonne: z.string().min(1, t("validation.lienAvecPersonneRequis")),
-
       typeRepresentation: z.string().optional(),
-
       postePersonneMorale: z.string().optional(),
-
       justificatifPersonneMorale: z.array(z.instanceof(File)).optional(),
 
       nom: z
         .string()
-        .min(VALIDATION_LIMITS.NOM_MIN, t("validation.nomMin", { min: VALIDATION_LIMITS.NOM_MIN }))
-        .max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH })),
+        .min(VALIDATION_LIMITS.NOM_MIN, t(VALIDATION_NOM_MIN, { min: VALIDATION_LIMITS.NOM_MIN }))
+        .max(TEXT_FIELD_MAX_LENGTH, t(VALIDATION_LONGUEUR_MAX, { max: TEXT_FIELD_MAX_LENGTH })),
 
       nomNaissance: z
         .string()
-        .max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH }))
+        .max(TEXT_FIELD_MAX_LENGTH, t(VALIDATION_LONGUEUR_MAX, { max: TEXT_FIELD_MAX_LENGTH }))
         .optional(),
 
       prenom: z
         .string()
         .min(VALIDATION_LIMITS.PRENOM_MIN, t("validation.prenomMin", { min: VALIDATION_LIMITS.PRENOM_MIN }))
-        .max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH })),
+        .max(TEXT_FIELD_MAX_LENGTH, t(VALIDATION_LONGUEUR_MAX, { max: TEXT_FIELD_MAX_LENGTH })),
 
       adresse: z
         .string()
-        .min(VALIDATION_LIMITS.ADRESSE_MIN, t("validation.adresseMin", { min: VALIDATION_LIMITS.ADRESSE_MIN }))
-        .max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH })),
+        .min(VALIDATION_LIMITS.ADRESSE_MIN, t(VALIDATION_ADRESSE_MIN, { min: VALIDATION_LIMITS.ADRESSE_MIN }))
+        .max(TEXT_FIELD_MAX_LENGTH, t(VALIDATION_LONGUEUR_MAX, { max: TEXT_FIELD_MAX_LENGTH })),
 
       pays: z.string().min(1, t("validation.paysRequis")),
 
@@ -77,18 +94,18 @@ export const createInfosPersonnellesSchema = (t: ComposerTranslation) => {
       adressePostale: z
         .string()
         .trim()
-        .max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH }))
-        .regex(/^[a-zA-Z0-9\s]*$/, t("validation.numeroPostalFormat")),
+        .max(TEXT_FIELD_MAX_LENGTH, t(VALIDATION_LONGUEUR_MAX, { max: TEXT_FIELD_MAX_LENGTH }))
+        .regex(/^[a-zA-Z0-9\s]*$/, t(VALIDATION_NUMERO_POSTAL_FORMAT)),
 
       npa: z
         .string()
-        .min(1, t("validation.npaMin"))
-        .max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH }))
+        .min(1, t(VALIDATION_NPA_MIN))
+        .max(TEXT_FIELD_MAX_LENGTH, t(VALIDATION_LONGUEUR_MAX, { max: TEXT_FIELD_MAX_LENGTH }))
         .refine(val => /^\d+$/.test(val), t("validation.npaFormat")),
 
       localite: z
-        .string().min(2, t("validation.localiteRequise"))
-        .max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH })),
+        .string().min(2, t(VALIDATION_LOCALITE_REQUISE))
+        .max(TEXT_FIELD_MAX_LENGTH, t(VALIDATION_LONGUEUR_MAX, { max: TEXT_FIELD_MAX_LENGTH })),
 
       dateNaissance: z
         .string()
@@ -110,442 +127,251 @@ export const createInfosPersonnellesSchema = (t: ComposerTranslation) => {
 
       telephone: z
         .string()
-        .min(1, t("validation.telephoneFormat"))
-        .refine(validateInternationalPhone, t("validation.telephoneFormat")),
+        .min(1, t(VALIDATION_TELEPHONE_FORMAT))
+        .refine(validateInternationalPhone, t(VALIDATION_TELEPHONE_FORMAT)),
 
       typeDocumentIdentite: z
         .string({
-          required_error: t("validation.selectionnerDocument"),
-          invalid_type_error: t("validation.selectionnerDocument"),
+          required_error: t(VALIDATION_SELECTION_DOCUMENT),
+          invalid_type_error: t(VALIDATION_SELECTION_DOCUMENT),
         })
-        .min(1, t("validation.selectionnerDocument")),
+        .min(1, t(VALIDATION_SELECTION_DOCUMENT)),
 
       numeroDocumentIdentite: z.preprocess(
-        val => (val == null ? val : String(val).trim()),
+        val => (typeof val === "string" ? val.trim() : val),
         z
           .string()
-          .max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH }))
+          .max(TEXT_FIELD_MAX_LENGTH, t(VALIDATION_LONGUEUR_MAX, { max: TEXT_FIELD_MAX_LENGTH }))
           .optional(),
       ),
 
       tiersTypeDocumentIdentite: z.string().optional(),
 
       tiersNumeroDocumentIdentite: z.preprocess(
-        val => (val == null ? val : String(val).trim()),
+        val => (typeof val === "string" ? val.trim() : val),
         z
           .string()
-          .max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH }))
+          .max(TEXT_FIELD_MAX_LENGTH, t(VALIDATION_LONGUEUR_MAX, { max: TEXT_FIELD_MAX_LENGTH }))
           .optional(),
       ),
 
-      tiersNom: z.string().max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH })).optional(),
-      tiersPrenom: z.string().max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH })).optional(),
+      tiersNom: z.string().max(TEXT_FIELD_MAX_LENGTH, t(VALIDATION_LONGUEUR_MAX, { max: TEXT_FIELD_MAX_LENGTH })).optional(),
+      tiersPrenom: z.string().max(TEXT_FIELD_MAX_LENGTH, t(VALIDATION_LONGUEUR_MAX, { max: TEXT_FIELD_MAX_LENGTH })).optional(),
       tiersGenre: optionalRipolSelectionSchema,
       tiersNationalite: optionalRipolSelectionSchema,
       tiersDateNaissance: z.string().optional(),
-      tiersAdresse: z.string().max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH })).optional(),
-      tiersAdressePostale: z.string().max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH })).optional(),
-      tiersNpa: z.string().max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH })).optional(),
-      tiersLocalite: z.string().max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH })).optional(),
+      tiersAdresse: z.string().max(TEXT_FIELD_MAX_LENGTH, t(VALIDATION_LONGUEUR_MAX, { max: TEXT_FIELD_MAX_LENGTH })).optional(),
+      tiersAdressePostale: z.string().max(TEXT_FIELD_MAX_LENGTH, t(VALIDATION_LONGUEUR_MAX, { max: TEXT_FIELD_MAX_LENGTH })).optional(),
+      tiersNpa: z.string().max(TEXT_FIELD_MAX_LENGTH, t(VALIDATION_LONGUEUR_MAX, { max: TEXT_FIELD_MAX_LENGTH })).optional(),
+      tiersLocalite: z.string().max(TEXT_FIELD_MAX_LENGTH, t(VALIDATION_LONGUEUR_MAX, { max: TEXT_FIELD_MAX_LENGTH })).optional(),
       tiersPays: z.string().optional(),
       tiersTelephone: z.string().optional(),
-      tiersEmail: z.string().max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH })).optional(),
-      tiersConfirmationEmail: z.string().max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH })).optional(),
+      tiersEmail: z.string().max(TEXT_FIELD_MAX_LENGTH, t(VALIDATION_LONGUEUR_MAX, { max: TEXT_FIELD_MAX_LENGTH })).optional(),
+      tiersConfirmationEmail: z.string().max(TEXT_FIELD_MAX_LENGTH, t(VALIDATION_LONGUEUR_MAX, { max: TEXT_FIELD_MAX_LENGTH })).optional(),
 
-      organisationNom: z.string().max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH })).optional(),
-      organisationAdresse: z.string().max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH })).optional(),
-      organisationAdressePostale: z.string().max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH })).optional(),
-      organisationNpa: z.string().max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH })).optional(),
-      organisationLocalite: z.string().max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH })).optional(),
+      organisationNom: z.string().max(TEXT_FIELD_MAX_LENGTH, t(VALIDATION_LONGUEUR_MAX, { max: TEXT_FIELD_MAX_LENGTH })).optional(),
+      organisationAdresse: z.string().max(TEXT_FIELD_MAX_LENGTH, t(VALIDATION_LONGUEUR_MAX, { max: TEXT_FIELD_MAX_LENGTH })).optional(),
+      organisationAdressePostale: z.string().max(TEXT_FIELD_MAX_LENGTH, t(VALIDATION_LONGUEUR_MAX, { max: TEXT_FIELD_MAX_LENGTH })).optional(),
+      organisationNpa: z.string().max(TEXT_FIELD_MAX_LENGTH, t(VALIDATION_LONGUEUR_MAX, { max: TEXT_FIELD_MAX_LENGTH })).optional(),
+      organisationLocalite: z.string().max(TEXT_FIELD_MAX_LENGTH, t(VALIDATION_LONGUEUR_MAX, { max: TEXT_FIELD_MAX_LENGTH })).optional(),
       organisationPays: z.string().optional(),
       organisationTelephone: z.string().optional(),
-      organisationEmail: z.string().max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH })).optional(),
-      organisationConfirmationEmail: z.string().max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH })).optional(),
+      organisationEmail: z.string().max(TEXT_FIELD_MAX_LENGTH, t(VALIDATION_LONGUEUR_MAX, { max: TEXT_FIELD_MAX_LENGTH })).optional(),
+      organisationConfirmationEmail: z.string().max(TEXT_FIELD_MAX_LENGTH, t(VALIDATION_LONGUEUR_MAX, { max: TEXT_FIELD_MAX_LENGTH })).optional(),
     })
-    .refine(
-      data => {
-        return data.typeDocumentIdentite === "documents_voles_perdus"
-          || !!(data.numeroDocumentIdentite && data.numeroDocumentIdentite.length > 0);
-      },
-      {
-        message: t("validation.numeroDocumentRequis"),
-        path: ["numeroDocumentIdentite"],
-      },
-    )
-    .refine(data => isRequiredWhenTiers(data.lienAvecPersonne, data.tiersTypeDocumentIdentite), {
-      message: t("validation.selectionnerDocument"),
-      path: ["tiersTypeDocumentIdentite"],
-    })
-    .refine(data => isRequiredWhenTiers(data.lienAvecPersonne, data.tiersNumeroDocumentIdentite)
-      || data.tiersTypeDocumentIdentite === "documents_voles_perdus", {
-      message: t("validation.numeroDocumentRequis"),
-      path: ["tiersNumeroDocumentIdentite"],
-    })
-    .refine(
-      data => {
-        const isSuisse = data.nationalite?.label?.toLowerCase().includes("suisse");
-        if (data.nationalite && !isSuisse) {
-          return !!(data.titreSejour && data.titreSejour.length > 0);
-        }
-        return true;
-      },
-      {
-        message: t("validation.titreSejourRequis"),
-        path: ["titreSejour"],
-      },
-    )
-    .refine(
-      data => {
-        if (data.lienAvecPersonne && data.lienAvecPersonne === INFORMATIONS_PERSONNELLES_TIERS) {
-          return !!(data.typeRepresentation && data.typeRepresentation.length > 0);
-        }
-        return true;
-      },
-      {
-        message: t("validation.typeRepresentationRequis"),
-        path: ["typeRepresentation"],
-      },
-    )
-    .refine(
-      data => {
-        if (data.lienAvecPersonne && data.lienAvecPersonne === INFORMATIONS_PERSONNELLES_MON_ENTREPRISE) {
-          return !!(data.postePersonneMorale && data.postePersonneMorale.length > 0);
-        }
-        return true;
-      },
-      {
-        message: t("validation.postePersonneMoraleRequis"),
-        path: ["postePersonneMorale"],
-      },
-    )
-    .refine(
-      data => {
-        const isTiers = data.lienAvecPersonne === INFORMATIONS_PERSONNELLES_TIERS;
-        if (isTiers) {
-          return !!(data.tiersNom && data.tiersNom.length >= VALIDATION_LIMITS.NOM_MIN);
-        }
-        return true;
-      },
-      {
-        message: t("validation.nomMin", { min: VALIDATION_LIMITS.NOM_MIN }),
-        path: ["tiersNom"],
-      },
-    )
-    .refine(
-      data => {
-        const isTiers = data.lienAvecPersonne === INFORMATIONS_PERSONNELLES_TIERS;
-        if (isTiers) {
-          return !!(data.tiersPrenom && data.tiersPrenom.length >= VALIDATION_LIMITS.PRENOM_MIN);
-        }
-        return true;
-      },
-      {
-        message: t("validation.prenomMin", { min: VALIDATION_LIMITS.PRENOM_MIN }),
-        path: ["tiersPrenom"],
-      },
-    )
-    .refine(
-      data => {
-        const isTiers = data.lienAvecPersonne === INFORMATIONS_PERSONNELLES_TIERS;
-        if (isTiers) {
-          return !!data.tiersGenre?.code;
-        }
-        return true;
-      },
-      {
-        message: t("validation.genreRequis"),
-        path: ["tiersGenre"],
-      },
-    )
-    .refine(
-      data => {
-        const isTiers = data.lienAvecPersonne === INFORMATIONS_PERSONNELLES_TIERS;
-        if (isTiers) {
-          return !!data.tiersNationalite?.code;
-        }
-        return true;
-      },
-      {
-        message: t("validation.nationaliteRequise"),
-        path: ["tiersNationalite"],
-      },
-    )
-    .refine(
-      data => {
-        const isTiers = data.lienAvecPersonne === INFORMATIONS_PERSONNELLES_TIERS;
-        if (isTiers) {
-          return !!(data.tiersDateNaissance && data.tiersDateNaissance.length > 0);
-        }
-        return true;
-      },
-      {
-        message: t("validation.dateNaissanceRequise"),
-        path: ["tiersDateNaissance"],
-      },
-    )
-    .refine(
-      data => {
-        const isTiers = data.lienAvecPersonne === INFORMATIONS_PERSONNELLES_TIERS;
-        if (isTiers) {
-          return !!(data.tiersDateNaissance && parseDate(data.tiersDateNaissance) !== null);
-        }
-        return true;
-      },
-      {
-        message: t("validation.formatDateInvalide"),
-        path: ["tiersDateNaissance"],
-      },
-    )
-    .refine(
-      data => {
-        const isTiers = data.lienAvecPersonne === INFORMATIONS_PERSONNELLES_TIERS;
-        if (isTiers) {
-          const birthDate = data.tiersDateNaissance ? parseDate(data.tiersDateNaissance) : null;
-          if (!birthDate) {
-            return false;
-          }
-          const age = calculateAge(birthDate);
-          return age >= AGE_MIN && age <= AGE_MAX;
-        }
-        return true;
-      },
-      {
-        message: t("validation.ageInvalide"),
-        path: ["tiersDateNaissance"],
-      },
-    )
-    .refine(
-      data => {
-        const isTiers = data.lienAvecPersonne === INFORMATIONS_PERSONNELLES_TIERS;
-        if (isTiers) {
-          return !!(data.tiersAdresse && data.tiersAdresse.length >= VALIDATION_LIMITS.ADRESSE_MIN);
-        }
-        return true;
-      },
-      {
-        message: t("validation.adresseMin", { min: VALIDATION_LIMITS.ADRESSE_MIN }),
-        path: ["tiersAdresse"],
-      },
-    )
-    .refine(
-      data => {
-        const isTiers = data.lienAvecPersonne === INFORMATIONS_PERSONNELLES_TIERS;
-        if (isTiers) {
-          const value = data.tiersAdressePostale?.trim() ?? "";
-          return /^[a-zA-Z0-9\s]*$/.test(value);
-        }
-        return true;
-      },
-      {
-        message: t("validation.numeroPostalFormat"),
-        path: ["tiersAdressePostale"],
-      },
-    )
-    .refine(
-      data => {
-        const isTiers = data.lienAvecPersonne === INFORMATIONS_PERSONNELLES_TIERS;
-        if (isTiers) {
-          return !!(data.tiersNpa && data.tiersNpa.length > 0 && /^\d+$/.test(data.tiersNpa));
-        }
-        return true;
-      },
-      {
-        message: t("validation.npaMin"),
-        path: ["tiersNpa"],
-      },
-    )
-    .refine(
-      data => {
-        const isTiers = data.lienAvecPersonne === INFORMATIONS_PERSONNELLES_TIERS;
-        if (isTiers) {
-          return !!(data.tiersLocalite && data.tiersLocalite.length >= 2);
-        }
-        return true;
-      },
-      {
-        message: t("validation.localiteRequise"),
-        path: ["tiersLocalite"],
-      },
-    )
-    .refine(
-      data => {
-        const isTiers = data.lienAvecPersonne === INFORMATIONS_PERSONNELLES_TIERS;
-        if (isTiers) {
-          return !!(
-            data.tiersTelephone &&
-            data.tiersTelephone.length > 0 &&
-            validateInternationalPhone(data.tiersTelephone)
-          );
-        }
-        return true;
-      },
-      {
-        message: t("validation.telephoneFormat"),
-        path: ["tiersTelephone"],
-      },
-    )
-    .refine(
-      data => {
-        const isTiers = data.lienAvecPersonne === INFORMATIONS_PERSONNELLES_TIERS;
-        if (!isTiers) {
-          return true;
-        }
-        return !!data.tiersEmail && z.string().email().safeParse(data.tiersEmail).success;
-      },
-      {
-        message: t("validation.emailInvalide"),
-        path: ["tiersEmail"],
-      },
-    )
-    .refine(
-      data => {
-        const isTiers = data.lienAvecPersonne === INFORMATIONS_PERSONNELLES_TIERS;
-        if (!isTiers) {
-          return true;
-        }
-        return !!data.tiersConfirmationEmail && z.string().email().safeParse(data.tiersConfirmationEmail).success;
-      },
-      {
-        message: t("validation.emailInvalide"),
-        path: ["tiersConfirmationEmail"],
-      },
-    )
-    .refine(
-      data => {
-        const isTiers = data.lienAvecPersonne === INFORMATIONS_PERSONNELLES_TIERS;
-        if (isTiers) {
-          return data.tiersEmail === data.tiersConfirmationEmail;
-        }
-        return true;
-      },
-      {
-        message: t("validation.emailsDifferent"),
-        path: ["tiersConfirmationEmail"],
-      },
-    )
-    .refine(
-      data => {
-        const isOrganisation = data.lienAvecPersonne === INFORMATIONS_PERSONNELLES_MON_ENTREPRISE;
-        if (isOrganisation) {
-          return !!(data.organisationNom && data.organisationNom.length >= VALIDATION_LIMITS.NOM_MIN);
-        }
-        return true;
-      },
-      {
-        message: t("validation.nomMin", { min: VALIDATION_LIMITS.NOM_MIN }),
-        path: ["organisationNom"],
-      },
-    )
-    .refine(
-      data => {
-        const isOrganisation = data.lienAvecPersonne === INFORMATIONS_PERSONNELLES_MON_ENTREPRISE;
-        if (isOrganisation) {
-          return !!(data.organisationAdresse && data.organisationAdresse.length >= VALIDATION_LIMITS.ADRESSE_MIN);
-        }
-        return true;
-      },
-      {
-        message: t("validation.adresseMin", { min: VALIDATION_LIMITS.ADRESSE_MIN }),
-        path: ["organisationAdresse"],
-      },
-    )
-    .refine(
-      data => {
-        const isOrganisation = data.lienAvecPersonne === INFORMATIONS_PERSONNELLES_MON_ENTREPRISE;
-        if (isOrganisation) {
-          const value = data.organisationAdressePostale?.trim() ?? "";
-          return /^[a-zA-Z0-9\s]*$/.test(value);
-        }
-        return true;
-      },
-      {
-        message: t("validation.numeroPostalFormat"),
-        path: ["organisationAdressePostale"],
-      },
-    )
-    .refine(
-      data => {
-        const isOrganisation = data.lienAvecPersonne === INFORMATIONS_PERSONNELLES_MON_ENTREPRISE;
-        if (isOrganisation) {
-          return !!(data.organisationNpa && data.organisationNpa.length > 0 && /^\d+$/.test(data.organisationNpa));
-        }
-        return true;
-      },
-      {
-        message: t("validation.npaMin"),
-        path: ["organisationNpa"],
-      },
-    )
-    .refine(
-      data => {
-        const isOrganisation = data.lienAvecPersonne === INFORMATIONS_PERSONNELLES_MON_ENTREPRISE;
-        if (isOrganisation) {
-          return !!(data.organisationLocalite && data.organisationLocalite.length >= 2);
-        }
-        return true;
-      },
-      {
-        message: t("validation.localiteRequise"),
-        path: ["organisationLocalite"],
-      },
-    )
-    .refine(
-      data => {
-        const isOrganisation = data.lienAvecPersonne === INFORMATIONS_PERSONNELLES_MON_ENTREPRISE;
-        if (isOrganisation) {
-          return !!(
-            data.organisationTelephone &&
-            data.organisationTelephone.length > 0 &&
-            validateInternationalPhone(data.organisationTelephone)
-          );
-        }
-        return true;
-      },
-      {
-        message: t("validation.telephoneFormat"),
-        path: ["organisationTelephone"],
-      },
-    )
-    .refine(
-      data => {
-        const isOrganisation = data.lienAvecPersonne === INFORMATIONS_PERSONNELLES_MON_ENTREPRISE;
-        if (!isOrganisation) {
-          return true;
-        }
-        return !!data.organisationEmail && z.string().email().safeParse(data.organisationEmail).success;
-      },
-      {
-        message: t("validation.emailInvalide"),
-        path: ["organisationEmail"],
-      },
-    )
-    .refine(
-      data => {
-        const isOrganisation = data.lienAvecPersonne === INFORMATIONS_PERSONNELLES_MON_ENTREPRISE;
-        if (!isOrganisation) {
-          return true;
-        }
-        return (
-          !!data.organisationConfirmationEmail &&
-          z.string().email().safeParse(data.organisationConfirmationEmail).success
-        );
-      },
-      {
-        message: t("validation.emailInvalide"),
-        path: ["organisationConfirmationEmail"],
-      },
-    )
-    .refine(
-      data => {
-        const isOrganisation = data.lienAvecPersonne === INFORMATIONS_PERSONNELLES_MON_ENTREPRISE;
-        if (isOrganisation) {
-          return data.organisationEmail === data.organisationConfirmationEmail;
-        }
-        return true;
-      },
-      {
-        message: t("validation.emailsDifferent"),
-        path: ["organisationConfirmationEmail"],
-      },
-    );
+    .superRefine((data, ctx) => {
+      addBaseValidation(t, data, ctx);
+      addTiersValidation(t, data, ctx);
+      addOrganisationValidation(t, data, ctx);
+    });
+};
+
+const addBaseValidation = (t: ComposerTranslation, data: any, ctx: z.RefinementCtx,) => {
+  if (
+    data.typeDocumentIdentite !== "documents_voles_perdus"
+    && !data.numeroDocumentIdentite
+  ) {
+    addCustomIssue(ctx, "numeroDocumentIdentite", t("validation.numeroDocumentRequis"));
+  }
+
+  const isSuisse = data.nationalite?.label?.toLowerCase().includes("suisse");
+
+  if (
+    data.nationalite
+    && !isSuisse
+    && !data.titreSejour
+  ) {
+    addCustomIssue(ctx, "titreSejour", t("validation.titreSejourRequis"));
+  }
+
+  if (
+    data.lienAvecPersonne === INFORMATIONS_PERSONNELLES_TIERS
+    && !data.typeRepresentation
+  ) {
+    addCustomIssue(ctx, "typeRepresentation", t("validation.typeRepresentationRequis"));
+  }
+
+  if (
+    data.lienAvecPersonne === INFORMATIONS_PERSONNELLES_MON_ENTREPRISE
+    && !data.postePersonneMorale
+  ) {
+    addCustomIssue(ctx, "postePersonneMorale", t("validation.postePersonneMoraleRequis"));
+  }
+};
+
+const validateTiersIdentity = (t: ComposerTranslation, data: any, ctx: z.RefinementCtx,) => {
+  if (!hasValue(data.tiersTypeDocumentIdentite)) {
+    addCustomIssue(ctx, "tiersTypeDocumentIdentite", t(VALIDATION_SELECTION_DOCUMENT));
+  }
+
+  if (
+    data.tiersTypeDocumentIdentite !== "documents_voles_perdus"
+    && !hasValue(data.tiersNumeroDocumentIdentite)
+  ) {
+    addCustomIssue(ctx, "tiersNumeroDocumentIdentite", t("validation.numeroDocumentRequis"));
+  }
+};
+
+const validateTiersPerson = (t: ComposerTranslation, data: any, ctx: z.RefinementCtx,) => {
+  if (!data.tiersNom || data.tiersNom.length < VALIDATION_LIMITS.NOM_MIN) {
+    addCustomIssue(ctx, "tiersNom", t(VALIDATION_NOM_MIN, { min: VALIDATION_LIMITS.NOM_MIN }));
+  }
+
+  if (!data.tiersPrenom || data.tiersPrenom.length < VALIDATION_LIMITS.PRENOM_MIN) {
+    addCustomIssue(ctx, "tiersPrenom", t("validation.prenomMin", { min: VALIDATION_LIMITS.PRENOM_MIN }));
+  }
+
+  if (!data.tiersGenre?.code) {
+    addCustomIssue(ctx, "tiersGenre", t("validation.genreRequis"));
+  }
+
+  if (!data.tiersNationalite?.code) {
+    addCustomIssue(ctx, "tiersNationalite", t("validation.nationaliteRequise"));
+  }
+};
+
+const validateTiersBirthDate = (t: ComposerTranslation, data: any, ctx: z.RefinementCtx,) => {
+  if (!data.tiersDateNaissance) {
+    addCustomIssue(ctx, "tiersDateNaissance", t("validation.dateNaissanceRequise"));
+    return;
+  }
+
+  const birthDate = parseDate(data.tiersDateNaissance);
+
+  if (!birthDate) {
+    addCustomIssue(ctx, "tiersDateNaissance", t("validation.formatDateInvalide"));
+    return;
+  }
+
+  const age = calculateAge(birthDate);
+
+  if (age < AGE_MIN || age > AGE_MAX) {
+    addCustomIssue(ctx, "tiersDateNaissance", t("validation.ageInvalide"));
+  }
+};
+
+const validateTiersAddress = (t: ComposerTranslation, data: any, ctx: z.RefinementCtx,) => {
+  if (!data.tiersAdresse || data.tiersAdresse.length < VALIDATION_LIMITS.ADRESSE_MIN) {
+    addCustomIssue(ctx, "tiersAdresse", t(VALIDATION_ADRESSE_MIN, { min: VALIDATION_LIMITS.ADRESSE_MIN }));
+  }
+
+  if (!/^[a-zA-Z0-9\s]*$/.test(data.tiersAdressePostale?.trim() ?? "")) {
+    addCustomIssue(ctx, "tiersAdressePostale", t(VALIDATION_NUMERO_POSTAL_FORMAT));
+  }
+
+  if (!data.tiersNpa || !/^\d+$/.test(data.tiersNpa)) {
+    addCustomIssue(ctx, "tiersNpa", t(VALIDATION_NPA_MIN));
+  }
+
+  if (!data.tiersLocalite || data.tiersLocalite.length < 2) {
+    addCustomIssue(ctx, "tiersLocalite", t(VALIDATION_LOCALITE_REQUISE));
+  }
+};
+
+const validateTiersContact = (t: ComposerTranslation, data: any, ctx: z.RefinementCtx,) => {
+  if (!data.tiersTelephone || !validateInternationalPhone(data.tiersTelephone)) {
+    addCustomIssue(ctx, "tiersTelephone", t(VALIDATION_TELEPHONE_FORMAT));
+  }
+
+  if (!data.tiersEmail || !z.string().email().safeParse(data.tiersEmail).success) {
+    addCustomIssue(ctx, "tiersEmail", t(VALIDATION_EMAIL_INVALIDE));
+  }
+
+  if (
+    !data.tiersConfirmationEmail
+    || !z.string().email().safeParse(data.tiersConfirmationEmail).success
+  ) {
+    addCustomIssue(ctx, "tiersConfirmationEmail", t(VALIDATION_EMAIL_INVALIDE));
+  }
+
+  if (data.tiersEmail !== data.tiersConfirmationEmail) {
+    addCustomIssue(ctx, "tiersConfirmationEmail", t("validation.emailsDifferent"));
+  }
+};
+
+const addTiersValidation = (t: ComposerTranslation, data: any, ctx: z.RefinementCtx,) => {
+  if (data.lienAvecPersonne !== INFORMATIONS_PERSONNELLES_TIERS) {
+    return;
+  }
+
+  validateTiersIdentity(t, data, ctx);
+  validateTiersPerson(t, data, ctx);
+  validateTiersBirthDate(t, data, ctx);
+  validateTiersAddress(t, data, ctx);
+  validateTiersContact(t, data, ctx);
+};
+
+const validateOrganisationIdentity = (t: ComposerTranslation, data: any, ctx: z.RefinementCtx,) => {
+  if (!data.organisationNom || data.organisationNom.length < VALIDATION_LIMITS.NOM_MIN) {
+    addCustomIssue(ctx, "organisationNom", t(VALIDATION_NOM_MIN, { min: VALIDATION_LIMITS.NOM_MIN }));
+  }
+};
+
+const validateOrganisationAddress = (t: ComposerTranslation, data: any, ctx: z.RefinementCtx,) => {
+  if (!data.organisationAdresse || data.organisationAdresse.length < VALIDATION_LIMITS.ADRESSE_MIN) {
+    addCustomIssue(ctx, "organisationAdresse", t(VALIDATION_ADRESSE_MIN, { min: VALIDATION_LIMITS.ADRESSE_MIN }));
+  }
+
+  if (!/^[a-zA-Z0-9\s]*$/.test(data.organisationAdressePostale?.trim() ?? "")) {
+    addCustomIssue(ctx, "organisationAdressePostale", t(VALIDATION_NUMERO_POSTAL_FORMAT));
+  }
+
+  if (!data.organisationNpa || !/^\d+$/.test(data.organisationNpa)) {
+    addCustomIssue(ctx, "organisationNpa", t(VALIDATION_NPA_MIN));
+  }
+
+  if (!data.organisationLocalite || data.organisationLocalite.length < 2) {
+    addCustomIssue(ctx, "organisationLocalite", t(VALIDATION_LOCALITE_REQUISE));
+  }
+};
+
+const validateOrganisationContact = (t: ComposerTranslation, data: any, ctx: z.RefinementCtx,) => {
+  if (!data.organisationTelephone || !validateInternationalPhone(data.organisationTelephone)) {
+    addCustomIssue(ctx, "organisationTelephone", t(VALIDATION_TELEPHONE_FORMAT));
+  }
+
+  if (!data.organisationEmail || !z.string().email().safeParse(data.organisationEmail).success) {
+    addCustomIssue(ctx, "organisationEmail", t(VALIDATION_EMAIL_INVALIDE));
+  }
+
+  if (
+    !data.organisationConfirmationEmail
+    || !z.string().email().safeParse(data.organisationConfirmationEmail).success
+  ) {
+    addCustomIssue(ctx, "organisationConfirmationEmail", t(VALIDATION_EMAIL_INVALIDE));
+  }
+
+  if (data.organisationEmail !== data.organisationConfirmationEmail) {
+    addCustomIssue(ctx, "organisationConfirmationEmail", t("validation.emailsDifferent"));
+  }
+};
+
+const addOrganisationValidation = (t: ComposerTranslation, data: any, ctx: z.RefinementCtx,) => {
+  if (data.lienAvecPersonne !== INFORMATIONS_PERSONNELLES_MON_ENTREPRISE) {
+    return;
+  }
+
+  validateOrganisationIdentity(t, data, ctx);
+  validateOrganisationAddress(t, data, ctx);
+  validateOrganisationContact(t, data, ctx);
 };

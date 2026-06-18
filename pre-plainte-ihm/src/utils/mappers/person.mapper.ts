@@ -76,11 +76,20 @@ export class PersonneMapper {
   /**
    * Ajoute les informations du tiers
    */
-  private static async addTiersInfo(result: any, form: PrePlainteFormFields): Promise<void> {
+  private static async addTiersInfo(
+    result: any,
+    form: PrePlainteFormFields,
+  ): Promise<void> {
     if (isBlank(form.tiersNom) || isBlank(form.tiersPrenom)) {
       return;
     }
 
+    result.tiers = this.buildTiers(form);
+    this.applyTiersIdentity(result.tiers, form);
+    this.applyTiersRepresentation(result, form);
+  }
+
+  private static buildTiers(form: PrePlainteFormFields) {
     const tiersAdresse = AdresseMapper.buildAdresse(
       form.tiersAdresse ?? "",
       form.tiersAdressePostale ?? "",
@@ -89,7 +98,7 @@ export class PersonneMapper {
       form.tiersPays ?? RIPOL.PAYS_SUISSE,
     );
 
-    result.tiers = {
+    return {
       nom: form.tiersNom,
       prenom: form.tiersPrenom,
       genre: form.tiersGenre,
@@ -99,14 +108,25 @@ export class PersonneMapper {
       telephone: form.tiersTelephone,
       email: form.tiersEmail,
     };
+  }
 
+  private static applyTiersIdentity(
+    tiers: any,
+    form: PrePlainteFormFields,
+  ) {
     if (form.tiersTypeDocumentIdentite != null) {
-      result.tiers.typeDocumentIdentite = form.tiersTypeDocumentIdentite;
-    }
-    if (!isBlank(form.tiersNumeroDocumentIdentite)) {
-      result.tiers.numeroDocumentIdentite = form.tiersNumeroDocumentIdentite;
+      tiers.typeDocumentIdentite = form.tiersTypeDocumentIdentite;
     }
 
+    if (!isBlank(form.tiersNumeroDocumentIdentite)) {
+      tiers.numeroDocumentIdentite = form.tiersNumeroDocumentIdentite;
+    }
+  }
+
+  private static applyTiersRepresentation(
+    result: any,
+    form: PrePlainteFormFields,
+  ) {
     if (!isBlank(form.typeRepresentation)) {
       result.typeRepresentation = form.typeRepresentation;
     }
