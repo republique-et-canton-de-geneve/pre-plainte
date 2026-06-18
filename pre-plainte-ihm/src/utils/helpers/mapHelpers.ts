@@ -92,7 +92,7 @@ export const getUserLocation = (): Promise<[number, number]> => {
         resolve([lat, lng]);
       },
       error => {
-        reject(error);
+        reject(new Error(error.message));
       },
       {
         enableHighAccuracy: true,

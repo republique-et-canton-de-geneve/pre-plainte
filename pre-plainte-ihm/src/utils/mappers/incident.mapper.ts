@@ -113,13 +113,13 @@ export class IncidentMapper {
     return {
       categorieObjet: this.toOptionalString(form.categorieObjet),
       sousCategorie: this.toOptionalString(form.sousCategorie),
-      type: form.typeObjet?.code ? form.typeObjet : undefined,
-      fabricant: form.fabricant?.code ? form.fabricant : undefined,
+      type: this.toOptionalRipolSelection(form.typeObjet),
+      fabricant: this.toOptionalRipolSelection(form.fabricant),
       fabricantAutre: this.resolveFabricantAutre(form),
-      modele: form.modele?.code ? form.modele : undefined,
+      modele: this.toOptionalRipolSelection(form.modele),
       modeleAutre: this.resolveModeleAutre(form),
-      couleur: form.couleur?.code ? form.couleur : undefined,
-      couleurSecondaire: form.couleurSecondaire?.code ? form.couleurSecondaire : undefined,
+      couleur: this.toOptionalRipolSelection(form.couleur),
+      couleurSecondaire: this.toOptionalRipolSelection(form.couleurSecondaire),
       numeroSerie: this.resolveNumeroSerie(form, isVehicle),
       numeroSerieInconnu: this.resolveNumeroSerieInconnu(form, isVehicle),
       numeroCadre: this.resolveNumeroCadre(form, isVehicle),
@@ -138,13 +138,28 @@ export class IncidentMapper {
       plaqueInconnu: this.resolvePlaqueInconnu(form, objetAvecPlaque),
       plaquePays: this.resolvePlaquePays(form, objetAvecPlaque),
       plaqueCanton: this.resolvePlaqueCanton(form, objetAvecPlaque),
+      ...this.buildVehicleFields(form, isVehicle),
+    };
+  }
+
+  private static buildVehicleFields(
+    form: PrePlainteFormFields,
+    isVehicle: boolean,
+  ) {
+    return {
       assuranceAucune: isVehicle ? !!form.assuranceAucune : undefined,
-      assureur: undefined,
+      assureur: isVehicle ? this.toOptionalRipolSelection(form.assureur) : undefined,
       assureurAutre: isVehicle ? this.resolveNomAssureurVehicule(form) : undefined,
       numeroAssurance: isVehicle ? this.toOptionalString(form.numeroAssurance) : undefined,
       numeroVignette: isVehicle ? this.toOptionalString(form.numeroVignette) : undefined,
       numeroMaster: isVehicle ? this.toOptionalString(form.numeroMaster) : undefined,
     };
+  }
+
+  private static toOptionalRipolSelection<T extends { code?: string }>(
+    value: T | null | undefined,
+  ): T | undefined {
+    return value?.code ? value : undefined;
   }
 
   private static resolveNomAssureurVehicule(form: PrePlainteFormFields) {
@@ -316,9 +331,9 @@ export class IncidentMapper {
         const merged = {
           ...form,
           ...s,
-        } as PrePlainteFormFields;
+        };
         const isVehiculeSnapshot = s?.categorieObjet === "vehicule" || s?.isVehicle === true;
-        return this.buildObjetIncidentDTO(merged, { isVehicle: !!isVehiculeSnapshot });
+        return this.buildObjetIncidentDTO(merged, { isVehicle: isVehiculeSnapshot });
       });
       categorieObjetIncident =
         this.toOptionalString(snapshots[0]?.categorieObjet) || this.toOptionalString(form.categorieObjet);
@@ -375,7 +390,7 @@ export class IncidentMapper {
           ...form,
           ...s,
           categorieObjet: "vehicule",
-        } as PrePlainteFormFields;
+        };
         return this.buildObjetIncidentDTO(merged, { isVehicle: true });
       });
     }

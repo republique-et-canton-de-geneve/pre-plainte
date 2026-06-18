@@ -29,29 +29,87 @@ const matchesRipolSearch = (ripol: Ripol, search: string): boolean => {
 };
 
 export class RipolService {
-  static async search(endpoint: string, search?: string, params?: Record<string, string>): Promise<Ripol[]> {
-    const isCacheable = !search;
+
+  static async search(endpoint: string, search?: string, params?: Record<string, string>,): Promise<Ripol[]> {
     const cacheKey = getCacheKey(endpoint, params);
-    const searchCacheKey = search ? `${cacheKey}:search:${search.trim().toLowerCase()}` : null;
 
+    const searchCacheKey = this.buildSearchCacheKey(cacheKey, search);
+
+    const cachedSearchResult = this.getFromSearchCache(searchCacheKey);
+    if (cachedSearchResult) {
+      return cachedSearchResult;
+    }
+
+    const cachedResult = this.getFromCache(cacheKey, search);
+    if (cachedResult) {
+      return cachedResult;
+    }
+
+    const data = await this.fetchData(endpoint, search, params);
+
+    this.storeInCache(cacheKey, searchCacheKey, search, data);
+
+    return data;
+  }
+
+  private static storeInCache(cacheKey: string, searchCacheKey: string | null, search: string | undefined, data: Ripol[],): void {
     if (searchCacheKey) {
-      const cachedSearch = searchCache.get(searchCacheKey);
-      if (cachedSearch && Date.now() - cachedSearch.timestamp < SEARCH_CACHE_DURATION) {
-        return cachedSearch.data;
-      }
+      searchCache.set(searchCacheKey, {
+        data,
+        timestamp: Date.now(),
+      });
     }
 
-    if (isCacheable) {
-      const cached = cache.get(cacheKey);
-      if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
-        return cached.data;
-      }
+    if (!search) {
+      cache.set(cacheKey, {
+        data,
+        timestamp: Date.now(),
+      });
+    }
+  }
+
+  private static buildSearchCacheKey(cacheKey: string, search?: string,): string | null {
+    return search ? `${cacheKey}:search:${search.trim().toLowerCase()}` : null;
+  }
+
+  private static getFromSearchCache(searchCacheKey: string | null): Ripol[] | null {
+    if (!searchCacheKey) {
+      return null;
     }
 
+    const cached = searchCache.get(searchCacheKey);
+
+    if (cached && this.isValidCache(cached, SEARCH_CACHE_DURATION)) {
+      return cached.data;
+    }
+
+    return null;
+  }
+
+  private static getFromCache(cacheKey: string, search?: string): Ripol[] | null {
+    if (search) {
+      return null;
+    }
+
+    const cached = cache.get(cacheKey);
+
+    if (cached && this.isValidCache(cached, CACHE_DURATION)) {
+      return cached.data;
+    }
+
+    return null;
+  }
+
+  private static isValidCache(entry: { timestamp: number }, duration: number): boolean {
+    return Date.now() - entry.timestamp < duration;
+  }
+
+  private static buildQuery(search?: string, params?: Record<string, string>): string {
     const queryParams = new URLSearchParams();
 
-    if (search && search.trim().length > 0) {
-      queryParams.set("search", search.trim());
+    const trimmedSearch = search?.trim();
+    if (trimmedSearch) {
+      queryParams.set("search", trimmedSearch);
     }
 
     if (params) {
@@ -60,9 +118,12 @@ export class RipolService {
       });
     }
 
-    const queryString = queryParams.toString();
-    const query = queryString ? `?${queryString}` : "";
-    const url = `${baseUrl}/${endpoint}${query}`;
+    const qs = queryParams.toString();
+    return qs ? `?${qs}` : "";
+  }
+
+  private static async fetchData(endpoint: string, search?: string, params?: Record<string, string>,): Promise<Ripol[]> {
+    const url = `${baseUrl}/${endpoint}${this.buildQuery(search, params)}`;
 
     const response = await fetch(url);
 
@@ -71,17 +132,7 @@ export class RipolService {
       throw new Error(getUserFacingApiErrorMessage(response.status, bodyText));
     }
 
-    const data = await response.json();
-
-    if (searchCacheKey) {
-      searchCache.set(searchCacheKey, { data, timestamp: Date.now() });
-    }
-
-    if (isCacheable) {
-      cache.set(cacheKey, { data, timestamp: Date.now() });
-    }
-
-    return data;
+    return response.json();
   }
 
   static readonly getSexes = (): Promise<Ripol[]> => RipolService.search("sexes");
