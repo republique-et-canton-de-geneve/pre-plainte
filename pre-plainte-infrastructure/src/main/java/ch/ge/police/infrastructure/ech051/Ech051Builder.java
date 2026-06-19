@@ -52,6 +52,7 @@ import static ch.ge.police.infrastructure.ech051.Ech051Constants.CommunicationUs
 public class Ech051Builder {
 
   private static final String RIPOL_SOURCE = "RIPOL";
+  private static final String PPL_SOURCE = "PPL";
   private static final ZoneId ZONE_EUROPE_ZURICH = ZoneId.of("Europe/Zurich");
   private static final DateTimeFormatter SEP_ACTION_PERIOD_FORMATTER =
       DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
@@ -176,9 +177,9 @@ public class Ech051Builder {
     xml.setDeliveryDate(processData.getDeliveryDate());
 
     Ech0051DocumentXml.SourceIdXml sourceIdXml = new Ech0051DocumentXml.SourceIdXml();
-    sourceIdXml.setSource("SEP");
-    sourceIdXml.setSourceTable(processData.getSourceId());
-    sourceIdXml.setValue(processData.getSourceValue() != null ? processData.getSourceValue() : "PPL");
+    sourceIdXml.setSource(PPL_SOURCE);
+    sourceIdXml.setSourceTable("");
+    sourceIdXml.setValue("");
     xml.setSourceId(sourceIdXml);
 
     if (processData.getProcessingStatus() != null) {
