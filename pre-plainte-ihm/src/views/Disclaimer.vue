@@ -3,59 +3,6 @@
     <h1 class="mb-5 text-h1 text-md-h2 d-none d-md-block">{{ t("titreApplication.prePlainte") }}</h1>
     <v-card class="pa-2 pa-md-8" elevation="1">
       <h2 class="pre-plainte-main-card-title text-h2 mb-4">{{ t("steps.informationsGenerales") }}</h2>
-      <h3>{{ t("informationsEvenement.typeIncident") }}</h3>
-      <AccessibleVSelect
-        v-model="typeIncident"
-        :label="t('informationsEvenement.typeIncident')"
-        required
-        :items="[
-          { label: t('incidentTypes.vol'), value: 'vol' },
-          { label: t('dommages.titre'), value: 'degat-delit' },
-          { label: t('cybercrime.titre'), value: 'cybercrime' },
-        ]"
-        :error-messages="typeIncidentError"
-        :hint="t('informationsEvenement.hintTypeIncident')"
-        persistent-hint
-        clearable
-        class="mb-8 mt-5"
-      />
-
-      <AccessibleVSelect
-        v-if="typeIncident === 'degat-delit'"
-        v-model="typeDommage"
-        :label="t('dommages.typeDommage')"
-        required
-        :items="typeDommageOptions"
-        :error-messages="typeDommageError"
-        item-title="label"
-        item-value="value"
-        :hint="t('dommages.hintTypeDommage')"
-        persistent-hint
-        class="mb-8"
-      />
-
-      <AccessibleVSelect
-        v-if="typeIncident === 'cybercrime'"
-        v-model="typeCybercrime"
-        :items="typeCybercrimeOptions"
-        item-title="label"
-        item-value="value"
-        :label="t('cybercrime.type')"
-        required
-        :error-messages="typeCybercrimeError"
-        variant="outlined"
-        class="mb-8"
-        :hint="t('cybercrime.hintType')"
-        persistent-hint
-        clearable
-      />
-
-      <v-alert type="info" class="mb-6" density="comfortable" :icon="mobile ? false : undefined">
-        {{ t("disclaimer.casNonTrouve") }}
-        <a :href="POSTES_POLICE_URL" target="_blank" rel="noopener noreferrer">
-          {{ t("disclaimer.prendreRendezVousPoste") }}
-        </a>
-      </v-alert>
 
       <v-alert type="info" class="mb-6" density="comfortable" :icon="mobile ? false : undefined">
         <div class="text-body-2 text-md-body-1">
@@ -116,6 +63,60 @@
           </span>
         </v-card-text>
       </v-card>
+
+      <h3>{{ t("informationsEvenement.typeIncident") }}</h3>
+      <AccessibleVSelect
+        v-model="typeIncident"
+        :label="t('informationsEvenement.typeIncident')"
+        required
+        :items="[
+          { label: t('incidentTypes.vol'), value: 'vol' },
+          { label: t('dommages.titre'), value: 'degat-delit' },
+          { label: t('cybercrime.titre'), value: 'cybercrime' },
+        ]"
+        :error-messages="typeIncidentError"
+        :hint="t('informationsEvenement.hintTypeIncident')"
+        persistent-hint
+        clearable
+        class="mb-8 mt-5"
+      />
+
+      <AccessibleVSelect
+        v-if="typeIncident === 'degat-delit'"
+        v-model="typeDommage"
+        :label="t('dommages.typeDommage')"
+        required
+        :items="typeDommageOptions"
+        :error-messages="typeDommageError"
+        item-title="label"
+        item-value="value"
+        :hint="t('dommages.hintTypeDommage')"
+        persistent-hint
+        class="mb-8"
+      />
+
+      <AccessibleVSelect
+        v-if="typeIncident === 'cybercrime'"
+        v-model="typeCybercrime"
+        :items="typeCybercrimeOptions"
+        item-title="label"
+        item-value="value"
+        :label="t('cybercrime.type')"
+        required
+        :error-messages="typeCybercrimeError"
+        variant="outlined"
+        class="mb-8"
+        :hint="t('cybercrime.hintType')"
+        persistent-hint
+        clearable
+      />
+
+      <v-alert type="info" class="mb-6" density="comfortable" :icon="mobile ? false : undefined">
+        {{ t("disclaimer.casNonTrouve") }}
+        <a :href="POSTES_POLICE_URL" target="_blank" rel="noopener noreferrer">
+          {{ t("disclaimer.prendreRendezVousPoste") }}
+        </a>
+      </v-alert>
 
       <v-divider v-if="captchaEnabled"></v-divider>
       <div @click.stop v-if="captchaEnabled">
