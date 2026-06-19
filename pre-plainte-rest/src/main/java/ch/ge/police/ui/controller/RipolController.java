@@ -28,7 +28,7 @@ public class RipolController {
   public static final String GROUP_TYPE_TYPE_DOCUMENT = "01M";
   public static final String GROUP_TYPE_LIEU = "390";
   public static final String GROUP_TYPE_MODE_OPERATOIRE = "kasPhaenomen";
-  public static final String GROUP_TYPE_COULEUR = "103";
+  public static final String GROUP_TYPE_COULEUR = "235";
   public static final String GROUP_TYPE_CANTON = "1";
   public static final String GROUP_TYPE_VEHICLE_BRAND = "102";
   public static final String MASTER_TYPE_VEHICLE_MODEL = GROUP_TYPE_VEHICLE_BRAND;

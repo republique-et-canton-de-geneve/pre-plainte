@@ -48,14 +48,14 @@ class Ech051AdapterTest {
 
     PrePlainte prePlainte = mock(PrePlainte.class);
     String xml = "<root>ok</root>";
-    when(builder.generateEch051Xml(prePlainte, true)).thenReturn(xml);
+    when(builder.generateEch051Xml(prePlainte, false)).thenReturn(xml);
 
     ArgumentCaptor<PutObjectRequest> reqCaptor = ArgumentCaptor.forClass(PutObjectRequest.class);
     ArgumentCaptor<RequestBody> bodyCaptor = ArgumentCaptor.forClass(RequestBody.class);
 
     adapter.soumettrePrePlainteVersNas(prePlainte);
 
-    verify(builder).generateEch051Xml(prePlainte, true);
+    verify(builder).generateEch051Xml(prePlainte, false);
     verify(s3Client).putObject(reqCaptor.capture(), bodyCaptor.capture());
 
     PutObjectRequest req = reqCaptor.getValue();
@@ -78,14 +78,14 @@ class Ech051AdapterTest {
   @Test
   void soumettrePrePlainteVersNas_shouldSupportNullPrePlainte() {
     Ech051Adapter adapter = newAdapter();
-    when(builder.generateEch051Xml(null, true)).thenReturn("<root>ok</root>");
+    when(builder.generateEch051Xml(null, false)).thenReturn("<root>ok</root>");
 
     ArgumentCaptor<PutObjectRequest> reqCaptor = ArgumentCaptor.forClass(PutObjectRequest.class);
     ArgumentCaptor<RequestBody> bodyCaptor = ArgumentCaptor.forClass(RequestBody.class);
 
     adapter.soumettrePrePlainteVersNas(null);
 
-    verify(builder).generateEch051Xml(null, true);
+    verify(builder).generateEch051Xml(null, false);
     verify(s3Client).putObject(reqCaptor.capture(), bodyCaptor.capture());
 
     PutObjectRequest req = reqCaptor.getValue();
@@ -100,7 +100,7 @@ class Ech051AdapterTest {
     Ech051Adapter adapter = newAdapter();
 
     PrePlainte prePlainte = mock(PrePlainte.class);
-    when(builder.generateEch051Xml(prePlainte, true)).thenReturn("<root/>");
+    when(builder.generateEch051Xml(prePlainte, false)).thenReturn("<root/>");
 
     doThrow(new RuntimeException("boom"))
       .when(s3Client)
@@ -121,7 +121,7 @@ class Ech051AdapterTest {
     Ech051Adapter adapter = newAdapter();
 
     PrePlainte prePlainte = mock(PrePlainte.class);
-    when(builder.generateEch051Xml(prePlainte, true)).thenReturn("<root/>");
+    when(builder.generateEch051Xml(prePlainte, false)).thenReturn("<root/>");
 
     AwsErrorDetails awsErrorDetails = AwsErrorDetails.builder()
       .errorCode("AccessDenied")
@@ -156,7 +156,7 @@ class Ech051AdapterTest {
     Ech051Adapter adapter = newAdapter();
 
     PrePlainte prePlainte = mock(PrePlainte.class);
-    when(builder.generateEch051Xml(prePlainte, true)).thenReturn("<root/>");
+    when(builder.generateEch051Xml(prePlainte, false)).thenReturn("<root/>");
 
     S3Exception s3Exception = (S3Exception) S3Exception.builder()
       .statusCode(500)
