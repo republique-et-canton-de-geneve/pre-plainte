@@ -50,7 +50,7 @@ public class SqliteRipolAdapter implements RipolPort {
   private static final String GROUP_TYPE_OBJET = MASTER_TYPE_OBJETS;
   private static final String GROUP_TYPE_VEHICULE = "101";
   private static final String GROUP_TYPE_VEHICLE_BRAND = "102";
-  private static final String GROUP_TYPE_COULEUR = "103";
+  private static final String GROUP_TYPE_COULEUR = "235";
   private static final String GROUP_TYPE_LIEU = "390";
   private static final String GROUP_TYPE_CANTON = "1";
   private static final List<String> PRELOADED_GROUP_TYPES = List.of(

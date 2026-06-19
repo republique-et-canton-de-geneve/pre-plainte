@@ -217,6 +217,25 @@ class Ech051BuilderTest {
   }
 
   @Test
+  void generateEch051Xml_shouldMapProcessDataSourceIdWithPplSourceAndEmptySourceTable() {
+    PrePlainte prePlainte = mock(PrePlainte.class);
+    when(mapper.toDocument(prePlainte)).thenReturn(Ech0051DocumentPayload.builder()
+        .processData(Ech0051DocumentPayload.ProcessData.builder()
+            .deliveryDate("2026-06-19")
+            .sourceId(Ech051Constants.SourceIds.VOL)
+            .sourceValue("demande-123")
+            .build())
+        .relations(Ech0051DocumentPayload.Relations.builder().build())
+        .build());
+
+    String xml = builder.generateEch051Xml(prePlainte, false);
+
+    assertThat(xml)
+        .contains("<eCH-0051:sourceID source=\"PPL\" sourceTable=\"\"></eCH-0051:sourceID>")
+        .doesNotContain("source=\"SEP\"");
+  }
+
+  @Test
   void generateEch051Xml_shouldUseVolMessageTypeWhenNoVehicleAndFalseTestFlag() {
     PrePlainte prePlainte = mock(PrePlainte.class);
     when(mapper.toDocument(prePlainte)).thenReturn(buildPayloadWithoutVehicle());
