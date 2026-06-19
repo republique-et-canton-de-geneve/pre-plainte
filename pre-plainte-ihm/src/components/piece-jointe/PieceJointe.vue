@@ -344,7 +344,7 @@ function match(bytes: Uint8Array, signature: number[]): boolean {
 }
 
 function removeFile(index: number) {
-  files.value.splice(index, 1);
+  files.value = files.value.filter((_, i) => i !== index);
 }
 
 function formatMo(size: number) {
