@@ -50,7 +50,7 @@ public class Ech051Adapter implements PrePlainteSubmissionPort {
     String key = buildKey();
 
     try {
-      String xml = builder.generateEch051Xml(prePlainte, true);
+      String xml = builder.generateEch051Xml(prePlainte, false);
 
       PutObjectRequest request = PutObjectRequest.builder()
         .bucket(bucketName)

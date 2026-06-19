@@ -677,19 +677,19 @@ class SqliteRipolAdapterTest {
         """);
       st.execute("""
           INSERT INTO TBINCIDENTCODE (ID, GROUPTYPE, CODEVALUE, TEXT)
-          VALUES (1, '103', '5001', 'Effektlack')
+          VALUES (1, '235', '5001', 'Effektlack')
         """);
       st.execute("""
           INSERT INTO TBLOCALIZATION (PK, GROUPTYPE, LOCALE_ID, TRANSLATION)
-          VALUES (1, '103', 3, 'Effet laqué')
+          VALUES (1, '235', 3, 'Effet laqué')
         """);
       st.execute("""
           INSERT INTO TBINCIDENTCODE (ID, GROUPTYPE, CODEVALUE, TEXT)
-          VALUES (2, '103', '9012', 'Eintrag gültig')
+          VALUES (2, '235', '9012', 'Eintrag gültig')
         """);
       st.execute("""
           INSERT INTO TBLOCALIZATION (PK, GROUPTYPE, LOCALE_ID, TRANSLATION)
-          VALUES (2, '103', 3, 'Eintrag gültig')
+          VALUES (2, '235', 3, 'Eintrag gültig')
         """);
     }
 
@@ -698,7 +698,7 @@ class SqliteRipolAdapterTest {
       new SingleResourceLoader("classpath:" + classpathLocation, new FileSystemResource(db.toFile()));
     SqliteRipolAdapter adapter = new SqliteRipolAdapter(loader, classpathLocation);
 
-    List<Ripol> colours = adapter.getCodesByGroupType("103");
+    List<Ripol> colours = adapter.getCodesByGroupType("235");
 
     assertEquals(1, colours.size());
     assertEquals("5001", colours.getFirst().code());
