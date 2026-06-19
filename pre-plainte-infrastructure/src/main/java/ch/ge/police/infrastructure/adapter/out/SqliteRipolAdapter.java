@@ -74,7 +74,6 @@ public class SqliteRipolAdapter implements RipolPort {
   private static final int SQLITE_HEADER_PROBE_BYTES = 128;
   private static final String SQLITE_MAGIC = "SQLite format 3";
   private static final String GIT_LFS_POINTER_PREFIX = "version https://git-lfs.github.com";
-  private static final int LOCALE_FR = 3;
   private static final String SQL_SELECT_TEXT_FR =
     "COALESCE(NULLIF(trim(loc.TRANSLATION), ''), code.TEXT) AS TEXT_FR\n";
   private static final String SQL_JOIN_LOCALIZATION_FR =
@@ -97,6 +96,17 @@ public class SqliteRipolAdapter implements RipolPort {
           + " AND length(trim(code.TEXT)) >= 10"
           + " AND trim(code.TEXT) NOT GLOB '*[^0-9]*'"
           + " )";
+  private static final String FROM_TBINCIDENTCODE_CODE = """
+    FROM TBINCIDENTCODE code
+    """;
+  private static final String TEXT_SEARCH_FILTER_SQL = """
+      AND (
+        LOWER(code.TEXT) LIKE ?
+        OR LOWER(COALESCE(NULLIF(trim(loc.TRANSLATION), ''), '')) LIKE ?
+      )
+    ORDER BY TEXT_FR ASC
+    LIMIT ?
+    """;
 
   private enum AllowedTable {
     INCIDENT_CODE(TABLE_INCIDENT_CODE),
@@ -188,12 +198,10 @@ public class SqliteRipolAdapter implements RipolPort {
               code.GROUPTYPE,
               code.CODEVALUE,
               code.TEXT AS TEXT_DE,
-              """ + SQL_SELECT_TEXT_FR + """
-          FROM TBINCIDENTCODE code
-          """ + SQL_JOIN_LOCALIZATION_FR + """
+              """ + SQL_SELECT_TEXT_FR + FROM_TBINCIDENTCODE_CODE + SQL_JOIN_LOCALIZATION_FR + """
           WHERE code.GROUPTYPE = ?
           """ + andAliased + exclude + """
-          
+
           ORDER BY TEXT_FR ASC
           """;
 
@@ -202,27 +210,16 @@ public class SqliteRipolAdapter implements RipolPort {
               code.GROUPTYPE,
               code.CODEVALUE,
               code.TEXT AS TEXT_DE,
-              """ + SQL_SELECT_TEXT_FR + """
-          FROM TBINCIDENTCODE code
-          """ + SQL_JOIN_LOCALIZATION_FR + """
+              """ + SQL_SELECT_TEXT_FR + FROM_TBINCIDENTCODE_CODE + SQL_JOIN_LOCALIZATION_FR + """
           WHERE code.GROUPTYPE = ?
-            """ + andAliased + exclude + """
-            AND (
-              LOWER(code.TEXT) LIKE ?
-              OR LOWER(COALESCE(NULLIF(trim(loc.TRANSLATION), ''), '')) LIKE ?
-            )
-          ORDER BY TEXT_FR ASC
-          LIMIT ?
-          """;
+            """ + andAliased + exclude + TEXT_SEARCH_FILTER_SQL;
 
       String brandsByType = """
           SELECT
               ? AS GROUPTYPE,
               code.CODEVALUE,
               code.TEXT AS TEXT_DE,
-              """ + SQL_SELECT_TEXT_FR + """
-          FROM TBINCIDENTCODE code
-          """ + SQL_JOIN_LOCALIZATION_FR + """
+              """ + SQL_SELECT_TEXT_FR + FROM_TBINCIDENTCODE_CODE + SQL_JOIN_LOCALIZATION_FR + """
           WHERE code.MASTERTYPE = ?
             AND code.MASTERVALUE = ?
             """ + andAliased + exclude + """
@@ -234,28 +231,17 @@ public class SqliteRipolAdapter implements RipolPort {
               ? AS GROUPTYPE,
               code.CODEVALUE,
               code.TEXT AS TEXT_DE,
-              """ + SQL_SELECT_TEXT_FR + """
-          FROM TBINCIDENTCODE code
-          """ + SQL_JOIN_LOCALIZATION_FR + """
+              """ + SQL_SELECT_TEXT_FR + FROM_TBINCIDENTCODE_CODE + SQL_JOIN_LOCALIZATION_FR + """
           WHERE code.MASTERTYPE = ?
             AND code.MASTERVALUE = ?
-            """ + andAliased + exclude + """
-            AND (
-              LOWER(code.TEXT) LIKE ?
-              OR LOWER(COALESCE(NULLIF(trim(loc.TRANSLATION), ''), '')) LIKE ?
-            )
-          ORDER BY TEXT_FR ASC
-          LIMIT ?
-          """;
+            """ + andAliased + exclude + TEXT_SEARCH_FILTER_SQL;
 
       String modelsByBrand = """
           SELECT
               '185' AS GROUPTYPE,
               code.CODEVALUE,
               code.TEXT AS TEXT_DE,
-              """ + SQL_SELECT_TEXT_FR + """
-          FROM TBINCIDENTCODE code
-          """ + SQL_JOIN_LOCALIZATION_FR + """
+              """ + SQL_SELECT_TEXT_FR + FROM_TBINCIDENTCODE_CODE + SQL_JOIN_LOCALIZATION_FR + """
           WHERE code.MASTERTYPE = '185'
             AND code.MASTERVALUE = ?
             """ + andAliased + exclude + """
@@ -267,19 +253,10 @@ public class SqliteRipolAdapter implements RipolPort {
               '185' AS GROUPTYPE,
               code.CODEVALUE,
               code.TEXT AS TEXT_DE,
-              """ + SQL_SELECT_TEXT_FR + """
-          FROM TBINCIDENTCODE code
-          """ + SQL_JOIN_LOCALIZATION_FR + """
+              """ + SQL_SELECT_TEXT_FR + FROM_TBINCIDENTCODE_CODE + SQL_JOIN_LOCALIZATION_FR + """
           WHERE code.MASTERTYPE = '185'
             AND code.MASTERVALUE = ?
-            """ + andAliased + exclude + """
-            AND (
-              LOWER(code.TEXT) LIKE ?
-              OR LOWER(COALESCE(NULLIF(trim(loc.TRANSLATION), ''), '')) LIKE ?
-            )
-          ORDER BY TEXT_FR ASC
-          LIMIT ?
-          """;
+            """ + andAliased + exclude + TEXT_SEARCH_FILTER_SQL;
 
       return new RipolIncidentCodeQueries(
           "SELECT * FROM TBINCIDENTCODE" + whereUnaliased + " LIMIT ?",
@@ -478,7 +455,7 @@ public class SqliteRipolAdapter implements RipolPort {
   @Override
   public List<String> listTables() {
     try {
-      return jdbcTemplate.execute((java.sql.Connection conn) -> {
+      return jdbcTemplate.execute((Connection conn) -> {
         List<String> tables = new ArrayList<>();
         DatabaseMetaData metaData = conn.getMetaData();
         try (ResultSet rs = metaData.getTables(null, null, "%", new String[]{"TABLE"})) {
@@ -884,7 +861,7 @@ public class SqliteRipolAdapter implements RipolPort {
     return row;
   }
 
-  private List<String> extractColumns(java.sql.Connection conn, String tableName) throws java.sql.SQLException {
+  private List<String> extractColumns(Connection conn, String tableName) throws java.sql.SQLException {
     List<String> columns = new ArrayList<>();
     DatabaseMetaData metaData = conn.getMetaData();
     try (ResultSet rs = metaData.getColumns(null, null, tableName, null)) {

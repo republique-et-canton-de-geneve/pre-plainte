@@ -14,7 +14,6 @@ import ch.ge.police.infrastructure.ech051.Ech051Constants;
 import ch.ge.police.infrastructure.ech051.MyAbiAdditionalInformationFormatter;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.IntStream;
 
