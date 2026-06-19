@@ -59,6 +59,7 @@ public class Ech051Builder {
   private static final DateTimeFormatter ACTION_PERIOD_NAIVE_TIME =
       DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm");
   private static final int ACTION_PERIOD_NAIVE_TIME_LENGTH = 16;
+  public static final int COLOURS_SIZE = 2;
 
   private final SuisseEpoliceMapperForPPL mapper;
 
@@ -307,7 +308,7 @@ public class Ech051Builder {
       Ech0051DocumentPayload.RipolReference primary,
       Ech0051DocumentPayload.RipolReference secondary
   ) {
-    List<Ech0051DocumentXml.RipolValueXml> colours = new ArrayList<>(2);
+    List<Ech0051DocumentXml.RipolValueXml> colours = new ArrayList<>(COLOURS_SIZE);
     Ech0051DocumentXml.RipolValueXml primaryXml = mapRipolValue(primary);
     if (primaryXml != null) {
       colours.add(primaryXml);
