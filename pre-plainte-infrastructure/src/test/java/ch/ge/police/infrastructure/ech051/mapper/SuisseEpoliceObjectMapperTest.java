@@ -3,7 +3,6 @@ package ch.ge.police.infrastructure.ech051.mapper;
 import ch.ge.police.core.domain.model.common.RipolCode;
 import ch.ge.police.core.domain.model.event.IncidentBase;
 import ch.ge.police.core.domain.model.event.dommagematerial.DommageMateriel;
-import ch.ge.police.core.domain.model.event.dommagematerial.common.TypeDommage;
 import ch.ge.police.core.domain.model.event.vol.Vol;
 import ch.ge.police.core.domain.model.event.vol.common.ObjetIncident;
 import ch.ge.police.infrastructure.ech051.Ech051Constants;
@@ -226,24 +225,14 @@ class SuisseEpoliceObjectMapperTest {
   }
 
   @Test
-  void shouldBuildFallbackObjectFromDommageWhenNoNonVehicleObjectExists() {
+  void shouldNotBuildObjectFromDommageWhenNoDegradedObjectExists() {
     DommageMateriel dommage = mock(DommageMateriel.class);
-    TypeDommage typeDommage = mock(TypeDommage.class);
-
-    when(typeDommage.getLabel()).thenReturn("Vandalisme");
-    when(dommage.getTypeDommage()).thenReturn(typeDommage);
-    when(dommage.getDescription()).thenReturn("Vitre brisée");
     when(dommage.getObjetDegrades()).thenReturn(List.of());
 
-    List<ObjectItem> result = mapper.buildObjectsFromIncident(dommage);
+    assertTrue(mapper.buildObjectsFromIncident(dommage).isEmpty());
 
-    assertEquals(1, result.size());
-    ObjectItem item = result.get(0);
-    assertEquals(Ech051Constants.OBJECT_KEY_TIERS, item.getKey());
-    assertEquals("Autre indications; Description du dommage: Vitre brisée", item.getAdditionalInformation());
-    assertNotNull(item.getTypeOfObject());
-    assertEquals(Ech051Constants.TYPE_OF_OBJECT_DOMMAGE_CODE, item.getTypeOfObject().getCode());
-    assertEquals(Ech051Constants.TYPE_OF_OBJECT_DOMMAGE_LABEL, item.getTypeOfObject().getLabel());
+    when(dommage.getObjetDegrades()).thenReturn(null);
+    assertTrue(mapper.buildObjectsFromIncident(dommage).isEmpty());
   }
 
   @Test

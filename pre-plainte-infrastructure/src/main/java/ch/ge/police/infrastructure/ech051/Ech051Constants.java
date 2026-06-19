@@ -82,8 +82,6 @@ public final class Ech051Constants {
   public static final String TYPE_OF_CRIME_CYBER_FAUSSE_ANNONCE_LABEL = "escroquerie";
   public static final String TYPE_OF_CRIME_CYBER_ACHAT_NON_RECU_CODE = "1000146100";
   public static final String TYPE_OF_CRIME_CYBER_ACHAT_NON_RECU_LABEL = "escroquerie";
-  public static final String TYPE_OF_OBJECT_DOMMAGE_CODE = "200219";
-  public static final String TYPE_OF_OBJECT_DOMMAGE_LABEL = "Dommage matériel";
   public static final String MODE_OPERANDI_DEGRADATIONS_CODE = "4000236";
   public static final String MODE_OPERANDI_DEGRADATIONS_LABEL = "vandalisme";
   public static final String MODE_OPERANDI_TAGS_CODE = "4000900";
