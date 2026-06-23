@@ -50,6 +50,7 @@ public class NotifyService {
       case EN -> "Your code";
       case DE -> "Ihr Code";
       case PT -> "O seu código";
+      case IT -> "Il vostro codice";
     };
   }
 
@@ -59,6 +60,7 @@ public class NotifyService {
       case EN -> "Your draft has been saved";
       case DE -> "Ihre Entwurfsspeicherung";
       case PT -> "Registo do seu rascunho";
+      case IT -> "Registrazione della vostra bozza";
     };
   }
 }
