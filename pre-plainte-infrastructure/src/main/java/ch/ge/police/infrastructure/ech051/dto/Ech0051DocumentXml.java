@@ -86,7 +86,7 @@ public class Ech0051DocumentXml {
   @Getter
   @Setter
   @XmlAccessorType(XmlAccessType.FIELD)
-  @XmlType(propOrder = {"key", "sourceId", "natural", "legal", "address", "communications", "deliveredAbroad", "additionalInformation"})
+  @XmlType(propOrder = {"key", "sourceId", "natural", "legal", "address", "communications", "additionalInformation"})
   public static class PersonXml {
     public PersonXml() {
       // JAXB requires an explicit no-arg constructor.
