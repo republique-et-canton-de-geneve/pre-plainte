@@ -217,13 +217,28 @@ class Ech051BuilderTest {
   }
 
   @Test
-  void generateEch051Xml_shouldMapProcessDataSourceIdWithPplSourceAndEmptySourceTable() {
+  void generateEch051Xml_shouldAddPplSourceIdOnEachPerson() {
+    PrePlainte prePlainte = mock(PrePlainte.class);
+    when(mapper.toDocument(prePlainte)).thenReturn(buildCompletePayload());
+
+    String xml = builder.generateEch051Xml(prePlainte, false);
+
+    assertThat(extractPersonXml(xml, "PER-1"))
+        .contains("<eCH-0051:key>PER-1</eCH-0051:key>")
+        .contains("<eCH-0051:sourceID source=\"PPL\" sourceTable=\"\"></eCH-0051:sourceID>");
+    assertThat(extractPersonXml(xml, "PER-LEGAL-1"))
+        .contains("<eCH-0051:key>PER-LEGAL-1</eCH-0051:key>")
+        .contains("<eCH-0051:sourceID source=\"PPL\" sourceTable=\"\"></eCH-0051:sourceID>");
+  }
+
+  @Test
+  void generateEch051Xml_shouldMapProcessDataSourceIdWithSepSourceTableAndAelNumber() {
     PrePlainte prePlainte = mock(PrePlainte.class);
     when(mapper.toDocument(prePlainte)).thenReturn(Ech0051DocumentPayload.builder()
         .processData(Ech0051DocumentPayload.ProcessData.builder()
             .deliveryDate("2026-06-19")
             .sourceId(Ech051Constants.SourceIds.VOL)
-            .sourceValue("demande-123")
+            .sourceValue("AEL-PPL-V-2QVTL32C8E")
             .build())
         .relations(Ech0051DocumentPayload.Relations.builder().build())
         .build());
@@ -231,8 +246,7 @@ class Ech051BuilderTest {
     String xml = builder.generateEch051Xml(prePlainte, false);
 
     assertThat(xml)
-        .contains("<eCH-0051:sourceID source=\"PPL\" sourceTable=\"\"></eCH-0051:sourceID>")
-        .doesNotContain("source=\"SEP\"");
+        .contains("<eCH-0051:sourceID source=\"SEP\" sourceTable=\"Fahrrad- und Mofadiebstahl\">AEL-PPL-V-2QVTL32C8E</eCH-0051:sourceID>");
   }
 
   @Test
