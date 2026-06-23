@@ -659,18 +659,30 @@ const finaliserValidationObjetVole = () => {
   clearDraftChampsObjet();
   afficherFicheSaisieNouvelObjet.value = false;
 };
-const validerObjetVole = () => {
+const validerObjetVole = (): boolean => {
   effacerErreursBrouillon();
 
   if (!validerBrouillonObjetVole()) {
-    return;
+    return false;
   }
 
   enregistrerObjetVole(buildSnapshotFromDraft());
   finaliserValidationObjetVole();
+  return true;
 };
 
+const validerBrouillonAvantNavigation = (): boolean => {
+  if (!afficherFicheSaisieNouvelObjet.value) {
+    return true;
+  }
+  const brouillonValide = validerObjetVole();
+  if (!brouillonValide) {
+    void nextTick(() => draftPanelRef.value?.scrollIntoView({ behavior: "smooth", block: "start" }));
+  }
+  return brouillonValide;
+};
 
+defineExpose({ validerBrouillonAvantNavigation });
 
 const initBrouillonAuMontage = () => {
   const codeType = typeObjet.value?.code;
