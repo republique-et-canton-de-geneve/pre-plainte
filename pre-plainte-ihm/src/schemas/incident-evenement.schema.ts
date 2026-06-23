@@ -796,8 +796,12 @@ export const createIncidentSchema = (t: ComposerTranslation, nationalite: string
   };
 
   return createEvenementInfoSchema(t).superRefine((data, ctx) => {
-    if (!(isCH(data.paysEvenement) || isCH(nationalite))) {
+    const personneLeseeSuisse = isCH(nationalite);
+    if (!(isCH(data.paysEvenement) || personneLeseeSuisse)) {
       addCustomIssue(ctx, "paysEvenement", t("validation.paysOuNationaliteSuisse"));
+    }
+    if (data.isTrajet && !(isCH(data.paysEvenementSecondaire) || personneLeseeSuisse)) {
+      addCustomIssue(ctx, "paysEvenementSecondaire", t("validation.paysOuNationaliteSuisse"));
     }
   });
 };
