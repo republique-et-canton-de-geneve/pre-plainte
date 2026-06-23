@@ -6,7 +6,8 @@ public enum EmailLanguage {
   FR("fr"),
   EN("en"),
   DE("de"),
-  PT("pt");
+  PT("pt"),
+  IT("it");
 
   private final String code;
 
@@ -27,6 +28,7 @@ public enum EmailLanguage {
       case "en" -> EN;
       case "de" -> DE;
       case "pt" -> PT;
+      case "it" -> IT;
       default -> FR;
     };
   }
