@@ -152,7 +152,7 @@
     "condition2": "Votre situation concerne le vol d'un véhicule immatriculé.",
     "condition3": "Votre situation concerne le vol de plaque d'immatriculation.",
     "avantConfirmation": "Avant de poursuivre, veuillez confirmer que votre situation ne correspond à aucun des cas mentionnés ci-dessus :",
-    "confirmeIdentite": "Je confirme que je ne connais pas l'identité de l'autrice ou de l'auteur des faits.",
+    "confirmeIdentite": "Je confirme que je ne connais pas l'identité de l'autrice ou de l'auteur des faits et que je n'ai aucune information à son sujet (pas de signalement, pas d'image ni de vidéo).",
     "confirmeSituation": "Je confirme que ma situation ne concerne pas le vol d'un véhicule immatriculé ou de plaque.",
     "casNonTrouve": "Si vous ne trouvez pas votre cas,",
     "prendreRendezVousPoste": "rendez-vous dans un poste de police."
