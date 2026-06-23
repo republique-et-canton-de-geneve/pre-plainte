@@ -14,6 +14,7 @@
 
     <AddressLookup
       :instance-id="instanceId"
+      :allowed-country-codes="allowedCountryCodes"
       @address-selected="onAddressSelected"
       @country-changed="onCountryChanged"
       :class="fieldClass"
@@ -94,6 +95,7 @@ const props = withDefaults(
     markRequired?: boolean;
     fieldClass?: string;
     optionalAddressInfo?: string;
+    allowedCountryCodes?: string[];
   }>(),
   {
     markRequired: true,
