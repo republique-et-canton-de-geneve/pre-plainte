@@ -48,7 +48,18 @@ class NotifyServiceTest {
   }
 
   @ParameterizedTest
-  @CsvSource({"CHALLENGE,FR,Votre code", "CHALLENGE,EN,Your code", "CHALLENGE,DE,Ihr Code", "CHALLENGE,PT,O seu código", "BROUILLON,FR,Enregistrement de votre brouillon", "BROUILLON,EN,Your draft has been saved", "BROUILLON,DE,Ihre Entwurfsspeicherung", "BROUILLON,PT,Registo do seu rascunho"})
+  @CsvSource({
+      "CHALLENGE,FR,Votre code",
+      "CHALLENGE,EN,Your code",
+      "CHALLENGE,DE,Ihr Code",
+      "CHALLENGE,PT,O seu código",
+      "CHALLENGE,IT,Il vostro codice",
+      "BROUILLON,FR,Enregistrement de votre brouillon",
+      "BROUILLON,EN,Your draft has been saved",
+      "BROUILLON,DE,Ihre Entwurfsspeicherung",
+      "BROUILLON,PT,Registo do seu rascunho",
+      "BROUILLON,IT,Registrazione della vostra bozza"
+  })
   void resolveSubject_returnsExpectedSubject(TemplateEmail template, EmailLanguage language, String expected) {
     assertEquals(expected, service.resolveSubject(template, language));
   }
