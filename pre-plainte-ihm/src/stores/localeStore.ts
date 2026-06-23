@@ -1,7 +1,7 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
 
-export const SUPPORTED_LOCALES = ["fr", "de", "en", "pt"] as const;
+export const SUPPORTED_LOCALES = ["fr", "de", "en", "it", "pt"] as const;
 export type AppLocale = (typeof SUPPORTED_LOCALES)[number];
 
 const DEFAULT_LOCALE: AppLocale = "fr";
