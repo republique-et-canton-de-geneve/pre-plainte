@@ -52,6 +52,7 @@ import static ch.ge.police.infrastructure.ech051.Ech051Constants.CommunicationUs
 public class Ech051Builder {
 
   private static final String RIPOL_SOURCE = "RIPOL";
+  private static final String SEP_SOURCE = "SEP";
   private static final String PPL_SOURCE = "PPL";
   private static final ZoneId ZONE_EUROPE_ZURICH = ZoneId.of("Europe/Zurich");
   private static final DateTimeFormatter SEP_ACTION_PERIOD_FORMATTER =
@@ -178,9 +179,9 @@ public class Ech051Builder {
     xml.setDeliveryDate(processData.getDeliveryDate());
 
     Ech0051DocumentXml.SourceIdXml sourceIdXml = new Ech0051DocumentXml.SourceIdXml();
-    sourceIdXml.setSource(PPL_SOURCE);
-    sourceIdXml.setSourceTable("");
-    sourceIdXml.setValue("");
+    sourceIdXml.setSource(SEP_SOURCE);
+    sourceIdXml.setSourceTable(processData.getSourceId());
+    sourceIdXml.setValue(processData.getSourceValue() != null ? processData.getSourceValue() : "PPL");
     xml.setSourceId(sourceIdXml);
 
     if (processData.getProcessingStatus() != null) {
@@ -198,6 +199,7 @@ public class Ech051Builder {
   private Ech0051DocumentXml.PersonXml mapPerson(Ech0051DocumentPayload.Person personDto) {
     Ech0051DocumentXml.PersonXml personXml = new Ech0051DocumentXml.PersonXml();
     personXml.setKey(personDto.getKey());
+    personXml.setSourceId(buildPplSourceId());
 
     if (personDto.getNaturalIdentity() != null) {
       Ech0051DocumentXml.NaturalXml naturalXml = new Ech0051DocumentXml.NaturalXml();
@@ -335,6 +337,14 @@ public class Ech051Builder {
     sourceId.setSource(ref.getSource());
     sourceId.setSourceTable(ref.getSourceTable());
     sourceId.setValue(ref.getCode());
+    return sourceId;
+  }
+
+  private Ech0051DocumentXml.SourceIdXml buildPplSourceId() {
+    Ech0051DocumentXml.SourceIdXml sourceId = new Ech0051DocumentXml.SourceIdXml();
+    sourceId.setSource(PPL_SOURCE);
+    sourceId.setSourceTable("");
+    sourceId.setValue("");
     return sourceId;
   }
 
