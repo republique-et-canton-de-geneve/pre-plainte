@@ -60,6 +60,7 @@ const languageItems: LanguageItem[] = [
   { value: "fr", nativeLabel: "Français", shortLabel: "FR" },
   { value: "en", nativeLabel: "English", shortLabel: "EN" },
   { value: "de", nativeLabel: "Deutsch", shortLabel: "DE" },
+  { value: "it", nativeLabel: "Italiano", shortLabel: "IT" },
   { value: "pt", nativeLabel: "Português", shortLabel: "PT" },
 ];
 
