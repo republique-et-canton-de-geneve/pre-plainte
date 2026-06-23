@@ -67,6 +67,9 @@
     "@vue/devtools-kit": "8.0.5",
     "@vue/devtools-shared": "8.0.5",
     "quansync": "1.0.0",
-    "rollup": "4.60.4"
+    "rollup": "4.60.4",
+    "typescript-eslint": "8.59.3",
+    "@typescript-eslint/scope-manager": "8.59.3",
+    "@typescript-eslint/utils": "8.59.3"
   }
 }
