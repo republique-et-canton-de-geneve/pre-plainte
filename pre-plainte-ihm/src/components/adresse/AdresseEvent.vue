@@ -13,6 +13,16 @@
       :error-messages="adresseLeseeError"
     />
 
+    <v-alert
+      v-if="paysEvenementLimiteASuisse"
+      type="info"
+      variant="tonal"
+      density="comfortable"
+      class="mb-4"
+    >
+      {{ t("informationsEvenement.adresseSuisseUniquement") }}
+    </v-alert>
+
     <div v-if="adresseLesee === false">
       <RipolAutocomplete
         v-model="typeLieu"
@@ -59,6 +69,7 @@
         v-model:npa="npaEvenement"
         v-model:localite="localiteEvenement"
         v-model:pays="paysEvenement"
+        :allowed-country-codes="paysEvenementAutorises"
         :adresse-error="adresseEvenementError"
         :adresse-postale-error="adressePostaleEvenementError"
         :npa-error="npaEvenementError"
@@ -86,6 +97,7 @@
         v-model:npa="npaEvenementSecondaire"
         v-model:localite="localiteEvenementSecondaire"
         v-model:pays="paysEvenementSecondaire"
+        :allowed-country-codes="paysEvenementAutorises"
         :adresse-error="adresseEvenementSecondaireError"
         :adresse-postale-error="adressePostaleEvenementSecondaireError"
         :npa-error="npaEvenementSecondaireError"
@@ -109,6 +121,16 @@ import BaseRadioGroup from "@/components/radio/BaseRadioGroup.vue";
 
 const { t } = useI18n();
 const store = useCreatePrePlainteStore();
+
+const nationalitePersonneLesee = computed(
+  () => store.userFormData.tiersNationalite?.code || store.userFormData.nationalite?.code,
+);
+const paysEvenementLimiteASuisse = computed(
+  () => !!nationalitePersonneLesee.value && nationalitePersonneLesee.value !== RIPOL.PAYS_SUISSE,
+);
+const paysEvenementAutorises = computed(() =>
+  paysEvenementLimiteASuisse.value ? [RIPOL.PAYS_SUISSE] : undefined,
+);
 
 const { value: adresseEvenement, errorMessage: adresseEvenementError } = useField<string>(
   "adresseEvenement",
