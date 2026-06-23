@@ -31,12 +31,14 @@
         @suggest-nearest="onSuggestNearest"
       />
 
-      <AppointmentTable
-        v-model:page="page"
-        v-model:creneau-prefere="creneauPrefere"
-        :creneaux-pagines="creneauxPagines"
-        :total-pages="totalPages"
-      />
+      <div ref="creneauxSection">
+        <AppointmentTable
+          v-model:page="page"
+          v-model:creneau-prefere="creneauPrefere"
+          :creneaux-pagines="creneauxPagines"
+          :total-pages="totalPages"
+        />
+      </div>
 
       <div class="d-md-none mt-4">
         <div class="pre-plainte-mobile-step-actions d-flex flex-column gap-4 mb-2">
@@ -90,7 +92,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from "vue";
+import { computed, nextTick, onMounted, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { useField, useForm } from "vee-validate";
 import { useEsiriusStore } from "@/stores/useEsiriusStore";
@@ -130,6 +132,7 @@ const creneauPrefere = ref<number | null>(null);
 const showCreneauError = ref(false);
 const creneauErrorMessage = ref("");
 const page = ref(1);
+const creneauxSection = ref<HTMLElement | null>(null);
 const itemsParPage = 5;
 
 onMounted(async () => {
@@ -271,6 +274,7 @@ const creneauxFiltres = computed(() => {
 
 const datesDisponibles = computed(() => {
   const validDates = creneauxCompatiblesIncident.value
+    .filter((creneau: any) => !poste.value || creneau.serviceId === poste.value.key)
     .filter((a: any) => a?.beginDateTime)
     .map((a: any) => a.beginDateTime.slice(YEAR_START, DAY_END));
   return Array.from(new Set(validDates))
@@ -393,6 +397,23 @@ watch(poste, () => {
 watch(dateSouhaitee, () => {
   page.value = 1;
   creneauPrefere.value = null;
+});
+
+watch(datesDisponibles, dates => {
+  const selectedDate = toIsoDate(dateSouhaitee.value) ?? dateSouhaitee.value;
+  if (selectedDate && !dates.includes(selectedDate)) {
+    dateSouhaitee.value = "";
+  }
+});
+
+watch([() => poste.value?.key, dateSouhaitee, datesDisponibles], async ([posteKey, selectedDate, dates]) => {
+  const selectedIsoDate = toIsoDate(selectedDate) ?? selectedDate;
+  if (!posteKey || !selectedIsoDate || !dates.includes(selectedIsoDate)) {
+    return;
+  }
+
+  await nextTick();
+  creneauxSection.value?.scrollIntoView({ behavior: "smooth", block: "start" });
 });
 
 watch(locale, () => {
