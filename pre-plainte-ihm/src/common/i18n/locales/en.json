@@ -152,7 +152,7 @@
     "condition2": "Your situation concerns the theft of a registered vehicle.",
     "condition3": "Your situation concerns the theft of a registration plate.",
     "avantConfirmation": "Before continuing, please confirm that your situation does not correspond to any of the cases mentioned above:",
-    "confirmeIdentite": "I confirm that I do not know the identity of the person who committed the acts.",
+    "confirmeIdentite": "I confirm that I do not know the identity of the person who committed the acts and that I have no information about them (no description, image or video).",
     "confirmeSituation": "I confirm that my situation does not concern the theft of a registered vehicle or a registration plate.",
     "casNonTrouve": "If you cannot find your case,",
     "prendreRendezVousPoste": "go to a police station."
