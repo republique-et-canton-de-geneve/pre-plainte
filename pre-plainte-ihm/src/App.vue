@@ -19,7 +19,7 @@ import { computed, onMounted } from "vue";
 import { useRoute } from "vue-router";
 import { useTheme } from "vuetify";
 import { VLocaleProvider } from "vuetify/components";
-import { fr, de, en, pt } from "vuetify/locale";
+import { fr, de, en, it, pt } from "vuetify/locale";
 import { useI18n } from "vue-i18n";
 import { useLocaleStore } from "@/stores/localeStore";
 
@@ -54,6 +54,9 @@ const vuetifyMessages = {
   },
   en: {
     ...en,
+  },
+  it: {
+    ...it,
   },
   pt: {
     ...pt,
