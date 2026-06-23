@@ -181,7 +181,7 @@ public class Ech051Builder {
     Ech0051DocumentXml.SourceIdXml sourceIdXml = new Ech0051DocumentXml.SourceIdXml();
     sourceIdXml.setSource(SEP_SOURCE);
     sourceIdXml.setSourceTable(processData.getSourceId());
-    sourceIdXml.setValue(processData.getSourceValue() != null ? processData.getSourceValue() : "PPL");
+    sourceIdXml.setValue(processData.getSourceValue() != null ? processData.getSourceValue() : PPL_SOURCE);
     xml.setSourceId(sourceIdXml);
 
     if (processData.getProcessingStatus() != null) {
