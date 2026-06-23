@@ -3,8 +3,8 @@
     <h1 class="mb-4 text-h1 text-md-h2 d-none d-md-block">{{ t("titreApplication.prePlainte") }}</h1>
     <v-card class="pa-2 pa-md-6 mb-4">
       <h2 class="pre-plainte-main-card-title mb-4 text-h2">{{ t("informationsEvenement.titre") }}</h2>
-      <VolForm v-if="typeIncident === 'vol'" />
-      <DegatMaterielForm v-if="typeIncident === 'degat-delit'" />
+      <VolForm v-if="typeIncident === 'vol'" ref="volFormRef" />
+      <DegatMaterielForm v-if="typeIncident === 'degat-delit'" ref="degatMaterielFormRef" />
 
       <div v-if="typeIncident === 'cybercrime'" class="inputs-fields">
         <v-textarea
@@ -165,7 +165,7 @@
           <v-btn variant="outlined" color="primary" class="w-100" @click="handleCancelClick">
             {{ t("common.precedent") }}
           </v-btn>
-          <v-btn type="submit" variant="flat" color="primary" class="w-100" @click="onSubmit">
+          <v-btn type="submit" variant="flat" color="primary" class="w-100">
             {{ t("common.continuer") }}
           </v-btn>
         </div>
@@ -191,7 +191,7 @@
         <v-btn variant="outlined" color="primary" class="me-4" @click="handleCancelClick">
           {{ t("common.precedent") }}
         </v-btn>
-        <v-btn type="submit" variant="flat" color="primary" @click="onSubmit">
+        <v-btn type="submit" variant="flat" color="primary">
           {{ t("common.poursuivre") }}
         </v-btn>
       </v-col>
@@ -204,7 +204,7 @@ import { useCreatePrePlainteStore } from "@/stores/createPrePlainteStore";
 import type { PrePlainteFormFields } from "@/types/pre-plainte.interface";
 import { toTypedSchema } from "@vee-validate/zod";
 import { useField, useForm } from "vee-validate";
-import { computed, ref, watch } from "vue";
+import { computed, nextTick, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { useDisplay } from "vuetify";
 import { createIncidentSchema } from "@/schemas/incident-evenement.schema.ts";
@@ -228,6 +228,13 @@ const { mobile } = useDisplay();
 const emit = defineEmits<{ cancel: []; continue: []; save: [] }>();
 const store = useCreatePrePlainteStore();
 const { scrollToTopOnConditionalErrors } = useFormErrorScroll();
+
+type FormulaireAvecBrouillon = {
+  validerBrouillonAvantNavigation: () => boolean;
+};
+
+const volFormRef = ref<FormulaireAvecBrouillon | null>(null);
+const degatMaterielFormRef = ref<FormulaireAvecBrouillon | null>(null);
 
 const nationaliteLabel: string =
   store.userFormData.tiersNationalite?.label || store.userFormData.nationalite?.label || "";
@@ -454,7 +461,7 @@ watch(
   { immediate: true },
 );
 
-const onSubmit = handleSubmit(
+const soumettreFormulaire = handleSubmit(
   formValues => {
     store.setUserFormData(formValues);
     emit("continue");
@@ -463,6 +470,24 @@ const onSubmit = handleSubmit(
     scrollToTopOnConditionalErrors(errors);
   },
 );
+
+const validerBrouillonActif = (): boolean => {
+  if (typeIncident.value === "vol") {
+    return volFormRef.value?.validerBrouillonAvantNavigation() ?? true;
+  }
+  if (typeIncident.value === "degat-delit") {
+    return degatMaterielFormRef.value?.validerBrouillonAvantNavigation() ?? true;
+  }
+  return true;
+};
+
+const onSubmit = async () => {
+  if (!validerBrouillonActif()) {
+    return;
+  }
+  await nextTick();
+  await soumettreFormulaire();
+};
 
 const persistCurrentValues = () => {
   store.setUserFormData(values as PrePlainteFormFields);
