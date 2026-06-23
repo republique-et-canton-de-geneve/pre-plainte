@@ -86,6 +86,7 @@ public class Ech0051DocumentXml {
   @Getter
   @Setter
   @XmlAccessorType(XmlAccessType.FIELD)
+  @XmlType(propOrder = {"key", "sourceId", "natural", "legal", "address", "communications", "deliveredAbroad", "additionalInformation"})
   public static class PersonXml {
     public PersonXml() {
       // JAXB requires an explicit no-arg constructor.
@@ -93,6 +94,9 @@ public class Ech0051DocumentXml {
 
     @XmlElement(name = "key", namespace = SepNamespaces.ECH_0051_NS)
     private String key;
+
+    @XmlElement(name = "sourceID", namespace = SepNamespaces.ECH_0051_NS)
+    private SourceIdXml sourceId;
 
     @XmlElement(name = "natural", namespace = SepNamespaces.ECH_0051_NS)
     private NaturalXml natural;
