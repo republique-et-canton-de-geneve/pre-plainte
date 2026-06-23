@@ -236,10 +236,11 @@ type FormulaireAvecBrouillon = {
 const volFormRef = ref<FormulaireAvecBrouillon | null>(null);
 const degatMaterielFormRef = ref<FormulaireAvecBrouillon | null>(null);
 
-const nationaliteLabel: string =
-  store.userFormData.tiersNationalite?.label || store.userFormData.nationalite?.label || "";
+const nationalitePersonneLesee =
+  store.userFormData.tiersNationalite?.code || store.userFormData.nationalite?.code || "";
+
 const validationSchema = computed(() => {
-  return toTypedSchema(createIncidentSchema(t, nationaliteLabel));
+  return toTypedSchema(createIncidentSchema(t, nationalitePersonneLesee));
 });
 
 const form = useForm<PrePlainteFormFields>({
