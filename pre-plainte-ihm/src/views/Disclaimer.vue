@@ -113,7 +113,7 @@
 
       <v-alert
         v-if="typeCybercrime === TYPE_CYBERCRIME_AUTRE"
-        type="warning"
+        type="info"
         class="mb-6"
         density="comfortable"
         :icon="mobile ? false : undefined"
