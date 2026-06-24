@@ -186,6 +186,10 @@ public class ObjetIncident {
       throw new ValidationMetierException("Le type d'objet volé est obligatoire.");
     }
 
+    if (couleur == null || !couleur.hasCode()) {
+      throw new ValidationMetierException("La couleur de l'objet est obligatoire.");
+    }
+
     if (isVehicleType()) {
       validateFabricantSelection();
       validateFabricantAutreValue();
