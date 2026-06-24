@@ -11,9 +11,7 @@ import java.nio.file.StandardCopyOption;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
-import java.sql.Types;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -31,7 +29,6 @@ import org.springframework.core.io.ResourceLoader;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.ConnectionCallback;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.PreparedStatementCreatorFactory;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.stereotype.Component;
@@ -99,9 +96,24 @@ public class SqliteRipolAdapter implements RipolPort {
           + " AND length(trim(code.TEXT)) >= 10"
           + " AND trim(code.TEXT) NOT GLOB '*[^0-9]*'"
           + " )";
-  private static final String FROM_TBINCIDENTCODE_CODE = """
-    FROM TBINCIDENTCODE code
-    """;
+  private static final String SQL_CREATE_INCIDENT_CODE_VIEW =
+    "CREATE VIEW RIPOL_INCIDENT_CODE AS SELECT * FROM TBINCIDENTCODE";
+  private static final String SQL_CREATE_ACTIVE_INCIDENT_CODE_VIEW =
+    "CREATE VIEW RIPOL_INCIDENT_CODE AS SELECT * FROM TBINCIDENTCODE "
+      + "WHERE CAST(ACTIVE AS INTEGER) = 1";
+  private static final String SQL_CREATE_SELECTABLE_INCIDENT_CODE_VIEW =
+    "CREATE VIEW RIPOL_INCIDENT_CODE AS SELECT * FROM TBINCIDENTCODE "
+      + "WHERE CAST(SELECTABLE AS INTEGER) = 1";
+  private static final String SQL_CREATE_ACTIVE_SELECTABLE_INCIDENT_CODE_VIEW =
+    "CREATE VIEW RIPOL_INCIDENT_CODE AS SELECT * FROM TBINCIDENTCODE "
+      + "WHERE CAST(ACTIVE AS INTEGER) = 1 AND CAST(SELECTABLE AS INTEGER) = 1";
+  private static final String FROM_INCIDENT_CODE_VIEW = "FROM RIPOL_INCIDENT_CODE code\n";
+  private static final String SQL_SELECT_INCIDENT_CODE_WITH_LIMIT =
+    "SELECT * FROM RIPOL_INCIDENT_CODE LIMIT ?";
+  private static final String SQL_SELECT_INCIDENT_CODE_GROUP_TYPES =
+    "SELECT DISTINCT GROUPTYPE FROM RIPOL_INCIDENT_CODE ORDER BY GROUPTYPE";
+  private static final String SQL_SELECT_INCIDENT_CODE_BY_GROUP_TYPE =
+    "SELECT * FROM RIPOL_INCIDENT_CODE WHERE GROUPTYPE = ? LIMIT ?";
   private static final String SQL_SELECT_LOCALIZATION_GROUP_TYPES =
     "SELECT DISTINCT GROUPTYPE FROM TBLOCALIZATION ORDER BY GROUPTYPE";
   private static final String SQL_SELECT_LOCALIZATION_WITH_LIMIT = "SELECT * FROM TBLOCALIZATION LIMIT ?";
@@ -115,21 +127,65 @@ public class SqliteRipolAdapter implements RipolPort {
     ORDER BY TEXT_FR ASC
     LIMIT ?
     """;
+  private static final String SQL_CODES_BY_GROUP_TYPE = """
+      SELECT
+          code.GROUPTYPE,
+          code.CODEVALUE,
+          code.TEXT AS TEXT_DE,
+          """ + SQL_SELECT_TEXT_FR + FROM_INCIDENT_CODE_VIEW + SQL_JOIN_LOCALIZATION_FR + """
+      WHERE code.GROUPTYPE = ?
+      """ + SQL_EXCLUDE_UNUSABLE_RIPOL_LABELS + """
+      ORDER BY TEXT_FR ASC
+      """;
+  private static final String SQL_CODES_BY_GROUP_TYPE_SEARCH = """
+      SELECT
+          code.GROUPTYPE,
+          code.CODEVALUE,
+          code.TEXT AS TEXT_DE,
+          """ + SQL_SELECT_TEXT_FR + FROM_INCIDENT_CODE_VIEW + SQL_JOIN_LOCALIZATION_FR + """
+      WHERE code.GROUPTYPE = ?
+      """ + SQL_EXCLUDE_UNUSABLE_RIPOL_LABELS + TEXT_SEARCH_FILTER_SQL;
+  private static final String SQL_BRANDS_BY_TYPE = """
+      SELECT
+          ? AS GROUPTYPE,
+          code.CODEVALUE,
+          code.TEXT AS TEXT_DE,
+          """ + SQL_SELECT_TEXT_FR + FROM_INCIDENT_CODE_VIEW + SQL_JOIN_LOCALIZATION_FR + """
+      WHERE code.MASTERTYPE = ?
+        AND code.MASTERVALUE = ?
+      """ + SQL_EXCLUDE_UNUSABLE_RIPOL_LABELS + """
+      ORDER BY TEXT_FR ASC
+      """;
+  private static final String SQL_BRANDS_BY_TYPE_SEARCH = """
+      SELECT
+          ? AS GROUPTYPE,
+          code.CODEVALUE,
+          code.TEXT AS TEXT_DE,
+          """ + SQL_SELECT_TEXT_FR + FROM_INCIDENT_CODE_VIEW + SQL_JOIN_LOCALIZATION_FR + """
+      WHERE code.MASTERTYPE = ?
+        AND code.MASTERVALUE = ?
+      """ + SQL_EXCLUDE_UNUSABLE_RIPOL_LABELS + TEXT_SEARCH_FILTER_SQL;
+  private static final String SQL_MODELS_BY_BRAND = """
+      SELECT
+          '185' AS GROUPTYPE,
+          code.CODEVALUE,
+          code.TEXT AS TEXT_DE,
+          """ + SQL_SELECT_TEXT_FR + FROM_INCIDENT_CODE_VIEW + SQL_JOIN_LOCALIZATION_FR + """
+      WHERE code.MASTERTYPE = '185'
+        AND code.MASTERVALUE = ?
+      """ + SQL_EXCLUDE_UNUSABLE_RIPOL_LABELS + """
+      ORDER BY TEXT_FR ASC
+      """;
+  private static final String SQL_MODELS_BY_BRAND_SEARCH = """
+      SELECT
+          '185' AS GROUPTYPE,
+          code.CODEVALUE,
+          code.TEXT AS TEXT_DE,
+          """ + SQL_SELECT_TEXT_FR + FROM_INCIDENT_CODE_VIEW + SQL_JOIN_LOCALIZATION_FR + """
+      WHERE code.MASTERTYPE = '185'
+        AND code.MASTERVALUE = ?
+      """ + SQL_EXCLUDE_UNUSABLE_RIPOL_LABELS + TEXT_SEARCH_FILTER_SQL;
 
-  private enum RipolQuery {
-    INCIDENT_CODE_ALL,
-    INCIDENT_CODE_GROUP_TYPES,
-    INCIDENT_CODE_BY_GROUP_TYPE,
-    CODES_BY_GROUP_TYPE,
-    CODES_BY_GROUP_TYPE_SEARCH,
-    BRANDS_BY_TYPE,
-    BRANDS_BY_TYPE_SEARCH,
-    MODELS_BY_BRAND,
-    MODELS_BY_BRAND_SEARCH,
-    LOCALIZATION_ALL,
-    LOCALIZATION_GROUP_TYPES,
-    LOCALIZATION_BY_GROUP_TYPE
-  }
   private enum AllowedTable {
     INCIDENT_CODE(TABLE_INCIDENT_CODE),
     LOCALIZATION(TABLE_LOCALIZATION);
@@ -153,36 +209,10 @@ public class SqliteRipolAdapter implements RipolPort {
   }
 
   private enum IncidentCodeUsabilityFilter {
-    NONE("", "", ""),
-    ACTIVE_ONLY(
-      " AND CAST(code.ACTIVE AS INTEGER) = 1",
-      " AND CAST(ACTIVE AS INTEGER) = 1",
-      " WHERE CAST(ACTIVE AS INTEGER) = 1"
-    ),
-    SELECTABLE_ONLY(
-      " AND CAST(code.SELECTABLE AS INTEGER) = 1",
-      " AND CAST(SELECTABLE AS INTEGER) = 1",
-      " WHERE CAST(SELECTABLE AS INTEGER) = 1"
-    ),
-    ACTIVE_AND_SELECTABLE(
-      " AND CAST(code.ACTIVE AS INTEGER) = 1 AND CAST(code.SELECTABLE AS INTEGER) = 1",
-      " AND CAST(ACTIVE AS INTEGER) = 1 AND CAST(SELECTABLE AS INTEGER) = 1",
-      " WHERE CAST(ACTIVE AS INTEGER) = 1 AND CAST(SELECTABLE AS INTEGER) = 1"
-    );
-
-    private final String andAliasedFilter;
-    private final String andUnaliasedFilter;
-    private final String whereUnaliasedFilter;
-
-    IncidentCodeUsabilityFilter(
-        String andAliasedFilter,
-        String andUnaliasedFilter,
-        String whereUnaliasedFilter
-    ) {
-      this.andAliasedFilter = andAliasedFilter;
-      this.andUnaliasedFilter = andUnaliasedFilter;
-      this.whereUnaliasedFilter = whereUnaliasedFilter;
-    }
+    NONE,
+    ACTIVE_ONLY,
+    SELECTABLE_ONLY,
+    ACTIVE_AND_SELECTABLE;
 
     static IncidentCodeUsabilityFilter from(boolean hasActiveColumn, boolean hasSelectableColumn) {
       if (hasActiveColumn && hasSelectableColumn) {
@@ -198,107 +228,10 @@ public class SqliteRipolAdapter implements RipolPort {
     }
   }
 
-  private record RipolIncidentCodeQueries(
-      String selectAllWithLimit,
-      String selectDistinctGroupTypes,
-      String selectByGroupTypeWithLimit,
-      String codesByGroupType,
-      String codesByGroupTypeSearch,
-      String brandsByType,
-      String brandsByTypeSearch,
-      String modelsByBrand,
-      String modelsByBrandSearch
-  ) {
-    private static RipolIncidentCodeQueries forFilter(IncidentCodeUsabilityFilter filter) {
-      String andAliased = filter.andAliasedFilter;
-      String andUnaliased = filter.andUnaliasedFilter;
-      String whereUnaliased = filter.whereUnaliasedFilter;
-      String exclude = SQL_EXCLUDE_UNUSABLE_RIPOL_LABELS;
-
-      String codesByGroupType = """
-          SELECT
-              code.GROUPTYPE,
-              code.CODEVALUE,
-              code.TEXT AS TEXT_DE,
-              """ + SQL_SELECT_TEXT_FR + FROM_TBINCIDENTCODE_CODE + SQL_JOIN_LOCALIZATION_FR + """
-          WHERE code.GROUPTYPE = ?
-          """ + andAliased + exclude + """
-
-          ORDER BY TEXT_FR ASC
-          """;
-
-      String codesByGroupTypeSearch = """
-          SELECT
-              code.GROUPTYPE,
-              code.CODEVALUE,
-              code.TEXT AS TEXT_DE,
-              """ + SQL_SELECT_TEXT_FR + FROM_TBINCIDENTCODE_CODE + SQL_JOIN_LOCALIZATION_FR + """
-          WHERE code.GROUPTYPE = ?
-            """ + andAliased + exclude + TEXT_SEARCH_FILTER_SQL;
-
-      String brandsByType = """
-          SELECT
-              ? AS GROUPTYPE,
-              code.CODEVALUE,
-              code.TEXT AS TEXT_DE,
-              """ + SQL_SELECT_TEXT_FR + FROM_TBINCIDENTCODE_CODE + SQL_JOIN_LOCALIZATION_FR + """
-          WHERE code.MASTERTYPE = ?
-            AND code.MASTERVALUE = ?
-            """ + andAliased + exclude + """
-          ORDER BY TEXT_FR ASC
-          """;
-
-      String brandsByTypeSearch = """
-          SELECT
-              ? AS GROUPTYPE,
-              code.CODEVALUE,
-              code.TEXT AS TEXT_DE,
-              """ + SQL_SELECT_TEXT_FR + FROM_TBINCIDENTCODE_CODE + SQL_JOIN_LOCALIZATION_FR + """
-          WHERE code.MASTERTYPE = ?
-            AND code.MASTERVALUE = ?
-            """ + andAliased + exclude + TEXT_SEARCH_FILTER_SQL;
-
-      String modelsByBrand = """
-          SELECT
-              '185' AS GROUPTYPE,
-              code.CODEVALUE,
-              code.TEXT AS TEXT_DE,
-              """ + SQL_SELECT_TEXT_FR + FROM_TBINCIDENTCODE_CODE + SQL_JOIN_LOCALIZATION_FR + """
-          WHERE code.MASTERTYPE = '185'
-            AND code.MASTERVALUE = ?
-            """ + andAliased + exclude + """
-          ORDER BY TEXT_FR ASC
-          """;
-
-      String modelsByBrandSearch = """
-          SELECT
-              '185' AS GROUPTYPE,
-              code.CODEVALUE,
-              code.TEXT AS TEXT_DE,
-              """ + SQL_SELECT_TEXT_FR + FROM_TBINCIDENTCODE_CODE + SQL_JOIN_LOCALIZATION_FR + """
-          WHERE code.MASTERTYPE = '185'
-            AND code.MASTERVALUE = ?
-            """ + andAliased + exclude + TEXT_SEARCH_FILTER_SQL;
-
-      return new RipolIncidentCodeQueries(
-          "SELECT * FROM TBINCIDENTCODE" + whereUnaliased + " LIMIT ?",
-          "SELECT DISTINCT GROUPTYPE FROM TBINCIDENTCODE" + whereUnaliased + " ORDER BY GROUPTYPE",
-          "SELECT * FROM TBINCIDENTCODE WHERE GROUPTYPE = ?" + andUnaliased + " LIMIT ?",
-          codesByGroupType,
-          codesByGroupTypeSearch,
-          brandsByType,
-          brandsByTypeSearch,
-          modelsByBrand,
-          modelsByBrandSearch
-      );
-    }
-  }
-
   private final JdbcTemplate jdbcTemplate;
   private final Map<String, List<Ripol>> codesByGroupTypeCache = new ConcurrentHashMap<>();
   private final Map<String, List<Ripol>> brandsByKeyCache = new ConcurrentHashMap<>();
   private final Map<String, List<Ripol>> modelsByBrandCache = new ConcurrentHashMap<>();
-  private final RipolIncidentCodeQueries incidentCodeQueries;
 
   private static final RowMapper<Ripol> RIPOL_ROW_MAPPER = (rs, rowNum) ->
     new Ripol(
@@ -344,7 +277,7 @@ public class SqliteRipolAdapter implements RipolPort {
         incidentCodeHasActiveColumn,
         incidentCodeHasSelectableColumn
     );
-    this.incidentCodeQueries = RipolIncidentCodeQueries.forFilter(incidentCodeFilter);
+    createIncidentCodeView(incidentCodeFilter);
     log.info(
       "event=ripol_incident_code_filters traceId={} active={} selectable={}",
       MDC.get(TRACE_ID),
@@ -404,6 +337,15 @@ public class SqliteRipolAdapter implements RipolPort {
         e
       );
       return false;
+    }
+  }
+
+  private void createIncidentCodeView(IncidentCodeUsabilityFilter incidentCodeFilter) {
+    switch (incidentCodeFilter) {
+      case NONE -> jdbcTemplate.execute(SQL_CREATE_INCIDENT_CODE_VIEW);
+      case ACTIVE_ONLY -> jdbcTemplate.execute(SQL_CREATE_ACTIVE_INCIDENT_CODE_VIEW);
+      case SELECTABLE_ONLY -> jdbcTemplate.execute(SQL_CREATE_SELECTABLE_INCIDENT_CODE_VIEW);
+      case ACTIVE_AND_SELECTABLE -> jdbcTemplate.execute(SQL_CREATE_ACTIVE_SELECTABLE_INCIDENT_CODE_VIEW);
     }
   }
 
@@ -519,13 +461,13 @@ public class SqliteRipolAdapter implements RipolPort {
 
     try {
       return switch (table) {
-        case INCIDENT_CODE -> executeQuery(
-            RipolQuery.INCIDENT_CODE_ALL,
+        case INCIDENT_CODE -> jdbcTemplate.query(
+            SQL_SELECT_INCIDENT_CODE_WITH_LIMIT,
             (rs, rowNum) -> mapRow(rs),
             limit
         );
-        case LOCALIZATION -> executeQuery(
-            RipolQuery.LOCALIZATION_ALL,
+        case LOCALIZATION -> jdbcTemplate.query(
+            SQL_SELECT_LOCALIZATION_WITH_LIMIT,
             (rs, rowNum) -> mapRow(rs),
             limit
         );
@@ -549,12 +491,12 @@ public class SqliteRipolAdapter implements RipolPort {
 
     try {
       return switch (table) {
-        case INCIDENT_CODE -> executeQuery(
-            RipolQuery.INCIDENT_CODE_GROUP_TYPES,
+        case INCIDENT_CODE -> jdbcTemplate.query(
+            SQL_SELECT_INCIDENT_CODE_GROUP_TYPES,
             (rs, rowNum) -> rs.getString(COL_GROUPTYPE)
         );
-        case LOCALIZATION -> executeQuery(
-            RipolQuery.LOCALIZATION_GROUP_TYPES,
+        case LOCALIZATION -> jdbcTemplate.query(
+            SQL_SELECT_LOCALIZATION_GROUP_TYPES,
             (rs, rowNum) -> rs.getString(COL_GROUPTYPE)
         );
       };
@@ -579,14 +521,14 @@ public class SqliteRipolAdapter implements RipolPort {
 
     try {
       return switch (table) {
-        case INCIDENT_CODE -> executeQuery(
-            RipolQuery.INCIDENT_CODE_BY_GROUP_TYPE,
+        case INCIDENT_CODE -> jdbcTemplate.query(
+            SQL_SELECT_INCIDENT_CODE_BY_GROUP_TYPE,
             (rs, rowNum) -> mapRow(rs),
             groupType,
             limit
         );
-        case LOCALIZATION -> executeQuery(
-            RipolQuery.LOCALIZATION_BY_GROUP_TYPE,
+        case LOCALIZATION -> jdbcTemplate.query(
+            SQL_SELECT_LOCALIZATION_BY_GROUP_TYPE,
             (rs, rowNum) -> mapRow(rs),
             groupType,
             limit
@@ -606,40 +548,6 @@ public class SqliteRipolAdapter implements RipolPort {
     }
   }
 
-  private <T> List<T> executeQuery(RipolQuery query, RowMapper<T> rowMapper, Object... parameters) {
-    int[] parameterTypes = Arrays.stream(parameters)
-      .mapToInt(SqliteRipolAdapter::toSqlType)
-      .toArray();
-    PreparedStatementCreatorFactory statementFactory = new PreparedStatementCreatorFactory(
-      resolveSql(query),
-      parameterTypes
-    );
-    return jdbcTemplate.query(
-      statementFactory.newPreparedStatementCreator(Arrays.asList(parameters)),
-      rowMapper
-    );
-  }
-
-  private String resolveSql(RipolQuery query) {
-    return switch (query) {
-      case INCIDENT_CODE_ALL -> incidentCodeQueries.selectAllWithLimit();
-      case INCIDENT_CODE_GROUP_TYPES -> incidentCodeQueries.selectDistinctGroupTypes();
-      case INCIDENT_CODE_BY_GROUP_TYPE -> incidentCodeQueries.selectByGroupTypeWithLimit();
-      case CODES_BY_GROUP_TYPE -> incidentCodeQueries.codesByGroupType();
-      case CODES_BY_GROUP_TYPE_SEARCH -> incidentCodeQueries.codesByGroupTypeSearch();
-      case BRANDS_BY_TYPE -> incidentCodeQueries.brandsByType();
-      case BRANDS_BY_TYPE_SEARCH -> incidentCodeQueries.brandsByTypeSearch();
-      case MODELS_BY_BRAND -> incidentCodeQueries.modelsByBrand();
-      case MODELS_BY_BRAND_SEARCH -> incidentCodeQueries.modelsByBrandSearch();
-      case LOCALIZATION_ALL -> SQL_SELECT_LOCALIZATION_WITH_LIMIT;
-      case LOCALIZATION_GROUP_TYPES -> SQL_SELECT_LOCALIZATION_GROUP_TYPES;
-      case LOCALIZATION_BY_GROUP_TYPE -> SQL_SELECT_LOCALIZATION_BY_GROUP_TYPE;
-    };
-  }
-  private static int toSqlType(Object parameter) {
-    return parameter instanceof Integer ? Types.INTEGER : Types.VARCHAR;
-  }
-
   @Override
   public List<Ripol> getCodesByGroupType(String groupType) {
     return codesByGroupTypeCache.computeIfAbsent(groupType, this::queryCodesByGroupType);
@@ -647,8 +555,8 @@ public class SqliteRipolAdapter implements RipolPort {
 
   private List<Ripol> queryCodesByGroupType(String groupType) {
     try {
-      List<Ripol> rows = executeQuery(
-          RipolQuery.CODES_BY_GROUP_TYPE,
+      List<Ripol> rows = jdbcTemplate.query(
+          SQL_CODES_BY_GROUP_TYPE,
           RIPOL_ROW_MAPPER,
           groupType
       );
@@ -669,8 +577,8 @@ public class SqliteRipolAdapter implements RipolPort {
   }
 
   private List<Ripol> queryCodesByGroupTypeWithSearch(String groupType, String likePattern) {
-    List<Ripol> rows = executeQuery(
-      RipolQuery.CODES_BY_GROUP_TYPE_SEARCH,
+    List<Ripol> rows = jdbcTemplate.query(
+      SQL_CODES_BY_GROUP_TYPE_SEARCH,
       RIPOL_ROW_MAPPER,
       groupType,
       likePattern,
@@ -696,8 +604,8 @@ public class SqliteRipolAdapter implements RipolPort {
 
   private List<Ripol> queryBrandsByTypeAndMasterType(String masterValue, String masterType) {
     try {
-      List<Ripol> rows = executeQuery(
-          RipolQuery.BRANDS_BY_TYPE,
+      List<Ripol> rows = jdbcTemplate.query(
+          SQL_BRANDS_BY_TYPE,
           RIPOL_ROW_MAPPER,
           masterType,
           masterType,
@@ -722,8 +630,8 @@ public class SqliteRipolAdapter implements RipolPort {
 
   private List<Ripol> queryBrandsByTypeAndMasterTypeWithSearch(
       String masterValue, String masterType, String likePattern) {
-    List<Ripol> rows = executeQuery(
-      RipolQuery.BRANDS_BY_TYPE_SEARCH,
+    List<Ripol> rows = jdbcTemplate.query(
+      SQL_BRANDS_BY_TYPE_SEARCH,
       RIPOL_ROW_MAPPER,
       masterType,
       masterType,
@@ -738,8 +646,8 @@ public class SqliteRipolAdapter implements RipolPort {
   }
 
   private List<Ripol> queryModelsByBrandWithSearch(String brandCode, String likePattern) {
-    return executeQuery(
-      RipolQuery.MODELS_BY_BRAND_SEARCH,
+    return jdbcTemplate.query(
+      SQL_MODELS_BY_BRAND_SEARCH,
       RIPOL_ROW_MAPPER,
       brandCode,
       likePattern,
@@ -763,8 +671,8 @@ public class SqliteRipolAdapter implements RipolPort {
 
   private List<Ripol> queryModelsByBrand(String brandCode) {
     try {
-      return executeQuery(
-          RipolQuery.MODELS_BY_BRAND,
+      return jdbcTemplate.query(
+          SQL_MODELS_BY_BRAND,
           RIPOL_ROW_MAPPER,
           brandCode
       );
