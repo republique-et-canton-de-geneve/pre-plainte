@@ -603,7 +603,7 @@ public class SqliteRipolAdapter implements RipolPort {
     }
   }
 
-  @SuppressWarnings("java:S3649")
+  @SuppressWarnings({"java:S2077", "java:S3649"})
   private <T> List<T> executeQuery(String sql, RowMapper<T> rowMapper, Object... parameters) {
     if (!isAllowedQuery(sql)) {
       throw new IllegalArgumentException("Requête SQL non autorisée");
