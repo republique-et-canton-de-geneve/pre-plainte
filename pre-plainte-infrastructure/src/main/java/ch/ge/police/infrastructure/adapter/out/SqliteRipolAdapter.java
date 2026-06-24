@@ -102,6 +102,11 @@ public class SqliteRipolAdapter implements RipolPort {
   private static final String FROM_TBINCIDENTCODE_CODE = """
     FROM TBINCIDENTCODE code
     """;
+  private static final String SQL_SELECT_LOCALIZATION_GROUP_TYPES =
+    "SELECT DISTINCT GROUPTYPE FROM TBLOCALIZATION ORDER BY GROUPTYPE";
+  private static final String SQL_SELECT_LOCALIZATION_WITH_LIMIT = "SELECT * FROM TBLOCALIZATION LIMIT ?";
+  private static final String SQL_SELECT_LOCALIZATION_BY_GROUP_TYPE =
+    "SELECT * FROM TBLOCALIZATION WHERE GROUPTYPE = ? LIMIT ?";
   private static final String TEXT_SEARCH_FILTER_SQL = """
       AND (
         LOWER(code.TEXT) LIKE ?
@@ -190,6 +195,17 @@ public class SqliteRipolAdapter implements RipolPort {
       String modelsByBrand,
       String modelsByBrandSearch
   ) {
+    private boolean contains(String sql) {
+      return selectAllWithLimit.equals(sql)
+        || selectDistinctGroupTypes.equals(sql)
+        || selectByGroupTypeWithLimit.equals(sql)
+        || codesByGroupType.equals(sql)
+        || codesByGroupTypeSearch.equals(sql)
+        || brandsByType.equals(sql)
+        || brandsByTypeSearch.equals(sql)
+        || modelsByBrand.equals(sql)
+        || modelsByBrandSearch.equals(sql);
+    }
     private static RipolIncidentCodeQueries forFilter(IncidentCodeUsabilityFilter filter) {
       String andAliased = filter.andAliasedFilter;
       String andUnaliased = filter.andUnaliasedFilter;
@@ -506,7 +522,7 @@ public class SqliteRipolAdapter implements RipolPort {
             limit
         );
         case LOCALIZATION -> executeQuery(
-            "SELECT * FROM TBLOCALIZATION LIMIT ?",
+            SQL_SELECT_LOCALIZATION_WITH_LIMIT,
             (rs, rowNum) -> mapRow(rs),
             limit
         );
@@ -530,13 +546,13 @@ public class SqliteRipolAdapter implements RipolPort {
 
     try {
       return switch (table) {
-        case INCIDENT_CODE -> jdbcTemplate.queryForList(
+        case INCIDENT_CODE -> executeQuery(
             incidentCodeQueries.selectDistinctGroupTypes(),
-            String.class
+            (rs, rowNum) -> rs.getString(COL_GROUPTYPE)
         );
-        case LOCALIZATION -> jdbcTemplate.queryForList(
-            "SELECT DISTINCT GROUPTYPE FROM TBLOCALIZATION ORDER BY GROUPTYPE",
-            String.class
+        case LOCALIZATION -> executeQuery(
+            SQL_SELECT_LOCALIZATION_GROUP_TYPES,
+            (rs, rowNum) -> rs.getString(COL_GROUPTYPE)
         );
       };
     } catch (DataAccessException e) {
@@ -567,7 +583,7 @@ public class SqliteRipolAdapter implements RipolPort {
             limit
         );
         case LOCALIZATION -> executeQuery(
-            "SELECT * FROM TBLOCALIZATION WHERE GROUPTYPE = ? LIMIT ?",
+            SQL_SELECT_LOCALIZATION_BY_GROUP_TYPE,
             (rs, rowNum) -> mapRow(rs),
             groupType,
             limit
@@ -587,7 +603,11 @@ public class SqliteRipolAdapter implements RipolPort {
     }
   }
 
+  @SuppressWarnings("java:S3649")
   private <T> List<T> executeQuery(String sql, RowMapper<T> rowMapper, Object... parameters) {
+    if (!isAllowedQuery(sql)) {
+      throw new IllegalArgumentException("Requête SQL non autorisée");
+    }
     int[] parameterTypes = Arrays.stream(parameters)
       .mapToInt(SqliteRipolAdapter::toSqlType)
       .toArray();
@@ -596,6 +616,13 @@ public class SqliteRipolAdapter implements RipolPort {
       statementFactory.newPreparedStatementCreator(Arrays.asList(parameters)),
       rowMapper
     );
+  }
+
+  private boolean isAllowedQuery(String sql) {
+    return SQL_SELECT_LOCALIZATION_GROUP_TYPES.equals(sql)
+      || SQL_SELECT_LOCALIZATION_WITH_LIMIT.equals(sql)
+      || SQL_SELECT_LOCALIZATION_BY_GROUP_TYPE.equals(sql)
+      || incidentCodeQueries.contains(sql);
   }
 
   private static int toSqlType(Object parameter) {
