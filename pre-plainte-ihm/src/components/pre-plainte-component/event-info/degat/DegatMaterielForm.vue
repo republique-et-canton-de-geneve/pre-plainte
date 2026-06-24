@@ -396,36 +396,36 @@ const clearDraftApresValidation = () => {
   stopRestoringOnNextTick();
 };
 
-const validerVehiculeDommage = () => {
+const validerVehiculeDommage = (): boolean => {
   effacerErreursBrouillon();
 
   if (!sousCategorie.value?.trim()) {
     setFieldError("sousCategorie", t("validation.champRequis"));
-    return;
+    return false;
   }
 
   if (!typeObjet.value?.code) {
     setFieldError("typeObjet", t("validation.typeObjetRequis"));
-    return;
+    return false;
   }
 
   if (!fabricant.value?.code) {
     setFieldError("fabricant", t("validation.fabricantRequis"));
-    return;
+    return false;
   }
   if (fabricant.value.code === "AUTRE" && !chaineFormulaire(fabricantAutre.value).trim()) {
     setFieldError("fabricantAutre", t("validation.champRequis"));
-    return;
+    return false;
   }
 
   if (fabricant.value.code !== "AUTRE") {
     if (!modele.value?.code) {
       setFieldError("modele", t("validation.modeleRequis"));
-      return;
+      return false;
     }
     if (modele.value.code === "AUTRE" && !chaineFormulaire(modeleAutre.value).trim()) {
       setFieldError("modeleAutre", t("validation.champRequis"));
-      return;
+      return false;
     }
   }
 
@@ -442,52 +442,52 @@ const validerVehiculeDommage = () => {
       t,
     )
   ) {
-    return;
+    return false;
   }
 
   if (!checkLength(fabricantAutre.value, TEXT_FIELD_MAX_LENGTH)) {
     setFieldError("fabricantAutre", t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH }));
-    return;
+    return false;
   }
 
   if (!checkLength(modeleAutre.value, TEXT_FIELD_MAX_LENGTH)) {
     setFieldError("modeleAutre", t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH }));
-    return;
+    return false;
   }
 
   if (!checkLength(vin.value, TEXT_FIELD_MAX_LENGTH)) {
     setFieldError("vin", t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH }));
-    return;
+    return false;
   }
 
   if (!checkLength(numeroCadre.value, TEXT_FIELD_MAX_LENGTH)) {
     setFieldError("numeroCadre", t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH }));
-    return;
+    return false;
   }
 
   if (!checkLength(velofinderId.value, TEXT_FIELD_MAX_LENGTH)) {
     setFieldError("velofinderId", t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH }));
-    return;
+    return false;
   }
 
   if (!checkLength(assureurAutre.value, TEXT_FIELD_MAX_LENGTH)) {
     setFieldError("assureurAutre", t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH }));
-    return;
+    return false;
   }
 
   if (!checkLength(numeroAssurance.value, TEXT_FIELD_MAX_LENGTH)) {
     setFieldError("numeroAssurance", t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH }));
-    return;
+    return false;
   }
 
   if (!checkLength(numeroVignette.value, TEXT_FIELD_MAX_LENGTH)) {
     setFieldError("numeroVignette", t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH }));
-    return;
+    return false;
   }
 
   if (!checkLength(numeroMaster.value, TEXT_FIELD_MAX_LENGTH)) {
     setFieldError("numeroMaster", t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH }));
-    return;
+    return false;
   }
 
   const snapshot = buildSnapshotFromDraft();
@@ -504,8 +504,21 @@ const validerVehiculeDommage = () => {
   editingIndex.value = null;
   clearDraftApresValidation();
   afficherFicheSaisie.value = false;
+  return true;
 };
 
+const validerBrouillonAvantNavigation = (): boolean => {
+  if (typeDommage.value !== "dommage-vehicule" || !afficherFicheSaisie.value) {
+    return true;
+  }
+  const brouillonValide = validerVehiculeDommage();
+  if (!brouillonValide) {
+    void nextTick(() => draftPanelRef.value?.scrollIntoView({ behavior: "smooth", block: "start" }));
+  }
+  return brouillonValide;
+};
+
+defineExpose({ validerBrouillonAvantNavigation });
 const dernierIndexValide = computed(() => {
   const n = objetsDegradesValides.value?.length ?? 0;
   return n > 0 ? n - 1 : -1;

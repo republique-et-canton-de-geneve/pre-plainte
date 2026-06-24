@@ -12,7 +12,7 @@ export function toTranslatedOptions<T extends string>(items: readonly I18nOption
   }));
 }
 
-export function getEmailLanguage(): "fr" | "en" | "de" | "pt" {
+export function getEmailLanguage(): "fr" | "en" | "de" | "pt" | "it" {
   const localeStore = useLocaleStore();
   const locale = localeStore.locale?.toLowerCase();
 
@@ -20,6 +20,7 @@ export function getEmailLanguage(): "fr" | "en" | "de" | "pt" {
     case "en":
     case "de":
     case "pt":
+    case "it":
       return locale;
     default:
       return "fr";
