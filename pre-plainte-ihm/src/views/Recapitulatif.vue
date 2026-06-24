@@ -682,7 +682,7 @@
                             {{ formatRipol(obj.modele) }}
                           </dd>
                         </v-col>
-                        <v-col v-if="obj.modele?.code === 'AUTRE' && obj.modeleAutre" cols="12" md="6">
+                        <v-col v-if="(!obj.modele || obj.modele?.code === 'AUTRE') && obj.modeleAutre" cols="12" md="6">
                           <dt :id="`lbl-vo-moda-${vIdx}`">
                             <v-label class="ge-field-label">{{ t("incidentTypes.modele") }}</v-label>
                           </dt>
@@ -906,7 +906,7 @@
                             {{ formatRipol(obj.modele) }}
                           </dd>
                         </v-col>
-                        <v-col v-if="obj.modele?.code === 'AUTRE' && obj.modeleAutre" cols="12" md="6">
+                        <v-col v-if="(!obj.modele || obj.modele?.code === 'AUTRE') && obj.modeleAutre" cols="12" md="6">
                           <dt :id="`lbl-dv-moda-${dIdx}`">
                             <v-label class="ge-field-label">{{ t("incidentTypes.modele") }}</v-label>
                           </dt>

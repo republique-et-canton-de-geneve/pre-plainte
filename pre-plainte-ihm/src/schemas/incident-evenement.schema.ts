@@ -139,22 +139,6 @@ const validateVehicleBrandAndModel = (
       message: t("validation.champRequis"),
     });
   }
-  if (data.fabricant.code !== "AUTRE") {
-    if (!data.modele?.code) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: [...basePath, "modele"],
-        message: t("validation.modeleRequis"),
-      });
-    }
-    if (data.modele?.code === "AUTRE" && !data.modeleAutre?.trim()) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: [...basePath, "modeleAutre"],
-        message: t("validation.champRequis"),
-      });
-    }
-  }
 };
 
 const validateIncidentRequirements = (data: Record<string, any>, ctx: z.RefinementCtx, t: ComposerTranslation) => {
