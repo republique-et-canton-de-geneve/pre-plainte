@@ -105,6 +105,7 @@ class DommageMaterielTest {
     ObjetIncident objet = ObjetIncident.builder()
       .type(new RipolCode("713103", "Telephone mobile"))
       .numeroIMEI("123456789012345")
+      .couleur(new RipolCode("123", "Blanc"))
       .build();
 
     dommage.setObjetDegrades(List.of(objet));

@@ -94,7 +94,6 @@
     />
     <AccessibleVSelect
       :label="t('incidentTypes.devise')"
-      required
       v-model="devise"
       :items="deviseOptions"
       :error-messages="deviseError"
@@ -172,7 +171,9 @@ import {
   DEVISES,
   CATEGORIES_OBJETS,
   VOL_OBJET_CATEGORIE,
-  EMPTY_VALUE_EM_DASH, TEXT_FIELD_MAX_LENGTH,
+  EMPTY_VALUE_EM_DASH,
+  TEXT_FIELD_MAX_LENGTH,
+  VEHICULE_CATEGORIES_AVEC_VIN,
 } from "@/constants/constant";
 import AccessibleVSelect from "@/components/accessibility/AccessibleVSelect.vue";
 import { applyDateMask } from "@/utils/helpers/dateHelpers.ts";
@@ -252,6 +253,9 @@ const definirDraftPanelRef = (element: unknown) => {
 };
 const editingIndex = ref<number | null>(null);
 const isRestoring = ref(false);
+
+const isVeloCategory = computed(() => sousCategorie.value === "velos");
+const hasVin = computed(() => VEHICULE_CATEGORIES_AVEC_VIN.includes(sousCategorie.value) ?? !isVeloCategory.value);
 
 const deviseOptions = computed(() => toTranslatedOptions(DEVISES, t));
 const natureDommageOptions = computed(() => [
@@ -430,6 +434,11 @@ const validerVehiculeDommage = async (): Promise<boolean> => {
     return false;
   }
 
+  if (!couleur.value?.code) {
+    setFieldError("couleur", t("validation.couleurRequise"));
+    return false;
+  }
+
   if (!fabricant.value?.code) {
     setFieldError("fabricant", t("validation.fabricantRequis"));
     return false;
@@ -449,6 +458,16 @@ const validerVehiculeDommage = async (): Promise<boolean> => {
       setFieldError("modeleAutre", t("validation.champRequis"));
       return false;
     }
+  }
+
+  if (isVeloCategory.value && !numeroCadreInconnu.value && !chaineFormulaire(numeroCadre.value).trim()) {
+    setFieldError("numeroCadre", t("validation.numeroCadreRequis"));
+    return false;
+  }
+
+  if (hasVin.value && !vinInconnu.value && !chaineFormulaire(vin.value).trim()) {
+    setFieldError("vin", t("validation.vinRequis"));
+    return false;
   }
 
   if (

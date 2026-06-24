@@ -76,18 +76,6 @@
         :localite-error="localiteEvenementError"
       />
 
-      <RipolAutocomplete
-        v-if="showLieuOrigine"
-        v-model="lieuOrigine"
-        :label="t('adresseEvent.lieuOrigine')"
-        :fetch-fn="RipolService.searchLieuxOrigine"
-        :hint="t('adresseEvent.hintLieuOrigine')"
-        :preload="false"
-        :min-search-length="2"
-        :show-code="true"
-        class="mb-3"
-      />
-
       <AdresseEventFields
         v-if="isTrajet"
         :title="t('adresseEvent.adresseDestination')"
@@ -102,6 +90,19 @@
         :adresse-postale-error="adressePostaleEvenementSecondaireError"
         :npa-error="npaEvenementSecondaireError"
         :localite-error="localiteEvenementSecondaireError"
+      />
+
+      <RipolAutocomplete
+        v-if="isTrajet === false"
+        v-model="lieuOrigine"
+        :label="t('adresseEvent.lieuOrigine')"
+        required
+        :fetch-fn="RipolService.searchLieuxOrigine"
+        :hint="t('adresseEvent.hintLieuOrigine')"
+        :preload="false"
+        :min-search-length="2"
+        class="mb-3"
+        :error-messages="lieuOrigineError"
       />
     </div>
   </div>
@@ -157,7 +158,7 @@ const { value: localiteEvenement, errorMessage: localiteEvenementError } = useFi
 const { value: paysEvenement } = useField<string>("paysEvenement", undefined, {
   keepValueOnUnmount: true,
 });
-const { value: lieuOrigine } = useField<RipolSelection | null>("lieuOrigine", undefined, {
+const { value: lieuOrigine, errorMessage: lieuOrigineError } = useField<RipolSelection | null>("lieuOrigine", undefined, {
   keepValueOnUnmount: true,
 });
 
@@ -226,8 +227,6 @@ function clearSecondaryAddressFields() {
 const showAdresseEvenement = computed(
   () => (adresseConnue.value || isTrajet.value) && !adresseLesee.value,
 );
-
-const showLieuOrigine = computed(() => showAdresseEvenement && paysEvenement.value === RIPOL.PAYS_SUISSE);
 
 watch(adresseConnue, isKnown => {
   if (!isKnown) {
