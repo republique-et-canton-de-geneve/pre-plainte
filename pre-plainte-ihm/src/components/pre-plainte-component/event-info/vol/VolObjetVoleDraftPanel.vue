@@ -1,9 +1,11 @@
 <template>
   <div>
-    <h3 class="text-h5 text-md-h5 mb-4">{{ t("incidentTypes.titreBlocAjoutObjetVole") }}</h3>
+    <h3 v-if="objetIndex === undefined" class="text-h5 text-md-h5 mb-4">
+      {{ t("incidentTypes.titreBlocAjoutObjetVole") }}
+    </h3>
     <v-sheet class="pa-4 mb-4 objet-vole-brouillon">
       <p class="text-subtitle-1 font-weight-medium mb-4">
-        {{ t("incidentTypes.objetVoleNumero", { n: (brouillon.objetsVolesValides?.length ?? 0) + 1 }) }}
+        {{ t("incidentTypes.objetVoleNumero", { n: numeroObjet }) }}
       </p>
 
       <AccessibleVSelect
@@ -269,6 +271,7 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from "vue";
 import { useI18n } from "vue-i18n";
 import { useDisplay } from "vuetify/framework";
 import { NUMERO_IMEI_MAX_LENGTH, VOL_OBJET_CATEGORIE } from "@/constants/constant";
@@ -279,13 +282,19 @@ import type { VolObjetVoleDraftBrouillon } from "@/types/volObjetVoleBrouillon.t
 import { requiredLabel } from "@/utils/helpers/labelHelpers";
 import { formatLicensePlate } from "@/composables/useLicencePlate.ts";
 
-const { t } = useI18n();
-const { mobile } = useDisplay();
-
 const props = defineProps<{
   brouillon: VolObjetVoleDraftBrouillon;
   activePrefixes: readonly string[];
+  objetIndex?: number;
 }>();
+
+const { t } = useI18n();
+const { mobile } = useDisplay();
+const numeroObjet = computed(() =>
+  props.objetIndex !== undefined
+    ? props.objetIndex + 1
+    : (props.brouillon.objetsVolesValides?.length ?? 0) + 1,
+);
 
 defineEmits<{
   "update:brouillon": [value: VolObjetVoleDraftBrouillon];
