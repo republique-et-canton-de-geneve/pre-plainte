@@ -155,7 +155,12 @@
     "confirmeIdentite": "Ich bestätige, dass ich die Identität der mutmasslichen Täterin oder des mutmasslichen Täters nicht kenne und keine Informationen über diese Person habe (weder Signalement noch Bild- oder Videoaufnahmen).",
     "confirmeSituation": "Ich bestätige, dass meine Situation weder den Diebstahl eines eingelösten Fahrzeugs noch eines Kontrollschilds betrifft.",
     "casNonTrouve": "Wenn Sie Ihren Fall nicht finden,",
-    "prendreRendezVousPoste": "begeben Sie sich auf einen Polizeiposten."
+    "prendreRendezVousPoste": "begeben Sie sich auf einen Polizeiposten.",
+    "cybercrimeAutreIntroduction": "Begeben Sie sich in diesem Fall mit den folgenden Unterlagen auf einen Polizeiposten:",
+    "cybercrimeAutreDocumentChronologique": "Ein Dokument, das den Sachverhalt chronologisch zusammenfasst",
+    "cybercrimeAutreEchanges": "E-Mail-Austausch oder Unterhaltungen",
+    "cybercrimeAutrePreuvesPaiement": "Zahlungsbelege, Bankkartennummern und Kontoauszüge",
+    "cybercrimeAutreEtc": "Usw."
   },
   "informationsPersonnelles": {
     "titre": "Persönliche Informationen",
@@ -665,6 +670,7 @@
     "urlComplete": "Vollständige URL",
     "descriptionCybercrime": "Beschreibung des Ablaufs der Ereignisse",
     "commandeFrauduleuse": "Betrügerische Bestellung (meine Daten wurden missbräuchlich für eine Bestellung verwendet)",
+    "autre": "Andere",
     "dateDecouverte": "Datum der Entdeckung des Betrugs",
     "montantDelit": "Betrag des Delikts in CHF",
     "assuranceDisponible": "Sie verfügen über eine Cybercrime-Versicherung",
