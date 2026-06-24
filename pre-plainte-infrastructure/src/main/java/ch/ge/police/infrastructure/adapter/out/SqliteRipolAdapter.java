@@ -11,7 +11,9 @@ import java.nio.file.StandardCopyOption;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
+import java.sql.Types;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -29,6 +31,7 @@ import org.springframework.core.io.ResourceLoader;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.ConnectionCallback;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.PreparedStatementCreatorFactory;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.stereotype.Component;
@@ -497,12 +500,12 @@ public class SqliteRipolAdapter implements RipolPort {
 
     try {
       return switch (table) {
-        case INCIDENT_CODE -> jdbcTemplate.query(
+        case INCIDENT_CODE -> executeQuery(
             incidentCodeQueries.selectAllWithLimit(),
             (rs, rowNum) -> mapRow(rs),
             limit
         );
-        case LOCALIZATION -> jdbcTemplate.query(
+        case LOCALIZATION -> executeQuery(
             "SELECT * FROM TBLOCALIZATION LIMIT ?",
             (rs, rowNum) -> mapRow(rs),
             limit
@@ -557,13 +560,13 @@ public class SqliteRipolAdapter implements RipolPort {
 
     try {
       return switch (table) {
-        case INCIDENT_CODE -> jdbcTemplate.query(
+        case INCIDENT_CODE -> executeQuery(
             incidentCodeQueries.selectByGroupTypeWithLimit(),
             (rs, rowNum) -> mapRow(rs),
             groupType,
             limit
         );
-        case LOCALIZATION -> jdbcTemplate.query(
+        case LOCALIZATION -> executeQuery(
             "SELECT * FROM TBLOCALIZATION WHERE GROUPTYPE = ? LIMIT ?",
             (rs, rowNum) -> mapRow(rs),
             groupType,
@@ -584,6 +587,21 @@ public class SqliteRipolAdapter implements RipolPort {
     }
   }
 
+  private <T> List<T> executeQuery(String sql, RowMapper<T> rowMapper, Object... parameters) {
+    int[] parameterTypes = Arrays.stream(parameters)
+      .mapToInt(SqliteRipolAdapter::toSqlType)
+      .toArray();
+    PreparedStatementCreatorFactory statementFactory = new PreparedStatementCreatorFactory(sql, parameterTypes);
+    return jdbcTemplate.query(
+      statementFactory.newPreparedStatementCreator(Arrays.asList(parameters)),
+      rowMapper
+    );
+  }
+
+  private static int toSqlType(Object parameter) {
+    return parameter instanceof Integer ? Types.INTEGER : Types.VARCHAR;
+  }
+
   @Override
   public List<Ripol> getCodesByGroupType(String groupType) {
     return codesByGroupTypeCache.computeIfAbsent(groupType, this::queryCodesByGroupType);
@@ -591,7 +609,7 @@ public class SqliteRipolAdapter implements RipolPort {
 
   private List<Ripol> queryCodesByGroupType(String groupType) {
     try {
-      List<Ripol> rows = jdbcTemplate.query(
+      List<Ripol> rows = executeQuery(
           incidentCodeQueries.codesByGroupType(),
           RIPOL_ROW_MAPPER,
           groupType
@@ -613,7 +631,7 @@ public class SqliteRipolAdapter implements RipolPort {
   }
 
   private List<Ripol> queryCodesByGroupTypeWithSearch(String groupType, String likePattern) {
-    List<Ripol> rows = jdbcTemplate.query(
+    List<Ripol> rows = executeQuery(
       incidentCodeQueries.codesByGroupTypeSearch(),
       RIPOL_ROW_MAPPER,
       groupType,
@@ -640,7 +658,7 @@ public class SqliteRipolAdapter implements RipolPort {
 
   private List<Ripol> queryBrandsByTypeAndMasterType(String masterValue, String masterType) {
     try {
-      List<Ripol> rows = jdbcTemplate.query(
+      List<Ripol> rows = executeQuery(
           incidentCodeQueries.brandsByType(),
           RIPOL_ROW_MAPPER,
           masterType,
@@ -666,7 +684,7 @@ public class SqliteRipolAdapter implements RipolPort {
 
   private List<Ripol> queryBrandsByTypeAndMasterTypeWithSearch(
       String masterValue, String masterType, String likePattern) {
-    List<Ripol> rows = jdbcTemplate.query(
+    List<Ripol> rows = executeQuery(
       incidentCodeQueries.brandsByTypeSearch(),
       RIPOL_ROW_MAPPER,
       masterType,
@@ -682,7 +700,7 @@ public class SqliteRipolAdapter implements RipolPort {
   }
 
   private List<Ripol> queryModelsByBrandWithSearch(String brandCode, String likePattern) {
-    return jdbcTemplate.query(
+    return executeQuery(
       incidentCodeQueries.modelsByBrandSearch(),
       RIPOL_ROW_MAPPER,
       brandCode,
@@ -707,7 +725,7 @@ public class SqliteRipolAdapter implements RipolPort {
 
   private List<Ripol> queryModelsByBrand(String brandCode) {
     try {
-      return jdbcTemplate.query(
+      return executeQuery(
           incidentCodeQueries.modelsByBrand(),
           RIPOL_ROW_MAPPER,
           brandCode
