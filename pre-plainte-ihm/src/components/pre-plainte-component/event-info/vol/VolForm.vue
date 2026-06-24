@@ -20,19 +20,27 @@
     >
       {{ t("incidentTypes.volDansVehiculeWarning") }}
     </v-alert>
-    <VolObjetVoleResumeSheet
-      v-for="(obj, index) in brouillon.objetsVolesValides"
-      :key="`obj-vol-${index}`"
-      :obj="obj"
-      :index="index"
-      :libelle-resume-champ-absent="libelleResumeChampAbsent"
-      :show-ajouter-autre-button="index === dernierIndexObjetValide"
-      @modifier="ouvrirDialogModifierObjet"
-      @supprimer="ouvrirDialogSupprimerObjet"
-      @ajouter-autre="scrollVersSaisieObjet"
-    />
+    <template v-for="(obj, index) in brouillon.objetsVolesValides" :key="`obj-vol-${index}`">
+      <div v-if="editingIndex === index" :ref="definirDraftPanelRef">
+        <VolObjetVoleDraftPanel
+          :brouillon="brouillonPourDraftPanel"
+          :active-prefixes="activePrefixes"
+          :objet-index="index"
+        />
+      </div>
+      <VolObjetVoleResumeSheet
+        v-else
+        :obj="obj"
+        :index="index"
+        :libelle-resume-champ-absent="libelleResumeChampAbsent"
+        :show-ajouter-autre-button="editingIndex === null && index === dernierIndexObjetValide"
+        @modifier="ouvrirDialogModifierObjet"
+        @supprimer="ouvrirDialogSupprimerObjet"
+        @ajouter-autre="scrollVersSaisieObjet"
+      />
+    </template>
 
-    <div v-if="afficherFicheSaisieNouvelObjet" ref="draftPanelRef">
+    <div v-if="afficherFicheSaisieNouvelObjet && editingIndex === null" :ref="definirDraftPanelRef">
       <VolObjetVoleDraftPanel :brouillon="brouillonPourDraftPanel" :active-prefixes="activePrefixes" />
     </div>
     <BaseRadioGroup
@@ -154,6 +162,9 @@ const { value: numeroMaster } = useField<string>("numeroMaster");
 
 const editingIndex = ref<number | null>(null);
 const draftPanelRef = ref<HTMLElement | null>(null);
+const definirDraftPanelRef = (element: unknown) => {
+  draftPanelRef.value = element instanceof HTMLElement ? element : null;
+};
 const isRestoring = ref(false);
 
 const categorieOptions = computed(() =>
