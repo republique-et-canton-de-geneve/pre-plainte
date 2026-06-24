@@ -155,7 +155,12 @@
     "confirmeIdentite": "I confirm that I do not know the identity of the person who committed the acts and that I have no information about them (no description, image or video).",
     "confirmeSituation": "I confirm that my situation does not concern the theft of a registered vehicle or a registration plate.",
     "casNonTrouve": "If you cannot find your case,",
-    "prendreRendezVousPoste": "go to a police station."
+    "prendreRendezVousPoste": "go to a police station.",
+    "cybercrimeAutreIntroduction": "In this case, go to a police station with the following documents:",
+    "cybercrimeAutreDocumentChronologique": "A document summarizing the events in chronological order",
+    "cybercrimeAutreEchanges": "Email exchanges or conversations",
+    "cybercrimeAutrePreuvesPaiement": "Proof of payment, bank card numbers and bank statements",
+    "cybercrimeAutreEtc": "Etc."
   },
   "informationsPersonnelles": {
     "titre": "Personal information",
@@ -665,6 +670,7 @@
     "urlComplete": "Full URL",
     "descriptionCybercrime": "Description of how the events unfolded",
     "commandeFrauduleuse": "Fraudulent order (my data was misused for an order)",
+    "autre": "Other",
     "dateDecouverte": "Date the fraud was discovered",
     "montantDelit": "Amount of the offence in CHF",
     "assuranceDisponible": "You have cybercrime insurance",
