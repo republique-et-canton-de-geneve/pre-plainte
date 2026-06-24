@@ -119,6 +119,7 @@ public class SqliteRipolAdapter implements RipolPort {
   private static final String SQL_SELECT_LOCALIZATION_WITH_LIMIT = "SELECT * FROM TBLOCALIZATION LIMIT ?";
   private static final String SQL_SELECT_LOCALIZATION_BY_GROUP_TYPE =
     "SELECT * FROM TBLOCALIZATION WHERE GROUPTYPE = ? LIMIT ?";
+  private static final String SQL_ORDER_BY_TEXT_FR = "ORDER BY TEXT_FR ASC\n";
   private static final String TEXT_SEARCH_FILTER_SQL = """
       AND (
         LOWER(code.TEXT) LIKE ?
@@ -134,9 +135,7 @@ public class SqliteRipolAdapter implements RipolPort {
           code.TEXT AS TEXT_DE,
           """ + SQL_SELECT_TEXT_FR + FROM_INCIDENT_CODE_VIEW + SQL_JOIN_LOCALIZATION_FR + """
       WHERE code.GROUPTYPE = ?
-      """ + SQL_EXCLUDE_UNUSABLE_RIPOL_LABELS + """
-      ORDER BY TEXT_FR ASC
-      """;
+      """ + SQL_EXCLUDE_UNUSABLE_RIPOL_LABELS + SQL_ORDER_BY_TEXT_FR;
   private static final String SQL_CODES_BY_GROUP_TYPE_SEARCH = """
       SELECT
           code.GROUPTYPE,
@@ -153,9 +152,7 @@ public class SqliteRipolAdapter implements RipolPort {
           """ + SQL_SELECT_TEXT_FR + FROM_INCIDENT_CODE_VIEW + SQL_JOIN_LOCALIZATION_FR + """
       WHERE code.MASTERTYPE = ?
         AND code.MASTERVALUE = ?
-      """ + SQL_EXCLUDE_UNUSABLE_RIPOL_LABELS + """
-      ORDER BY TEXT_FR ASC
-      """;
+      """ + SQL_EXCLUDE_UNUSABLE_RIPOL_LABELS + SQL_ORDER_BY_TEXT_FR;
   private static final String SQL_BRANDS_BY_TYPE_SEARCH = """
       SELECT
           ? AS GROUPTYPE,
@@ -173,9 +170,7 @@ public class SqliteRipolAdapter implements RipolPort {
           """ + SQL_SELECT_TEXT_FR + FROM_INCIDENT_CODE_VIEW + SQL_JOIN_LOCALIZATION_FR + """
       WHERE code.MASTERTYPE = '185'
         AND code.MASTERVALUE = ?
-      """ + SQL_EXCLUDE_UNUSABLE_RIPOL_LABELS + """
-      ORDER BY TEXT_FR ASC
-      """;
+      """ + SQL_EXCLUDE_UNUSABLE_RIPOL_LABELS + SQL_ORDER_BY_TEXT_FR;
   private static final String SQL_MODELS_BY_BRAND_SEARCH = """
       SELECT
           '185' AS GROUPTYPE,
