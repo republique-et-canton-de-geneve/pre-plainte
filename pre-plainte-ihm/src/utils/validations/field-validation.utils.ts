@@ -169,14 +169,7 @@ export const loadFormData = (): Partial<PrePlainteFormFields> => {
       return {};
     }
 
-    const savedData = JSON.parse(savedDataRaw) as Partial<PrePlainteFormFields> & {
-      dateDebutEvenement?: string;
-    };
-
-    if (!savedData.dateDebutEvenement && savedData.dateDebutEvenement) {
-      (savedData as Partial<PrePlainteFormFields>).dateDebutEvenement = savedData.dateDebutEvenement;
-      delete savedData.dateDebutEvenement;
-    }
+    const savedData = JSON.parse(savedDataRaw) as Partial<PrePlainteFormFields>;
 
     return {
       ...normalizeFormNames(savedData),
