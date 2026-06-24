@@ -499,19 +499,6 @@ const persistCurrentValues = () => {
   store.setUserFormData(values as PrePlainteFormFields);
 };
 
-watch(
-  [dateDebutEvenement, heureDebutEvenement, dateFinEvenement, heureFinEvenement],
-  ([debutDate, debutHeure, finDate, finHeure]) => {
-    store.setUserFormData({
-      ...store.userFormData,
-      dateDebutEvenement: debutDate ?? "",
-      heureDebutEvenement: debutHeure ?? "",
-      dateFinEvenement: finDate ?? "",
-      heureFinEvenement: finHeure ?? "",
-    });
-  },
-);
-
 onBeforeUnmount(() => {
   persistCurrentValues();
 });
