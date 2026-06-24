@@ -533,7 +533,7 @@ const validerBrouillonAvantNavigation = async (): Promise<boolean> => {
   if (typeDommage.value !== "dommage-vehicule" || !afficherFicheSaisie.value) {
     return true;
   }
-  const brouillonValide = validerVehiculeDommage();
+  const brouillonValide = await validerVehiculeDommage();
   if (!brouillonValide) {
     void nextTick(() => draftPanelRef.value?.scrollIntoView({ behavior: "smooth", block: "start" }));
   }
