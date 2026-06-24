@@ -406,14 +406,30 @@ watch(datesDisponibles, dates => {
   }
 });
 
-watch([() => poste.value?.key, dateSouhaitee, datesDisponibles], async ([posteKey, selectedDate, dates]) => {
+watch([() => poste.value?.key, dateSouhaitee], async ([posteKey, selectedDate], _, onCleanup) => {
   const selectedIsoDate = toIsoDate(selectedDate) ?? selectedDate;
-  if (!posteKey || !selectedIsoDate || !dates.includes(selectedIsoDate)) {
+  if (!posteKey || !selectedIsoDate || !datesDisponibles.value.includes(selectedIsoDate)) {
     return;
   }
 
+  let animationFrame: number | null = null;
+  let cancelled = false;
+  onCleanup(() => {
+    cancelled = true;
+    if (animationFrame !== null) {
+      cancelAnimationFrame(animationFrame);
+    }
+  });
+
   await nextTick();
-  creneauxSection.value?.scrollIntoView({ behavior: "smooth", block: "start" });
+  if (cancelled) {
+    return;
+  }
+  animationFrame = requestAnimationFrame(() => {
+    animationFrame = requestAnimationFrame(() => {
+      creneauxSection.value?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  });
 });
 
 watch(locale, () => {
