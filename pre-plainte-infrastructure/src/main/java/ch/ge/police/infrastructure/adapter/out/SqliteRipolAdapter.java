@@ -116,6 +116,20 @@ public class SqliteRipolAdapter implements RipolPort {
     LIMIT ?
     """;
 
+  private enum RipolQuery {
+    INCIDENT_CODE_ALL,
+    INCIDENT_CODE_GROUP_TYPES,
+    INCIDENT_CODE_BY_GROUP_TYPE,
+    CODES_BY_GROUP_TYPE,
+    CODES_BY_GROUP_TYPE_SEARCH,
+    BRANDS_BY_TYPE,
+    BRANDS_BY_TYPE_SEARCH,
+    MODELS_BY_BRAND,
+    MODELS_BY_BRAND_SEARCH,
+    LOCALIZATION_ALL,
+    LOCALIZATION_GROUP_TYPES,
+    LOCALIZATION_BY_GROUP_TYPE
+  }
   private enum AllowedTable {
     INCIDENT_CODE(TABLE_INCIDENT_CODE),
     LOCALIZATION(TABLE_LOCALIZATION);
@@ -195,17 +209,6 @@ public class SqliteRipolAdapter implements RipolPort {
       String modelsByBrand,
       String modelsByBrandSearch
   ) {
-    private boolean contains(String sql) {
-      return selectAllWithLimit.equals(sql)
-        || selectDistinctGroupTypes.equals(sql)
-        || selectByGroupTypeWithLimit.equals(sql)
-        || codesByGroupType.equals(sql)
-        || codesByGroupTypeSearch.equals(sql)
-        || brandsByType.equals(sql)
-        || brandsByTypeSearch.equals(sql)
-        || modelsByBrand.equals(sql)
-        || modelsByBrandSearch.equals(sql);
-    }
     private static RipolIncidentCodeQueries forFilter(IncidentCodeUsabilityFilter filter) {
       String andAliased = filter.andAliasedFilter;
       String andUnaliased = filter.andUnaliasedFilter;
@@ -517,12 +520,12 @@ public class SqliteRipolAdapter implements RipolPort {
     try {
       return switch (table) {
         case INCIDENT_CODE -> executeQuery(
-            incidentCodeQueries.selectAllWithLimit(),
+            RipolQuery.INCIDENT_CODE_ALL,
             (rs, rowNum) -> mapRow(rs),
             limit
         );
         case LOCALIZATION -> executeQuery(
-            SQL_SELECT_LOCALIZATION_WITH_LIMIT,
+            RipolQuery.LOCALIZATION_ALL,
             (rs, rowNum) -> mapRow(rs),
             limit
         );
@@ -547,11 +550,11 @@ public class SqliteRipolAdapter implements RipolPort {
     try {
       return switch (table) {
         case INCIDENT_CODE -> executeQuery(
-            incidentCodeQueries.selectDistinctGroupTypes(),
+            RipolQuery.INCIDENT_CODE_GROUP_TYPES,
             (rs, rowNum) -> rs.getString(COL_GROUPTYPE)
         );
         case LOCALIZATION -> executeQuery(
-            SQL_SELECT_LOCALIZATION_GROUP_TYPES,
+            RipolQuery.LOCALIZATION_GROUP_TYPES,
             (rs, rowNum) -> rs.getString(COL_GROUPTYPE)
         );
       };
@@ -577,13 +580,13 @@ public class SqliteRipolAdapter implements RipolPort {
     try {
       return switch (table) {
         case INCIDENT_CODE -> executeQuery(
-            incidentCodeQueries.selectByGroupTypeWithLimit(),
+            RipolQuery.INCIDENT_CODE_BY_GROUP_TYPE,
             (rs, rowNum) -> mapRow(rs),
             groupType,
             limit
         );
         case LOCALIZATION -> executeQuery(
-            SQL_SELECT_LOCALIZATION_BY_GROUP_TYPE,
+            RipolQuery.LOCALIZATION_BY_GROUP_TYPE,
             (rs, rowNum) -> mapRow(rs),
             groupType,
             limit
@@ -603,28 +606,36 @@ public class SqliteRipolAdapter implements RipolPort {
     }
   }
 
-  @SuppressWarnings({"java:S2077", "java:S3649"})
-  private <T> List<T> executeQuery(String sql, RowMapper<T> rowMapper, Object... parameters) {
-    if (!isAllowedQuery(sql)) {
-      throw new IllegalArgumentException("Requête SQL non autorisée");
-    }
+  private <T> List<T> executeQuery(RipolQuery query, RowMapper<T> rowMapper, Object... parameters) {
     int[] parameterTypes = Arrays.stream(parameters)
       .mapToInt(SqliteRipolAdapter::toSqlType)
       .toArray();
-    PreparedStatementCreatorFactory statementFactory = new PreparedStatementCreatorFactory(sql, parameterTypes);
+    PreparedStatementCreatorFactory statementFactory = new PreparedStatementCreatorFactory(
+      resolveSql(query),
+      parameterTypes
+    );
     return jdbcTemplate.query(
       statementFactory.newPreparedStatementCreator(Arrays.asList(parameters)),
       rowMapper
     );
   }
 
-  private boolean isAllowedQuery(String sql) {
-    return SQL_SELECT_LOCALIZATION_GROUP_TYPES.equals(sql)
-      || SQL_SELECT_LOCALIZATION_WITH_LIMIT.equals(sql)
-      || SQL_SELECT_LOCALIZATION_BY_GROUP_TYPE.equals(sql)
-      || incidentCodeQueries.contains(sql);
+  private String resolveSql(RipolQuery query) {
+    return switch (query) {
+      case INCIDENT_CODE_ALL -> incidentCodeQueries.selectAllWithLimit();
+      case INCIDENT_CODE_GROUP_TYPES -> incidentCodeQueries.selectDistinctGroupTypes();
+      case INCIDENT_CODE_BY_GROUP_TYPE -> incidentCodeQueries.selectByGroupTypeWithLimit();
+      case CODES_BY_GROUP_TYPE -> incidentCodeQueries.codesByGroupType();
+      case CODES_BY_GROUP_TYPE_SEARCH -> incidentCodeQueries.codesByGroupTypeSearch();
+      case BRANDS_BY_TYPE -> incidentCodeQueries.brandsByType();
+      case BRANDS_BY_TYPE_SEARCH -> incidentCodeQueries.brandsByTypeSearch();
+      case MODELS_BY_BRAND -> incidentCodeQueries.modelsByBrand();
+      case MODELS_BY_BRAND_SEARCH -> incidentCodeQueries.modelsByBrandSearch();
+      case LOCALIZATION_ALL -> SQL_SELECT_LOCALIZATION_WITH_LIMIT;
+      case LOCALIZATION_GROUP_TYPES -> SQL_SELECT_LOCALIZATION_GROUP_TYPES;
+      case LOCALIZATION_BY_GROUP_TYPE -> SQL_SELECT_LOCALIZATION_BY_GROUP_TYPE;
+    };
   }
-
   private static int toSqlType(Object parameter) {
     return parameter instanceof Integer ? Types.INTEGER : Types.VARCHAR;
   }
@@ -637,7 +648,7 @@ public class SqliteRipolAdapter implements RipolPort {
   private List<Ripol> queryCodesByGroupType(String groupType) {
     try {
       List<Ripol> rows = executeQuery(
-          incidentCodeQueries.codesByGroupType(),
+          RipolQuery.CODES_BY_GROUP_TYPE,
           RIPOL_ROW_MAPPER,
           groupType
       );
@@ -659,7 +670,7 @@ public class SqliteRipolAdapter implements RipolPort {
 
   private List<Ripol> queryCodesByGroupTypeWithSearch(String groupType, String likePattern) {
     List<Ripol> rows = executeQuery(
-      incidentCodeQueries.codesByGroupTypeSearch(),
+      RipolQuery.CODES_BY_GROUP_TYPE_SEARCH,
       RIPOL_ROW_MAPPER,
       groupType,
       likePattern,
@@ -686,7 +697,7 @@ public class SqliteRipolAdapter implements RipolPort {
   private List<Ripol> queryBrandsByTypeAndMasterType(String masterValue, String masterType) {
     try {
       List<Ripol> rows = executeQuery(
-          incidentCodeQueries.brandsByType(),
+          RipolQuery.BRANDS_BY_TYPE,
           RIPOL_ROW_MAPPER,
           masterType,
           masterType,
@@ -712,7 +723,7 @@ public class SqliteRipolAdapter implements RipolPort {
   private List<Ripol> queryBrandsByTypeAndMasterTypeWithSearch(
       String masterValue, String masterType, String likePattern) {
     List<Ripol> rows = executeQuery(
-      incidentCodeQueries.brandsByTypeSearch(),
+      RipolQuery.BRANDS_BY_TYPE_SEARCH,
       RIPOL_ROW_MAPPER,
       masterType,
       masterType,
@@ -728,7 +739,7 @@ public class SqliteRipolAdapter implements RipolPort {
 
   private List<Ripol> queryModelsByBrandWithSearch(String brandCode, String likePattern) {
     return executeQuery(
-      incidentCodeQueries.modelsByBrandSearch(),
+      RipolQuery.MODELS_BY_BRAND_SEARCH,
       RIPOL_ROW_MAPPER,
       brandCode,
       likePattern,
@@ -753,7 +764,7 @@ public class SqliteRipolAdapter implements RipolPort {
   private List<Ripol> queryModelsByBrand(String brandCode) {
     try {
       return executeQuery(
-          incidentCodeQueries.modelsByBrand(),
+          RipolQuery.MODELS_BY_BRAND,
           RIPOL_ROW_MAPPER,
           brandCode
       );
