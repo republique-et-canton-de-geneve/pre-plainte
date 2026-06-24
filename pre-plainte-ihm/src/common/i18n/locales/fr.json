@@ -155,7 +155,12 @@
     "confirmeIdentite": "Je confirme que je ne connais pas l'identité de l'autrice ou de l'auteur des faits et que je n'ai aucune information à son sujet (pas de signalement, pas d'image ni de vidéo).",
     "confirmeSituation": "Je confirme que ma situation ne concerne pas le vol d'un véhicule immatriculé ou de plaque.",
     "casNonTrouve": "Si vous ne trouvez pas votre cas,",
-    "prendreRendezVousPoste": "rendez-vous dans un poste de police."
+    "prendreRendezVousPoste": "rendez-vous dans un poste de police.",
+    "cybercrimeAutreIntroduction": "Dans ce cas, rendez-vous dans un poste de police avec les documents suivants :",
+    "cybercrimeAutreDocumentChronologique": "Un document résumant les faits de manière chronologique",
+    "cybercrimeAutreEchanges": "Les échanges de mails ou conversations",
+    "cybercrimeAutrePreuvesPaiement": "Les preuves de paiements, les numéros de cartes bancaires, les relevés de comptes",
+    "cybercrimeAutreEtc": "Etc…"
   },
   "informationsPersonnelles": {
     "titre": "Informations personnelles",
@@ -665,6 +670,7 @@
     "urlComplete": "URL complète",
     "descriptionCybercrime": "Description du déroulement des faits",
     "commandeFrauduleuse": "Commande frauduleuse (mes données ont été utilisées abusivement pour une commande)",
+    "autre": "Autre",
     "dateDecouverte": "Date de découverte de l'escroquerie",
     "montantDelit": "Montant du délit en CHF",
     "assuranceDisponible": "Vous disposez d'une assurance cybercrime",
