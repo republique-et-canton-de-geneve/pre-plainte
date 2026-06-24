@@ -155,7 +155,12 @@
     "confirmeIdentite": "Confirmo que não conheço a identidade da autora ou do autor dos factos e que não tenho qualquer informação sobre essa pessoa (nem descrição, nem imagem, nem vídeo).",
     "confirmeSituation": "Confirmo que a minha situação não diz respeito ao roubo de um veículo matriculado ou de uma matrícula.",
     "casNonTrouve": "Se não encontrar o seu caso,",
-    "prendreRendezVousPoste": "dirija-se a um posto de polícia."
+    "prendreRendezVousPoste": "dirija-se a um posto de polícia.",
+    "cybercrimeAutreIntroduction": "Neste caso, dirija-se a um posto de polícia com os seguintes documentos:",
+    "cybercrimeAutreDocumentChronologique": "Um documento que resuma os factos por ordem cronológica",
+    "cybercrimeAutreEchanges": "As trocas de e-mails ou conversas",
+    "cybercrimeAutrePreuvesPaiement": "Os comprovativos de pagamento, os números dos cartões bancários e os extratos de conta",
+    "cybercrimeAutreEtc": "Etc."
   },
   "informationsPersonnelles": {
     "titre": "Informações pessoais",
@@ -665,6 +670,7 @@
     "urlComplete": "URL completa",
     "descriptionCybercrime": "Descrição do desenrolar dos factos",
     "commandeFrauduleuse": "Encomenda fraudulenta (os meus dados foram utilizados abusivamente para uma encomenda)",
+    "autre": "Outro",
     "dateDecouverte": "Data de descoberta da burla",
     "montantDelit": "Montante do delito em CHF",
     "assuranceDisponible": "Dispõe de um seguro de cibercrime",

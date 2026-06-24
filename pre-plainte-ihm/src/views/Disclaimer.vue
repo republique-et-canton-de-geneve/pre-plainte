@@ -111,7 +111,23 @@
         clearable
       />
 
-      <v-alert type="info" class="mb-6" density="comfortable" :icon="mobile ? false : undefined">
+      <v-alert
+        v-if="typeCybercrime === TYPE_CYBERCRIME_AUTRE"
+        type="warning"
+        class="mb-6"
+        density="comfortable"
+        :icon="mobile ? false : undefined"
+      >
+        <p>{{ t("disclaimer.cybercrimeAutreIntroduction") }}</p>
+        <ul class="ml-4 mt-2">
+          <li>{{ t("disclaimer.cybercrimeAutreDocumentChronologique") }}</li>
+          <li>{{ t("disclaimer.cybercrimeAutreEchanges") }}</li>
+          <li>{{ t("disclaimer.cybercrimeAutrePreuvesPaiement") }}</li>
+          <li>{{ t("disclaimer.cybercrimeAutreEtc") }}</li>
+        </ul>
+      </v-alert>
+
+      <v-alert v-else type="info" class="mb-6" density="comfortable" :icon="mobile ? false : undefined">
         {{ t("disclaimer.casNonTrouve") }}
         <a :href="POSTES_POLICE_URL" target="_blank" rel="noopener noreferrer">
           {{ t("disclaimer.prendreRendezVousPoste") }}
@@ -187,11 +203,13 @@ const { value: typeIncident, errorMessage: typeIncidentError } = useField<string
 const { value: typeDommage, errorMessage: typeDommageError } = useField<string>("typeDommage");
 const { value: typeCybercrime, errorMessage: typeCybercrimeError } = useField<string>("typeCybercrime");
 
+const TYPE_CYBERCRIME_AUTRE = "autre";
 const typeDommageOptions = computed(() => toTranslatedOptions(TYPES_DOMMAGE, t));
 const typeCybercrimeOptions = computed(() => [
   { label: t("cybercrime.commandeFrauduleuse"), value: "commande-frauduleuse" },
   { label: t("cybercrime.achatNonRecu"), value: "achat-non-recu" },
   { label: t("cybercrime.fausseAnnonce"), value: "fausse-annonce" },
+  { label: t("cybercrime.autre"), value: TYPE_CYBERCRIME_AUTRE },
 ]);
 
 const canContinue = computed(
@@ -199,6 +217,7 @@ const canContinue = computed(
     Boolean(typeIncident.value) &&
     (typeIncident.value !== "degat-delit" || Boolean(typeDommage.value)) &&
     (typeIncident.value !== "cybercrime" || Boolean(typeCybercrime.value)) &&
+    typeCybercrime.value !== TYPE_CYBERCRIME_AUTRE &&
     confirmeIdentite.value &&
     confirmeSituation.value &&
     (!captchaEnabled || Boolean(captchaToken.value)),
