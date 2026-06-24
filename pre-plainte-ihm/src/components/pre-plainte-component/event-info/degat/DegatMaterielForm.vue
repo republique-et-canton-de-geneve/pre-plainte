@@ -36,19 +36,36 @@
     </template>
 
     <template v-if="typeDommage === 'dommage-vehicule'">
-      <DegatVehiculeEndommageResumeSheet
-        v-for="(obj, index) in objetsDegradesValides"
-        :key="`obj-deg-${index}`"
-        :obj="obj"
-        :index="index"
-        :libelle-resume-champ-absent="libelleResumeChampAbsent"
-        :show-ajouter-autre-button="index === dernierIndexValide"
-        @modifier="ouvrirDialogModifier"
-        @supprimer="ouvrirDialogSupprimer"
-        @ajouter-autre="scrollVersSaisie"
-      />
+      <template v-for="(obj, index) in objetsDegradesValides" :key="`obj-deg-${index}`">
+        <div v-if="editingIndex === index" :ref="definirDraftPanelRef">
+          <DegatVehiculeEndommageDraftPanel
+            :objets-count="objetsDegradesValides?.length ?? 0"
+            :objet-index="index"
+            :sous-categorie="sousCategorie"
+            :sous-categorie-error="sousCategorieError"
+            :categorie-objet="categorieObjet"
+            :sub-categorie-options="subCategorieOptions"
+            :active-prefixes="activePrefixes"
+            :valeur-reelle="valeurReelle"
+            :valeur-reelle-error="valeurReelleError"
+            :on-validate="validerVehiculeDommage"
+            @update:sous-categorie="sousCategorie = $event"
+            @update:valeurReelle="valeurReelle = $event"
+          />
+        </div>
+        <DegatVehiculeEndommageResumeSheet
+          v-else
+          :obj="obj"
+          :index="index"
+          :libelle-resume-champ-absent="libelleResumeChampAbsent"
+          :show-ajouter-autre-button="editingIndex === null && index === dernierIndexValide"
+          @modifier="ouvrirDialogModifier"
+          @supprimer="ouvrirDialogSupprimer"
+          @ajouter-autre="scrollVersSaisie"
+        />
+      </template>
 
-      <div v-if="afficherFicheSaisie" ref="draftPanelRef">
+      <div v-if="afficherFicheSaisie && editingIndex === null" :ref="definirDraftPanelRef">
         <DegatVehiculeEndommageDraftPanel
           :objets-count="objetsDegradesValides?.length ?? 0"
           :sous-categorie="sousCategorie"
@@ -229,6 +246,9 @@ const { value: objetsDegradesValides } = useField<VolObjetFormSnapshot[]>("objet
 
 const afficherFicheSaisie = ref((objetsDegradesValides.value?.length ?? 0) === 0);
 const draftPanelRef = ref<HTMLElement | null>(null);
+const definirDraftPanelRef = (element: unknown) => {
+  draftPanelRef.value = element instanceof HTMLElement ? element : null;
+};
 const editingIndex = ref<number | null>(null);
 const isRestoring = ref(false);
 
