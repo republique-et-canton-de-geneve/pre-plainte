@@ -28,8 +28,10 @@ public class FausseAnnonce {
   }
 
   private void verifierChampsObligatoires() {
+    verifierChampObligatoire(urlComplete, "L'URL de l’annonce est obligatoire.");
     verifierChampObligatoire(titreAnnonce, "Le titre de l’annonce est obligatoire.");
     verifierChampObligatoire(nomBailleur, "Le nom du bailleur est obligatoire.");
+    verifierChampObligatoire(adresseBienImmobilier, "L'adresse du bien immobilier est obligatoire.");
     verifierChampObligatoire(montantDemande, "Le montant demandé est obligatoire.");
     verifierChampObligatoire(modePaiementDemande, "Le mode de paiement est obligatoire.");
   }

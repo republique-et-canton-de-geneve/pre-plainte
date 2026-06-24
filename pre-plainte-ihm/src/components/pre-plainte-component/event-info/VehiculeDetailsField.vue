@@ -25,6 +25,7 @@
     :error-messages="sousCategorieError"
     :hint="t('sousCategories.hint')"
     persistent-hint
+    clearable
   />
 
   <RipolAutocomplete
@@ -93,7 +94,7 @@
   <RipolAutocomplete
     v-model="couleur"
     :key="colourKey"
-    :label="t('incidentTypes.couleur')"
+    :label="requiredLabel(t('incidentTypes.couleur'))"
     :fetch-fn="fetchColours"
     :error-messages="couleurError"
     :hint="t('incidentTypes.hintCouleur')"
@@ -115,7 +116,7 @@
 
   <template v-if="isVeloCategory">
     <v-text-field
-      :label="t('incidentTypes.numeroCadre')"
+      :label="(numeroCadreInconnu ? t('incidentTypes.numeroCadre') : requiredLabel(t('incidentTypes.numeroCadre')))"
       v-model="numeroCadre"
       :disabled="numeroCadreInconnu"
       class="mb-2"
@@ -129,7 +130,7 @@
 
   <template v-if="hasVin">
     <v-text-field
-      :label="t('incidentTypes.vin')"
+      :label="(vinInconnu ? t('incidentTypes.vin') : requiredLabel(t('incidentTypes.vin')))"
       v-model="vin"
       :disabled="vinInconnu"
       class="mb-2"

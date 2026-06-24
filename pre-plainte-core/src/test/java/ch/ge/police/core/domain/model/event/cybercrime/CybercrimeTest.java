@@ -90,6 +90,7 @@ class CybercrimeTest {
     annonce.setTitreAnnonce("Appartement à louer");
     annonce.setNomBailleur("Martin");
     annonce.setEmailBailleur("martin@test.ch");
+    annonce.setAdresseBienImmobilier("Rue du Rhône 1, 1201 Genève");
     annonce.setMontantDemande(1200.0);
     annonce.setModePaiementDemande("Virement bancaire");
     cybercrime.setFausseAnnonce(annonce);
