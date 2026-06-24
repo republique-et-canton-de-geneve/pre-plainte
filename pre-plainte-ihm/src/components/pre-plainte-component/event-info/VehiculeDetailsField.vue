@@ -82,7 +82,7 @@
   <v-text-field
     v-if="fabricant && (!hasModels || isAutreModele) && !isAutreFabricant"
     v-model="modeleAutre"
-    :label="requiredLabel(t('incidentTypes.modeleAutre'))"
+    :label="hasModels ? requiredLabel(t('incidentTypes.modeleAutre')) : t('incidentTypes.modeleAutre')"
     :error-messages="modeleAutreError"
     :hint="t('incidentTypes.hintModeleAutre')"
     variant="outlined"
