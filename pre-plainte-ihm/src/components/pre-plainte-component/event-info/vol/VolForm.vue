@@ -689,7 +689,7 @@ const validerBrouillonAvantNavigation = async (): Promise<boolean> => {
   if (!afficherFicheSaisieNouvelObjet.value) {
     return true;
   }
-  const brouillonValide = validerObjetVole();
+  const brouillonValide = await validerObjetVole();
   if (!brouillonValide) {
     void nextTick(() => draftPanelRef.value?.scrollIntoView({ behavior: "smooth", block: "start" }));
   }
