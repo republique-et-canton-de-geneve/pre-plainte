@@ -499,13 +499,13 @@ public class SqliteRipolAdapter implements RipolPort {
       return switch (table) {
         case INCIDENT_CODE -> jdbcTemplate.query(
             incidentCodeQueries.selectAllWithLimit(),
-            preparedStatement -> preparedStatement.setInt(1, limit),
-            (rs, rowNum) -> mapRow(rs)
+            (rs, rowNum) -> mapRow(rs),
+            limit
         );
         case LOCALIZATION -> jdbcTemplate.query(
             "SELECT * FROM TBLOCALIZATION LIMIT ?",
-            preparedStatement -> preparedStatement.setInt(1, limit),
-            (rs, rowNum) -> mapRow(rs)
+            (rs, rowNum) -> mapRow(rs),
+            limit
         );
       };
     } catch (DataAccessException e) {
@@ -559,19 +559,15 @@ public class SqliteRipolAdapter implements RipolPort {
       return switch (table) {
         case INCIDENT_CODE -> jdbcTemplate.query(
             incidentCodeQueries.selectByGroupTypeWithLimit(),
-            preparedStatement -> {
-              preparedStatement.setString(1, groupType);
-              preparedStatement.setInt(2, limit);
-            },
-            (rs, rowNum) -> mapRow(rs)
+            (rs, rowNum) -> mapRow(rs),
+            groupType,
+            limit
         );
         case LOCALIZATION -> jdbcTemplate.query(
             "SELECT * FROM TBLOCALIZATION WHERE GROUPTYPE = ? LIMIT ?",
-            preparedStatement -> {
-              preparedStatement.setString(1, groupType);
-              preparedStatement.setInt(2, limit);
-            },
-            (rs, rowNum) -> mapRow(rs)
+            (rs, rowNum) -> mapRow(rs),
+            groupType,
+            limit
         );
       };
     } catch (DataAccessException e) {
@@ -597,8 +593,8 @@ public class SqliteRipolAdapter implements RipolPort {
     try {
       List<Ripol> rows = jdbcTemplate.query(
           incidentCodeQueries.codesByGroupType(),
-          preparedStatement -> preparedStatement.setString(1, groupType),
-          RIPOL_ROW_MAPPER
+          RIPOL_ROW_MAPPER,
+          groupType
       );
       if (DEDUPLICATE_BY_LABEL_GROUP_TYPES.contains(groupType)) {
         return deduplicateByDisplayLabel(rows);
@@ -619,13 +615,11 @@ public class SqliteRipolAdapter implements RipolPort {
   private List<Ripol> queryCodesByGroupTypeWithSearch(String groupType, String likePattern) {
     List<Ripol> rows = jdbcTemplate.query(
       incidentCodeQueries.codesByGroupTypeSearch(),
-      preparedStatement -> {
-        preparedStatement.setString(1, groupType);
-        preparedStatement.setString(2, likePattern);
-        preparedStatement.setString(3, likePattern);
-        preparedStatement.setInt(4, SEARCH_RESULT_LIMIT);
-      },
-      RIPOL_ROW_MAPPER
+      RIPOL_ROW_MAPPER,
+      groupType,
+      likePattern,
+      likePattern,
+      SEARCH_RESULT_LIMIT
     );
     if (DEDUPLICATE_BY_LABEL_GROUP_TYPES.contains(groupType)) {
       return deduplicateByDisplayLabel(rows);
@@ -648,12 +642,10 @@ public class SqliteRipolAdapter implements RipolPort {
     try {
       List<Ripol> rows = jdbcTemplate.query(
           incidentCodeQueries.brandsByType(),
-          preparedStatement -> {
-            preparedStatement.setString(1, masterType);
-            preparedStatement.setString(2, masterType);
-            preparedStatement.setString(3, masterValue);
-          },
-          RIPOL_ROW_MAPPER
+          RIPOL_ROW_MAPPER,
+          masterType,
+          masterType,
+          masterValue
       );
       if (GROUP_TYPE_VEHICLE_BRAND.equals(masterType)) {
         return deduplicateByDisplayLabel(rows);
@@ -676,15 +668,13 @@ public class SqliteRipolAdapter implements RipolPort {
       String masterValue, String masterType, String likePattern) {
     List<Ripol> rows = jdbcTemplate.query(
       incidentCodeQueries.brandsByTypeSearch(),
-      preparedStatement -> {
-        preparedStatement.setString(1, masterType);
-        preparedStatement.setString(2, masterType);
-        preparedStatement.setString(3, masterValue);
-        preparedStatement.setString(4, likePattern);
-        preparedStatement.setString(5, likePattern);
-        preparedStatement.setInt(6, SEARCH_RESULT_LIMIT);
-      },
-      RIPOL_ROW_MAPPER);
+      RIPOL_ROW_MAPPER,
+      masterType,
+      masterType,
+      masterValue,
+      likePattern,
+      likePattern,
+      SEARCH_RESULT_LIMIT);
     if (GROUP_TYPE_VEHICLE_BRAND.equals(masterType)) {
       return deduplicateByDisplayLabel(rows);
     }
@@ -694,13 +684,11 @@ public class SqliteRipolAdapter implements RipolPort {
   private List<Ripol> queryModelsByBrandWithSearch(String brandCode, String likePattern) {
     return jdbcTemplate.query(
       incidentCodeQueries.modelsByBrandSearch(),
-      preparedStatement -> {
-        preparedStatement.setString(1, brandCode);
-        preparedStatement.setString(2, likePattern);
-        preparedStatement.setString(3, likePattern);
-        preparedStatement.setInt(4, SEARCH_RESULT_LIMIT);
-      },
-      RIPOL_ROW_MAPPER
+      RIPOL_ROW_MAPPER,
+      brandCode,
+      likePattern,
+      likePattern,
+      SEARCH_RESULT_LIMIT
     );
   }
 
@@ -721,8 +709,8 @@ public class SqliteRipolAdapter implements RipolPort {
     try {
       return jdbcTemplate.query(
           incidentCodeQueries.modelsByBrand(),
-          preparedStatement -> preparedStatement.setString(1, brandCode),
-          RIPOL_ROW_MAPPER
+          RIPOL_ROW_MAPPER,
+          brandCode
       );
     } catch (DataAccessException e) {
       log.error(
