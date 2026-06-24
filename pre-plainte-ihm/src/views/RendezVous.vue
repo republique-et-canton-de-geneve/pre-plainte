@@ -117,6 +117,7 @@ const DAY_END = 8;
 const HOUR_MINUTE_START = 9;
 const VEHICULE_PLAQUE_MAX_RENDEZ_VOUS_HOURS = 24;
 const RENDEZ_VOUS_DATE_WINDOW_DAYS = 15;
+const SCROLL_AFTER_SELECT_DELAY_MS = 300;
 
 const { t, locale } = useI18n();
 const { mobile } = useDisplay();
@@ -406,31 +407,30 @@ watch(datesDisponibles, dates => {
   }
 });
 
-watch([() => poste.value?.key, dateSouhaitee], async ([posteKey, selectedDate], _, onCleanup) => {
-  const selectedIsoDate = toIsoDate(selectedDate) ?? selectedDate;
-  if (!posteKey || !selectedIsoDate || !datesDisponibles.value.includes(selectedIsoDate)) {
-    return;
-  }
-
-  let animationFrame: number | null = null;
-  let cancelled = false;
-  onCleanup(() => {
-    cancelled = true;
-    if (animationFrame !== null) {
-      cancelAnimationFrame(animationFrame);
+watch(
+  [() => poste.value?.key, dateSouhaitee, () => creneauxFiltres.value.length],
+  ([posteKey, selectedDate, nombreCreneaux], _, onCleanup) => {
+    const selectedIsoDate = toIsoDate(selectedDate) ?? selectedDate;
+    if (!posteKey || !selectedIsoDate || nombreCreneaux === 0 || !datesDisponibles.value.includes(selectedIsoDate)) {
+      return;
     }
-  });
 
-  await nextTick();
-  if (cancelled) {
-    return;
-  }
-  animationFrame = requestAnimationFrame(() => {
-    animationFrame = requestAnimationFrame(() => {
-      creneauxSection.value?.scrollIntoView({ behavior: "smooth", block: "start" });
+    let cancelled = false;
+    const scrollTimeout = window.setTimeout(() => {
+      void nextTick(() => {
+        if (!cancelled) {
+          creneauxSection.value?.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      });
+    }, SCROLL_AFTER_SELECT_DELAY_MS);
+
+    onCleanup(() => {
+      cancelled = true;
+      window.clearTimeout(scrollTimeout);
     });
-  });
-});
+  },
+  { flush: "post" },
+);
 
 watch(locale, () => {
   validate();
