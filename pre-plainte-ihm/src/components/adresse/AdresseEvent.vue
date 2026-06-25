@@ -76,34 +76,36 @@
         :localite-error="localiteEvenementError"
       />
 
-      <AdresseEventFields
-        v-if="isTrajet"
-        :title="t('adresseEvent.adresseDestination')"
-        instance-id="incident-end"
-        v-model:adresse="adresseEvenementSecondaire"
-        v-model:adressePostale="adressePostaleEvenementSecondaire"
-        v-model:npa="npaEvenementSecondaire"
-        v-model:localite="localiteEvenementSecondaire"
-        v-model:pays="paysEvenementSecondaire"
-        :allowed-country-codes="paysEvenementAutorises"
-        :adresse-error="adresseEvenementSecondaireError"
-        :adresse-postale-error="adressePostaleEvenementSecondaireError"
-        :npa-error="npaEvenementSecondaireError"
-        :localite-error="localiteEvenementSecondaireError"
-      />
+      <template v-if="adresseConnue === false">
+        <AdresseEventFields
+          v-if="isTrajet"
+          :title="t('adresseEvent.adresseDestination')"
+          instance-id="incident-end"
+          v-model:adresse="adresseEvenementSecondaire"
+          v-model:adressePostale="adressePostaleEvenementSecondaire"
+          v-model:npa="npaEvenementSecondaire"
+          v-model:localite="localiteEvenementSecondaire"
+          v-model:pays="paysEvenementSecondaire"
+          :allowed-country-codes="paysEvenementAutorises"
+          :adresse-error="adresseEvenementSecondaireError"
+          :adresse-postale-error="adressePostaleEvenementSecondaireError"
+          :npa-error="npaEvenementSecondaireError"
+          :localite-error="localiteEvenementSecondaireError"
+        />
 
-      <RipolAutocomplete
-        v-if="isTrajet === false"
-        v-model="lieuOrigine"
-        :label="t('adresseEvent.lieuOrigine')"
-        required
-        :fetch-fn="RipolService.searchLieuxOrigine"
-        :hint="t('adresseEvent.hintLieuOrigine')"
-        :preload="false"
-        :min-search-length="2"
-        class="mb-3"
-        :error-messages="lieuOrigineError"
-      />
+        <RipolAutocomplete
+          v-if="isTrajet === false"
+          v-model="lieuOrigine"
+          :label="t('adresseEvent.lieuOrigine')"
+          required
+          :fetch-fn="RipolService.searchLieuxOrigine"
+          :hint="t('adresseEvent.hintLieuOrigine')"
+          :preload="false"
+          :min-search-length="2"
+          class="mb-3"
+          :error-messages="lieuOrigineError"
+        />
+      </template>
     </div>
   </div>
 </template>
@@ -228,8 +230,9 @@ const showAdresseEvenement = computed(
 );
 
 watch(adresseConnue, isKnown => {
-  if (!isKnown) {
-    clearPrimaryAddressFields();
+  if (isKnown) {
+    clearSecondaryAddressFields();
+    lieuOrigine.value = null;
   }
 });
 
@@ -246,7 +249,11 @@ watch(adresseLesee, value => {
 });
 
 watch(isTrajet, value => {
+  if (value) {
+    lieuOrigine.value = null;
+  }
   if (!value) {
+    clearPrimaryAddressFields();
     clearSecondaryAddressFields();
   }
 });

@@ -554,20 +554,25 @@ public class PdfGenerationAdapter implements PdfGenerationUseCase {
 
   private void addLieuEvent(List<String[]> rows, IncidentBase details, String suffixeAdressePrincipale) {
     addBooleanOuiNonPdf(rows, "Adresse de la personne lesée ?", details.getAdresseLesee());
-    addIfNotNull(rows, "Type de lieu",
-      Optional.ofNullable(details.getTypeLieu())
-        .map(RipolCode::label)
-        .orElse(null));
-    addBooleanOuiNonPdf(rows, "Connaissez-vous l'adresse exacte du vol ou du dommage ?",
-      details.getAdresseConnue());
+    if (Boolean.FALSE.equals(details.getAdresseLesee())) {
+      addIfNotNull(rows, "Type de lieu",
+        Optional.ofNullable(details.getTypeLieu())
+          .map(RipolCode::label)
+          .orElse(null));
+      addBooleanOuiNonPdf(rows, "Connaissez-vous l'adresse exacte du vol ou du dommage ?",
+        details.getAdresseConnue());
 
-    if (Boolean.TRUE.equals(details.getIsTrajet())) {
-      addAdresseEvenement("de départ", details.getAdresseIncident(), rows);
-      addAdresseEvenement("d'arrivée", details.getAdresseIncidentSecondaire(), rows);
-      return;
+      if (Boolean.TRUE.equals(details.getAdresseConnue())) {
+        addAdresseEvenement(suffixeAdressePrincipale, details.getAdresseIncident(), rows);
+      } else {
+        if (Boolean.TRUE.equals(details.getIsTrajet())) {
+          addAdresseEvenement("de départ", details.getAdresseIncident(), rows);
+          addAdresseEvenement("d'arrivée", details.getAdresseIncidentSecondaire(), rows);
+        } else {
+          addIfNotNull(rows, "Commune de l'événement", details.getLieuOrigine());
+        }
+      }
     }
-
-    addAdresseEvenement(suffixeAdressePrincipale, details.getAdresseIncident(), rows);
   }
 
   private void handleCybercrime(List<String[]> rows, Cybercrime c) {
