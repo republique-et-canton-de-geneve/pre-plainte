@@ -162,7 +162,7 @@ export class IncidentMapper {
   }
 
   private static resolveModeleAutre(form: PrePlainteFormFields) {
-    if (!this.isAutre(form.modele?.code)) {
+    if (form.modele !== null && !this.isAutre(form.modele?.code)) {
       return undefined;
     }
     return this.toOptionalString(form.modeleAutre);

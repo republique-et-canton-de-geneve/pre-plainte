@@ -883,6 +883,7 @@
     "champRequis": "O campo é obrigatório",
     "modeOperatoireRequis": "O modo operatório é obrigatório",
     "volDansVehiculeRequis": "Indique se o objeto foi roubado dentro de um veículo ou sobre um veículo",
+    "categorieObjetRequise": "A categoria do objeto é obrigatória",
     "typeObjetRequis": "O tipo de objeto é obrigatório",
     "couleurRequise": "A cor é obrigatória",
     "fabricantRequis": "O fabricante é obrigatório",
