@@ -339,6 +339,7 @@ class ObjetIncidentTest {
       .sousCategorie("voitures")
       .isVehicle(true)
       .type(new RipolCode("200", "Voiture"))
+      .couleur(new RipolCode("123", "Blanc"))
       .fabricant(new RipolCode("BMW", "BMW"))
       .modeleAutre("Modele personnalisé")
       .plaquePays(SUISSE)
