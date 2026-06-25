@@ -148,6 +148,7 @@ class ObjetIncidentTest {
   void shouldAcceptObjectWithoutDescriptionWhenImeiUnknown() {
     ObjetIncident objet = ObjetIncident.builder()
       .type(new RipolCode("713103", "Telephone mobile"))
+      .couleur(new RipolCode("123", "Blanc"))
       .numeroIMEIInconnu(true)
       .build();
 
@@ -169,6 +170,7 @@ class ObjetIncidentTest {
   void shouldAcceptValidImei() {
     ObjetIncident objet = ObjetIncident.builder()
       .type(new RipolCode("713103", "Telephone mobile"))
+      .couleur(new RipolCode("123", "Blanc"))
       .numeroIMEI("123456789012345")
       .build();
 
@@ -207,6 +209,7 @@ class ObjetIncidentTest {
       .type(new RipolCode("200", "Velo"))
       .fabricant(new RipolCode("TREK", "Trek"))
       .modele(new RipolCode("DOMANE", "Domane"))
+      .couleur(new RipolCode("123", "Blanc"))
       .plaquePays(SUISSE)
       .plaqueCanton(new RipolCode("GE", "Genève"))
       .plaqueNumero("GE 123456")
@@ -241,6 +244,7 @@ class ObjetIncidentTest {
       .fabricantAutre("Marque custom")
       .modele(new RipolCode("AUTRE", "Autre"))
       .modeleAutre("Modele custom")
+      .couleur(new RipolCode("123", "Blanc"))
       .plaquePays(SUISSE)
       .plaqueCanton(new RipolCode("GE", "Genève"))
       .plaqueNumero("GE 123456")
@@ -335,6 +339,7 @@ class ObjetIncidentTest {
       .sousCategorie("voitures")
       .isVehicle(true)
       .type(new RipolCode("200", "Voiture"))
+      .couleur(new RipolCode("123", "Blanc"))
       .fabricant(new RipolCode("BMW", "BMW"))
       .modeleAutre("Modele personnalisé")
       .plaquePays(SUISSE)

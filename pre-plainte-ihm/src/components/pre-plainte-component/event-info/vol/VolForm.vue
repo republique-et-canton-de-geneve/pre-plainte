@@ -86,7 +86,10 @@ import {
   CATEGORIES_OBJETS,
   EMPTY_VALUE_EM_DASH,
   NUMERO_IMEI_MAX_LENGTH,
-  RIPOL, TEXT_FIELD_MAX_LENGTH, TEXTAREA_MAX_LENGTH,
+  RIPOL,
+  TEXT_FIELD_MAX_LENGTH,
+  TEXTAREA_MAX_LENGTH,
+  VEHICULE_CATEGORIES_AVEC_VIN,
   VOL_OBJET_CATEGORIE
 } from "@/constants/constant";
 import VolObjetVoleResumeSheet from "./VolObjetVoleResumeSheet.vue";
@@ -204,6 +207,8 @@ const activePrefixes = computed(() => {
 });
 
 const isVehicleCategory = computed(() => selectedCategorie.value?.useVehicleTypes === true);
+const isVeloCategory = computed(() => sousCategorie.value === "velos");
+const hasVin = computed(() => VEHICULE_CATEGORIES_AVEC_VIN.includes(sousCategorie.value) ?? !isVeloCategory.value);
 
 const objetTypeKey = computed(() => `objets-${categorieObjet.value}-${sousCategorie.value}`);
 const brandKey = computed(() => `brand-${typeObjet.value?.code ?? TEXTE_VIDE}`);
@@ -556,6 +561,22 @@ const validerBrouillonObjetVole = async (): Promise<boolean> => {
         return false;
       }
     }
+
+    if (!couleur.value?.code) {
+      setFieldError("couleur", t("validation.couleurRequise"));
+      return false;
+    }
+
+    if (isVeloCategory.value && !numeroCadreInconnu.value && !chaineFormulaire(numeroCadre.value).trim()) {
+      setFieldError("numeroCadre", t("validation.numeroCadreRequis"));
+      return false;
+    }
+
+    if (hasVin.value && !vinInconnu.value && !chaineFormulaire(vin.value).trim()) {
+      setFieldError("vin", t("validation.vinRequis"));
+      return false;
+    }
+
     if (
       !validerPlaqueVehicule(
         {

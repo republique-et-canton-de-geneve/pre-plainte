@@ -478,15 +478,6 @@
                       </dd>
                     </v-col>
 
-                    <v-col v-if="isFieldVisible('adresseConnue') && data.adresseConnue" cols="12" md="6">
-                      <dt id="lbl-adresseConnue">
-                        <v-label class="ge-field-label">{{ t("adresseEvent.adresseConnue") }}</v-label>
-                      </dt>
-                      <dd class="ge-field-value text-body-1" aria-labelledby="lbl-adresseConnue">
-                        {{ data.adresseConnue }}
-                      </dd>
-                    </v-col>
-
                     <template v-if="hasAdresseEvenementPrincipale">
                       <v-col cols="12">
                         <dt id="lbl-adresseEvenementSection">
@@ -546,15 +537,6 @@
                           {{ formatPays(data.paysEvenement) }}
                         </dd>
                       </v-col>
-
-                      <v-col cols="12" md="6" v-if="isFieldVisible('lieuOrigine') && data.lieuOrigine">
-                        <dt id="lbl-lieuOrigine">
-                          <v-label class="ge-field-label">{{ t("adresseEvent.lieuOrigine") }}</v-label>
-                        </dt>
-                        <dd class="ge-field-value text-body-1" aria-labelledby="lbl-lieuOrigine">
-                          {{ formatRipol(data.lieuOrigine) }}
-                        </dd>
-                      </v-col>
                     </template>
 
                     <template v-if="hasAdresseEvenementSecondaire">
@@ -606,6 +588,17 @@
                         </dt>
                         <dd class="ge-field-value text-body-1" aria-labelledby="lbl-paysEvenementSecondaire">
                           {{ formatPays(data.paysEvenementSecondaire) }}
+                        </dd>
+                      </v-col>
+                    </template>
+
+                    <template v-if="!data.adresseConnue && !data.isTrajet">
+                      <v-col cols="12" md="6" v-if="isFieldVisible('lieuOrigine') && data.lieuOrigine">
+                        <dt id="lbl-lieuOrigine">
+                          <v-label class="ge-field-label">{{ t("adresseEvent.lieuOrigine") }}</v-label>
+                        </dt>
+                        <dd class="ge-field-value text-body-1" aria-labelledby="lbl-lieuOrigine">
+                          {{ formatRipol(data.lieuOrigine) }}
                         </dd>
                       </v-col>
                     </template>
@@ -2120,8 +2113,7 @@ const hasAdresseEvenementPrincipale = computed(
     !!data.value.adresseEvenement ||
     !!data.value.adressePostaleEvenement ||
     !!data.value.npaEvenement ||
-    !!data.value.localiteEvenement ||
-    !!data.value.paysEvenement,
+    !!data.value.localiteEvenement,
 );
 
 const hasAdresseEvenementSecondaire = computed(
@@ -2129,8 +2121,7 @@ const hasAdresseEvenementSecondaire = computed(
     !!data.value.adresseEvenementSecondaire ||
     !!data.value.adressePostaleEvenementSecondaire ||
     !!data.value.npaEvenementSecondaire ||
-    !!data.value.localiteEvenementSecondaire ||
-    !!data.value.paysEvenementSecondaire,
+    !!data.value.localiteEvenementSecondaire,
 );
 
 const isTrajetRenseigne = computed(() => hasAdresseEvenementPrincipale.value && hasAdresseEvenementSecondaire.value);
