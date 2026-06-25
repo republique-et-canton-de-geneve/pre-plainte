@@ -541,11 +541,6 @@ const validerBrouillonObjetVole = async (): Promise<boolean> => {
     return false;
   }
 
-  if (!couleur.value?.code) {
-    setFieldError("couleur", t("validation.couleurRequise"));
-    return false;
-  }
-
   if (categorieObjet.value === VOL_OBJET_CATEGORIE.VEHICULE) {
     if (!fabricant.value?.code) {
       setFieldError("fabricant", t("validation.fabricantRequis"));
@@ -565,6 +560,11 @@ const validerBrouillonObjetVole = async (): Promise<boolean> => {
         setFieldError("modeleAutre", t("validation.champRequis"));
         return false;
       }
+    }
+
+    if (!couleur.value?.code) {
+      setFieldError("couleur", t("validation.couleurRequise"));
+      return false;
     }
 
     if (isVeloCategory.value && !numeroCadreInconnu.value && !chaineFormulaire(numeroCadre.value).trim()) {

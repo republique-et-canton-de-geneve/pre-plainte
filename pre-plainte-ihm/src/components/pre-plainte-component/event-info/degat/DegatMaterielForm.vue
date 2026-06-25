@@ -434,11 +434,6 @@ const validerVehiculeDommage = async (): Promise<boolean> => {
     return false;
   }
 
-  if (!couleur.value?.code) {
-    setFieldError("couleur", t("validation.couleurRequise"));
-    return false;
-  }
-
   if (!fabricant.value?.code) {
     setFieldError("fabricant", t("validation.fabricantRequis"));
     return false;
@@ -458,6 +453,11 @@ const validerVehiculeDommage = async (): Promise<boolean> => {
       setFieldError("modeleAutre", t("validation.champRequis"));
       return false;
     }
+  }
+
+  if (!couleur.value?.code) {
+    setFieldError("couleur", t("validation.couleurRequise"));
+    return false;
   }
 
   if (isVeloCategory.value && !numeroCadreInconnu.value && !chaineFormulaire(numeroCadre.value).trim()) {

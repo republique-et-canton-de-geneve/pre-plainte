@@ -628,7 +628,7 @@
     "lieuPlaceholder": "Exemplo: nome do estabelecimento, nome da área de serviço da autoestrada...",
     "typeLieu": "Tipo de local",
     "hintTypeLieu": "Digite pelo menos 2 caracteres para pesquisar (ex.: restaurante)",
-    "lieuOrigine": "Comuna / Cantão",
+    "lieuOrigine": "Comuna",
     "hintLieuOrigine": "Digite pelo menos 2 caracteres para pesquisar (ex.: Genève GE)",
     "adresseTrajet": "O roubo ocorreu durante um trajeto?",
     "adresseDepart": "Morada de partida",

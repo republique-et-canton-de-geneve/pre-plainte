@@ -628,7 +628,7 @@
     "lieuPlaceholder": "Beispiel: Name der Einrichtung, Name des Rastplatzes an der Autobahn...",
     "typeLieu": "Art des Ortes",
     "hintTypeLieu": "Geben Sie mindestens 2 Zeichen für die Suche ein (z. B.: Restaurant)",
-    "lieuOrigine": "Gemeinde / Kanton",
+    "lieuOrigine": "Gemeinde",
     "hintLieuOrigine": "Geben Sie mindestens 2 Zeichen für die Suche ein (z. B.: Genève GE)",
     "adresseTrajet": "Hat der Diebstahl während einer Fahrt stattgefunden?",
     "adresseDepart": "Abfahrtsadresse",
