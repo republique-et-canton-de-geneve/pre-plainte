@@ -31,6 +31,7 @@ class VolTest {
         .type(new RipolCode("713103", "Téléphone mobile"))
         .fabricant(new RipolCode("35839", "Apple"))
         .modele(new RipolCode("12345", "iPhone 14"))
+        .couleur(new RipolCode("123", "Blanc"))
         .numeroSerie("SN001")
         .numeroIMEI("123456789012345")
         .build()));
