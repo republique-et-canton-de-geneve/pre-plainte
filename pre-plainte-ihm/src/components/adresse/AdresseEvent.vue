@@ -213,7 +213,6 @@ function clearPrimaryAddressFields() {
   npaEvenement.value = "";
   localiteEvenement.value = "";
   paysEvenement.value = "CH";
-  lieuOrigine.value = null;
 }
 
 function clearSecondaryAddressFields() {

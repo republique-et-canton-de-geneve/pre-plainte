@@ -706,52 +706,53 @@ export const createEvenementInfoSchema = (t: ComposerTranslation) =>
           if (data.typeLieu === null) {
             addCustomIssue(ctx, "typeLieu", t("validation.champRequis"));
           }
-        }
 
-        if (data.adresseConnue || data.isTrajet) {
-          if (!data.adresseEvenement || data.adresseEvenement.length < MIN_ADRESSE_EVENEMENT_TAILLE) {
-            addCustomIssue(ctx, "adresseEvenement", t("validation.adresseEvenementRequise"));
+          if (data.adresseConnue || data.isTrajet) {
+            if (!data.adresseEvenement || data.adresseEvenement.length < MIN_ADRESSE_EVENEMENT_TAILLE) {
+              addCustomIssue(ctx, "adresseEvenement", t("validation.adresseEvenementRequise"));
+            }
+
+            const value = data.adressePostaleEvenement?.trim() ?? "";
+            if (!/^[a-zA-Z0-9\s]*$/.test(value)) {
+              addCustomIssue(ctx, "adressePostaleEvenement", t("validation.numeroPostalFormat"));
+            }
+
+            if (!data.localiteEvenement) {
+              addCustomIssue(ctx, "localiteEvenement", t("validation.localiteRequise"));
+            }
+
+            if (!data.npaEvenement || data.npaEvenement.length < 4) {
+              addCustomIssue(ctx, "npaEvenement", t("validation.npaFormat"));
+            }
           }
 
-          const value = data.adressePostaleEvenement?.trim() ?? "";
-          if (!/^[a-zA-Z0-9\s]*$/.test(value)) {
-            addCustomIssue(ctx, "adressePostaleEvenement", t("validation.numeroPostalFormat"));
-          }
-
-          if (!data.localiteEvenement) {
-            addCustomIssue(ctx, "localiteEvenement", t("validation.localiteRequise"));
-          }
-
-          if (!data.npaEvenement || data.npaEvenement.length < 4) {
-            addCustomIssue(ctx, "npaEvenement", t("validation.npaFormat"));
-          }
-        }
-
-        if (data.adresseConnue === false && data.isTrajet === null) {
-          addCustomIssue(ctx, "isTrajet", t("validation.champRequis"));
-        }
-
-        if (data.isTrajet) {
-          if (!data.adresseEvenementSecondaire || data.adresseEvenementSecondaire.length < MIN_ADRESSE_EVENEMENT_TAILLE) {
-            addCustomIssue(ctx, "adresseEvenementSecondaire", t("validation.adresseEvenementRequise"));
-          }
-
-          const value = data.adressePostaleEvenementSecondaire?.trim() ?? "";
-          if (!/^[a-zA-Z0-9\s]*$/.test(value)) {
-            addCustomIssue(ctx, "adressePostaleEvenementSecondaire", t("validation.numeroPostalFormat"));
-          }
-
-          if (!data.localiteEvenementSecondaire) {
-            addCustomIssue(ctx, "localiteEvenementSecondaire", t("validation.localiteRequise"));
-          }
-
-          if (!data.npaEvenementSecondaire || data.npaEvenementSecondaire.length < 4) {
-            addCustomIssue(ctx, "npaEvenementSecondaire", t("validation.npaFormat"));
+          if (data.adresseConnue === false && data.isTrajet === null) {
+            addCustomIssue(ctx, "isTrajet", t("validation.champRequis"));
           }
         }
 
-        if (data.isTrajet === false && data.lieuOrigine === null) {
-          addCustomIssue(ctx, "lieuOrigine", t("validation.champRequis"));
+        if (data.adresseLesee === false && data.adresseConnue === false) {
+          if (data.isTrajet) {
+            if (!data.adresseEvenementSecondaire || data.adresseEvenementSecondaire.length < MIN_ADRESSE_EVENEMENT_TAILLE) {
+              addCustomIssue(ctx, "adresseEvenementSecondaire", t("validation.adresseEvenementRequise"));
+            }
+
+            const value = data.adressePostaleEvenementSecondaire?.trim() ?? "";
+            if (!/^[a-zA-Z0-9\s]*$/.test(value)) {
+              addCustomIssue(ctx, "adressePostaleEvenementSecondaire", t("validation.numeroPostalFormat"));
+            }
+
+            if (!data.localiteEvenementSecondaire) {
+              addCustomIssue(ctx, "localiteEvenementSecondaire", t("validation.localiteRequise"));
+            }
+
+            if (!data.npaEvenementSecondaire || data.npaEvenementSecondaire.length < 4) {
+              addCustomIssue(ctx, "npaEvenementSecondaire", t("validation.npaFormat"));
+            }
+          }
+          if (data.isTrajet === false && data.lieuOrigine === null) {
+            addCustomIssue(ctx, "lieuOrigine", t("validation.champRequis"));
+          }
         }
       }
     })
