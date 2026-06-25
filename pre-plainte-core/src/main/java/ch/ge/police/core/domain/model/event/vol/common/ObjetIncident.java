@@ -182,13 +182,7 @@ public class ObjetIncident {
       return;
     }
 
-    if (type == null || !type.hasCode()) {
-      throw new ValidationMetierException("Le type d'objet volé est obligatoire.");
-    }
-
-    if (couleur == null || !couleur.hasCode()) {
-      throw new ValidationMetierException("La couleur de l'objet est obligatoire.");
-    }
+    validateTypeEtCouleur();
 
     if (isVehicleType()) {
       validateFabricantSelection();
@@ -209,6 +203,16 @@ public class ObjetIncident {
 
     if (numeroIMEI != null && !numeroIMEI.isBlank() && !NUMERO_IMEI_PATTERN.matcher(numeroIMEI).matches()) {
       throw new ValidationMetierException("Le numéro IMEI doit contenir exactement 15 chiffres.");
+    }
+  }
+
+  private void validateTypeEtCouleur() {
+    if (type == null || !type.hasCode()) {
+      throw new ValidationMetierException("Le type d'objet volé est obligatoire.");
+    }
+
+    if (couleur == null || !couleur.hasCode()) {
+      throw new ValidationMetierException("La couleur de l'objet est obligatoire.");
     }
   }
 

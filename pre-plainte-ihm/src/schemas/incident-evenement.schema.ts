@@ -38,7 +38,7 @@ const optionalRipolSelectionSchema = z
 const createIncidentRequirements = (t: ComposerTranslation): Record<string, { field: string; message: string }[]> => ({
   vol: [
     { field: "volDansVehicule", message: t("validation.volDansVehiculeRequis") },
-    { field: "categorieObjet", message: t("validation.typeObjetRequis") },
+    { field: "categorieObjet", message: t("validation.categorieObjetRequise") },
     { field: "typeObjet", message: t("validation.typeObjetRequis") },
     { field: "couleur", message: t("validation.couleurRequise") },
     { field: "avezVousDegradation", message: t("validation.degradationsRequis") },
