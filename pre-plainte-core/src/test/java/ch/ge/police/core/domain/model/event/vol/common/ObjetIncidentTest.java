@@ -295,4 +295,69 @@ class ObjetIncidentTest {
 
     assertFalse(objet.isVehicleType());
   }
+
+  @Test
+  void shouldRejectVehicleWithoutBrand() {
+    ObjetIncident objet = ObjetIncident.builder()
+      .categorieObjet("vehicule")
+      .sousCategorie("voitures")
+      .isVehicle(true)
+      .type(new RipolCode("200", "Voiture"))
+      .modele(new RipolCode("MODEL", "Model"))
+      .plaquePays(SUISSE)
+      .plaqueCanton(new RipolCode("GE", "Genève"))
+      .plaqueNumero("GE 123456")
+      .build();
+
+    assertThrows(ValidationMetierException.class, objet::champsObligatoire);
+  }
+
+  @Test
+  void shouldRejectVehicleWithOtherBrandWithoutBrandPrecision() {
+    ObjetIncident objet = ObjetIncident.builder()
+      .categorieObjet("vehicule")
+      .sousCategorie("voitures")
+      .isVehicle(true)
+      .type(new RipolCode("200", "Voiture"))
+      .fabricant(new RipolCode("AUTRE", "Autre"))
+      .plaquePays(SUISSE)
+      .plaqueCanton(new RipolCode("GE", "Genève"))
+      .plaqueNumero("GE 123456")
+      .build();
+
+    assertThrows(ValidationMetierException.class, objet::champsObligatoire);
+  }
+
+  @Test
+  void shouldAcceptVehicleWithModelAutreOnly() {
+    ObjetIncident objet = ObjetIncident.builder()
+      .categorieObjet("vehicule")
+      .sousCategorie("voitures")
+      .isVehicle(true)
+      .type(new RipolCode("200", "Voiture"))
+      .fabricant(new RipolCode("BMW", "BMW"))
+      .modeleAutre("Modele personnalisé")
+      .plaquePays(SUISSE)
+      .plaqueCanton(new RipolCode("GE", "Genève"))
+      .plaqueNumero("GE 123456")
+      .build();
+
+    assertDoesNotThrow(objet::champsObligatoire);
+  }
+
+  @Test
+  void shouldRejectVehicleWithoutModelAndModelAutre() {
+    ObjetIncident objet = ObjetIncident.builder()
+      .categorieObjet("vehicule")
+      .sousCategorie("voitures")
+      .isVehicle(true)
+      .type(new RipolCode("200", "Voiture"))
+      .fabricant(new RipolCode("BMW", "BMW"))
+      .plaquePays(SUISSE)
+      .plaqueCanton(new RipolCode("GE", "Genève"))
+      .plaqueNumero("GE 123456")
+      .build();
+
+    assertThrows(ValidationMetierException.class, objet::champsObligatoire);
+  }
 }
