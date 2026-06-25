@@ -38,12 +38,13 @@ const optionalRipolSelectionSchema = z
 const createIncidentRequirements = (t: ComposerTranslation): Record<string, { field: string; message: string }[]> => ({
   vol: [
     { field: "volDansVehicule", message: t("validation.volDansVehiculeRequis") },
+    { field: "categorieObjet", message: t("validation.categorieObjetRequise") },
     { field: "typeObjet", message: t("validation.typeObjetRequis") },
+    { field: "couleur", message: t("validation.couleurRequise") },
     { field: "avezVousDegradation", message: t("validation.degradationsRequis") },
   ],
   "degat-delit": [
     { field: "typeDommage", message: t("validation.typeDommageRequis") },
-    { field: "devise", message: t("validation.deviseRequise") },
     { field: "naturesDommage", message: t("validation.natureDommageRequis") },
     { field: "description", message: t("validation.descriptionDommageRequise") },
     { field: "constatPresent", message: t("validation.constatRequis") },
@@ -61,7 +62,7 @@ const addCustomIssue = (ctx: z.RefinementCtx, path: string, message: string) => 
   });
 };
 
-const isRipolField = (field: string) => ["typeObjet", "fabricant", "modele"].includes(field);
+const isRipolField = (field: string) => ["typeObjet", "couleur", "fabricant", "modele"].includes(field);
 
 const validateIncidentRequirement = (
   data: Record<string, any>,
@@ -115,6 +116,38 @@ const hasObjetsVolesEnregistres = (data: Record<string, unknown>) =>
   Array.isArray(data.objetsVolesValides) && data.objetsVolesValides.length > 0;
 
 const isVehicleVolObject = (data: Record<string, any>) => data.categorieObjet === "vehicule" || data.isVehicle === true;
+
+const validateVehicleFields = (
+  data: Record<string, any>,
+  ctx: z.RefinementCtx,
+  t: ComposerTranslation,
+  basePath: (string | number)[] = [],
+) => {
+  if (!isVehicleVolObject(data)) {
+    return;
+  }
+
+  if (!data.typeObjet?.code) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: [...basePath, "typeObjet"],
+      message: t("validation.typeObjetRequis"),
+    });
+  }
+
+  validateVehicleBrandAndModel(data, ctx, t, basePath);
+
+  if (!data.couleur?.code) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: [...basePath, "couleur"],
+      message: t("validation.couleurRequise"),
+    });
+  }
+
+  validatePlaque(data, ctx, t, basePath);
+
+}
 
 const validateVehicleBrandAndModel = (
   data: Record<string, any>,
@@ -177,7 +210,7 @@ const validateIncidentRequirements = (data: Record<string, any>, ctx: z.Refineme
     data.typeIncident === "vol" &&
     (hasObjetsVolesEnregistres(data) || data.categorieObjet === "plaque")
   ) {
-    rules = rules.filter(r => r.field !== "typeObjet");
+    rules = rules.filter(r => r.field !== "typeObjet" && r.field !== "couleur");
   }
 
   rules.forEach(({ field, message }) => {
@@ -194,15 +227,13 @@ const validateDommageSpecificRules = (data: Record<string, any>, ctx: z.Refineme
   if (Array.isArray(data.objetsDegradesValides) && data.objetsDegradesValides.length > 0) {
     data.objetsDegradesValides.forEach((objet: unknown, index: number) => {
       if (objet && typeof objet === "object") {
-        validateVehicleBrandAndModel(objet as Record<string, any>, ctx, t, ["objetsDegradesValides", index]);
-        validatePlaque(objet as Record<string, any>, ctx, t, ["objetsDegradesValides", index]);
+        validateVehicleFields(objet as Record<string, any>, ctx, t, ["objetsDegradesValides", index]);
       }
     });
     return;
   }
 
-    validateVehicleBrandAndModel(data, ctx, t);
-    validatePlaque(data, ctx, t);
+  validateVehicleFields(data, ctx, t);
 }
 
 const validateDommageConstatPolice = (data: Record<string, any>, ctx: z.RefinementCtx, t: ComposerTranslation) => {
@@ -224,8 +255,7 @@ const validateVolSpecificRules = (data: Record<string, any>, ctx: z.RefinementCt
   if (hasObjetsVolesEnregistres(data)) {
     data.objetsVolesValides.forEach((objet: unknown, index: number) => {
       if (objet && typeof objet === "object") {
-        validateVehicleBrandAndModel(objet as Record<string, any>, ctx, t, ["objetsVolesValides", index]);
-        validatePlaque(objet as Record<string, any>, ctx, t, ["objetsVolesValides", index]);
+        validateVehicleFields(objet as Record<string, any>, ctx, t, ["objetsVolesValides", index]);
       }
     });
     return;
@@ -248,8 +278,7 @@ const validateVolSpecificRules = (data: Record<string, any>, ctx: z.RefinementCt
     addCustomIssue(ctx, "numeroIMEI", t("validation.numeroIMEIFormat", { max: NUMERO_IMEI_MAX_LENGTH }));
   }
 
-  validateVehicleBrandAndModel(data, ctx, t);
-  validatePlaque(data, ctx, t);
+  validateVehicleFields(data, ctx, t);
 };
 
 function validateRequiredDates(data: any, fields: string[][], ctx: any, t: any) {
@@ -665,35 +694,66 @@ export const createEvenementInfoSchema = (t: ComposerTranslation) =>
       },
     )
     .superRefine((data, ctx) => {
-      if (
-        data.typeIncident !== "cybercrime" &&
-        data.adresseConnue &&
-        (!data.adresseEvenement || data.adresseEvenement.length < MIN_ADRESSE_EVENEMENT_TAILLE)
-      ) {
-        addCustomIssue(ctx, "adresseEvenement", t("validation.adresseEvenementRequise"));
-      }
-
-      if (data.typeIncident !== "cybercrime" && data.adresseConnue) {
-        const value = data.adressePostaleEvenement?.trim() ?? "";
-        if (!/^[a-zA-Z0-9\s]*$/.test(value)) {
-          addCustomIssue(ctx, "adressePostaleEvenement", t("validation.numeroPostalFormat"));
+      if (data.typeIncident !== "cybercrime") {
+        if (data.adresseLesee === null) {
+          addCustomIssue(ctx, "adresseLesee", t("validation.champRequis"));
         }
-      }
 
-      if (data.typeIncident !== "cybercrime" && data.adresseConnue && !data.localiteEvenement) {
-        addCustomIssue(ctx, "localiteEvenement", t("validation.localiteRequise"));
-      }
+        if (data.adresseLesee === false) {
+          if (data.adresseConnue === null) {
+            addCustomIssue(ctx, "adresseConnue", t("validation.champRequis"));
+          }
+          if (data.typeLieu === null) {
+            addCustomIssue(ctx, "typeLieu", t("validation.champRequis"));
+          }
 
-      if (
-        data.typeIncident !== "cybercrime" &&
-        data.adresseConnue &&
-        (!data.npaEvenement || data.npaEvenement.length < 4)
-      ) {
-        addCustomIssue(ctx, "npaEvenement", t("validation.npaFormat"));
-      }
+          if (data.adresseConnue || data.isTrajet) {
+            if (!data.adresseEvenement || data.adresseEvenement.length < MIN_ADRESSE_EVENEMENT_TAILLE) {
+              addCustomIssue(ctx, "adresseEvenement", t("validation.adresseEvenementRequise"));
+            }
 
-      if (data.typeIncident !== "cybercrime" && data.adresseLesee === null) {
-        addCustomIssue(ctx, "adresseLesee", t("validation.champRequis"));
+            const value = data.adressePostaleEvenement?.trim() ?? "";
+            if (!/^[a-zA-Z0-9\s]*$/.test(value)) {
+              addCustomIssue(ctx, "adressePostaleEvenement", t("validation.numeroPostalFormat"));
+            }
+
+            if (!data.localiteEvenement) {
+              addCustomIssue(ctx, "localiteEvenement", t("validation.localiteRequise"));
+            }
+
+            if (!data.npaEvenement || data.npaEvenement.length < 4) {
+              addCustomIssue(ctx, "npaEvenement", t("validation.npaFormat"));
+            }
+          }
+
+          if (data.adresseConnue === false && data.isTrajet === null) {
+            addCustomIssue(ctx, "isTrajet", t("validation.champRequis"));
+          }
+        }
+
+        if (data.adresseLesee === false && data.adresseConnue === false) {
+          if (data.isTrajet) {
+            if (!data.adresseEvenementSecondaire || data.adresseEvenementSecondaire.length < MIN_ADRESSE_EVENEMENT_TAILLE) {
+              addCustomIssue(ctx, "adresseEvenementSecondaire", t("validation.adresseEvenementRequise"));
+            }
+
+            const value = data.adressePostaleEvenementSecondaire?.trim() ?? "";
+            if (!/^[a-zA-Z0-9\s]*$/.test(value)) {
+              addCustomIssue(ctx, "adressePostaleEvenementSecondaire", t("validation.numeroPostalFormat"));
+            }
+
+            if (!data.localiteEvenementSecondaire) {
+              addCustomIssue(ctx, "localiteEvenementSecondaire", t("validation.localiteRequise"));
+            }
+
+            if (!data.npaEvenementSecondaire || data.npaEvenementSecondaire.length < 4) {
+              addCustomIssue(ctx, "npaEvenementSecondaire", t("validation.npaFormat"));
+            }
+          }
+          if (data.isTrajet === false && data.lieuOrigine === null) {
+            addCustomIssue(ctx, "lieuOrigine", t("validation.champRequis"));
+          }
+        }
       }
     })
     .superRefine((data, ctx) => {
@@ -770,11 +830,19 @@ export const createEvenementInfoSchema = (t: ComposerTranslation) =>
     .superRefine((data, ctx) => validateAchatNonRecuCybercrime(data, ctx, addCustomIssue, t))
     .superRefine((data, ctx) => {
       if (data.typeCybercrime === "fausse-annonce") {
-        if (
-          data.urlComplete?.trim() &&
-          !isUrlWebAvecDomaine(data.urlComplete)
-        ) {
+        if (!data.urlComplete?.trim()) {
+          addCustomIssue(ctx, "urlComplete", t("validation.urlCompleteRequise"));
+        }
+        else if (!isUrlWebAvecDomaine(data.urlComplete)) {
           addCustomIssue(ctx, "urlComplete", t("validation.plateformeUrlOuIdInvalide"));
+        }
+
+        if (!data.titreAnnonce?.trim()) {
+          addCustomIssue(ctx, "titreAnnonce", t("validation.titreAnnonceRequis"));
+        }
+
+        if (!data.nomBailleur?.trim()) {
+          addCustomIssue(ctx, "nomBailleur", t("validation.nomBailleurRequis"));
         }
 
         const hasEmail = data.emailBailleur?.trim();
@@ -790,6 +858,18 @@ export const createEvenementInfoSchema = (t: ComposerTranslation) =>
         const hasTelephone = data.telephoneBailleur?.trim();
         if (!data.telephoneBailleurInconnu && !hasTelephone) {
           addCustomIssue(ctx, "telephoneBailleur", t("validation.telephoneBailleurRequis"));
+        }
+
+        if (!data.adresseBienImmobilier?.trim()) {
+          addCustomIssue(ctx, "adresseBienImmobilier", t("validation.adresseBienImmobilierRequise"));
+        }
+
+        if (!data.montantDemande?.trim()) {
+          addCustomIssue(ctx, "montantDemande", t("validation.montantDemandeRequis"));
+        }
+
+        if (!data.modePaiementDemande?.trim()) {
+          addCustomIssue(ctx, "modePaiementDemande", t("validation.modePaiementDemandeRequis"));
         }
       }
     });

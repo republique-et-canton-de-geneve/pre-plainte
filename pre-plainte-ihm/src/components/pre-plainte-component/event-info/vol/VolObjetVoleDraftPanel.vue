@@ -80,6 +80,7 @@
           :error-messages="brouillon.sousCategorieError"
           :hint="t('sousCategories.hint')"
           persistent-hint
+          clearable
         />
         <RipolAutocomplete
           v-model="brouillon.typeObjet"
@@ -144,7 +145,7 @@
         <RipolAutocomplete
           v-model="brouillon.couleur"
           :key="brouillon.colourKey"
-          :label="t('incidentTypes.couleur')"
+          :label="requiredLabel(t('incidentTypes.couleur'))"
           :fetch-fn="brouillon.fetchColours"
           :error-messages="brouillon.couleurError"
           :hint="t('incidentTypes.hintCouleur')"
