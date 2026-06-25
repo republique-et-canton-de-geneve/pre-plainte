@@ -883,6 +883,7 @@
     "champRequis": "Dieses Feld ist erforderlich",
     "modeOperatoireRequis": "Die Vorgehensweise ist erforderlich",
     "volDansVehiculeRequis": "Bitte geben Sie an, ob der Gegenstand in oder auf einem Fahrzeug gestohlen wurde",
+    "categorieObjetRequise": "Die Objektkategorie ist erforderlich",
     "typeObjetRequis": "Die Art des Gegenstands ist erforderlich",
     "couleurRequise": "Die Farbe ist erforderlich",
     "fabricantRequis": "Der Hersteller ist erforderlich",

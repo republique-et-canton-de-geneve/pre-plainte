@@ -883,6 +883,7 @@
     "champRequis": "Le champ est requis",
     "modeOperatoireRequis": "Le mode opératoire est requis",
     "volDansVehiculeRequis": "Veuillez indiquer si l'objet a été volé dans ou sur un véhicule",
+    "categorieObjetRequise": "La catégorie d'objet est requise",
     "typeObjetRequis": "Le type de l'objet est requis",
     "couleurRequise": "La couleur est requise",
     "fabricantRequis": "Le fabricant est requis",
