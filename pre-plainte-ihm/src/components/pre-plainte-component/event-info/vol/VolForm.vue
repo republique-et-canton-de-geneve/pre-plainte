@@ -507,7 +507,7 @@ const numeroIMEIRequis = computed(
     !numeroIMEIInconnu.value,
 );
 
-const validerBrouillonObjetVole = (): boolean => {
+const validerBrouillonObjetVole = async (): Promise<boolean> => {
   if (!categorieObjet.value?.trim()) {
     setFieldError("categorieObjet", t("validation.champRequis"));
     return false;
@@ -546,11 +546,12 @@ const validerBrouillonObjetVole = (): boolean => {
       return false;
     }
     if (fabricant.value.code !== "AUTRE") {
-      if (!modele.value?.code) {
+      const models = await RipolService.searchVehicleModels(fabricant.value.code);
+      if (models.length > 0 && !modele.value?.code) {
         setFieldError("modele", t("validation.modeleRequis"));
         return false;
       }
-      if (modele.value.code === "AUTRE" && !chaineFormulaire(modeleAutre.value).trim()) {
+      if ((modele.value?.code === "AUTRE" || models.length === 0) && !chaineFormulaire(modeleAutre.value).trim()) {
         setFieldError("modeleAutre", t("validation.champRequis"));
         return false;
       }
@@ -670,10 +671,12 @@ const finaliserValidationObjetVole = () => {
   clearDraftChampsObjet();
   afficherFicheSaisieNouvelObjet.value = false;
 };
-const validerObjetVole = (): boolean => {
+const validerObjetVole = async (): Promise<boolean> => {
   effacerErreursBrouillon();
 
-  if (!validerBrouillonObjetVole()) {
+  const isBrouillonValide = await validerBrouillonObjetVole();
+
+  if (!isBrouillonValide) {
     return false;
   }
 
@@ -682,11 +685,11 @@ const validerObjetVole = (): boolean => {
   return true;
 };
 
-const validerBrouillonAvantNavigation = (): boolean => {
+const validerBrouillonAvantNavigation = async (): Promise<boolean> => {
   if (!afficherFicheSaisieNouvelObjet.value) {
     return true;
   }
-  const brouillonValide = validerObjetVole();
+  const brouillonValide = await validerObjetVole();
   if (!brouillonValide) {
     void nextTick(() => draftPanelRef.value?.scrollIntoView({ behavior: "smooth", block: "start" }));
   }
@@ -749,6 +752,26 @@ watch(fabricant, () => {
   }
   modele.value = null;
   hasModels.value = true;
+});
+
+watch(modele, newVal => {
+  if (isRestoring.value || !newVal) {
+    return;
+  }
+
+  if (modeleAutre.value) {
+    modeleAutre.value = "";
+  }
+});
+
+watch(modeleAutre, newVal => {
+  if (isRestoring.value || !newVal) {
+    return;
+  }
+
+  if (modele.value?.code !== "AUTRE") {
+    modele.value = null;
+  }
 });
 
 const brouillon = reactive({

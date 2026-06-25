@@ -505,9 +505,11 @@ public class PdfGenerationAdapter implements PdfGenerationUseCase {
     if (marque != null && !marque.isBlank()) {
       parts.add(marque.trim());
     }
-    String modele = RIPOL_AUTRE.equals(o.getModeleCode()) ? o.getModeleAutre() : o.getModeleLabel();
-    if (modele != null && !modele.isBlank()) {
-      parts.add(modele.trim());
+    if (!RIPOL_AUTRE.equals(o.getFabricantCode())) {
+      String modele = (o.getModele() == null || RIPOL_AUTRE.equals(o.getModeleCode())) ? o.getModeleAutre() : o.getModeleLabel();
+      if (modele != null && !modele.isBlank()) {
+        parts.add(modele.trim());
+      }
     }
     return parts.isEmpty() ? null : String.join(" ", parts);
   }
