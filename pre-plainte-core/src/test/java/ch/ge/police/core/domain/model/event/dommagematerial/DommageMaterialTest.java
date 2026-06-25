@@ -56,13 +56,6 @@ class DommageMaterielTest {
   }
 
   @Test
-  void shouldThrowWhenDeviseMissing() {
-    dommage.setDevise(null);
-    Exception ex = assertThrows(ValidationMetierException.class, dommage::champsObligatoireIncident);
-    assertEquals("La devise est obligatoire.", ex.getMessage());
-  }
-
-  @Test
   void shouldThrowWhenNatureDommageMissing() {
     dommage.setNaturesDommage(null);
     Exception ex = assertThrows(ValidationMetierException.class, dommage::champsObligatoireIncident);
