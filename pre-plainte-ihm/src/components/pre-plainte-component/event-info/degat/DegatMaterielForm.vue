@@ -445,7 +445,7 @@ const validerVehiculeDommage = async (): Promise<boolean> => {
       setFieldError("modele", t("validation.modeleRequis"));
       return false;
     }
-    if (modele.value?.code === "AUTRE" && !chaineFormulaire(modeleAutre.value).trim()) {
+    if ((modele.value?.code === "AUTRE" || models.length === 0) && !chaineFormulaire(modeleAutre.value).trim()) {
       setFieldError("modeleAutre", t("validation.champRequis"));
       return false;
     }
