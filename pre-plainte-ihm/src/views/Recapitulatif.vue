@@ -674,22 +674,24 @@
                             {{ obj.fabricantAutre }}
                           </dd>
                         </v-col>
-                        <v-col v-if="obj.modele && obj.modele.code !== 'AUTRE'" cols="12" md="6">
-                          <dt :id="`lbl-vo-mod-${vIdx}`">
-                            <v-label class="ge-field-label">{{ t("incidentTypes.modele") }}</v-label>
-                          </dt>
-                          <dd class="ge-field-value text-body-1" :aria-labelledby="`lbl-vo-mod-${vIdx}`">
-                            {{ formatRipol(obj.modele) }}
-                          </dd>
-                        </v-col>
-                        <v-col v-if="(!obj.modele || obj.modele?.code === 'AUTRE') && obj.modeleAutre" cols="12" md="6">
-                          <dt :id="`lbl-vo-moda-${vIdx}`">
-                            <v-label class="ge-field-label">{{ t("incidentTypes.modele") }}</v-label>
-                          </dt>
-                          <dd class="ge-field-value text-body-1" :aria-labelledby="`lbl-vo-moda-${vIdx}`">
-                            {{ obj.modeleAutre }}
-                          </dd>
-                        </v-col>
+                        <template v-if="obj.fabricant?.code !== 'AUTRE'">
+                          <v-col v-if="obj.modele && obj.modele.code !== 'AUTRE'" cols="12" md="6">
+                            <dt :id="`lbl-vo-mod-${vIdx}`">
+                              <v-label class="ge-field-label">{{ t("incidentTypes.modele") }}</v-label>
+                            </dt>
+                            <dd class="ge-field-value text-body-1" :aria-labelledby="`lbl-vo-mod-${vIdx}`">
+                              {{ formatRipol(obj.modele) }}
+                            </dd>
+                          </v-col>
+                          <v-col v-if="(!obj.modele || obj.modele?.code === 'AUTRE') && obj.modeleAutre" cols="12" md="6">
+                            <dt :id="`lbl-vo-moda-${vIdx}`">
+                              <v-label class="ge-field-label">{{ t("incidentTypes.modele") }}</v-label>
+                            </dt>
+                            <dd class="ge-field-value text-body-1" :aria-labelledby="`lbl-vo-moda-${vIdx}`">
+                              {{ obj.modeleAutre }}
+                            </dd>
+                          </v-col>
+                        </template>
                         <v-col v-if="obj.couleur" cols="12" md="6">
                           <dt :id="`lbl-vo-coul-${vIdx}`">
                             <v-label class="ge-field-label">{{ t("incidentTypes.couleur") }}</v-label>
@@ -898,22 +900,24 @@
                             {{ obj.fabricantAutre }}
                           </dd>
                         </v-col>
-                        <v-col v-if="obj.modele && obj.modele.code !== 'AUTRE'" cols="12" md="6">
-                          <dt :id="`lbl-dv-mod-${dIdx}`">
-                            <v-label class="ge-field-label">{{ t("incidentTypes.modele") }}</v-label>
-                          </dt>
-                          <dd class="ge-field-value text-body-1" :aria-labelledby="`lbl-dv-mod-${dIdx}`">
-                            {{ formatRipol(obj.modele) }}
-                          </dd>
-                        </v-col>
-                        <v-col v-if="(!obj.modele || obj.modele?.code === 'AUTRE') && obj.modeleAutre" cols="12" md="6">
-                          <dt :id="`lbl-dv-moda-${dIdx}`">
-                            <v-label class="ge-field-label">{{ t("incidentTypes.modele") }}</v-label>
-                          </dt>
-                          <dd class="ge-field-value text-body-1" :aria-labelledby="`lbl-dv-moda-${dIdx}`">
-                            {{ obj.modeleAutre }}
-                          </dd>
-                        </v-col>
+                        <template v-if="obj.fabricant?.code !== 'AUTRE'">
+                          <v-col v-if="obj.modele && obj.modele.code !== 'AUTRE'" cols="12" md="6">
+                            <dt :id="`lbl-dv-mod-${dIdx}`">
+                              <v-label class="ge-field-label">{{ t("incidentTypes.modele") }}</v-label>
+                            </dt>
+                            <dd class="ge-field-value text-body-1" :aria-labelledby="`lbl-dv-mod-${dIdx}`">
+                              {{ formatRipol(obj.modele) }}
+                            </dd>
+                          </v-col>
+                          <v-col v-if="(!obj.modele || obj.modele?.code === 'AUTRE') && obj.modeleAutre" cols="12" md="6">
+                            <dt :id="`lbl-dv-moda-${dIdx}`">
+                              <v-label class="ge-field-label">{{ t("incidentTypes.modele") }}</v-label>
+                            </dt>
+                            <dd class="ge-field-value text-body-1" :aria-labelledby="`lbl-dv-moda-${dIdx}`">
+                              {{ obj.modeleAutre }}
+                            </dd>
+                          </v-col>
+                        </template>
                         <v-col v-if="obj.couleur" cols="12" md="6">
                           <dt :id="`lbl-dv-coul-${dIdx}`">
                             <v-label class="ge-field-label">{{ t("incidentTypes.couleur") }}</v-label>
