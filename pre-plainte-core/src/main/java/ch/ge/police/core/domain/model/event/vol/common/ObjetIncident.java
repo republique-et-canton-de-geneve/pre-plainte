@@ -187,8 +187,11 @@ public class ObjetIncident {
     }
 
     if (isVehicleType()) {
-      validateRipolSelection(fabricant, "La marque du vehicule est obligatoire.");
-      validateAutreValue(fabricant, fabricantAutre, "La marque du vehicule doit etre precisee.");
+      validateFabricantSelection();
+      validateFabricantAutreValue();
+      if (!CODE_AUTRE.equals(fabricant.code())) {
+        validateModele();
+      }
       if (!plaqueInconnu && VEHICULE_CATEGORIES_AVEC_PLAQUE.contains(sousCategorie)) {
         validatePlaquePays();
         validatePlaqueCanton();
@@ -249,15 +252,21 @@ public class ObjetIncident {
     }
   }
 
-  private void validateRipolSelection(RipolCode value, String message) {
-    if (value == null || !value.hasCode()) {
-      throw new ValidationMetierException(message);
+  private void validateFabricantSelection() {
+    if (fabricant == null || !fabricant.hasCode()) {
+      throw new ValidationMetierException("La marque du vehicule est obligatoire.");
     }
   }
 
-  private void validateAutreValue(RipolCode value, String autreValue, String message) {
-    if (value != null && CODE_AUTRE.equals(value.code()) && (autreValue == null || autreValue.isBlank())) {
-      throw new ValidationMetierException(message);
+  private void validateFabricantAutreValue() {
+    if (fabricant != null && CODE_AUTRE.equals(fabricant.code()) && (fabricantAutre == null || fabricantAutre.isBlank())) {
+      throw new ValidationMetierException("La marque du vehicule doit etre precisee.");
+    }
+  }
+
+  private void validateModele() {
+    if ((modele == null || !modele.hasCode()) && (modeleAutre == null || modeleAutre.isBlank())) {
+      throw new ValidationMetierException("Le modele du vehicule doit etre precise.");
     }
   }
 
