@@ -94,8 +94,14 @@ export const INCIDENT_FIELDS = {
 
 export type IncidentKey = keyof typeof INCIDENT_FIELDS;
 
+export const TYPE_INCIDENT = {
+  VOL: "vol",
+  DOMMAGE: "degat-delit",
+  CYBERCRIME: "cybercrime",
+} as const;
+
 export const INCIDENT_TYPE_MAP: Record<string, IncidentKey> = {
-  vol: "VOL",
-  "degat-delit": "DOMMAGE",
-  cybercrime: "CYBERCRIME",
+  [TYPE_INCIDENT.VOL]: "VOL",
+  [TYPE_INCIDENT.DOMMAGE]: "DOMMAGE",
+  [TYPE_INCIDENT.CYBERCRIME]: "CYBERCRIME",
 };

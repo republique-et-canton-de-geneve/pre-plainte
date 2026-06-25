@@ -204,7 +204,7 @@ import { useCreatePrePlainteStore } from "@/stores/createPrePlainteStore";
 import type { PrePlainteFormFields } from "@/types/pre-plainte.interface";
 import { toTypedSchema } from "@vee-validate/zod";
 import { useField, useForm } from "vee-validate";
-import { computed, nextTick, ref, watch } from "vue";
+import { computed, nextTick, onBeforeUnmount, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { useDisplay } from "vuetify";
 import { createIncidentSchema } from "@/schemas/incident-evenement.schema.ts";
@@ -221,6 +221,7 @@ import PieceJointe from "@/components/piece-jointe/PieceJointe.vue";
 import { applyDateMask, applyTimeMask } from "@/utils/helpers/dateHelpers.ts";
 import ExitActionsForm from "@/components/actions/ExitActionsForm.vue";
 import { isCybercrimeTypeWithoutDetailFields } from "@/constants/constant";
+import { TYPE_INCIDENT } from "@/utils/incident-fields";
 import { requiredLabel } from "@/utils/helpers/labelHelpers";
 
 const { t, locale } = useI18n();
@@ -320,6 +321,10 @@ useFormReset(form, resetConditions.eventInfo, () => {
 watch(
   typeCybercrime,
   cybercrimeType => {
+    if (typeIncident.value !== TYPE_INCIDENT.CYBERCRIME) {
+      return;
+    }
+
     if (isCybercrimeTypeWithoutDetailFields(cybercrimeType)) {
       setFieldValue("descriptionCybercrime", "");
       setFieldValue("justificatifsPaiement", []);
@@ -493,6 +498,10 @@ const onSubmit = async () => {
 const persistCurrentValues = () => {
   store.setUserFormData(values as PrePlainteFormFields);
 };
+
+onBeforeUnmount(() => {
+  persistCurrentValues();
+});
 
 const handleCancelClick = () => {
   persistCurrentValues();
