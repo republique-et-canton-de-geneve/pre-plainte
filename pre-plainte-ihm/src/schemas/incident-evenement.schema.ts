@@ -38,7 +38,9 @@ const optionalRipolSelectionSchema = z
 const createIncidentRequirements = (t: ComposerTranslation): Record<string, { field: string; message: string }[]> => ({
   vol: [
     { field: "volDansVehicule", message: t("validation.volDansVehiculeRequis") },
+    { field: "categorieObjet", message: t("validation.typeObjetRequis") },
     { field: "typeObjet", message: t("validation.typeObjetRequis") },
+    { field: "couleur", message: t("validation.couleurRequise") },
     { field: "avezVousDegradation", message: t("validation.degradationsRequis") },
   ],
   "degat-delit": [
@@ -114,6 +116,38 @@ const hasObjetsVolesEnregistres = (data: Record<string, unknown>) =>
   Array.isArray(data.objetsVolesValides) && data.objetsVolesValides.length > 0;
 
 const isVehicleVolObject = (data: Record<string, any>) => data.categorieObjet === "vehicule" || data.isVehicle === true;
+
+const validateVehicleFields = (
+  data: Record<string, any>,
+  ctx: z.RefinementCtx,
+  t: ComposerTranslation,
+  basePath: (string | number)[] = [],
+) => {
+  if (!isVehicleVolObject(data)) {
+    return;
+  }
+
+  if (!data.typeObjet?.code) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: [...basePath, "typeObjet"],
+      message: t("validation.typeObjetRequis"),
+    });
+  }
+
+  validateVehicleBrandAndModel(data, ctx, t, basePath);
+
+  if (!data.couleur?.code) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: [...basePath, "couleur"],
+      message: t("validation.couleurRequise"),
+    });
+  }
+
+  validatePlaque(data, ctx, t, basePath);
+
+}
 
 const validateVehicleBrandAndModel = (
   data: Record<string, any>,
@@ -193,15 +227,13 @@ const validateDommageSpecificRules = (data: Record<string, any>, ctx: z.Refineme
   if (Array.isArray(data.objetsDegradesValides) && data.objetsDegradesValides.length > 0) {
     data.objetsDegradesValides.forEach((objet: unknown, index: number) => {
       if (objet && typeof objet === "object") {
-        validateVehicleBrandAndModel(objet as Record<string, any>, ctx, t, ["objetsDegradesValides", index]);
-        validatePlaque(objet as Record<string, any>, ctx, t, ["objetsDegradesValides", index]);
+        validateVehicleFields(data, ctx, t, ["objetsDegradesValides", index]);
       }
     });
     return;
   }
 
-    validateVehicleBrandAndModel(data, ctx, t);
-    validatePlaque(data, ctx, t);
+  validateVehicleFields(data, ctx, t);
 }
 
 const validateDommageConstatPolice = (data: Record<string, any>, ctx: z.RefinementCtx, t: ComposerTranslation) => {
@@ -223,8 +255,7 @@ const validateVolSpecificRules = (data: Record<string, any>, ctx: z.RefinementCt
   if (hasObjetsVolesEnregistres(data)) {
     data.objetsVolesValides.forEach((objet: unknown, index: number) => {
       if (objet && typeof objet === "object") {
-        validateVehicleBrandAndModel(objet as Record<string, any>, ctx, t, ["objetsVolesValides", index]);
-        validatePlaque(objet as Record<string, any>, ctx, t, ["objetsVolesValides", index]);
+        validateVehicleFields(data, ctx, t, ["objetsVolesValides", index]);
       }
     });
     return;
@@ -247,8 +278,7 @@ const validateVolSpecificRules = (data: Record<string, any>, ctx: z.RefinementCt
     addCustomIssue(ctx, "numeroIMEI", t("validation.numeroIMEIFormat", { max: NUMERO_IMEI_MAX_LENGTH }));
   }
 
-  validateVehicleBrandAndModel(data, ctx, t);
-  validatePlaque(data, ctx, t);
+  validateVehicleFields(data, ctx, t);
 };
 
 function validateRequiredDates(data: any, fields: string[][], ctx: any, t: any) {

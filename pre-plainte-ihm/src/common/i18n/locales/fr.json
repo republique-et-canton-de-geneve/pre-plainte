@@ -628,7 +628,7 @@
     "lieuPlaceholder": "Exemple: nom de l'établissement, nom de l'aire d'autoroute...",
     "typeLieu": "Type de lieu",
     "hintTypeLieu": "Tapez au moins 2 caractères pour rechercher (ex: restaurant)",
-    "lieuOrigine": "Commune / Canton",
+    "lieuOrigine": "Commune",
     "hintLieuOrigine": "Tapez au moins 2 caractères pour rechercher (ex: Genève GE)",
     "adresseTrajet": "Le vol a-t-il eu lieu sur un trajet ?",
     "adresseDepart": "Adresse de départ",

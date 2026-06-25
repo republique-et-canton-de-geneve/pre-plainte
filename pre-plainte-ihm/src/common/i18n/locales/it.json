@@ -628,7 +628,7 @@
     "lieuPlaceholder": "Esempio: nome dell'esercizio, nome dell'area di servizio autostradale...",
     "typeLieu": "Tipo di luogo",
     "hintTypeLieu": "Digitate almeno 2 caratteri per la ricerca (es.: ristorante)",
-    "lieuOrigine": "Comune / Cantone",
+    "lieuOrigine": "Comune",
     "hintLieuOrigine": "Digitate almeno 2 caratteri per la ricerca (es.: Ginevra GE)",
     "adresseTrajet": "Il furto è avvenuto durante un tragitto?",
     "adresseDepart": "Indirizzo di partenza",
