@@ -210,7 +210,7 @@ const validateIncidentRequirements = (data: Record<string, any>, ctx: z.Refineme
     data.typeIncident === "vol" &&
     (hasObjetsVolesEnregistres(data) || data.categorieObjet === "plaque")
   ) {
-    rules = rules.filter(r => r.field !== "typeObjet");
+    rules = rules.filter(r => r.field !== "typeObjet" && r.field !== "couleur");
   }
 
   rules.forEach(({ field, message }) => {
@@ -227,7 +227,7 @@ const validateDommageSpecificRules = (data: Record<string, any>, ctx: z.Refineme
   if (Array.isArray(data.objetsDegradesValides) && data.objetsDegradesValides.length > 0) {
     data.objetsDegradesValides.forEach((objet: unknown, index: number) => {
       if (objet && typeof objet === "object") {
-        validateVehicleFields(data, ctx, t, ["objetsDegradesValides", index]);
+        validateVehicleFields(objet as Record<string, any>, ctx, t, ["objetsDegradesValides", index]);
       }
     });
     return;
@@ -255,7 +255,7 @@ const validateVolSpecificRules = (data: Record<string, any>, ctx: z.RefinementCt
   if (hasObjetsVolesEnregistres(data)) {
     data.objetsVolesValides.forEach((objet: unknown, index: number) => {
       if (objet && typeof objet === "object") {
-        validateVehicleFields(data, ctx, t, ["objetsVolesValides", index]);
+        validateVehicleFields(objet as Record<string, any>, ctx, t, ["objetsVolesValides", index]);
       }
     });
     return;
