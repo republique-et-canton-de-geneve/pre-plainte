@@ -185,6 +185,7 @@ import DegatVehiculeEndommageResumeSheet from "./DegatVehiculeEndommageResumeShe
 import { toTranslatedOptions } from "@/utils/helpers/traductionHelper";
 import { requiredLabel } from "@/utils/helpers/labelHelpers";
 import { checkLength, validerPlaqueVehicule } from "@/utils/helpers/volObjetVolHelpers";
+import { RipolService } from "@/services/ripolService.ts";
 
 const TEXTE_VIDE = "";
 
@@ -416,7 +417,7 @@ const clearDraftApresValidation = () => {
   stopRestoringOnNextTick();
 };
 
-const validerVehiculeDommage = (): boolean => {
+const validerVehiculeDommage = async (): Promise<boolean> => {
   effacerErreursBrouillon();
 
   if (!sousCategorie.value?.trim()) {
@@ -439,11 +440,12 @@ const validerVehiculeDommage = (): boolean => {
   }
 
   if (fabricant.value.code !== "AUTRE") {
-    if (!modele.value?.code) {
+    const models = await RipolService.searchVehicleModels(fabricant.value.code);
+    if (models.length > 0 && !modele.value?.code) {
       setFieldError("modele", t("validation.modeleRequis"));
       return false;
     }
-    if (modele.value.code === "AUTRE" && !chaineFormulaire(modeleAutre.value).trim()) {
+    if ((modele.value?.code === "AUTRE" || models.length === 0) && !chaineFormulaire(modeleAutre.value).trim()) {
       setFieldError("modeleAutre", t("validation.champRequis"));
       return false;
     }
@@ -527,11 +529,11 @@ const validerVehiculeDommage = (): boolean => {
   return true;
 };
 
-const validerBrouillonAvantNavigation = (): boolean => {
+const validerBrouillonAvantNavigation = async (): Promise<boolean> => {
   if (typeDommage.value !== "dommage-vehicule" || !afficherFicheSaisie.value) {
     return true;
   }
-  const brouillonValide = validerVehiculeDommage();
+  const brouillonValide = await validerVehiculeDommage();
   if (!brouillonValide) {
     void nextTick(() => draftPanelRef.value?.scrollIntoView({ behavior: "smooth", block: "start" }));
   }
@@ -584,6 +586,26 @@ watch(
   },
   { immediate: true },
 );
+
+watch(modele, newVal => {
+  if (isRestoring.value || !newVal) {
+    return;
+  }
+
+  if (modeleAutre.value) {
+    modeleAutre.value = "";
+  }
+});
+
+watch(modeleAutre, newVal => {
+  if (isRestoring.value || !newVal) {
+    return;
+  }
+
+  if (modele.value?.code !== "AUTRE") {
+    modele.value = null;
+  }
+});
 
 type ActionDialog = "modifier" | "supprimer";
 
