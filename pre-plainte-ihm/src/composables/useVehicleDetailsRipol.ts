@@ -161,19 +161,57 @@ export function useVehicleDetailsRipol({ sousCategorie, activePrefixes }: UseVeh
     }
   };
 
-  initVehicleWatchers({
-    sousCategorie,
-    typeObjet,
-    fabricant,
-    modele,
-    assuranceAucune,
-    assureurAutre,
-    numeroAssurance,
-    numeroVignette,
-    numeroMaster,
-    hasPlateNumber,
-    resetVehicleCaches,
-    appliquerPaysVehiculeDefaut,
+  watch(sousCategorie, () => {
+    typeObjet.value = null;
+    fabricant.value = null;
+    modele.value = null;
+    hasBrands.value = true;
+    hasModels.value = false;
+    resetVehicleCaches();
+
+    plaqueNumero.value = "";
+    plaquePays.value = null;
+    plaqueCanton.value = null;
+    plaqueInconnu.value = false;
+
+    vin.value = "";
+    vinInconnu.value = false;
+
+    numeroCadre.value = "";
+    numeroCadreInconnu.value = false;
+
+    appliquerPaysVehiculeDefaut();
+  });
+
+  watch(hasPlateNumber, show => {
+    if (show) {
+      appliquerPaysVehiculeDefaut();
+    }
+  });
+
+  watch(typeObjet, () => {
+    fabricant.value = null;
+    modele.value = null;
+    hasBrands.value = true;
+    hasModels.value = false;
+    allBrandsCache.value = null;
+    allModelsCache.value = null;
+  });
+
+  watch(fabricant, () => {
+    modele.value = null;
+    hasModels.value = true;
+    allModelsCache.value = null;
+  });
+
+  watch(assuranceAucune, isNone => {
+    if (!isNone) {
+      return;
+    }
+    assureurAutre.value = "";
+    numeroAssurance.value = "";
+    numeroVignette.value = "";
+    numeroMaster.value = "";
   });
 
   return {
@@ -239,57 +277,4 @@ export function useVehicleDetailsRipol({ sousCategorie, activePrefixes }: UseVeh
     fetchColours,
     RipolService,
   };
-}
-
-function initVehicleWatchers(ctx: any) {
-  const {
-    sousCategorie,
-    typeObjet,
-    fabricant,
-    modele,
-    assuranceAucune,
-    assureurAutre,
-    numeroAssurance,
-    numeroVignette,
-    numeroMaster,
-    hasPlateNumber,
-    resetCaches,
-    appliquerPaysVehiculeDefaut,
-  } = ctx;
-
-  watch(sousCategorie, () => {
-    typeObjet.value = null;
-    fabricant.value = null;
-    modele.value = null;
-
-    resetCaches();
-    appliquerPaysVehiculeDefaut();
-  });
-
-  watch(hasPlateNumber, (show: boolean) => {
-    if (show) {
-      appliquerPaysVehiculeDefaut();
-    }
-  });
-
-  watch(typeObjet, () => {
-    fabricant.value = null;
-    modele.value = null;
-    resetCaches();
-  });
-
-  watch(fabricant, () => {
-    modele.value = null;
-  });
-
-  watch(assuranceAucune, (isNone: boolean) => {
-    if (!isNone) {
-      return;
-    }
-
-    assureurAutre.value = "";
-    numeroAssurance.value = "";
-    numeroVignette.value = "";
-    numeroMaster.value = "";
-  });
 }
