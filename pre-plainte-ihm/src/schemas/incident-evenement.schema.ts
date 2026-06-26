@@ -193,7 +193,7 @@ const validateVehicleBrandAndModel = (
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: [...basePath, "modeleAutre"],
-        message: t("validation.champRequis"),
+        message: t(VALIDATION_CHAMP_REQUIS),
       });
     }
     if (!data.modele?.code && !data.modeleAutre?.trim()) {
@@ -536,28 +536,78 @@ const validatePlaqueInternationale = (numero: string, ctx: z.RefinementCtx, t: C
   }
 };
 
-const validateAdresseEvenement = (data: any, ctx: any, t: any) => {
-  if (!data.adresseEvenement || data.adresseEvenement.length < MIN_ADRESSE_EVENEMENT_TAILLE) {
-    addCustomIssue(ctx, "adresseEvenement", t("validation.adresseEvenementRequise"));
+const validateAdresseLesee = (data: any, ctx: any, t: any) => {
+  if (data.adresseLesee === null) {
+    addCustomIssue(ctx, "adresseLesee", t(VALIDATION_CHAMP_REQUIS));
   }
 };
 
-const validateAdressePostaleEvenement = (data: any, ctx: any, t: any) => {
-  const value = data.adressePostaleEvenement?.trim() ?? "";
+const validateAdressePrincipale = (data: any, ctx: any, t: any) => {
+  if (data.adresseLesee !== false) {
+    return;
+  }
+
+  if (data.adresseConnue === null) {
+    addCustomIssue(ctx, "adresseConnue", t(VALIDATION_CHAMP_REQUIS));
+  }
+
+  if (data.typeLieu === null) {
+    addCustomIssue(ctx, "typeLieu", t(VALIDATION_CHAMP_REQUIS));
+  }
+
+  if (data.adresseConnue || data.isTrajet) {
+    validateAdresseEvenement(data, "adresseEvenement", ctx, t);
+    validateAdressePostaleEvenement(data, "adressePostaleEvenement", ctx, t);
+    validateLocaliteEvenement(data, "localiteEvenement", ctx, t);
+    validateNpaEvenement(data, "npaEvenement", ctx, t);
+  }
+
+  if (data.adresseConnue === false && data.isTrajet === null) {
+    addCustomIssue(ctx, "isTrajet", t(VALIDATION_CHAMP_REQUIS));
+  }
+};
+
+const validateAdresseSecondaire = (data: any, ctx: any, t: any) => {
+  if (data.adresseLesee !== false || data.adresseConnue !== false) {
+    return;
+  }
+
+  if (data.isTrajet) {
+    validateAdresseEvenement(data, "adresseEvenementSecondaire", ctx, t);
+    validateAdressePostaleEvenement(data, "adressePostaleEvenementSecondaire", ctx, t);
+    validateLocaliteEvenement(data, "localiteEvenementSecondaire", ctx, t);
+    validateNpaEvenement(data, "npaEvenementSecondaire", ctx, t);
+  }
+
+  if (data.isTrajet === false && data.lieuOrigine === null) {
+    addCustomIssue(ctx, "lieuOrigine", t(VALIDATION_CHAMP_REQUIS));
+  }
+};
+
+const validateAdresseEvenement = (data: any, field: string, ctx: any, t: any) => {
+  const value = data[field];
+  if (!value || value.length < MIN_ADRESSE_EVENEMENT_TAILLE) {
+    addCustomIssue(ctx, field, t("validation.adresseEvenementRequise"));
+  }
+};
+
+const validateAdressePostaleEvenement = (data: any, field: string, ctx: any, t: any) => {
+  const value = data[field]?.trim() ?? "";
   if (!/^[a-zA-Z0-9\s]*$/.test(value)) {
-    addCustomIssue(ctx, "adressePostaleEvenement", t("validation.numeroPostalFormat"));
+    addCustomIssue(ctx, field, t("validation.numeroPostalFormat"));
   }
 };
 
-const validateLocaliteEvenement = (data: any, ctx: any, t: any) => {
-  if (!data.localiteEvenement) {
-    addCustomIssue(ctx, "localiteEvenement", t("validation.localiteRequise"));
+const validateLocaliteEvenement = (data: any, field: string, ctx: any, t: any) => {
+  if (!data[field]) {
+    addCustomIssue(ctx, field, t("validation.localiteRequise"));
   }
 };
 
-const validateNpaEvenement = (data: any, ctx: any, t: any) => {
-  if (!data.npaEvenement || data.npaEvenement.length < 4) {
-    addCustomIssue(ctx, "npaEvenement", t("validation.npaFormat"));
+const validateNpaEvenement = (data: any, field: string, ctx: any, t: any) => {
+  const value = data[field];
+  if (!value || value.length < 4) {
+    addCustomIssue(ctx, field, t("validation.npaFormat"));
   }
 };
 
@@ -792,65 +842,9 @@ export const createEvenementInfoSchema = (t: ComposerTranslation) =>
     })
     .superRefine((data, ctx) => {
       if (data.typeIncident !== "cybercrime") {
-        if (data.adresseLesee === null) {
-          addCustomIssue(ctx, "adresseLesee", t("validation.champRequis"));
-        }
-
-        if (data.adresseLesee === false) {
-          if (data.adresseConnue === null) {
-            addCustomIssue(ctx, "adresseConnue", t("validation.champRequis"));
-          }
-          if (data.typeLieu === null) {
-            addCustomIssue(ctx, "typeLieu", t("validation.champRequis"));
-          }
-
-          if (data.adresseConnue || data.isTrajet) {
-            if (!data.adresseEvenement || data.adresseEvenement.length < MIN_ADRESSE_EVENEMENT_TAILLE) {
-              addCustomIssue(ctx, "adresseEvenement", t("validation.adresseEvenementRequise"));
-            }
-
-            const value = data.adressePostaleEvenement?.trim() ?? "";
-            if (!/^[a-zA-Z0-9\s]*$/.test(value)) {
-              addCustomIssue(ctx, "adressePostaleEvenement", t("validation.numeroPostalFormat"));
-            }
-
-            if (!data.localiteEvenement) {
-              addCustomIssue(ctx, "localiteEvenement", t("validation.localiteRequise"));
-            }
-
-            if (!data.npaEvenement || data.npaEvenement.length < 4) {
-              addCustomIssue(ctx, "npaEvenement", t("validation.npaFormat"));
-            }
-          }
-
-          if (data.adresseConnue === false && data.isTrajet === null) {
-            addCustomIssue(ctx, "isTrajet", t("validation.champRequis"));
-          }
-        }
-
-        if (data.adresseLesee === false && data.adresseConnue === false) {
-          if (data.isTrajet) {
-            if (!data.adresseEvenementSecondaire || data.adresseEvenementSecondaire.length < MIN_ADRESSE_EVENEMENT_TAILLE) {
-              addCustomIssue(ctx, "adresseEvenementSecondaire", t("validation.adresseEvenementRequise"));
-            }
-
-            const value = data.adressePostaleEvenementSecondaire?.trim() ?? "";
-            if (!/^[a-zA-Z0-9\s]*$/.test(value)) {
-              addCustomIssue(ctx, "adressePostaleEvenementSecondaire", t("validation.numeroPostalFormat"));
-            }
-
-            if (!data.localiteEvenementSecondaire) {
-              addCustomIssue(ctx, "localiteEvenementSecondaire", t("validation.localiteRequise"));
-            }
-
-            if (!data.npaEvenementSecondaire || data.npaEvenementSecondaire.length < 4) {
-              addCustomIssue(ctx, "npaEvenementSecondaire", t("validation.npaFormat"));
-            }
-          }
-          if (data.isTrajet === false && data.lieuOrigine === null) {
-            addCustomIssue(ctx, "lieuOrigine", t("validation.champRequis"));
-          }
-        }
+        validateAdresseLesee(data, ctx, t);
+        validateAdressePrincipale(data, ctx, t);
+        validateAdresseSecondaire(data, ctx, t);
       }
     })
     .superRefine((data, ctx) => {
@@ -926,50 +920,64 @@ export const createEvenementInfoSchema = (t: ComposerTranslation) =>
     })
     .superRefine((data, ctx) => validateAchatNonRecuCybercrime(data, ctx, addCustomIssue, t))
     .superRefine((data, ctx) => {
-      if (data.typeCybercrime === "fausse-annonce") {
-        if (!data.urlComplete?.trim()) {
-          addCustomIssue(ctx, "urlComplete", t("validation.urlCompleteRequise"));
-        }
-        else if (!isUrlWebAvecDomaine(data.urlComplete)) {
-          addCustomIssue(ctx, "urlComplete", t("validation.plateformeUrlOuIdInvalide"));
-        }
-
-        if (!data.titreAnnonce?.trim()) {
-          addCustomIssue(ctx, "titreAnnonce", t("validation.titreAnnonceRequis"));
-        }
-
-        if (!data.nomBailleur?.trim()) {
-          addCustomIssue(ctx, "nomBailleur", t("validation.nomBailleurRequis"));
-        }
-
-        const hasEmail = data.emailBailleur?.trim();
-        if (!data.emailBailleurInconnu && !hasEmail) {
-          addCustomIssue(ctx, "emailBailleur", t("validation.emailBailleurRequis"));
-        } else if (
-          data.emailBailleur?.trim() &&
-          !z.string().email().safeParse(data.emailBailleur).success
-        ) {
-          addCustomIssue(ctx, "emailBailleur", t("validation.emailBailleurFormat"));
-        }
-
-        const hasTelephone = data.telephoneBailleur?.trim();
-        if (!data.telephoneBailleurInconnu && !hasTelephone) {
-          addCustomIssue(ctx, "telephoneBailleur", t("validation.telephoneBailleurRequis"));
-        }
-
-        if (!data.adresseBienImmobilier?.trim()) {
-          addCustomIssue(ctx, "adresseBienImmobilier", t("validation.adresseBienImmobilierRequise"));
-        }
-
-        if (!data.montantDemande?.trim()) {
-          addCustomIssue(ctx, "montantDemande", t("validation.montantDemandeRequis"));
-        }
-
-        if (!data.modePaiementDemande?.trim()) {
-          addCustomIssue(ctx, "modePaiementDemande", t("validation.modePaiementDemandeRequis"));
-        }
+      if (data.typeCybercrime !== "fausse-annonce") {
+        return;
       }
+
+      validateAnnonce(data, ctx, t);
+      validateBailleur(data, ctx, t);
+      validateBienImmobilier(data, ctx, t);
+      validatePaiement(data, ctx, t);
     });
+
+const validateAnnonce = (data: any, ctx: any, t: any) => {
+  if (!data.urlComplete?.trim()) {
+    addCustomIssue(ctx, "urlComplete", t("validation.urlCompleteRequise"));
+  } else if (!isUrlWebAvecDomaine(data.urlComplete)) {
+    addCustomIssue(ctx, "urlComplete", t("validation.plateformeUrlOuIdInvalide"));
+  }
+
+  if (!data.titreAnnonce?.trim()) {
+    addCustomIssue(ctx, "titreAnnonce", t("validation.titreAnnonceRequis"));
+  }
+};
+
+const validateBailleur = (data: any, ctx: any, t: any) => {
+  if (!data.nomBailleur?.trim()) {
+    addCustomIssue(ctx, "nomBailleur", t("validation.nomBailleurRequis"));
+  }
+
+  const hasEmail = data.emailBailleur?.trim();
+  if (!data.emailBailleurInconnu && !hasEmail) {
+    addCustomIssue(ctx, "emailBailleur", t("validation.emailBailleurRequis"));
+  } else if (
+    hasEmail &&
+    !z.string().email().safeParse(data.emailBailleur).success
+  ) {
+    addCustomIssue(ctx, "emailBailleur", t("validation.emailBailleurFormat"));
+  }
+
+  const hasTelephone = data.telephoneBailleur?.trim();
+  if (!data.telephoneBailleurInconnu && !hasTelephone) {
+    addCustomIssue(ctx, "telephoneBailleur", t("validation.telephoneBailleurRequis"));
+  }
+};
+
+const validateBienImmobilier = (data: any, ctx: any, t: any) => {
+  if (!data.adresseBienImmobilier?.trim()) {
+    addCustomIssue(ctx, "adresseBienImmobilier", t("validation.adresseBienImmobilierRequise"));
+  }
+};
+
+const validatePaiement = (data: any, ctx: any, t: any) => {
+  if (!data.montantDemande?.trim()) {
+    addCustomIssue(ctx, "montantDemande", t("validation.montantDemandeRequis"));
+  }
+
+  if (!data.modePaiementDemande?.trim()) {
+    addCustomIssue(ctx, "modePaiementDemande", t("validation.modePaiementDemandeRequis"));
+  }
+};
 
 export const createIncidentSchema = (t: ComposerTranslation, nationalite: string) => {
   const isCH = (v?: string) => {
