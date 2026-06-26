@@ -410,7 +410,7 @@ watch(
     }
 
     let cancelled = false;
-    const scrollTimeout = window.setTimeout(() => {
+    const scrollTimeout = globalThis.setTimeout(() => {
       void nextTick(() => {
         if (!cancelled) {
           creneauxSection.value?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -420,7 +420,7 @@ watch(
 
     onCleanup(() => {
       cancelled = true;
-      window.clearTimeout(scrollTimeout);
+      globalThis.clearTimeout(scrollTimeout);
     });
   },
   { flush: "post" },

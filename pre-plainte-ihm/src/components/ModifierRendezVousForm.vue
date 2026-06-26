@@ -485,7 +485,6 @@ const handleConfirm = async () => {
   } catch (error) {
     isUpdating.value = false;
     prePlainteIsLoading.value = false;
-    throw error;
   }
 };
 const formatDateTimeFrench = (dateString: string): string => {
