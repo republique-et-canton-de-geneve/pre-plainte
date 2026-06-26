@@ -230,6 +230,8 @@ const emit = defineEmits<{ cancel: []; continue: []; save: [] }>();
 const store = useCreatePrePlainteStore();
 const { scrollToTopOnConditionalErrors } = useFormErrorScroll();
 
+const DEGAT_DELIT = "degat-delit";
+
 type FormulaireAvecBrouillon = {
   validerBrouillonAvantNavigation: () => boolean;
 };
@@ -240,9 +242,7 @@ const degatMaterielFormRef = ref<FormulaireAvecBrouillon | null>(null);
 const nationalitePersonneLesee =
   store.userFormData.tiersNationalite?.code || store.userFormData.nationalite?.code || "";
 
-const validationSchema = computed(() => {
-  return toTypedSchema(createIncidentSchema(t, nationalitePersonneLesee));
-});
+const validationSchema = computed(() => toTypedSchema(createIncidentSchema(t, nationalitePersonneLesee)));
 
 const form = useForm<PrePlainteFormFields>({
   initialValues: store.userFormData,
@@ -260,7 +260,7 @@ switch (openFromRecap) {
     typeIncident.value = "vol";
     break;
   case "degat":
-    typeIncident.value = "degat-delit";
+    typeIncident.value = DEGAT_DELIT;
     break;
   case "cyber":
     typeIncident.value = "cybercrime";
@@ -440,7 +440,7 @@ watch(
       setFieldValue("avezVousDegradation", null);
     }
 
-    if (incident !== "degat-delit") {
+    if (incident !== DEGAT_DELIT) {
       setFieldValue("typeDommage", "");
       setFieldValue("montantEstime", "");
       setFieldValue("devise", "");
@@ -481,7 +481,7 @@ const validerBrouillonActif = (): boolean => {
   if (typeIncident.value === "vol") {
     return volFormRef.value?.validerBrouillonAvantNavigation() ?? true;
   }
-  if (typeIncident.value === "degat-delit") {
+  if (typeIncident.value === DEGAT_DELIT) {
     return degatMaterielFormRef.value?.validerBrouillonAvantNavigation() ?? true;
   }
   return true;

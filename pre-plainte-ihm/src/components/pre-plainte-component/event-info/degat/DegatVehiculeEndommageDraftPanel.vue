@@ -65,6 +65,6 @@ const emit = defineEmits<{
 
 const { t } = useI18n();
 const numeroObjet = computed(() =>
-  props.objetIndex !== undefined ? props.objetIndex + 1 : props.objetsCount + 1,
+  props.objetIndex === undefined ? props.objetsCount + 1 : props.objetIndex + 1,
 );
 </script>
