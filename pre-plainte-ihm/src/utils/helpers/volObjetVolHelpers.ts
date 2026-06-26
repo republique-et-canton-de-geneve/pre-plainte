@@ -165,3 +165,7 @@ export function validerNumeroPlaque(
 export function checkLength(value: unknown, max: number): boolean {
   return typeof value !== "string" || value.length <= max;
 }
+
+export const chaineFormulaire = (v: string) => v ?? TEXTE_VIDE;
+
+export const texteOuVide = (v: string | undefined | null) => v ?? TEXTE_VIDE;

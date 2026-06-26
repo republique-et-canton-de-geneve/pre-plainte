@@ -185,15 +185,28 @@ import DegatVehiculeEndommageDraftPanel from "./DegatVehiculeEndommageDraftPanel
 import DegatVehiculeEndommageResumeSheet from "./DegatVehiculeEndommageResumeSheet.vue";
 import { toTranslatedOptions } from "@/utils/helpers/traductionHelper";
 import { requiredLabel } from "@/utils/helpers/labelHelpers";
-import { checkLength, validerPlaqueVehicule } from "@/utils/helpers/volObjetVolHelpers";
-import { RipolService } from "@/services/ripolService.ts";
+import { chaineFormulaire, texteOuVide, validerPlaqueVehicule } from "@/utils/helpers/volObjetVolHelpers";
+import {
+  validateFabricantEtModele,
+  validateLongueurs,
+  validateNumeroCadreEtVin
+} from "@/utils/helpers/vehiculeValidationHelper.ts";
 
 const TEXTE_VIDE = "";
 const CHAMP_REQUIS_ERREUR = "validation.champRequis";
 const VALIDATION_LONGUEUR_MAX = "validation.longueurMax";
 
-const chaineFormulaire = (v: unknown) => String(v ?? TEXTE_VIDE);
-const texteOuVide = (v: string | undefined | null) => v ?? TEXTE_VIDE;
+const LONGUEURS_FIELDS = [
+  { field: "fabricantAutre", value: () => fabricantAutre.value, max: TEXT_FIELD_MAX_LENGTH },
+  { field: "modeleAutre", value: () => modeleAutre.value, max: TEXT_FIELD_MAX_LENGTH },
+  { field: "vin", value: () => vin.value, max: TEXT_FIELD_MAX_LENGTH },
+  { field: "numeroCadre", value: () => numeroCadre.value, max: TEXT_FIELD_MAX_LENGTH },
+  { field: "velofinderId", value: () => velofinderId.value, max: TEXT_FIELD_MAX_LENGTH },
+  { field: "assureurAutre", value: () => assureurAutre.value, max: TEXT_FIELD_MAX_LENGTH },
+  { field: "numeroAssurance", value: () => numeroAssurance.value, max: TEXT_FIELD_MAX_LENGTH },
+  { field: "numeroVignette", value: () => numeroVignette.value, max: TEXT_FIELD_MAX_LENGTH },
+  { field: "numeroMaster", value: () => numeroMaster.value, max: TEXT_FIELD_MAX_LENGTH },
+];
 
 const cloneRipol = (sel: RipolSelection | null): RipolSelection | null => {
   if (!sel) {
@@ -430,7 +443,12 @@ const validerVehiculeDommage = async (): Promise<boolean> => {
     return false;
   }
 
-  if (!validateLongueurs()) {
+  if (!validateLongueurs(
+    LONGUEURS_FIELDS,
+    setFieldError as any,
+    t,
+    VALIDATION_LONGUEUR_MAX,
+  )) {
     return false;
   }
 
@@ -451,7 +469,17 @@ const validateChampsObligatoires = async (): Promise<boolean> => {
     return false;
   }
 
-  if (!await validateFabricantEtModele()) {
+  if (
+    !await validateFabricantEtModele({
+      fabricant: fabricant.value,
+      fabricantAutre: fabricantAutre.value,
+      modele: modele.value,
+      modeleAutre: modeleAutre.value,
+      setFieldError: setFieldError as any,
+      t,
+      champRequisErreur: CHAMP_REQUIS_ERREUR,
+    })
+  ) {
     return false;
   }
 
@@ -460,7 +488,18 @@ const validateChampsObligatoires = async (): Promise<boolean> => {
     return false;
   }
 
-  if (!validateNumeroCadreEtVin()) {
+  if (
+    !validateNumeroCadreEtVin({
+      isVeloCategory: isVeloCategory.value,
+      numeroCadreInconnu: numeroCadreInconnu.value,
+      numeroCadre: numeroCadre.value,
+      hasVin: hasVin.value,
+      vinInconnu: vinInconnu.value,
+      vin: vin.value,
+      setFieldError: setFieldError as any,
+      t,
+    })
+  ) {
     return false;
   }
 
@@ -475,113 +514,6 @@ const validateChampsObligatoires = async (): Promise<boolean> => {
     (field, message) => setFieldError(field as any, message),
     t,
   );
-};
-
-const validateFabricantEtModele = async (): Promise<boolean> => {
-  if (!fabricant.value?.code) {
-    setFieldError("fabricant", t("validation.fabricantRequis"));
-    return false;
-  }
-
-  if (
-    fabricant.value.code === "AUTRE"
-    && !chaineFormulaire(fabricantAutre.value).trim()
-  ) {
-    setFieldError("fabricantAutre", t(CHAMP_REQUIS_ERREUR));
-    return false;
-  }
-
-  if (fabricant.value.code === "AUTRE") {
-    return true;
-  }
-
-  const models = await RipolService.searchVehicleModels(fabricant.value.code);
-
-  if (models.length > 0 && !modele.value?.code) {
-    setFieldError("modele", t("validation.modeleRequis"));
-    return false;
-  }
-
-  if (
-    (modele.value?.code === "AUTRE" || models.length === 0)
-    && !chaineFormulaire(modeleAutre.value).trim()
-  ) {
-    setFieldError("modeleAutre", t(CHAMP_REQUIS_ERREUR));
-    return false;
-  }
-
-  return true;
-};
-
-const validateNumeroCadreEtVin = (): boolean => {
-  if (
-    isVeloCategory.value
-    && !numeroCadreInconnu.value
-    && !chaineFormulaire(numeroCadre.value).trim()
-  ) {
-    setFieldError("numeroCadre", t("validation.numeroCadreRequis"));
-    return false;
-  }
-
-  if (
-    hasVin.value
-    && !vinInconnu.value
-    && !chaineFormulaire(vin.value).trim()
-  ) {
-    setFieldError("vin", t("validation.vinRequis"));
-    return false;
-  }
-
-  return true;
-};
-
-const validateLongueurs = (): boolean => {
-  if (!checkLength(fabricantAutre.value, TEXT_FIELD_MAX_LENGTH)) {
-    setFieldError("fabricantAutre", t(VALIDATION_LONGUEUR_MAX, { max: TEXT_FIELD_MAX_LENGTH }));
-    return false;
-  }
-
-  if (!checkLength(modeleAutre.value, TEXT_FIELD_MAX_LENGTH)) {
-    setFieldError("modeleAutre", t(VALIDATION_LONGUEUR_MAX, { max: TEXT_FIELD_MAX_LENGTH }));
-    return false;
-  }
-
-  if (!checkLength(vin.value, TEXT_FIELD_MAX_LENGTH)) {
-    setFieldError("vin", t(VALIDATION_LONGUEUR_MAX, { max: TEXT_FIELD_MAX_LENGTH }));
-    return false;
-  }
-
-  if (!checkLength(numeroCadre.value, TEXT_FIELD_MAX_LENGTH)) {
-    setFieldError("numeroCadre", t(VALIDATION_LONGUEUR_MAX, { max: TEXT_FIELD_MAX_LENGTH }));
-    return false;
-  }
-
-  if (!checkLength(velofinderId.value, TEXT_FIELD_MAX_LENGTH)) {
-    setFieldError("velofinderId", t(VALIDATION_LONGUEUR_MAX, { max: TEXT_FIELD_MAX_LENGTH }));
-    return false;
-  }
-
-  if (!checkLength(assureurAutre.value, TEXT_FIELD_MAX_LENGTH)) {
-    setFieldError("assureurAutre", t(VALIDATION_LONGUEUR_MAX, { max: TEXT_FIELD_MAX_LENGTH }));
-    return false;
-  }
-
-  if (!checkLength(numeroAssurance.value, TEXT_FIELD_MAX_LENGTH)) {
-    setFieldError("numeroAssurance", t(VALIDATION_LONGUEUR_MAX, { max: TEXT_FIELD_MAX_LENGTH }));
-    return false;
-  }
-
-  if (!checkLength(numeroVignette.value, TEXT_FIELD_MAX_LENGTH)) {
-    setFieldError("numeroVignette", t(VALIDATION_LONGUEUR_MAX, { max: TEXT_FIELD_MAX_LENGTH }));
-    return false;
-  }
-
-  if (!checkLength(numeroMaster.value, TEXT_FIELD_MAX_LENGTH)) {
-    setFieldError("numeroMaster", t(VALIDATION_LONGUEUR_MAX, { max: TEXT_FIELD_MAX_LENGTH }));
-    return false;
-  }
-
-  return true;
 };
 
 const mettreAJourListe = () => {
