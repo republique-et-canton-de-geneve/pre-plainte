@@ -879,7 +879,6 @@
     "dateFinEvenementRequise": "La data di fine dell'evento è obbligatoria",
     "heureFinEvenementRequise": "L'ora di fine dell'evento è obbligatoria",
     "dateFinEvenementApresDebut": "La fine dell'evento deve essere successiva all'inizio",
-    "detailsPlainteDeposeeRequis": "I dettagli della denuncia sono obbligatori se avete già presentato una denuncia",
     "champRequis": "Il campo è obbligatorio",
     "modeOperatoireRequis": "La modalità operativa è obbligatoria",
     "volDansVehiculeRequis": "Indicate se l'oggetto è stato rubato all'interno o sopra un veicolo",
