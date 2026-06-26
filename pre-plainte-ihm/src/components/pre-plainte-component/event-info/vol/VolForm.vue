@@ -100,7 +100,17 @@ import { filterNationalities, sortRipolByLabelFr } from "@/utils/helpers/ripolHe
 import type { RipolSelection, Ripol } from "@/types/ripol.interface";
 import type { PrePlainteFormFields, VolObjetFormSnapshot } from "@/types/pre-plainte.interface";
 import BaseRadioGroup from "@/components/radio/BaseRadioGroup.vue";
-import { checkLength, validerNumeroPlaque, validerPlaqueVehicule } from "@/utils/helpers/volObjetVolHelpers";
+import {
+  chaineFormulaire,
+  texteOuVide,
+  validerNumeroPlaque,
+  validerPlaqueVehicule
+} from "@/utils/helpers/volObjetVolHelpers";
+import {
+  validateFabricantEtModele,
+  validateLongueurs,
+  validateNumeroCadreEtVin
+} from "@/utils/helpers/vehiculeValidationHelper.ts";
 
 const TEXTE_VIDE = "";
 const NUMERO_IMEI_REGEX = /^\d{15}$/;
@@ -108,8 +118,20 @@ const VALIDATION_LONGUEUR_MAX = "validation.longueurMax";
 const VALIDATION_CHAMP_REQUIS = "validation.champRequis";
 const CHAMP_REQUIS_ERREUR = "validation.champRequis";
 
-const chaineFormulaire = (v: unknown) => String(v ?? TEXTE_VIDE);
-const texteOuVide = (v: string | undefined | null) => v ?? TEXTE_VIDE;
+const LONGUEURS_FIELDS = [
+  { field: "fabricantAutre", value: () => fabricantAutre.value, max: TEXT_FIELD_MAX_LENGTH },
+  { field: "modeleAutre", value: () => modeleAutre.value, max: TEXT_FIELD_MAX_LENGTH },
+  { field: "numeroSerie", value: () => numeroSerie.value, max: TEXT_FIELD_MAX_LENGTH },
+  { field: "justificationAbsenceIMEI", value: () => justificationAbsenceIMEI.value, max: TEXTAREA_MAX_LENGTH },
+  { field: "gravure", value: () => gravure.value, max: TEXT_FIELD_MAX_LENGTH },
+  { field: "vin", value: () => vin.value, max: TEXT_FIELD_MAX_LENGTH },
+  { field: "numeroCadre", value: () => numeroCadre.value, max: TEXT_FIELD_MAX_LENGTH },
+  { field: "velofinderId", value: () => velofinderId.value, max: TEXT_FIELD_MAX_LENGTH },
+  { field: "assureurAutre", value: () => assureurAutre.value, max: TEXT_FIELD_MAX_LENGTH },
+  { field: "numeroAssurance", value: () => numeroAssurance.value, max: TEXT_FIELD_MAX_LENGTH },
+  { field: "numeroVignette", value: () => numeroVignette.value, max: TEXT_FIELD_MAX_LENGTH },
+  { field: "numeroMaster", value: () => numeroMaster.value, max: TEXT_FIELD_MAX_LENGTH },
+];
 
 const cloneRipol = (sel: RipolSelection | null): RipolSelection | null => {
   if (!sel) {
@@ -143,9 +165,9 @@ const { value: couleur, errorMessage: couleurError } = useField<RipolSelection |
 const { value: couleurSecondaire } = useField<RipolSelection | null>("couleurSecondaire");
 const { value: valeurReelle, errorMessage: valeurReelleError } = useField<string>("valeurReelle");
 const { value: gravure, errorMessage: gravureError } = useField<string>("gravure");
-const { value: numeroSerie, errorMessage: numeroSerieError } = useField("numeroSerie");
+const { value: numeroSerie, errorMessage: numeroSerieError } = useField<string>("numeroSerie");
 const { value: numeroSerieInconnu } = useField<boolean>("numeroSerieInconnu");
-const { value: numeroIMEI, errorMessage: numeroIMEIError } = useField("numeroIMEI");
+const { value: numeroIMEI, errorMessage: numeroIMEIError } = useField<string>("numeroIMEI");
 const { value: numeroIMEIInconnu } = useField<boolean>("numeroIMEIInconnu");
 const { value: justificationAbsenceIMEI, errorMessage: justificationAbsenceIMEIError } = useField<string>("justificationAbsenceIMEI");
 const { value: isVehicle } = useField<boolean>("isVehicle");
@@ -524,7 +546,12 @@ const validerBrouillonObjetVole = async (): Promise<boolean> => {
     return false;
   }
 
-  return validateLongueurs();
+  return validateLongueurs(
+    LONGUEURS_FIELDS,
+    setFieldError as any,
+    t,
+    VALIDATION_LONGUEUR_MAX,
+  );
 };
 
 const validateChampsObligatoires = async (): Promise<boolean> => {
@@ -572,7 +599,17 @@ const validatePlaque = (): boolean => {
 };
 
 const validateVehicule = async (): Promise<boolean> => {
-  if (!await validateFabricantEtModele()) {
+  if (
+    !await validateFabricantEtModele({
+      fabricant: fabricant.value,
+      fabricantAutre: fabricantAutre.value,
+      modele: modele.value,
+      modeleAutre: modeleAutre.value,
+      setFieldError: setFieldError as any,
+      t,
+      champRequisErreur: CHAMP_REQUIS_ERREUR,
+    })
+  ) {
     return false;
   }
 
@@ -581,7 +618,18 @@ const validateVehicule = async (): Promise<boolean> => {
     return false;
   }
 
-  if (!validateNumeroCadreEtVin()) {
+  if (
+    !validateNumeroCadreEtVin({
+      isVeloCategory: isVeloCategory.value,
+      numeroCadreInconnu: numeroCadreInconnu.value,
+      numeroCadre: numeroCadre.value,
+      hasVin: hasVin.value,
+      vinInconnu: vinInconnu.value,
+      vin: vin.value,
+      setFieldError: setFieldError as any,
+      t,
+    })
+  ) {
     return false;
   }
 
@@ -596,64 +644,6 @@ const validateVehicule = async (): Promise<boolean> => {
     setFieldError as (field: string, message: string) => void,
     t,
   );
-};
-
-const validateFabricantEtModele = async (): Promise<boolean> => {
-  if (!fabricant.value?.code) {
-    setFieldError("fabricant", t("validation.fabricantRequis"));
-    return false;
-  }
-
-  if (
-    fabricant.value.code === "AUTRE"
-    && !chaineFormulaire(fabricantAutre.value).trim()
-  ) {
-    setFieldError("fabricantAutre", t(CHAMP_REQUIS_ERREUR));
-    return false;
-  }
-
-  if (fabricant.value.code === "AUTRE") {
-    return true;
-  }
-
-  const models = await RipolService.searchVehicleModels(fabricant.value.code);
-
-  if (models.length > 0 && !modele.value?.code) {
-    setFieldError("modele", t("validation.modeleRequis"));
-    return false;
-  }
-
-  if (
-    (modele.value?.code === "AUTRE" || models.length === 0)
-    && !chaineFormulaire(modeleAutre.value).trim()
-  ) {
-    setFieldError("modeleAutre", t(CHAMP_REQUIS_ERREUR));
-    return false;
-  }
-
-  return true;
-};
-
-const validateNumeroCadreEtVin = (): boolean => {
-  if (
-    isVeloCategory.value
-    && !numeroCadreInconnu.value
-    && !chaineFormulaire(numeroCadre.value).trim()
-  ) {
-    setFieldError("numeroCadre", t("validation.numeroCadreRequis"));
-    return false;
-  }
-
-  if (
-    hasVin.value
-    && !vinInconnu.value
-    && !chaineFormulaire(vin.value).trim()
-  ) {
-    setFieldError("vin", t("validation.vinRequis"));
-    return false;
-  }
-
-  return true;
 };
 
 const validateNumeroSerieEtIMEI = (): boolean => {
@@ -686,35 +676,6 @@ const validateNumeroSerieEtIMEI = (): boolean => {
   ) {
     setFieldError("numeroIMEI", t("validation.numeroIMEIFormat"));
     return false;
-  }
-
-  return true;
-};
-
-const LONGUEURS_FIELDS = [
-  { field: "fabricantAutre", value: () => fabricantAutre.value, max: TEXT_FIELD_MAX_LENGTH },
-  { field: "modeleAutre", value: () => modeleAutre.value, max: TEXT_FIELD_MAX_LENGTH },
-  { field: "numeroSerie", value: () => numeroSerie.value, max: TEXT_FIELD_MAX_LENGTH },
-  { field: "justificationAbsenceIMEI", value: () => justificationAbsenceIMEI.value, max: TEXTAREA_MAX_LENGTH },
-  { field: "gravure", value: () => gravure.value, max: TEXT_FIELD_MAX_LENGTH },
-  { field: "vin", value: () => vin.value, max: TEXT_FIELD_MAX_LENGTH },
-  { field: "numeroCadre", value: () => numeroCadre.value, max: TEXT_FIELD_MAX_LENGTH },
-  { field: "velofinderId", value: () => velofinderId.value, max: TEXT_FIELD_MAX_LENGTH },
-  { field: "assureurAutre", value: () => assureurAutre.value, max: TEXT_FIELD_MAX_LENGTH },
-  { field: "numeroAssurance", value: () => numeroAssurance.value, max: TEXT_FIELD_MAX_LENGTH },
-  { field: "numeroVignette", value: () => numeroVignette.value, max: TEXT_FIELD_MAX_LENGTH },
-  { field: "numeroMaster", value: () => numeroMaster.value, max: TEXT_FIELD_MAX_LENGTH },
-];
-
-const validateLongueurs = (): boolean => {
-  for (const rule of LONGUEURS_FIELDS) {
-    if (!checkLength(rule.value(), rule.max)) {
-      setFieldError(
-        rule.field as any,
-        t(VALIDATION_LONGUEUR_MAX, { max: rule.max }),
-      );
-      return false;
-    }
   }
 
   return true;
