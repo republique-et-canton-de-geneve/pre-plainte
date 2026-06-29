@@ -204,7 +204,15 @@ When("je sélectionne le type d'incident {string}", (typeIncident) => {
 
 When("je renseigne et je vérifie mon adresse e-mail", () => {
   cy.get('[data-cy="verification-email"]').filter(":visible").first().type(donneesEmailVerifie.email);
-  cy.get('[data-cy="envoyer-code-email"]').filter(":visible").first().click();
+  cy.get('[data-cy="envoyer-code-email"]', { timeout: 15000 })
+    .filter(":visible")
+    .first()
+    .should($button => {
+      expect($button[0].disabled).to.eq(false);
+      expect($button[0].getAttribute("aria-disabled")).not.to.eq("true");
+      expect($button[0].classList.contains("v-btn--disabled")).to.eq(false);
+    })
+    .click();
   cy.get("body", { timeout: 15000 }).should($body => {
     const otpVisible = $body.find('[data-cy="email-otp"]:visible input:visible').length > 0;
     const continuerActif = boutonVisibleActif($body, '[data-cy="continuer-verification-email"]');
