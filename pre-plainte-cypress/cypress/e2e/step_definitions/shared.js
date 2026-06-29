@@ -54,6 +54,17 @@ const selectVisibleOption = (champ, valeur) => {
   cy.contains(".v-list-item-title", valeur).click({ force: true });
 };
 
+const boutonVisibleActif = ($body, selector) =>
+  $body.find(selector).filter((_, element) => {
+    const button = element;
+    return (
+      Cypress.$(button).is(":visible") &&
+      !button.disabled &&
+      button.getAttribute("aria-disabled") !== "true" &&
+      !button.classList.contains("v-btn--disabled")
+    );
+  }).length > 0;
+
 const donneesInformationsPersonnellesInvalides = {
   "age inferieur a 16 ans": {
     dateNaissance: "01.01.2015",
@@ -194,9 +205,9 @@ When("je sélectionne le type d'incident {string}", (typeIncident) => {
 When("je renseigne et je vérifie mon adresse e-mail", () => {
   cy.get('[data-cy="verification-email"]').filter(":visible").first().type(donneesEmailVerifie.email);
   cy.get('[data-cy="envoyer-code-email"]').filter(":visible").first().click();
-  cy.get("body").should($body => {
+  cy.get("body", { timeout: 15000 }).should($body => {
     const otpVisible = $body.find('[data-cy="email-otp"]:visible input:visible').length > 0;
-    const continuerActif = $body.find('[data-cy="continuer-verification-email"]:visible:not(:disabled)').length > 0;
+    const continuerActif = boutonVisibleActif($body, '[data-cy="continuer-verification-email"]');
 
     expect(otpVisible || continuerActif).to.eq(true);
   }).then($body => {
@@ -213,7 +224,15 @@ When("je renseigne et je vérifie mon adresse e-mail", () => {
         });
     }
   });
-  cy.get('[data-cy="continuer-verification-email"]').filter(":visible").first().should("not.be.disabled").click();
+  cy.get('[data-cy="continuer-verification-email"]', { timeout: 15000 })
+    .filter(":visible")
+    .first()
+    .should($button => {
+      expect($button[0].disabled).to.eq(false);
+      expect($button[0].getAttribute("aria-disabled")).not.to.eq("true");
+      expect($button[0].classList.contains("v-btn--disabled")).to.eq(false);
+    })
+    .click();
 });
 
 When("je renseigne les informations personnelles nominales pour moi-même", () => {
