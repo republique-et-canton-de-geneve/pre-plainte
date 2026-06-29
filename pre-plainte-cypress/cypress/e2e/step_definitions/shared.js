@@ -194,11 +194,15 @@ When("je sélectionne le type d'incident {string}", (typeIncident) => {
 When("je renseigne et je vérifie mon adresse e-mail", () => {
   cy.get('[data-cy="verification-email"]').filter(":visible").first().type(donneesEmailVerifie.email);
   cy.get('[data-cy="envoyer-code-email"]').filter(":visible").first().click();
-  cy.get("body").then($body => {
+  cy.get("body").should($body => {
     const otpVisible = $body.find('[data-cy="email-otp"]:visible input:visible').length > 0;
-    const continuerDesactive = $body.find('[data-cy="continuer-verification-email"]:visible:disabled').length > 0;
+    const continuerActif = $body.find('[data-cy="continuer-verification-email"]:visible:not(:disabled)').length > 0;
 
-    if (otpVisible || continuerDesactive) {
+    expect(otpVisible || continuerActif).to.eq(true);
+  }).then($body => {
+    const otpVisible = $body.find('[data-cy="email-otp"]:visible input:visible').length > 0;
+
+    if (otpVisible) {
       cy.get('[data-cy="email-otp"]')
         .filter(":visible")
         .first()
@@ -209,7 +213,7 @@ When("je renseigne et je vérifie mon adresse e-mail", () => {
         });
     }
   });
-  cy.get('[data-cy="continuer-verification-email"]').filter(":visible").first().click();
+  cy.get('[data-cy="continuer-verification-email"]').filter(":visible").first().should("not.be.disabled").click();
 });
 
 When("je renseigne les informations personnelles nominales pour moi-même", () => {
