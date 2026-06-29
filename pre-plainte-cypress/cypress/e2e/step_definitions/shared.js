@@ -8,7 +8,7 @@ import {
   selectRadio,
 } from "../../support/helpers/vuetify";
 import { ripol, ripolSelection, stubRipol } from "../../support/stubs/ripol";
-import { stubEmailChallengeOk } from "../../support/stubs/email-challenge";
+import { emailChallengeState, stubEmailChallengeOk } from "../../support/stubs/email-challenge";
 import { stubEsiriusOk } from "../../support/stubs/esirius";
 import { stubSoumissionPrePlainteOk } from "../../support/stubs/pre-plainte";
 import { declarantSuisseValide, donneesEmailVerifie } from "../../support/data/pre-plainte";
@@ -64,6 +64,53 @@ const boutonVisibleActif = ($body, selector) =>
       !button.classList.contains("v-btn--disabled")
     );
   }).length > 0;
+
+const etatVerificationEmail = ($body) => {
+  const envoyerCodeEmail = $body.find('[data-cy="envoyer-code-email"]').filter(":visible").first();
+  const continuerVerificationEmail = $body.find('[data-cy="continuer-verification-email"]').filter(":visible").first();
+
+  return {
+    otpVisible: $body.find('[data-cy="email-otp"]:visible input:visible').length > 0,
+    continuerActif: boutonVisibleActif($body, '[data-cy="continuer-verification-email"]'),
+    requestCount: emailChallengeState.requestCount,
+    verifyCount: emailChallengeState.verifyCount,
+    envoyerDisabled: envoyerCodeEmail.prop("disabled") === true,
+    envoyerClasses: envoyerCodeEmail.attr("class") ?? "",
+    continuerDisabled: continuerVerificationEmail.prop("disabled") === true,
+    continuerClasses: continuerVerificationEmail.attr("class") ?? "",
+    alertes: $body
+      .find(".v-alert:visible")
+      .map((_, element) => Cypress.$(element).text().trim().replace(/\s+/g, " "))
+      .get()
+      .join(" | "),
+  };
+};
+
+const verificationEmailPrete = etat => etat.otpVisible || etat.continuerActif;
+
+const messageEtatVerificationEmail = etat =>
+  [
+    `otpVisible=${etat.otpVisible}`,
+    `continuerActif=${etat.continuerActif}`,
+    `requestCount=${etat.requestCount}`,
+    `verifyCount=${etat.verifyCount}`,
+    `envoyerDisabled=${etat.envoyerDisabled}`,
+    `envoyerClasses=${etat.envoyerClasses}`,
+    `continuerDisabled=${etat.continuerDisabled}`,
+    `continuerClasses=${etat.continuerClasses}`,
+    `alertes=${etat.alertes}`,
+  ].join("; ");
+
+const cliquerEnvoyerCodeEmail = () =>
+  cy.get('[data-cy="envoyer-code-email"]', { timeout: 15000 })
+    .filter(":visible")
+    .first()
+    .should($button => {
+      expect($button[0].disabled).to.eq(false);
+      expect($button[0].getAttribute("aria-disabled")).not.to.eq("true");
+      expect($button[0].classList.contains("v-btn--disabled")).to.eq(false);
+    })
+    .click();
 
 const donneesInformationsPersonnellesInvalides = {
   "age inferieur a 16 ans": {
@@ -204,20 +251,21 @@ When("je sélectionne le type d'incident {string}", (typeIncident) => {
 
 When("je renseigne et je vérifie mon adresse e-mail", () => {
   cy.get('[data-cy="verification-email"]').filter(":visible").first().type(donneesEmailVerifie.email);
-  cy.get('[data-cy="envoyer-code-email"]', { timeout: 15000 })
-    .filter(":visible")
-    .first()
-    .should($button => {
-      expect($button[0].disabled).to.eq(false);
-      expect($button[0].getAttribute("aria-disabled")).not.to.eq("true");
-      expect($button[0].classList.contains("v-btn--disabled")).to.eq(false);
-    })
-    .click();
-  cy.get("body", { timeout: 15000 }).should($body => {
-    const otpVisible = $body.find('[data-cy="email-otp"]:visible input:visible').length > 0;
-    const continuerActif = boutonVisibleActif($body, '[data-cy="continuer-verification-email"]');
+  cliquerEnvoyerCodeEmail();
+  cy.wait(500);
+  cy.get("body").then($body => {
+    const etat = etatVerificationEmail($body);
 
-    expect(otpVisible || continuerActif).to.eq(true);
+    if (!verificationEmailPrete(etat) && etat.requestCount === 0) {
+      return cliquerEnvoyerCodeEmail();
+    }
+
+    return undefined;
+  });
+  cy.get("body", { timeout: 15000 }).should($body => {
+    const etat = etatVerificationEmail($body);
+
+    expect(verificationEmailPrete(etat), messageEtatVerificationEmail(etat)).to.eq(true);
   }).then($body => {
     const otpVisible = $body.find('[data-cy="email-otp"]:visible input:visible').length > 0;
 
