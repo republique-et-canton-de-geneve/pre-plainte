@@ -69,6 +69,7 @@
       <h3>{{ t("informationsEvenement.typeIncident") }}</h3>
       <AccessibleVSelect
         v-model="typeIncident"
+        data-cy="type-incident"
         :label="t('informationsEvenement.typeIncident')"
         required
         :items="[
