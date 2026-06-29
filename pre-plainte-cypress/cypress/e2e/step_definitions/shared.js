@@ -31,7 +31,7 @@ const donneesEvenementVolVehicule = {
   categorieObjet: "vehicule",
   sousCategorie: "",
   typeObjet: null,
-  fabricant: null,
+  fabricant: {},
   fabricantAutre: "",
   modele: null,
   modeleAutre: "",
@@ -47,6 +47,11 @@ const valeursTypePersonne = {
 
 const libellesChamps = {
   "Coordonnées du tiers concerné": "Coordonnées du tiers",
+};
+
+const selectVisibleOption = (champ, valeur) => {
+  fieldRoot(champ).find(".v-field").click({ force: true });
+  cy.contains(".v-list-item-title", valeur).click({ force: true });
 };
 
 const donneesInformationsPersonnellesInvalides = {
@@ -155,11 +160,7 @@ When("je saisis {string} dans le champ {string}", (valeur, champ) => {
 });
 
 When("je renseigne le type de véhicule {string}", (typeVehicule) => {
-  cy.get(".css-fallback-native-select")
-    .contains("label", "Sous-catégorie")
-    .parent()
-    .find("select")
-    .select("voitures", { force: true });
+  selectVisibleOption("Catégorie d'objet", "Véhicule");
   fieldInput("Type de l'objet").click({ force: true });
   fieldInput("Type de l'objet").type(`{selectall}${typeVehicule}`, { force: true });
   cy.contains(".v-list-item-title", typeVehicule).click({ force: true });
@@ -177,6 +178,16 @@ When("je clique sur le bouton continuer des informations générales", () => {
   cy.get('[data-cy="continuer-informations-generales"]').filter(":visible").first().click();
 });
 
+When("je sélectionne le type d'incident {string}", (typeIncident) => {
+  const valeursTypeIncident = {
+    Vol: "vol",
+    Dommage: "degat-delit",
+    Cybercrime: "cybercrime",
+  };
+
+  selectNative("Type d'incident", valeursTypeIncident[typeIncident] ?? typeIncident);
+});
+
 When("je renseigne et je vérifie mon adresse e-mail", () => {
   cy.get('[data-cy="verification-email"]').filter(":visible").first().type(donneesEmailVerifie.email);
   cy.get('[data-cy="envoyer-code-email"]').filter(":visible").first().click();
@@ -184,7 +195,7 @@ When("je renseigne et je vérifie mon adresse e-mail", () => {
   cy.get('[data-cy="email-otp"]')
     .filter(":visible")
     .first()
-    .find("input")
+    .find("input:visible")
     .should("have.length", donneesEmailVerifie.confirmationEmail.length)
     .each(($input, index) => {
       cy.wrap($input).type(donneesEmailVerifie.confirmationEmail[index]);
@@ -214,11 +225,11 @@ When("je continue après les informations personnelles", () => {
 });
 
 When("je renseigne un vol simple nominal", () => {
-  cy.get('[data-cy="type-incident-native"]').select("vol", { force: true });
   selectRadio("Certains objets que vous allez déclarer", "Non");
-  selectNative("Catégorie d'objet", "informatique");
+  selectVisibleOption("Catégorie d'objet", "Informatique");
+  selectVisibleOption("Sous-catégorie", "Ordinateur portable / Tablette");
   cy.wait("@getRipolObjectTypes");
-  fieldInput("Type de l'objet").should("have.value", "Ordinateur portable");
+  selectAutocomplete("Type de l'objet", "Ordinateur portable");
   fillField("Numéro de série", "SN123456");
   cy.get('[data-cy="objet-vole-valider"]').click();
   selectRadio("Avez-vous constaté des dégradations", "Non");
@@ -228,7 +239,7 @@ When("je renseigne un vol simple nominal", () => {
   fillField("Heure de fin de l'événement", "11:00");
   selectRadio("L'adresse correspond à", "L'adresse de la personne lesée");
   cy.contains("Ordinateur portable").should(bevisible);
-  cy.get('[data-cy="continuer-evenement"]').filter(":visible").first().click();
+  cy.contains("button", /Continuer|Poursuivre/).last().click({ force: true });
 });
 
 When("je sélectionne le premier créneau disponible", () => {
