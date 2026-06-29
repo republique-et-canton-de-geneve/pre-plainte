@@ -131,6 +131,7 @@ import { createVerificationEmailPageSchema } from "@/schemas/verification-email-
 import { isDevEmailChallengeBypassed } from "@/config/dev-flags";
 import { EMAIL_CHALLENGE_CODE_LENGTH } from "@/constants/constant";
 import { requiredLabel } from "@/utils/helpers/labelHelpers";
+import { generateUuid } from "@/utils/helpers/randomHelpers";
 
 const devBypassEmail = isDevEmailChallengeBypassed();
 const EMAIL_CHALLENGE_GENERIC_ERROR_KEY = "emailChallenge.erreurVerification";
@@ -236,7 +237,7 @@ watch(locale, () => {
 });
 
 async function ensureKeyAndSend(): Promise<void> {
-  const key = keyChallenge.value ?? crypto.randomUUID();
+  const key = keyChallenge.value ?? generateUuid();
   if (!keyChallenge.value) {
     store.setKeyChallenge(key);
   }
@@ -287,7 +288,7 @@ function persistVerifiedEmail(emailTrim: string, confirmation: string) {
 
 function ensureDevBypassKeyChallenge() {
   if (!keyChallenge.value) {
-    store.setKeyChallenge(crypto.randomUUID());
+    store.setKeyChallenge(generateUuid());
   }
 }
 
