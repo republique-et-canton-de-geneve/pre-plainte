@@ -44,7 +44,126 @@ class Ech051BuilderTest {
 
     String xml = builder.generateEch051Xml(prePlainte, true);
 
-    assertThat(xml).contains("<eCH-0058:senderId>T4-TEST</eCH-0058:senderId>").contains("<eCH-0058:recipientId>T4-DEST</eCH-0058:recipientId>").contains("<eCH-0058:testDeliveryFlag>true</eCH-0058:testDeliveryFlag>").contains("<eCH-0051:legal>").contains("<eCH-0051:currentName>ACME Assurance SA</eCH-0051:currentName>").contains("john.doe@test.ch").contains("+41791234567").contains("+41221234567").contains("<eCH-0051:uri>").contains("<eCH-0051:marking xml:lang=\"fr\">quality_assurance_link</eCH-0051:marking>").contains("<eCH-0051:uri>https://example.test/profile</eCH-0051:uri>").contains("<eCH-0051:bootyAmount>").contains("<eCH-0051:amount>2500</eCH-0051:amount>").contains("sourceTable=\"LOCALITY_TABLE\"").contains("Quartier centre").contains("2026-01-12T10:15:00.000+01:00").contains("2026-01-12T11:45:00.000+01:00").contains("2026-01-13T00:00:00.000+01:00").contains("2026-01-14T00:00:00.000+01:00").contains("date-invalide").contains("<eCH-0051:vehicle>").contains("VELO-999").contains("CADRE-123").contains("VIN-456").contains("AutreMarque").contains("AutreModele").contains("GE123456").contains("sourceTable=\"CANTON_TABLE\"").contains("sourceTable=\"COUNTRY_TABLE\"").contains("<eCH-0051:vehiclePersonLink>").contains("VEH-1").contains("PER-1").contains("INS-1").contains("sourceTable=\"vehicleTypeTable\"").contains("sourceTable=\"vehicleBrandTable\"").contains("sourceTable=\"vehicleModelTable\"").contains("sourceTable=\"vehicleColourTable\"").contains("sourceTable=\"vehicleColourSecondaryTable\"").contains("<eCH-0051:financialTransaction").contains("sep:paymentType=\"IBAN\"").contains("sep:platformType=\"Ricardo\"").contains("sep:platformId=\"RID-778899\"").contains("sep:transactionNumber=\"REF-778899\"").contains("<eCH-0051:accountSend>inconnu</eCH-0051:accountSend>").contains("<eCH-0051:accountReceive>CH9300762011623852957</eCH-0051:accountReceive>");
+    assertThat(xml).contains("<eCH-0058:senderId>T4-TEST</eCH-0058:senderId>").contains("<eCH-0058:recipientId>T4-DEST</eCH-0058:recipientId>").contains("<eCH-0058:testDeliveryFlag>true</eCH-0058:testDeliveryFlag>").contains("<eCH-0051:legal>").contains("<eCH-0051:currentName>ACME Assurance SA</eCH-0051:currentName>").contains("john.doe@test.ch").contains("+41791234567").contains("+41221234567").contains("<eCH-0051:uri>").contains("<eCH-0051:marking xml:lang=\"fr\">quality_assurance_link</eCH-0051:marking>").contains("<eCH-0051:uri>https://example.test/profile</eCH-0051:uri>").contains("<eCH-0051:bootyAmount>").contains("<eCH-0051:amount>2500</eCH-0051:amount>").contains("sourceTable=\"LOCALITY_TABLE\"").contains("Quartier centre").contains("2026-01-12T10:15:00.000+01:00").contains("2026-01-12T11:45:00.000+01:00").contains("2026-01-13T00:00:00.000+01:00").contains("2026-01-14T00:00:00.000+01:00").contains("date-invalide").contains("<eCH-0051:vehicle>").contains("VELO-999").contains("CADRE-123").contains("VIN-456").contains("AutreMarque").contains("AutreModele").contains("GE123456").contains("sourceTable=\"CANTON_TABLE\"").contains("sourceTable=\"COUNTRY_TABLE\"").contains("<eCH-0051:vehiclePersonLink>").contains("VEH-1").contains("PER-1").contains("INS-1").contains("sourceTable=\"vehicleTypeTable\"").contains("sourceTable=\"vehicleBrandTable\"").contains("sourceTable=\"vehicleModelTable\"").contains("sourceTable=\"vehicleColourTable\"").contains("sourceTable=\"vehicleColourSecondaryTable\"").contains("<eCH-0051:financialTransaction").contains("sep:paymentType=\"IBAN\"").contains("sep:platformType=\"Ricardo\"").contains("sep:platformId=\"RID-778899\"").contains("sep:transactionNumber=\"REF-778899\"").contains("<eCH-0051:accountSend>inconnu</eCH-0051:accountSend>").contains("<eCH-0051:accountReceive>CH9300762011623852957</eCH-0051:accountReceive>").doesNotContain("colourSecondary");
+  }
+
+  @Test
+  void generateEch051Xml_shouldGroupEmailAndPhoneInSingleMeansOfCommunicationBlock() {
+    PrePlainte prePlainte = mock(PrePlainte.class);
+    when(mapper.toDocument(prePlainte)).thenReturn(buildCompletePayload());
+
+    String xml = builder.generateEch051Xml(prePlainte, false);
+
+    String personXml = extractPersonXml(xml, "PER-1");
+
+    assertThat(personXml.split("<eCH-0051:meansOfCommunication>", -1).length - 1).isEqualTo(2);
+    assertThat(personXml)
+        .contains("<eCH-0051:eMailAddress>john.doe@test.ch</eCH-0051:eMailAddress>")
+        .contains("<eCH-0051:phoneNumberInternational>+41791234567</eCH-0051:phoneNumberInternational>")
+        .contains("<eCH-0051:telephone>")
+        .contains("<eCH-0051:phoneNumberInternational>+41221234567</eCH-0051:phoneNumberInternational>");
+  }
+
+  @Test
+  void generateEch051Xml_shouldUseBusinessEmailAndTelephoneUsageForLegalPerson() {
+    PrePlainte prePlainte = mock(PrePlainte.class);
+    Ech0051DocumentPayload payload = Ech0051DocumentPayload.builder()
+        .processData(Ech0051DocumentPayload.ProcessData.builder()
+            .deliveryDate("2026-06-16")
+            .sourceId(Ech051Constants.SourceIds.VOL)
+            .processingStatus("GREEN")
+            .build())
+        .persons(List.of(
+            Ech0051DocumentPayload.Person.builder()
+                .key("PER-LEGAL-1")
+                .legalIdentity(Ech0051DocumentPayload.LegalIdentity.builder().currentName("UBS banque").build())
+                .address(Ech0051DocumentPayload.Address.builder().street("Route").build())
+                .communication(Ech0051DocumentPayload.Communication.builder()
+                    .email("contact@ubs.ch")
+                    .phone("+41789055439")
+                    .build())
+                .build()
+        ))
+        .relations(Ech0051DocumentPayload.Relations.builder().build())
+        .build();
+
+    when(mapper.toDocument(prePlainte)).thenReturn(payload);
+
+    String xml = builder.generateEch051Xml(prePlainte, false);
+
+    String personXml = extractPersonXml(xml, "PER-LEGAL-1");
+
+    assertThat(personXml)
+        .contains("<eCH-0051:currentName>UBS banque</eCH-0051:currentName>")
+        .contains("<eCH-0051:eMailAddress>contact@ubs.ch</eCH-0051:eMailAddress>")
+        .contains("<eCH-0051:telephone>")
+        .contains("<eCH-0051:marking xml:lang=\"fr\">téléphone bureau</eCH-0051:marking>")
+        .contains("<eCH-0051:sourceID source=\"RIPOL\" sourceTable=\"ART_TEL_FAX\">5</eCH-0051:sourceID>")
+        .contains("<eCH-0051:marking xml:lang=\"fr\">e-mail bureau</eCH-0051:marking>")
+        .contains("<eCH-0051:sourceID source=\"RIPOL\" sourceTable=\"ART_TEL_FAX\">10</eCH-0051:sourceID>");
+  }
+
+  @Test
+  void generateEch051Xml_shouldKeepGenericEmailAndPhoneUsageForLegalPersonWithoutAddress() {
+    PrePlainte prePlainte = mock(PrePlainte.class);
+    Ech0051DocumentPayload payload = Ech0051DocumentPayload.builder()
+        .processData(Ech0051DocumentPayload.ProcessData.builder()
+            .deliveryDate("2026-06-16")
+            .sourceId(Ech051Constants.SourceIds.VOL)
+            .processingStatus("GREEN")
+            .build())
+        .persons(List.of(
+            Ech0051DocumentPayload.Person.builder()
+                .key("PER-LEGAL-INS")
+                .legalIdentity(Ech0051DocumentPayload.LegalIdentity.builder().currentName("AXA").build())
+                .communication(Ech0051DocumentPayload.Communication.builder()
+                    .email("support@axa.test")
+                    .phone("+41220000000")
+                    .build())
+                .build()
+        ))
+        .relations(Ech0051DocumentPayload.Relations.builder().build())
+        .build();
+
+    when(mapper.toDocument(prePlainte)).thenReturn(payload);
+
+    String xml = builder.generateEch051Xml(prePlainte, false);
+
+    String personXml = extractPersonXml(xml, "PER-LEGAL-INS");
+
+    assertThat(personXml)
+        .contains("<eCH-0051:currentName>AXA</eCH-0051:currentName>")
+        .contains("<eCH-0051:eMailAddress>support@axa.test</eCH-0051:eMailAddress>")
+        .contains("<eCH-0051:marking xml:lang=\"fr\">e-mail privé</eCH-0051:marking>")
+        .contains("<eCH-0051:sourceID source=\"RIPOL\" sourceTable=\"ART_TEL_FAX\">7</eCH-0051:sourceID>")
+        .contains("<eCH-0051:marking xml:lang=\"fr\">téléphone fixe</eCH-0051:marking>")
+        .contains("<eCH-0051:sourceID source=\"RIPOL\" sourceTable=\"ART_TEL_FAX\">1</eCH-0051:sourceID>");
+  }
+
+  @Test
+  void generateEch051Xml_shouldEmitMultipleColourElementsInsteadOfColourSecondary() {
+    PrePlainte prePlainte = mock(PrePlainte.class);
+    Ech0051DocumentPayload payload = Ech0051DocumentPayload.builder()
+        .processData(Ech0051DocumentPayload.ProcessData.builder()
+            .deliveryDate("2026-06-09")
+            .sourceId(Ech051Constants.SourceIds.VOL)
+            .processingStatus("GREEN")
+            .build())
+        .objects(List.of(sampleObject()))
+        .vehicles(List.of(sampleVehicle()))
+        .relations(Ech0051DocumentPayload.Relations.builder().build())
+        .build();
+    when(mapper.toDocument(prePlainte)).thenReturn(payload);
+
+    String xml = builder.generateEch051Xml(prePlainte, false);
+
+    assertThat(xml)
+        .doesNotContain("colourSecondary")
+        .contains("<eCH-0051:marking xml:lang=\"fr\">beige-brun</eCH-0051:marking>")
+        .contains("<eCH-0051:marking xml:lang=\"fr\">noir</eCH-0051:marking>")
+        .contains("<eCH-0051:marking xml:lang=\"fr\">Bleu</eCH-0051:marking>")
+        .contains("<eCH-0051:marking xml:lang=\"fr\">Noir</eCH-0051:marking>");
+    assertThat(xml.split("<eCH-0051:colour>", -1).length - 1).isGreaterThanOrEqualTo(4);
   }
 
   @Test
@@ -95,6 +214,39 @@ class Ech051BuilderTest {
     assertThat(xml)
         .contains("<eCH-0051:actionPeriodFrom>2026-06-04T14:00:00.000+02:00</eCH-0051:actionPeriodFrom>")
         .contains("<eCH-0051:actionPeriodTo>2026-06-04T16:30:00.000+02:00</eCH-0051:actionPeriodTo>");
+  }
+
+  @Test
+  void generateEch051Xml_shouldAddPplSourceIdOnEachPerson() {
+    PrePlainte prePlainte = mock(PrePlainte.class);
+    when(mapper.toDocument(prePlainte)).thenReturn(buildCompletePayload());
+
+    String xml = builder.generateEch051Xml(prePlainte, false);
+
+    assertThat(extractPersonXml(xml, "PER-1"))
+        .contains("<eCH-0051:key>PER-1</eCH-0051:key>")
+        .contains("<eCH-0051:sourceID source=\"PPL\" sourceTable=\"\"></eCH-0051:sourceID>");
+    assertThat(extractPersonXml(xml, "PER-LEGAL-1"))
+        .contains("<eCH-0051:key>PER-LEGAL-1</eCH-0051:key>")
+        .contains("<eCH-0051:sourceID source=\"PPL\" sourceTable=\"\"></eCH-0051:sourceID>");
+  }
+
+  @Test
+  void generateEch051Xml_shouldMapProcessDataSourceIdWithSepSourceTableAndAelNumber() {
+    PrePlainte prePlainte = mock(PrePlainte.class);
+    when(mapper.toDocument(prePlainte)).thenReturn(Ech0051DocumentPayload.builder()
+        .processData(Ech0051DocumentPayload.ProcessData.builder()
+            .deliveryDate("2026-06-19")
+            .sourceId(Ech051Constants.SourceIds.VOL)
+            .sourceValue("AEL-PPL-V-2QVTL32C8E")
+            .build())
+        .relations(Ech0051DocumentPayload.Relations.builder().build())
+        .build());
+
+    String xml = builder.generateEch051Xml(prePlainte, false);
+
+    assertThat(xml)
+        .contains("<eCH-0051:sourceID source=\"SEP\" sourceTable=\"Fahrrad- und Mofadiebstahl\">AEL-PPL-V-2QVTL32C8E</eCH-0051:sourceID>");
   }
 
   @Test
@@ -290,6 +442,37 @@ class Ech051BuilderTest {
             .personReceiveRef("PER-LEGAL-1")
             .build()))
         .build();
+  }
+
+  private Ech0051DocumentPayload.ObjectItem sampleObject() {
+    return Ech0051DocumentPayload.ObjectItem.builder()
+        .key("OBJ-SAMPLE")
+        .typeOfObject(ripolRef("713103", "Téléphone mobile", "RIPOL", "sacheBezeichnung"))
+        .fabricant(ripolRef("4865", "Apple", "RIPOL", "sacheMarke"))
+        .modele(ripolRef("224124", "iPhone XS Max", "RIPOL", "sacheModell"))
+        .couleur(ripolRef("1101", "beige-brun", "RIPOL", "sacheFarbe"))
+        .couleurSecondaire(ripolRef("1102", "noir", "RIPOL", "sacheFarbe"))
+        .build();
+  }
+
+  private Ech0051DocumentPayload.VehicleItem sampleVehicle() {
+    return Ech0051DocumentPayload.VehicleItem.builder()
+        .key("VEH-SAMPLE")
+        .typeOfVehicle(ripolRef("BIKE", "Vélo", "RIPOL", "vehicleTypeTable"))
+        .mark(ripolRef("TREK", "Trek", "RIPOL", "vehicleBrandTable"))
+        .modelType(ripolRef("DOMANE", "Domane", "RIPOL", "vehicleModelTable"))
+        .colour(ripolRef("BLUE", "Bleu", "RIPOL", "vehicleColourTable"))
+        .colourSecondary(ripolRef("BLACK", "Noir", "RIPOL", "vehicleColourSecondaryTable"))
+        .build();
+  }
+
+  private static String extractPersonXml(String xml, String personKey) {
+    String keyMarker = "<eCH-0051:key>" + personKey + "</eCH-0051:key>";
+    int keyIndex = xml.indexOf(keyMarker);
+    assertThat(keyIndex).isGreaterThanOrEqualTo(0);
+    int personStart = xml.lastIndexOf("<eCH-0051:person", keyIndex);
+    int personEnd = xml.indexOf("</eCH-0051:person>", keyIndex);
+    return xml.substring(personStart, personEnd);
   }
 
   private Ech0051DocumentPayload.RipolReference ripolRef(String code, String label, String source, String sourceTable) {

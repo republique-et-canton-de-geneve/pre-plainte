@@ -180,7 +180,8 @@ const setItemsFromFetch = (newItems: RipolSelection[]) => {
 };
 
 const fetchItems = async (search?: string) => {
-  const generation = ++fetchGeneration;
+  ++fetchGeneration;
+  const generation = fetchGeneration;
   fetchLoading.value = true;
   startLoading();
   try {
@@ -197,9 +198,6 @@ const fetchItems = async (search?: string) => {
       items.value = props.modelValue ? [props.modelValue] : [];
     }
   } finally {
-    if (generation !== fetchGeneration) {
-      return;
-    }
     fetchLoading.value = false;
     stopLoading();
     if (props.preload) {

@@ -148,6 +148,7 @@ class ObjetIncidentTest {
   void shouldAcceptObjectWithoutDescriptionWhenImeiUnknown() {
     ObjetIncident objet = ObjetIncident.builder()
       .type(new RipolCode("713103", "Telephone mobile"))
+      .couleur(new RipolCode("123", "Blanc"))
       .numeroIMEIInconnu(true)
       .build();
 
@@ -169,6 +170,7 @@ class ObjetIncidentTest {
   void shouldAcceptValidImei() {
     ObjetIncident objet = ObjetIncident.builder()
       .type(new RipolCode("713103", "Telephone mobile"))
+      .couleur(new RipolCode("123", "Blanc"))
       .numeroIMEI("123456789012345")
       .build();
 
@@ -202,10 +204,12 @@ class ObjetIncidentTest {
   void shouldAcceptVehicleWithBrandAndModel() {
     ObjetIncident objet = ObjetIncident.builder()
       .categorieObjet("vehicule")
+      .sousCategorie("voitures")
       .isVehicle(true)
       .type(new RipolCode("200", "Velo"))
       .fabricant(new RipolCode("TREK", "Trek"))
       .modele(new RipolCode("DOMANE", "Domane"))
+      .couleur(new RipolCode("123", "Blanc"))
       .plaquePays(SUISSE)
       .plaqueCanton(new RipolCode("GE", "Genève"))
       .plaqueNumero("GE 123456")
@@ -233,12 +237,14 @@ class ObjetIncidentTest {
   void shouldAcceptVehicleWithOtherBrandAndModelPrecision() {
     ObjetIncident objet = ObjetIncident.builder()
       .categorieObjet("vehicule")
+      .sousCategorie("voitures")
       .isVehicle(true)
       .type(new RipolCode("200", "Velo"))
       .fabricant(new RipolCode("AUTRE", "Autre"))
       .fabricantAutre("Marque custom")
       .modele(new RipolCode("AUTRE", "Autre"))
       .modeleAutre("Modele custom")
+      .couleur(new RipolCode("123", "Blanc"))
       .plaquePays(SUISSE)
       .plaqueCanton(new RipolCode("GE", "Genève"))
       .plaqueNumero("GE 123456")
@@ -292,5 +298,71 @@ class ObjetIncidentTest {
       .build();
 
     assertFalse(objet.isVehicleType());
+  }
+
+  @Test
+  void shouldRejectVehicleWithoutBrand() {
+    ObjetIncident objet = ObjetIncident.builder()
+      .categorieObjet("vehicule")
+      .sousCategorie("voitures")
+      .isVehicle(true)
+      .type(new RipolCode("200", "Voiture"))
+      .modele(new RipolCode("MODEL", "Model"))
+      .plaquePays(SUISSE)
+      .plaqueCanton(new RipolCode("GE", "Genève"))
+      .plaqueNumero("GE 123456")
+      .build();
+
+    assertThrows(ValidationMetierException.class, objet::champsObligatoire);
+  }
+
+  @Test
+  void shouldRejectVehicleWithOtherBrandWithoutBrandPrecision() {
+    ObjetIncident objet = ObjetIncident.builder()
+      .categorieObjet("vehicule")
+      .sousCategorie("voitures")
+      .isVehicle(true)
+      .type(new RipolCode("200", "Voiture"))
+      .fabricant(new RipolCode("AUTRE", "Autre"))
+      .plaquePays(SUISSE)
+      .plaqueCanton(new RipolCode("GE", "Genève"))
+      .plaqueNumero("GE 123456")
+      .build();
+
+    assertThrows(ValidationMetierException.class, objet::champsObligatoire);
+  }
+
+  @Test
+  void shouldAcceptVehicleWithModelAutreOnly() {
+    ObjetIncident objet = ObjetIncident.builder()
+      .categorieObjet("vehicule")
+      .sousCategorie("voitures")
+      .isVehicle(true)
+      .type(new RipolCode("200", "Voiture"))
+      .couleur(new RipolCode("123", "Blanc"))
+      .fabricant(new RipolCode("BMW", "BMW"))
+      .modeleAutre("Modele personnalisé")
+      .plaquePays(SUISSE)
+      .plaqueCanton(new RipolCode("GE", "Genève"))
+      .plaqueNumero("GE 123456")
+      .build();
+
+    assertDoesNotThrow(objet::champsObligatoire);
+  }
+
+  @Test
+  void shouldRejectVehicleWithoutModelAndModelAutre() {
+    ObjetIncident objet = ObjetIncident.builder()
+      .categorieObjet("vehicule")
+      .sousCategorie("voitures")
+      .isVehicle(true)
+      .type(new RipolCode("200", "Voiture"))
+      .fabricant(new RipolCode("BMW", "BMW"))
+      .plaquePays(SUISSE)
+      .plaqueCanton(new RipolCode("GE", "Genève"))
+      .plaqueNumero("GE 123456")
+      .build();
+
+    assertThrows(ValidationMetierException.class, objet::champsObligatoire);
   }
 }

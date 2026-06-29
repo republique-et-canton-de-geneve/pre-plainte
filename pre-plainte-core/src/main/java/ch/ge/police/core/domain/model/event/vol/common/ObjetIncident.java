@@ -10,7 +10,12 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 
+import java.util.List;
 import java.util.regex.Pattern;
+
+import static ch.ge.police.core.domain.util.validation.ChampValidator.verifierLongueurMax;
+import static ch.ge.police.core.domain.util.validation.ValidationConstants.TEXTAREA_MAX_LENGTH;
+import static ch.ge.police.core.domain.util.validation.ValidationConstants.TEXT_FIELD_MAX_LENGTH;
 
 /**
  * Représente un objet volé ou un véhicule volé.
@@ -29,15 +34,18 @@ public class ObjetIncident {
   private static final String CATEGORIE_VEHICULE = "vehicule";
   private static final String CATEGORIE_PLAQUE = "plaque";
   private static final String CATEGORIE_DOCUMENTS = "documents";
+
+  private static final List<String> VEHICULE_CATEGORIES_AVEC_PLAQUE = List.of("motos", "voitures", "camions");
+
   private static final String CODE_AUTRE = "AUTRE";
   private static final String CODE_PAYS_SUISSE = "8100";
   private static final String CODE_PAYS_FRANCE = "8212";
-  private static final Pattern NUMERO_IMEI_PATTERN = Pattern.compile("\\d{15}");
 
-  private static final Pattern PLAQUE_SUISSE_PATTERN = Pattern.compile("^[A-Z]{2}\\s\\d{1,6}$", Pattern.UNICODE_CHARACTER_CLASS);
-  private static final Pattern PLAQUE_FRANCE_SIV_PATTERN = Pattern.compile("^[A-Z]{2}-\\d{3}-[A-Z]{2}$", Pattern.UNICODE_CHARACTER_CLASS);
-  private static final Pattern PLAQUE_FRANCE_FNI_PATTERN = Pattern.compile("^\\d{1,4}\\s[A-Z]{1,3}\\s(\\d{2,3}|2A|2B)$", Pattern.UNICODE_CHARACTER_CLASS);
-  private static final Pattern PLAQUE_INTERNATIONALE_PATTERN = Pattern.compile("^[A-Z\\d]{1,12}$", Pattern.UNICODE_CHARACTER_CLASS);
+  private static final Pattern NUMERO_IMEI_PATTERN = Pattern.compile("\\d{15}");
+  private static final Pattern PLAQUE_SUISSE_PATTERN = Pattern.compile("^[A-Z]{2}\\s\\d{1,6}$");
+  private static final Pattern PLAQUE_FRANCE_SIV_PATTERN = Pattern.compile("^[A-Z]{2}-\\d{3}-[A-Z]{2}$");
+  private static final Pattern PLAQUE_FRANCE_FNI_PATTERN = Pattern.compile("^\\d{1,4}\\s[A-Z]{1,3}\\s(\\d{2,3}|2A|2B)$");
+  private static final Pattern PLAQUE_INTERNATIONALE_PATTERN = Pattern.compile("^[A-Z\\d]{1,12}$");
 
   private String categorieObjet;
   private String sousCategorie;
@@ -166,22 +174,23 @@ public class ObjetIncident {
   }
 
   public void champsObligatoire() {
+    verifierLongueurs();
+
     if (CATEGORIE_PLAQUE.equals(categorieObjet)) {
       validatePlaquePays();
       validatePlaqueNumero();
       return;
     }
 
-    if (type == null || !type.hasCode()) {
-      throw new ValidationMetierException("Le type d'objet volé est obligatoire.");
-    }
+    validateTypeEtCouleur();
 
     if (isVehicleType()) {
-      validateRipolSelection(fabricant, "La marque du vehicule est obligatoire.");
-      validateAutreValue(fabricant, fabricantAutre, "La marque du vehicule doit etre precisee.");
-      validateRipolSelection(modele, "Le modele du vehicule est obligatoire.");
-      validateAutreValue(modele, modeleAutre, "Le modele du vehicule doit etre precise.");
-      if (!plaqueInconnu) {
+      validateFabricantSelection();
+      validateFabricantAutreValue();
+      if (!CODE_AUTRE.equals(fabricant.code())) {
+        validateModele();
+      }
+      if (!plaqueInconnu && VEHICULE_CATEGORIES_AVEC_PLAQUE.contains(sousCategorie)) {
         validatePlaquePays();
         validatePlaqueCanton();
         validatePlaqueNumero();
@@ -194,6 +203,16 @@ public class ObjetIncident {
 
     if (numeroIMEI != null && !numeroIMEI.isBlank() && !NUMERO_IMEI_PATTERN.matcher(numeroIMEI).matches()) {
       throw new ValidationMetierException("Le numéro IMEI doit contenir exactement 15 chiffres.");
+    }
+  }
+
+  private void validateTypeEtCouleur() {
+    if (type == null || !type.hasCode()) {
+      throw new ValidationMetierException("Le type d'objet volé est obligatoire.");
+    }
+
+    if (couleur == null || !couleur.hasCode()) {
+      throw new ValidationMetierException("La couleur de l'objet est obligatoire.");
     }
   }
 
@@ -241,15 +260,47 @@ public class ObjetIncident {
     }
   }
 
-  private void validateRipolSelection(RipolCode value, String message) {
-    if (value == null || !value.hasCode()) {
-      throw new ValidationMetierException(message);
+  private void validateFabricantSelection() {
+    if (fabricant == null || !fabricant.hasCode()) {
+      throw new ValidationMetierException("La marque du vehicule est obligatoire.");
     }
   }
 
-  private void validateAutreValue(RipolCode value, String autreValue, String message) {
-    if (value != null && CODE_AUTRE.equals(value.code()) && (autreValue == null || autreValue.isBlank())) {
-      throw new ValidationMetierException(message);
+  private void validateFabricantAutreValue() {
+    if (fabricant != null && CODE_AUTRE.equals(fabricant.code()) && (fabricantAutre == null || fabricantAutre.isBlank())) {
+      throw new ValidationMetierException("La marque du vehicule doit etre precisee.");
     }
+  }
+
+  private void validateModele() {
+    if ((modele == null || !modele.hasCode()) && (modeleAutre == null || modeleAutre.isBlank())) {
+      throw new ValidationMetierException("Le modele du vehicule doit etre precise.");
+    }
+  }
+
+  private void verifierLongueurs() {
+    verifierLongueurMax(categorieObjet, TEXT_FIELD_MAX_LENGTH, "categorieObjet");
+    verifierLongueurMax(sousCategorie, TEXT_FIELD_MAX_LENGTH, "sousCategorie");
+
+    verifierLongueurMax(fabricantAutre, TEXT_FIELD_MAX_LENGTH, "fabricantAutre");
+    verifierLongueurMax(modeleAutre, TEXT_FIELD_MAX_LENGTH, "modeleAutre");
+
+    verifierLongueurMax(numeroSerie, TEXT_FIELD_MAX_LENGTH, "numeroSerie");
+    verifierLongueurMax(numeroCadre, TEXT_FIELD_MAX_LENGTH, "numeroCadre");
+
+    verifierLongueurMax(justificationAbsenceIMEI, TEXTAREA_MAX_LENGTH, "justificationAbsenceIMEI");
+
+    verifierLongueurMax(gravure, TEXT_FIELD_MAX_LENGTH, "gravure");
+    verifierLongueurMax(realValue, TEXT_FIELD_MAX_LENGTH, "realValue");
+
+    verifierLongueurMax(purchaseDate, TEXT_FIELD_MAX_LENGTH, "purchaseDate");
+
+    verifierLongueurMax(vin, TEXT_FIELD_MAX_LENGTH, "vin");
+    verifierLongueurMax(velofinderId, TEXT_FIELD_MAX_LENGTH, "velofinderId");
+
+    verifierLongueurMax(assureurAutre, TEXT_FIELD_MAX_LENGTH, "assureurAutre");
+    verifierLongueurMax(numeroAssurance, TEXT_FIELD_MAX_LENGTH, "numeroAssurance");
+    verifierLongueurMax(numeroVignette, TEXT_FIELD_MAX_LENGTH, "numeroVignette");
+    verifierLongueurMax(numeroMaster, TEXT_FIELD_MAX_LENGTH, "numeroMaster");
   }
 }

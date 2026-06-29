@@ -57,8 +57,6 @@ import { useEsiriusStore } from "@/stores/useEsiriusStore";
 import AccessibleVSelect from "../accessibility/AccessibleVSelect.vue";
 import { useField } from "vee-validate";
 
-const RENDEZ_VOUS_DATE_WINDOW_DAYS = 15;
-
 interface Props {
   poste: any;
   servicesDisponibles: any[];
@@ -96,15 +94,12 @@ const dateOptions = computed(() => {
     month: "2-digit",
     year: "numeric",
   });
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
 
-  return Array.from({ length: RENDEZ_VOUS_DATE_WINDOW_DAYS }, (_, index) => {
-    const date = new Date(today);
-    date.setDate(today.getDate() + index);
+  return props.datesDisponibles.map(value => {
+    const date = new Date(`${value}T00:00:00`);
     return {
       label: formatter.format(date),
-      value: formatIsoDate(date),
+      value,
     };
   });
 });
@@ -139,12 +134,6 @@ const onPosteNativeChange = (e: Event) => {
   poste.value = selected ?? { key: null, name: t(traductionTousLesPostes) };
 };
 
-function formatIsoDate(date: Date): string {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
 </script>
 
 <style scoped>

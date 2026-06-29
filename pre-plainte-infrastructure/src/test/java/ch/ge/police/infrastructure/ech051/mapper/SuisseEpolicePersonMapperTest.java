@@ -61,24 +61,33 @@ class SuisseEpolicePersonMapperTest {
   }
 
   @Test
-  void shouldBuildIndividualPersonsWithVehicle() {
+  void shouldBuildIndividualPersonsWithVehicleUsingPhysicalPersonKeys() {
     InformationsPersonnelles infos = mockInformationsPersonnelles();
     when(infos.hasOrganisation()).thenReturn(false);
     when(infos.hasTiers()).thenReturn(false);
 
-    List<Person> result = mapper.buildPersons(infos, true, "aucune");
+    List<Person> result = mapper.buildPersons(infos, true, "Axa");
 
-    assertEquals(2, result.size());
+    assertEquals(4, result.size());
 
     Person victim = result.get(0);
-    Person insurance = result.get(1);
+    Person representative = result.get(1);
+    Person informant = result.get(2);
+    Person insurance = result.get(3);
 
-    assertEquals(Ech051Constants.PERSON_KEY_VEHICLE, victim.getKey());
-    assertEquals(PersonType.NATURAL, victim.getType());
+    assertEquals(Ech051Constants.PERSON_KEY_TIERS, victim.getKey());
+    assertEquals(Ech051Constants.IDENTITY_KEY_TIERS, victim.getNaturalIdentity().getKey());
+    assertEquals("marie@test.ch", victim.getCommunication().getEmail());
+
+    assertEquals(Ech051Constants.PERSON_KEY_DECLARANT_ENTREPRISE, representative.getKey());
+    assertEquals(Ech051Constants.IDENTITY_KEY_DECLARANT_ENTREPRISE, representative.getNaturalIdentity().getKey());
+
+    assertEquals(Ech051Constants.PERSON_KEY_INFORMANT, informant.getKey());
+    assertEquals(Ech051Constants.IDENTITY_KEY_INFORMANT, informant.getNaturalIdentity().getKey());
+    assertEquals("Durand", informant.getNaturalIdentity().getOfficialName());
 
     assertEquals(Ech051Constants.INSURER_KEY_VEHICLE, insurance.getKey());
-    assertEquals(PersonType.LEGAL, insurance.getType());
-    assertEquals("aucune", insurance.getLegalIdentity().getCurrentName());
+    assertEquals("Axa", insurance.getLegalIdentity().getCurrentName());
   }
 
   @Test
@@ -106,6 +115,38 @@ class SuisseEpolicePersonMapperTest {
     assertEquals(Ech051Constants.PERSON_KEY_ASSURANCE_TIERS, result.get(2).getKey());
     assertEquals(PersonType.LEGAL, result.get(2).getType());
     assertEquals("aucune", result.get(2).getLegalIdentity().getCurrentName());
+  }
+
+  @Test
+  void shouldBuildTiersPersonsWithVehicleUsingVehiclePersonKeys() {
+    InformationsPersonnelles infos = mockInformationsPersonnelles();
+    Tiers tiers = mock(Tiers.class);
+
+    mockInfosPersonneCommon(tiers, "Yasmin", "Victime");
+    when(tiers.getEmail()).thenReturn("yasmin@contact.ch");
+
+    when(infos.hasOrganisation()).thenReturn(false);
+    when(infos.hasTiers()).thenReturn(true);
+    when(infos.getTiers()).thenReturn(tiers);
+
+    List<Person> result = mapper.buildPersons(infos, true, "aucune");
+
+    assertEquals(3, result.size());
+
+    Person victim = result.get(0);
+    Person representative = result.get(1);
+    Person insurance = result.get(2);
+
+    assertEquals(Ech051Constants.PERSON_KEY_VEHICLE, victim.getKey());
+    assertEquals(Ech051Constants.IDENTITY_KEY_VEHICLE, victim.getNaturalIdentity().getKey());
+    assertEquals("Yasmin", victim.getNaturalIdentity().getOfficialName());
+    assertEquals("yasmin@contact.ch", victim.getCommunication().getEmail());
+
+    assertEquals(Ech051Constants.PERSON_KEY_INFORMANT, representative.getKey());
+    assertEquals(Ech051Constants.IDENTITY_KEY_INFORMANT, representative.getNaturalIdentity().getKey());
+
+    assertEquals(Ech051Constants.INSURER_KEY_VEHICLE, insurance.getKey());
+    assertEquals(PersonType.LEGAL, insurance.getType());
   }
 
   @Test

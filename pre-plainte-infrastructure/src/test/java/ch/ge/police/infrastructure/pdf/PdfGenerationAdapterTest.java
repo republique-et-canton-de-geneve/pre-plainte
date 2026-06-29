@@ -531,10 +531,33 @@ class PdfGenerationAdapterTest {
   }
 
   @Test
+  void shouldNotRenderLocationDetailsWhenAddressIsVictimAddress() throws Exception {
+    Vol vol = new Vol();
+    vol.setAdresseLesee(true);
+    vol.setAdresseConnue(true);
+    vol.setAdresseIncident(new Adresse("Rue du Vol 1", null, "1201", "Genève", "120000", "Suisse", "8212"));
+
+    List<String[]> rows = new ArrayList<>();
+    var handleVol = PdfGenerationAdapter.class.getDeclaredMethod("handleVol", List.class, Vol.class);
+    handleVol.setAccessible(true);
+    handleVol.invoke(adapter, rows, vol);
+
+    assertTrue(rows.stream().anyMatch(row ->
+      "Adresse de la personne lesée ?".equals(row[0]) && "Oui".equals(row[1])));
+
+    assertFalse(rows.stream().anyMatch(row -> row[0].startsWith("Adresse du vol")));
+    assertFalse(rows.stream().anyMatch(row -> row[0].startsWith("Localité du vol")));
+    assertFalse(rows.stream().anyMatch(row -> row[0].startsWith("Adresse de départ")));
+    assertFalse(rows.stream().anyMatch(row -> row[0].startsWith("Adresse d'arrivée")));
+  }
+
+  @Test
   void shouldGeneratePdfWithSecondaryEventAddress() {
     Vol vol = new Vol();
     vol.setDateDebutEvent("2025-01-01T10:00");
     vol.setDateFinEvent("2025-01-01T11:00");
+    vol.setAdresseLesee(false);
+    vol.setAdresseConnue(false);
     vol.setIsTrajet(true);
     vol.setAdresseIncident(new Adresse("SBB Bahnhof", null, "2494", "Basel", "405100", "Suisse", "8212"));
     vol.setAdresseIncidentSecondaire(new Adresse("Gare Cornavin", null, "1201", "Genève", "120000", "Suisse", "8212"));
@@ -550,6 +573,8 @@ class PdfGenerationAdapterTest {
   void shouldRenderVolAddressLabelsWithoutTrajetSuffixWhenNotTrajet() throws Exception {
     Vol vol = new Vol();
     vol.setAdresseIncident(new Adresse("Rue du Vol 1", null, "1201", "Genève", "120000", "Suisse", "8212"));
+    vol.setAdresseLesee(false);
+    vol.setAdresseConnue(true);
     vol.setIsTrajet(false);
 
     List<String[]> rows = new ArrayList<>();
@@ -567,6 +592,8 @@ class PdfGenerationAdapterTest {
     Vol vol = new Vol();
     vol.setAdresseIncident(new Adresse("SBB Bahnhof", null, "2494", "Basel", "405100", "Suisse", "8212"));
     vol.setAdresseIncidentSecondaire(new Adresse("Gare Cornavin", null, "1201", "Genève", "120000", "Suisse", "8212"));
+    vol.setAdresseLesee(false);
+    vol.setAdresseConnue(false);
     vol.setIsTrajet(true);
 
     List<String[]> rows = new ArrayList<>();
@@ -579,7 +606,28 @@ class PdfGenerationAdapterTest {
   }
 
   @Test
-  void shouldChainNonStructuredObjectsAndKeepStructuredObjectsDetailedInVolPdf() throws Exception {
+  void shouldRenderCommuneWhenAddressUnknownAndNotTrajet() throws Exception {
+    Vol vol = new Vol();
+    vol.setAdresseLesee(false);
+    vol.setAdresseConnue(false);
+    vol.setIsTrajet(false);
+    vol.setLieuOrigine("Genève");
+
+    List<String[]> rows = new ArrayList<>();
+    var handleVol = PdfGenerationAdapter.class.getDeclaredMethod("handleVol", List.class, Vol.class);
+    handleVol.setAccessible(true);
+    handleVol.invoke(adapter, rows, vol);
+
+    assertTrue(rows.stream().anyMatch(row ->
+      "Commune de l'événement".equals(row[0]) &&
+        "Genève".equals(row[1])));
+
+    assertFalse(rows.stream().anyMatch(row -> row[0].startsWith("Adresse de départ")));
+    assertFalse(rows.stream().anyMatch(row -> row[0].startsWith("Adresse d'arrivée")));
+  }
+
+  @Test
+  void shouldListNonStructuredObjectsWithBulletsAndKeepStructuredObjectsDetailedInVolPdf() throws Exception {
     ObjetIncident structured = ObjetIncident.builder()
         .categorieObjet("objet")
         .type(new RipolCode("713103", "Téléphone mobile"))
@@ -621,7 +669,7 @@ class PdfGenerationAdapterTest {
         "Numéro de série".equals(row[0]) && "SER123".equals(row[1])));
     assertTrue(rows.stream().anyMatch(row ->
         "Objets sans identification".equals(row[0])
-            && "Ordinateur portable Apple MacBook Pro Noir - Sac à main Louis Vuitton Neverfull Marron".equals(row[1])));
+            && "- Ordinateur portable Apple MacBook Pro Noir\n- Sac à main Louis Vuitton Neverfull Marron".equals(row[1])));
     assertFalse(rows.stream().anyMatch(row ->
         row[0] != null && row[0].startsWith("Objet volé (2)")));
   }

@@ -20,19 +20,27 @@
     >
       {{ t("incidentTypes.volDansVehiculeWarning") }}
     </v-alert>
-    <VolObjetVoleResumeSheet
-      v-for="(obj, index) in brouillon.objetsVolesValides"
-      :key="`obj-vol-${index}`"
-      :obj="obj"
-      :index="index"
-      :libelle-resume-champ-absent="libelleResumeChampAbsent"
-      :show-ajouter-autre-button="index === dernierIndexObjetValide"
-      @modifier="ouvrirDialogModifierObjet"
-      @supprimer="ouvrirDialogSupprimerObjet"
-      @ajouter-autre="scrollVersSaisieObjet"
-    />
+    <template v-for="(obj, index) in brouillon.objetsVolesValides" :key="`obj-vol-${index}`">
+      <div v-if="editingIndex === index" :ref="definirDraftPanelRef">
+        <VolObjetVoleDraftPanel
+          :brouillon="brouillonPourDraftPanel"
+          :active-prefixes="activePrefixes"
+          :objet-index="index"
+        />
+      </div>
+      <VolObjetVoleResumeSheet
+        v-else
+        :obj="obj"
+        :index="index"
+        :libelle-resume-champ-absent="libelleResumeChampAbsent"
+        :show-ajouter-autre-button="editingIndex === null && index === dernierIndexObjetValide"
+        @modifier="ouvrirDialogModifierObjet"
+        @supprimer="ouvrirDialogSupprimerObjet"
+        @ajouter-autre="scrollVersSaisieObjet"
+      />
+    </template>
 
-    <div v-if="afficherFicheSaisieNouvelObjet" ref="draftPanelRef">
+    <div v-if="afficherFicheSaisieNouvelObjet && editingIndex === null" :ref="definirDraftPanelRef">
       <VolObjetVoleDraftPanel :brouillon="brouillonPourDraftPanel" :active-prefixes="activePrefixes" />
     </div>
     <BaseRadioGroup
@@ -73,7 +81,17 @@ import { computed, nextTick, reactive, ref, watch, onMounted, toRaw } from "vue"
 import { useField, useFormContext } from "vee-validate";
 import { useI18n } from "vue-i18n";
 import { useDisplay } from "vuetify";
-import { AUTRE_OPTION, CATEGORIES_OBJETS, EMPTY_VALUE_EM_DASH, RIPOL, VOL_OBJET_CATEGORIE } from "@/constants/constant";
+import {
+  AUTRE_OPTION,
+  CATEGORIES_OBJETS,
+  EMPTY_VALUE_EM_DASH,
+  NUMERO_IMEI_MAX_LENGTH,
+  RIPOL,
+  TEXT_FIELD_MAX_LENGTH,
+  TEXTAREA_MAX_LENGTH,
+  VEHICULE_CATEGORIES_AVEC_VIN,
+  VOL_OBJET_CATEGORIE
+} from "@/constants/constant";
 import VolObjetVoleResumeSheet from "./VolObjetVoleResumeSheet.vue";
 import VolObjetVoleDraftPanel from "./VolObjetVoleDraftPanel.vue";
 import type { VolObjetVoleDraftBrouillon } from "@/types/volObjetVoleBrouillon.types";
@@ -82,7 +100,7 @@ import { filterNationalities, sortRipolByLabelFr } from "@/utils/helpers/ripolHe
 import type { RipolSelection, Ripol } from "@/types/ripol.interface";
 import type { PrePlainteFormFields, VolObjetFormSnapshot } from "@/types/pre-plainte.interface";
 import BaseRadioGroup from "@/components/radio/BaseRadioGroup.vue";
-import { validerNumeroPlaque, validerPlaqueVehicule } from "@/utils/helpers/volObjetVolHelpers";
+import { checkLength, validerNumeroPlaque, validerPlaqueVehicule } from "@/utils/helpers/volObjetVolHelpers";
 
 const TEXTE_VIDE = "";
 const NUMERO_IMEI_REGEX = /^\d{15}$/;
@@ -115,18 +133,18 @@ const afficherFicheSaisieNouvelObjet = ref((objetsVolesValides.value?.length ?? 
 
 const { value: typeObjet, errorMessage: typeObjetError } = useField<RipolSelection | null>("typeObjet");
 const { value: fabricant, errorMessage: fabricantError } = useField<RipolSelection | null>("fabricant");
-const { value: fabricantAutre } = useField<string>("fabricantAutre");
+const { value: fabricantAutre, errorMessage: fabricantAutreError } = useField<string>("fabricantAutre");
 const { value: modele, errorMessage: modeleError } = useField<RipolSelection | null>("modele");
-const { value: modeleAutre } = useField<string>("modeleAutre");
+const { value: modeleAutre, errorMessage: modeleAutreError } = useField<string>("modeleAutre");
 const { value: couleur, errorMessage: couleurError } = useField<RipolSelection | null>("couleur");
 const { value: couleurSecondaire } = useField<RipolSelection | null>("couleurSecondaire");
 const { value: valeurReelle, errorMessage: valeurReelleError } = useField<string>("valeurReelle");
-const { value: gravure } = useField<string>("gravure");
+const { value: gravure, errorMessage: gravureError } = useField<string>("gravure");
 const { value: numeroSerie, errorMessage: numeroSerieError } = useField("numeroSerie");
 const { value: numeroSerieInconnu } = useField<boolean>("numeroSerieInconnu");
 const { value: numeroIMEI, errorMessage: numeroIMEIError } = useField("numeroIMEI");
 const { value: numeroIMEIInconnu } = useField<boolean>("numeroIMEIInconnu");
-const { value: justificationAbsenceIMEI } = useField<string>("justificationAbsenceIMEI");
+const { value: justificationAbsenceIMEI, errorMessage: justificationAbsenceIMEIError } = useField<string>("justificationAbsenceIMEI");
 const { value: isVehicle } = useField<boolean>("isVehicle");
 
 const { value: numeroCadre } = useField<string>("numeroCadre");
@@ -139,9 +157,17 @@ const { value: plaqueNumero, errorMessage: plaqueNumeroError } = useField<string
 const { value: plaqueInconnu } = useField<boolean>("plaqueInconnu");
 const { value: plaquePays, errorMessage: plaquePaysError } = useField<RipolSelection | null>("plaquePays");
 const { value: plaqueCanton, errorMessage: plaqueCantonError } = useField<RipolSelection | null>("plaqueCanton");
+const { value: assuranceAucune } = useField<boolean>("assuranceAucune");
+const { value: assureurAutre } = useField<string>("assureurAutre");
+const { value: numeroAssurance } = useField<string>("numeroAssurance");
+const { value: numeroVignette } = useField<string>("numeroVignette");
+const { value: numeroMaster } = useField<string>("numeroMaster");
 
 const editingIndex = ref<number | null>(null);
 const draftPanelRef = ref<HTMLElement | null>(null);
+const definirDraftPanelRef = (element: unknown) => {
+  draftPanelRef.value = element instanceof HTMLElement ? element : null;
+};
 const isRestoring = ref(false);
 
 const categorieOptions = computed(() =>
@@ -181,6 +207,8 @@ const activePrefixes = computed(() => {
 });
 
 const isVehicleCategory = computed(() => selectedCategorie.value?.useVehicleTypes === true);
+const isVeloCategory = computed(() => sousCategorie.value === "velos");
+const hasVin = computed(() => VEHICULE_CATEGORIES_AVEC_VIN.includes(sousCategorie.value) ?? !isVeloCategory.value);
 
 const objetTypeKey = computed(() => `objets-${categorieObjet.value}-${sousCategorie.value}`);
 const brandKey = computed(() => `brand-${typeObjet.value?.code ?? TEXTE_VIDE}`);
@@ -311,6 +339,11 @@ const remplirBrouillonDepuisSnapshot = (obj: VolObjetFormSnapshot) => {
   plaquePays.value = obj.plaquePays ? { ...obj.plaquePays } : null;
   plaqueCanton.value = obj.plaqueCanton ? { ...obj.plaqueCanton } : null;
   appliquerPaysPlaqueDefaut();
+  assuranceAucune.value = !!obj.assuranceAucune;
+  assureurAutre.value = texteOuVide(obj.assureurAutre) || texteOuVide(obj.assureur?.label);
+  numeroAssurance.value = texteOuVide(obj.numeroAssurance);
+  numeroVignette.value = texteOuVide(obj.numeroVignette);
+  numeroMaster.value = texteOuVide(obj.numeroMaster);
 };
 
 const viderChampsVehiculeVol = () => {
@@ -324,6 +357,11 @@ const viderChampsVehiculeVol = () => {
   plaqueInconnu.value = false;
   plaquePays.value = null;
   plaqueCanton.value = null;
+  assuranceAucune.value = false;
+  assureurAutre.value = TEXTE_VIDE;
+  numeroAssurance.value = TEXTE_VIDE;
+  numeroVignette.value = TEXTE_VIDE;
+  numeroMaster.value = TEXTE_VIDE;
 };
 
 const reinitialiserDependancesChangementCategorie = (nouvelleCategorie: string) => {
@@ -422,6 +460,12 @@ const buildSnapshotFromDraft = (): VolObjetFormSnapshot => {
     plaqueInconnu: plaqueInconnu.value,
     plaquePays: cloneRipol(plaquePays.value),
     plaqueCanton: cloneRipol(plaqueCanton.value),
+    assuranceAucune: assuranceAucune.value,
+    assureur: null,
+    assureurAutre: chaineFormulaire(assureurAutre.value),
+    numeroAssurance: chaineFormulaire(numeroAssurance.value),
+    numeroVignette: chaineFormulaire(numeroVignette.value),
+    numeroMaster: chaineFormulaire(numeroMaster.value),
   };
 };
 
@@ -468,7 +512,7 @@ const numeroIMEIRequis = computed(
     !numeroIMEIInconnu.value,
 );
 
-const validerBrouillonObjetVole = (): boolean => {
+const validerBrouillonObjetVole = async (): Promise<boolean> => {
   if (!categorieObjet.value?.trim()) {
     setFieldError("categorieObjet", t("validation.champRequis"));
     return false;
@@ -506,14 +550,33 @@ const validerBrouillonObjetVole = (): boolean => {
       setFieldError("fabricantAutre", t("validation.champRequis"));
       return false;
     }
-    if (!modele.value?.code) {
-      setFieldError("modele", t("validation.modeleRequis"));
+    if (fabricant.value.code !== "AUTRE") {
+      const models = await RipolService.searchVehicleModels(fabricant.value.code);
+      if (models.length > 0 && !modele.value?.code) {
+        setFieldError("modele", t("validation.modeleRequis"));
+        return false;
+      }
+      if ((modele.value?.code === "AUTRE" || models.length === 0) && !chaineFormulaire(modeleAutre.value).trim()) {
+        setFieldError("modeleAutre", t("validation.champRequis"));
+        return false;
+      }
+    }
+
+    if (!couleur.value?.code) {
+      setFieldError("couleur", t("validation.couleurRequise"));
       return false;
     }
-    if (modele.value.code === "AUTRE" && !chaineFormulaire(modeleAutre.value).trim()) {
-      setFieldError("modeleAutre", t("validation.champRequis"));
+
+    if (isVeloCategory.value && !numeroCadreInconnu.value && !chaineFormulaire(numeroCadre.value).trim()) {
+      setFieldError("numeroCadre", t("validation.numeroCadreRequis"));
       return false;
     }
+
+    if (hasVin.value && !vinInconnu.value && !chaineFormulaire(vin.value).trim()) {
+      setFieldError("vin", t("validation.vinRequis"));
+      return false;
+    }
+
     if (
       !validerPlaqueVehicule(
         {
@@ -537,13 +600,73 @@ const validerBrouillonObjetVole = (): boolean => {
   }
 
   if (numeroIMEIRequis.value && !chaineFormulaire(numeroIMEI.value).trim()) {
-    setFieldError("numeroIMEI", t("validation.numeroIMEIRequis"));
+    setFieldError("numeroIMEI", t("validation.numeroIMEIRequis", { max: NUMERO_IMEI_MAX_LENGTH }));
     return false;
   }
 
   const numeroIMEITrim = chaineFormulaire(numeroIMEI.value).trim();
   if (!numeroIMEIInconnu.value && numeroIMEITrim && !NUMERO_IMEI_REGEX.test(numeroIMEITrim)) {
     setFieldError("numeroIMEI", t("validation.numeroIMEIFormat"));
+    return false;
+  }
+
+  if (!checkLength(fabricantAutre.value, TEXT_FIELD_MAX_LENGTH)) {
+    setFieldError("fabricantAutre", t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH }));
+    return false;
+  }
+
+  if (!checkLength(modeleAutre.value, TEXT_FIELD_MAX_LENGTH)) {
+    setFieldError("modeleAutre", t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH }));
+    return false;
+  }
+
+  if (!checkLength(numeroSerie.value, TEXT_FIELD_MAX_LENGTH)) {
+    setFieldError("numeroSerie", t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH }));
+    return false;
+  }
+
+  if (!checkLength(justificationAbsenceIMEI.value, TEXTAREA_MAX_LENGTH)) {
+    setFieldError("justificationAbsenceIMEI", t("validation.longueurMax", { max: TEXTAREA_MAX_LENGTH }));
+    return false;
+  }
+
+  if (!checkLength(gravure.value, TEXT_FIELD_MAX_LENGTH)) {
+    setFieldError("gravure", t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH }));
+    return false;
+  }
+
+  if (!checkLength(vin.value, TEXT_FIELD_MAX_LENGTH)) {
+    setFieldError("vin", t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH }));
+    return false;
+  }
+
+  if (!checkLength(numeroCadre.value, TEXT_FIELD_MAX_LENGTH)) {
+    setFieldError("numeroCadre", t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH }));
+    return false;
+  }
+
+  if (!checkLength(velofinderId.value, TEXT_FIELD_MAX_LENGTH)) {
+    setFieldError("velofinderId", t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH }));
+    return false;
+  }
+
+  if (!checkLength(assureurAutre.value, TEXT_FIELD_MAX_LENGTH)) {
+    setFieldError("assureurAutre", t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH }));
+    return false;
+  }
+
+  if (!checkLength(numeroAssurance.value, TEXT_FIELD_MAX_LENGTH)) {
+    setFieldError("numeroAssurance", t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH }));
+    return false;
+  }
+
+  if (!checkLength(numeroVignette.value, TEXT_FIELD_MAX_LENGTH)) {
+    setFieldError("numeroVignette", t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH }));
+    return false;
+  }
+
+  if (!checkLength(numeroMaster.value, TEXT_FIELD_MAX_LENGTH)) {
+    setFieldError("numeroMaster", t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH }));
     return false;
   }
 
@@ -569,18 +692,32 @@ const finaliserValidationObjetVole = () => {
   clearDraftChampsObjet();
   afficherFicheSaisieNouvelObjet.value = false;
 };
-const validerObjetVole = () => {
+const validerObjetVole = async (): Promise<boolean> => {
   effacerErreursBrouillon();
 
-  if (!validerBrouillonObjetVole()) {
-    return;
+  const isBrouillonValide = await validerBrouillonObjetVole();
+
+  if (!isBrouillonValide) {
+    return false;
   }
 
   enregistrerObjetVole(buildSnapshotFromDraft());
   finaliserValidationObjetVole();
+  return true;
 };
 
+const validerBrouillonAvantNavigation = async (): Promise<boolean> => {
+  if (!afficherFicheSaisieNouvelObjet.value) {
+    return true;
+  }
+  const brouillonValide = await validerObjetVole();
+  if (!brouillonValide) {
+    void nextTick(() => draftPanelRef.value?.scrollIntoView({ behavior: "smooth", block: "start" }));
+  }
+  return brouillonValide;
+};
 
+defineExpose({ validerBrouillonAvantNavigation });
 
 const initBrouillonAuMontage = () => {
   const codeType = typeObjet.value?.code;
@@ -638,6 +775,26 @@ watch(fabricant, () => {
   hasModels.value = true;
 });
 
+watch(modele, newVal => {
+  if (isRestoring.value || !newVal) {
+    return;
+  }
+
+  if (modeleAutre.value) {
+    modeleAutre.value = "";
+  }
+});
+
+watch(modeleAutre, newVal => {
+  if (isRestoring.value || !newVal) {
+    return;
+  }
+
+  if (modele.value?.code !== "AUTRE") {
+    modele.value = null;
+  }
+});
+
 const brouillon = reactive({
   TEXTE_VIDE,
   isRestoring,
@@ -654,15 +811,18 @@ const brouillon = reactive({
   fabricant,
   fabricantError,
   fabricantAutre,
+  fabricantAutreError,
   modele,
   modeleError,
   modeleAutre,
+  modeleAutreError,
   couleur,
   couleurError,
   couleurSecondaire,
   valeurReelle,
   valeurReelleError,
   gravure,
+  gravureError,
   numeroSerie,
   numeroSerieError,
   numeroSerieInconnu,
@@ -671,6 +831,7 @@ const brouillon = reactive({
   numeroIMEIError,
   numeroIMEIInconnu,
   justificationAbsenceIMEI,
+  justificationAbsenceIMEIError,
   plaqueNumero,
   plaqueNumeroError,
   plaquePays,

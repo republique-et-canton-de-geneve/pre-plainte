@@ -33,7 +33,7 @@
           <div class="text-caption text-medium-emphasis">{{ t("incidentTypes.fabricant") }}</div>
           <div class="text-body-2">{{ libelleFabricantResumeVolObjet(obj) }}</div>
         </v-col>
-        <v-col v-if="obj.modele" cols="12" md="6">
+        <v-col v-if="obj.fabricant?.code !== 'AUTRE' && (obj.modele || obj.modeleAutre)" cols="12" md="6">
           <div class="text-caption text-medium-emphasis">{{ t("incidentTypes.modele") }}</div>
           <div class="text-body-2">{{ libelleModeleResumeVolObjet(obj) }}</div>
         </v-col>

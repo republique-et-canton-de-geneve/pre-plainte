@@ -71,7 +71,7 @@ export function libelleFabricantResumeVolObjet(obj: VolObjetFormSnapshot): strin
 }
 
 export function libelleModeleResumeVolObjet(obj: VolObjetFormSnapshot): string {
-  if (obj.modele?.code === "AUTRE" && obj.modeleAutre) {
+  if (obj.modeleAutre) {
     return obj.modeleAutre;
   }
   return obj.modele?.label ?? TEXTE_VIDE;
@@ -163,4 +163,8 @@ export function validerNumeroPlaque(
     }
     return true;
   }
+}
+
+export function checkLength(value: unknown, max: number) {
+  return !(value && String(value).length > max);
 }
