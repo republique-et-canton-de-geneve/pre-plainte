@@ -15,7 +15,7 @@ Fonctionnalité: Vol d'objet - véhicule
     Alors le message "Le champ est requis" s'affiche sous le champ "Précisez le fabricant"
     Quand je saisis "A" dans le champ "Précisez le fabricant"
     Et je valide l'objet volé
-    Alors le message "Le modèle est requis" s'affiche
+    Alors aucune erreur de champ obligatoire n'est affichée
 
   Scénario: BVA - modèle "Autre" vide puis renseigné avec un caractère
     Quand je renseigne le type de véhicule "Voiture"
