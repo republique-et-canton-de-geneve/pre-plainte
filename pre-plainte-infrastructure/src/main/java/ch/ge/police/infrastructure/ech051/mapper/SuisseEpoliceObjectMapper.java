@@ -14,7 +14,6 @@ import ch.ge.police.infrastructure.ech051.Ech051Constants;
 import ch.ge.police.infrastructure.ech051.MyAbiAdditionalInformationFormatter;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.IntStream;
 
@@ -81,30 +80,17 @@ public class SuisseEpoliceObjectMapper {
   }
 
   private List<ObjectItem> buildObjectsFromDommage(DommageMateriel dommage) {
-    if (dommage.getObjetDegrades() != null && !dommage.getObjetDegrades().isEmpty()) {
-      List<ObjetIncident> eligible = dommage.getObjetDegrades().stream()
-          .filter(obj -> !obj.isVehicleType())
-          .filter(this::isObjectEligibleForMyAbi)
-          .toList();
-      int n = eligible.size();
-      return IntStream.range(0, n)
-          .mapToObj(i -> buildObjectItem(eligible.get(i), objectXmlKey(i, n)))
-          .toList();
+    if (dommage.getObjetDegrades() == null || dommage.getObjetDegrades().isEmpty()) {
+      return List.of();
     }
-
-    ObjectItem item = ObjectItem.builder()
-        .key(Ech051Constants.OBJECT_KEY_TIERS)
-        .typeOfObject(
-            RipolReferenceBuilder.of(
-                Ech051Constants.TYPE_OF_OBJECT_DOMMAGE_CODE,
-                Ech051Constants.TYPE_OF_OBJECT_DOMMAGE_LABEL,
-                TYPE_OBJET
-            )
-        )
-        .additionalInformation(buildDommageFallbackAdditionalInfo(dommage))
-        .build();
-
-    return List.of(item);
+    List<ObjetIncident> eligible = dommage.getObjetDegrades().stream()
+        .filter(obj -> !obj.isVehicleType())
+        .filter(this::isObjectEligibleForMyAbi)
+        .toList();
+    int n = eligible.size();
+    return IntStream.range(0, n)
+        .mapToObj(i -> buildObjectItem(eligible.get(i), objectXmlKey(i, n)))
+        .toList();
   }
 
   /**
@@ -316,12 +302,6 @@ public class SuisseEpoliceObjectMapper {
     MyAbiAdditionalInformationFormatter.addBoolean(details, "Numéro de série inconnu", objet.isNumeroSerieInconnu());
     MyAbiAdditionalInformationFormatter.addBoolean(details, "Numéro IMEI inconnu", objet.isNumeroIMEIInconnu());
     addPlaqueNumeroForMyAbi(details, objet);
-    return MyAbiAdditionalInformationFormatter.format(details);
-  }
-
-  private String buildDommageFallbackAdditionalInfo(DommageMateriel dommage) {
-    List<String> details = MyAbiAdditionalInformationFormatter.builder();
-    MyAbiAdditionalInformationFormatter.addLabeled(details, "Description du dommage", dommage.getDescription());
     return MyAbiAdditionalInformationFormatter.format(details);
   }
 

@@ -82,8 +82,6 @@ public final class Ech051Constants {
   public static final String TYPE_OF_CRIME_CYBER_FAUSSE_ANNONCE_LABEL = "escroquerie";
   public static final String TYPE_OF_CRIME_CYBER_ACHAT_NON_RECU_CODE = "1000146100";
   public static final String TYPE_OF_CRIME_CYBER_ACHAT_NON_RECU_LABEL = "escroquerie";
-  public static final String TYPE_OF_OBJECT_DOMMAGE_CODE = "200219";
-  public static final String TYPE_OF_OBJECT_DOMMAGE_LABEL = "Dommage matériel";
   public static final String MODE_OPERANDI_DEGRADATIONS_CODE = "4000236";
   public static final String MODE_OPERANDI_DEGRADATIONS_LABEL = "vandalisme";
   public static final String MODE_OPERANDI_TAGS_CODE = "4000900";
@@ -146,10 +144,14 @@ public final class Ech051Constants {
 
     public static final String EMAIL = "e-mail privé";
     public static final String EMAIL_CODE = "7";
+    public static final String EMAIL_BUSINESS = "e-mail bureau";
+    public static final String EMAIL_BUSINESS_CODE = "10";
     public static final String MOBILE = "téléphone mobile";
     public static final String MOBILE_CODE = "4";
     public static final String PHONE = "téléphone fixe";
     public static final String PHONE_CODE = "1";
+    public static final String TELEPHONE_BUSINESS = "téléphone bureau";
+    public static final String TELEPHONE_BUSINESS_CODE = "5";
     public static final String URI = "quality_assurance_link";
     public static final String SOURCE_TABLE = "ART_TEL_FAX";
   }

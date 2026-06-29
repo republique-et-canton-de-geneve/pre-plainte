@@ -1,8 +1,11 @@
 package ch.ge.police.core.domain.model.informationspersonnelles.common;
 
 import ch.ge.police.core.domain.model.common.Adresse;
-import ch.ge.police.core.domain.model.common.error.ValidationMetierException;
 import lombok.Data;
+
+import static ch.ge.police.core.domain.util.validation.ChampValidator.verifierChampObligatoire;
+import static ch.ge.police.core.domain.util.validation.ChampValidator.verifierLongueurMax;
+import static ch.ge.police.core.domain.util.validation.ValidationConstants.TEXT_FIELD_MAX_LENGTH;
 
 /**
  * Représente une entreprise, une association ou une organisation.
@@ -15,20 +18,25 @@ public class Organisation {
   private String email;
   private Adresse adresse;
 
+  public void validateOrganisationInfo() {
+    verifierChampsObligatoires();
+    verifierLongueurs();
 
-  public void validateurChampsObligatoire(Object value, String messageErreur){
-    if (value == null) {
-      throw new ValidationMetierException(messageErreur);
-    }
-    if (value instanceof String valueStr && valueStr.isBlank()) {
-      throw new ValidationMetierException(messageErreur);
+    if (adresse != null) {
+      adresse.validate();
     }
   }
 
-  public void validateOrganisationInfo() {
-    validateurChampsObligatoire(nom, "Le nom est obligatoire.");
-    validateurChampsObligatoire(adresse, "L'adresse est obligatoire.");
-    validateurChampsObligatoire(email, "L'e-mail est obligatoire.");
-    validateurChampsObligatoire(telephone, "Le téléphone est obligatoire.");
+  private void verifierChampsObligatoires() {
+    verifierChampObligatoire(nom, "Le nom est obligatoire.");
+    verifierChampObligatoire(adresse, "L'adresse est obligatoire.");
+    verifierChampObligatoire(email, "L'e-mail est obligatoire.");
+    verifierChampObligatoire(telephone, "Le téléphone est obligatoire.");
+  }
+
+  private void verifierLongueurs() {
+    verifierLongueurMax(nom, TEXT_FIELD_MAX_LENGTH, "nom");
+    verifierLongueurMax(email, TEXT_FIELD_MAX_LENGTH, "email");
+    verifierLongueurMax(telephone, TEXT_FIELD_MAX_LENGTH, "telephone");
   }
 }

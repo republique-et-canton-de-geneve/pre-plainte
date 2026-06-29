@@ -1,6 +1,11 @@
 import { z } from "zod";
 import type { ComposerTranslation } from "vue-i18n";
-import { isCybercrimeTypeWithoutDetailFields, RIPOL } from "@/constants/constant";
+import {
+  isCybercrimeTypeWithoutDetailFields,
+  NUMERO_IMEI_MAX_LENGTH,
+  RIPOL,
+  TEXT_FIELD_MAX_LENGTH, TEXTAREA_MAX_LENGTH, VEHICULE_CATEGORIES_AVEC_PLAQUE
+} from "@/constants/constant";
 import { isValidBoundedDate, parseDate, parseTime } from "@/utils/helpers/dateHelpers.ts";
 import { validateAchatNonRecuCybercrime } from "@/schemas/incident-evenement-achat-non-recu-refine";
 import { isUrlWebAvecDomaine } from "@/utils/validations/field-validation.utils";
@@ -14,10 +19,13 @@ const PLAQUE_FRANCE_SIV_PATTERN = /^[A-Z]{2}-\d{3}-[A-Z]{2}$/;
 const PLAQUE_FRANCE_FNI_PATTERN = /^\d{1,4}\s[A-Z]{1,3}\s(2A|2B|\d{2,3})$/;
 const PLAQUE_INTERNATIONALE_PATTERN = /^[A-Z\d]{1,12}$/;
 
-const optionalStringFromForm = z.preprocess(
-  v => (v === null || v === undefined ? "" : String(v)),
-  z.string().optional(),
-);
+const optionalStringFromForm = (t: ComposerTranslation) =>
+  z.preprocess(
+    v => (v === null || v === undefined ? "" : String(v)),
+    z.string()
+      .max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH }))
+      .optional(),
+  );
 
 const optionalRipolSelectionSchema = z
   .object({
@@ -30,12 +38,13 @@ const optionalRipolSelectionSchema = z
 const createIncidentRequirements = (t: ComposerTranslation): Record<string, { field: string; message: string }[]> => ({
   vol: [
     { field: "volDansVehicule", message: t("validation.volDansVehiculeRequis") },
+    { field: "categorieObjet", message: t("validation.categorieObjetRequise") },
     { field: "typeObjet", message: t("validation.typeObjetRequis") },
+    { field: "couleur", message: t("validation.couleurRequise") },
     { field: "avezVousDegradation", message: t("validation.degradationsRequis") },
   ],
   "degat-delit": [
     { field: "typeDommage", message: t("validation.typeDommageRequis") },
-    { field: "devise", message: t("validation.deviseRequise") },
     { field: "naturesDommage", message: t("validation.natureDommageRequis") },
     { field: "description", message: t("validation.descriptionDommageRequise") },
     { field: "constatPresent", message: t("validation.constatRequis") },
@@ -53,7 +62,7 @@ const addCustomIssue = (ctx: z.RefinementCtx, path: string, message: string) => 
   });
 };
 
-const isRipolField = (field: string) => ["typeObjet", "fabricant", "modele"].includes(field);
+const isRipolField = (field: string) => ["typeObjet", "couleur", "fabricant", "modele"].includes(field);
 
 const validateIncidentRequirement = (
   data: Record<string, any>,
@@ -108,6 +117,38 @@ const hasObjetsVolesEnregistres = (data: Record<string, unknown>) =>
 
 const isVehicleVolObject = (data: Record<string, any>) => data.categorieObjet === "vehicule" || data.isVehicle === true;
 
+const validateVehicleFields = (
+  data: Record<string, any>,
+  ctx: z.RefinementCtx,
+  t: ComposerTranslation,
+  basePath: (string | number)[] = [],
+) => {
+  if (!isVehicleVolObject(data)) {
+    return;
+  }
+
+  if (!data.typeObjet?.code) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: [...basePath, "typeObjet"],
+      message: t("validation.typeObjetRequis"),
+    });
+  }
+
+  validateVehicleBrandAndModel(data, ctx, t, basePath);
+
+  if (!data.couleur?.code) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: [...basePath, "couleur"],
+      message: t("validation.couleurRequise"),
+    });
+  }
+
+  validatePlaque(data, ctx, t, basePath);
+
+}
+
 const validateVehicleBrandAndModel = (
   data: Record<string, any>,
   ctx: z.RefinementCtx,
@@ -131,19 +172,26 @@ const validateVehicleBrandAndModel = (
       message: t("validation.champRequis"),
     });
   }
-  if (!data.modele?.code) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      path: [...basePath, "modele"],
-      message: t("validation.modeleRequis"),
-    });
-  }
-  if (data.modele?.code === "AUTRE" && !data.modeleAutre?.trim()) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      path: [...basePath, "modeleAutre"],
-      message: t("validation.champRequis"),
-    });
+  if (data.fabricant.code !== "AUTRE") {
+    if (data.modele?.code === "AUTRE" && !data.modeleAutre?.trim()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: [...basePath, "modeleAutre"],
+        message: t("validation.champRequis"),
+      });
+    }
+    if (!data.modele?.code && !data.modeleAutre?.trim()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: [...basePath, "modele"],
+        message: t("validation.modeleRequis"),
+      });
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: [...basePath, "modeleAutre"],
+        message: t("validation.champRequis"),
+      });
+    }
   }
 };
 
@@ -162,7 +210,7 @@ const validateIncidentRequirements = (data: Record<string, any>, ctx: z.Refineme
     data.typeIncident === "vol" &&
     (hasObjetsVolesEnregistres(data) || data.categorieObjet === "plaque")
   ) {
-    rules = rules.filter(r => r.field !== "typeObjet");
+    rules = rules.filter(r => r.field !== "typeObjet" && r.field !== "couleur");
   }
 
   rules.forEach(({ field, message }) => {
@@ -179,15 +227,13 @@ const validateDommageSpecificRules = (data: Record<string, any>, ctx: z.Refineme
   if (Array.isArray(data.objetsDegradesValides) && data.objetsDegradesValides.length > 0) {
     data.objetsDegradesValides.forEach((objet: unknown, index: number) => {
       if (objet && typeof objet === "object") {
-        validateVehicleBrandAndModel(objet as Record<string, any>, ctx, t, ["objetsDegradesValides", index]);
-        validatePlaque(objet as Record<string, any>, ctx, t, ["objetsDegradesValides", index]);
+        validateVehicleFields(objet as Record<string, any>, ctx, t, ["objetsDegradesValides", index]);
       }
     });
     return;
   }
 
-    validateVehicleBrandAndModel(data, ctx, t);
-    validatePlaque(data, ctx, t);
+  validateVehicleFields(data, ctx, t);
 }
 
 const validateDommageConstatPolice = (data: Record<string, any>, ctx: z.RefinementCtx, t: ComposerTranslation) => {
@@ -209,8 +255,7 @@ const validateVolSpecificRules = (data: Record<string, any>, ctx: z.RefinementCt
   if (hasObjetsVolesEnregistres(data)) {
     data.objetsVolesValides.forEach((objet: unknown, index: number) => {
       if (objet && typeof objet === "object") {
-        validateVehicleBrandAndModel(objet as Record<string, any>, ctx, t, ["objetsVolesValides", index]);
-        validatePlaque(objet as Record<string, any>, ctx, t, ["objetsVolesValides", index]);
+        validateVehicleFields(objet as Record<string, any>, ctx, t, ["objetsVolesValides", index]);
       }
     });
     return;
@@ -230,11 +275,10 @@ const validateVolSpecificRules = (data: Record<string, any>, ctx: z.RefinementCt
   }
 
   if (!data.numeroIMEIInconnu && data.numeroIMEI?.trim() && !NUMERO_IMEI_REGEX.test(data.numeroIMEI.trim())) {
-    addCustomIssue(ctx, "numeroIMEI", t("validation.numeroIMEIFormat"));
+    addCustomIssue(ctx, "numeroIMEI", t("validation.numeroIMEIFormat", { max: NUMERO_IMEI_MAX_LENGTH }));
   }
 
-  validateVehicleBrandAndModel(data, ctx, t);
-  validatePlaque(data, ctx, t);
+  validateVehicleFields(data, ctx, t);
 };
 
 function validateRequiredDates(data: any, fields: string[][], ctx: any, t: any) {
@@ -358,8 +402,8 @@ function validateCoordonneesCommande(data: any, ctx: any, t: any) {
 const shouldValidatePlaque = (data: Record<string, any>) =>
   !data.plaqueInconnu &&
   (data.categorieObjet === "plaque" ||
-  data.categorieObjet === "vehicule" ||
-  data.typeDommage === "vehicule");
+  (data.categorieObjet === "vehicule" && VEHICULE_CATEGORIES_AVEC_PLAQUE.includes(data.sousCategorie)) ||
+  (data.typeDommage === "vehicule" && VEHICULE_CATEGORIES_AVEC_PLAQUE.includes(data.sousCategorie)));
 
 const validatePlaque = (
   data: Record<string, any>,
@@ -465,19 +509,19 @@ export const createEvenementInfoSchema = (t: ComposerTranslation) =>
         .refine(val => !val || parseTime(val) !== null, {
           message: t(VALIDATION_FORMAT_HEURE_INVALIDE),
         }),
-      adresseEvenement: z.string().optional(),
+      adresseEvenement: z.string().max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH })).optional(),
       typeLieu: optionalRipolSelectionSchema,
       adresseConnue: z.boolean().nullish(),
       adresseLesee: z.boolean().nullish(),
       isTrajet: z.boolean().nullish(),
-      adressePostaleEvenement: z.string().optional(),
-      npaEvenement: z.string().optional(),
-      localiteEvenement: z.string().optional(),
+      adressePostaleEvenement: z.string().max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH })).optional(),
+      npaEvenement: z.string().max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH })).optional(),
+      localiteEvenement: z.string().max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH })).optional(),
       paysEvenement: z.string().optional(),
-      adresseEvenementSecondaire: z.string().optional(),
-      adressePostaleEvenementSecondaire: z.string().optional(),
-      npaEvenementSecondaire: z.string().optional(),
-      localiteEvenementSecondaire: z.string().optional(),
+      adresseEvenementSecondaire: z.string().max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH })).optional(),
+      adressePostaleEvenementSecondaire: z.string().max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH })).optional(),
+      npaEvenementSecondaire: z.string().max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH })).optional(),
+      localiteEvenementSecondaire: z.string().max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH })).optional(),
       paysEvenementSecondaire: z.string().optional(),
       lieuOrigine: optionalRipolSelectionSchema,
       temoins: z.string().optional(),
@@ -490,34 +534,39 @@ export const createEvenementInfoSchema = (t: ComposerTranslation) =>
       sousCategorie: z.string().optional(),
       typeObjet: optionalRipolSelectionSchema,
       fabricant: optionalRipolSelectionSchema,
-      fabricantAutre: z.string().optional(),
+      fabricantAutre: z.string().max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH })).optional(),
       modele: optionalRipolSelectionSchema,
-      modeleAutre: z.string().optional(),
+      modeleAutre: z.string().max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH })).optional(),
       couleur: optionalRipolSelectionSchema,
       couleurSecondaire: optionalRipolSelectionSchema,
-      valeurReelle: z.string().optional(),
-      numeroSerie: z.string().optional(),
+      valeurReelle: optionalStringFromForm(t),
+      numeroSerie: z.string().max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH })).optional(),
       numeroSerieInconnu: z.boolean().optional(),
-      numeroCadre: z.string().optional(),
+      numeroCadre: z.string().max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH })).optional(),
       numeroCadreInconnu: z.boolean().optional(),
-      numeroIMEI: z.string().optional(),
+      numeroIMEI: z.string().max(NUMERO_IMEI_MAX_LENGTH, t("validation.longueurMax", { max: NUMERO_IMEI_MAX_LENGTH })).optional(),
       numeroIMEIInconnu: z.boolean().optional(),
-      justificationAbsenceIMEI: z.string().optional(),
-      gravure: z.string().optional(),
+      justificationAbsenceIMEI: z.string().max(TEXTAREA_MAX_LENGTH, t("validation.longueurMax", { max: TEXTAREA_MAX_LENGTH })).optional(),
+      gravure: z.string().max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH })).optional(),
       isVehicle: z.boolean().optional(),
       dateAchat: z
         .string()
         .optional()
         .refine(val => !val || isValidBoundedDate(val), { message: t(VALIDATION_FORMAT_DATE_INVALIDE) }),
-      vin: z.string().optional(),
+      vin: z.string().max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH })).optional(),
       vinInconnu: z.boolean().optional(),
-      velofinderId: z.string().optional(),
+      velofinderId: z.string().max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH })).optional(),
       plaqueNumero: z.string().optional(),
       plaqueInconnu: z.boolean().optional(),
       plaquePays: optionalRipolSelectionSchema,
       plaqueCanton: optionalRipolSelectionSchema,
+      assuranceAucune: z.boolean().optional(),
+      assureurAutre: z.string().max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH })).optional(),
+      numeroAssurance: z.string().max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH })).optional(),
+      numeroVignette: z.string().max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH })).optional(),
+      numeroMaster: z.string().max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH })).optional(),
       avezVousDegradation: z.boolean().nullish(),
-      montantEstime: z.string().optional(),
+      montantEstime: optionalStringFromForm(t),
       devise: z.string().optional(),
       typeDommage: z.string().optional(),
       naturesDommage: z
@@ -525,7 +574,7 @@ export const createEvenementInfoSchema = (t: ComposerTranslation) =>
           errorMap: () => ({ message: t("validation.natureDommageFormat") }),
         })
         .optional(),
-      description: z.string().optional(),
+      description: z.string().max(TEXTAREA_MAX_LENGTH, t("validation.longueurMax", { max: TEXTAREA_MAX_LENGTH })).optional(),
       dateConstat: z
         .string()
         .optional()
@@ -533,26 +582,26 @@ export const createEvenementInfoSchema = (t: ComposerTranslation) =>
       constatPresent: z.boolean().nullish(),
       fichiers: z.array(z.instanceof(File)).optional(),
       typeCybercrime: z.string().optional(),
-      descriptionCybercrime: z.string().optional(),
+      descriptionCybercrime: z.string().max(TEXTAREA_MAX_LENGTH, t("validation.longueurMax", { max: TEXTAREA_MAX_LENGTH })).optional(),
       justificatifsPaiement: z.array(z.instanceof(File)).optional(),
       copiesEcran: z.array(z.instanceof(File)).optional(),
       autresDocuments: z.array(z.instanceof(File)).optional(),
-      prestataire: z.string().optional(),
+      prestataire: z.string().max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH })).optional(),
       dateDecouverte: z
         .string()
         .optional()
         .refine(val => !val || isValidBoundedDate(val), { message: t(VALIDATION_FORMAT_DATE_INVALIDE) }),
-      montant: optionalStringFromForm,
+      montant: optionalStringFromForm(t),
       assurance: z.boolean().nullish(),
       emailCommandeInconnu: z.boolean().optional(),
-      emailCommande: z.string().optional(),
+      emailCommande: z.string().max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH })).optional(),
       telephoneCommandeInconnu: z.boolean().optional(),
-      telephoneCommande: z.string().nullable().optional(),
+      telephoneCommande: z.string().max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH })).nullable().optional(),
       livraisonAdresseLesee: z.boolean().nullish(),
-      livraisonAdresse: z.string().nullable().optional(),
-      livraisonAdressePostale: z.string().nullable().optional(),
-      livraisonNpa: z.string().nullable().optional(),
-      livraisonLocalite: z.string().nullable().optional(),
+      livraisonAdresse: z.string().max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH })).nullable().optional(),
+      livraisonAdressePostale: z.string().max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH })).nullable().optional(),
+      livraisonNpa: z.string().max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH })).nullable().optional(),
+      livraisonLocalite: z.string().max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH })).nullable().optional(),
       livraisonLocaliteCode: z.string().nullable().optional(),
       livraisonPays: z.string().optional(),
       datePremierContact: z
@@ -579,40 +628,40 @@ export const createEvenementInfoSchema = (t: ComposerTranslation) =>
         .refine(val => !val || parseTime(val) !== null, {
           message: t(VALIDATION_FORMAT_HEURE_INVALIDE),
         }),
-      montantDelitAchatLigne: optionalStringFromForm,
-      articleNonLivreDescription: z.string().optional(),
-      prenomVendeur: z.string().nullable().optional(),
-      nomVendeur: z.string().nullable().optional(),
+      montantDelitAchatLigne: optionalStringFromForm(t),
+      articleNonLivreDescription: z.string().max(TEXTAREA_MAX_LENGTH, t("validation.longueurMax", { max: TEXTAREA_MAX_LENGTH })).optional(),
+      prenomVendeur: z.string().max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH })).nullable().optional(),
+      nomVendeur: z.string().max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH })).nullable().optional(),
       telephoneVendeurInconnu: z.boolean().optional(),
-      telephoneVendeur: z.string().nullable().optional(),
+      telephoneVendeur: z.string().max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH })).nullable().optional(),
       emailVendeurInconnu: z.boolean().optional(),
-      emailVendeur: z.string().optional(),
+      emailVendeur: z.string().max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH })).optional(),
       adresseVendeurInconnue: z.boolean().optional(),
-      vendeurAdresse: z.string().nullable().optional(),
-      vendeurAdressePostale: z.string().nullable().optional(),
-      vendeurNpa: z.string().nullable().optional(),
-      vendeurLocalite: z.string().nullable().optional(),
+      vendeurAdresse: z.string().max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH })).nullable().optional(),
+      vendeurAdressePostale: z.string().max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH })).nullable().optional(),
+      vendeurNpa: z.string().max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH })).nullable().optional(),
+      vendeurLocalite: z.string().max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH })).nullable().optional(),
       vendeurLocaliteCode: z.string().nullable().optional(),
       vendeurPays: z.string().optional(),
       achatViaPlaceMarche: z.boolean().nullish(),
       plateforme: z.string().optional(),
-      plateformeAutre: z.string().nullable().optional(),
-      plateformeId: z.string().optional(),
-      nomEntrepriseVendeur: z.string().optional(),
-      siteWebEntrepriseVendeur: z.string().optional(),
+      plateformeAutre: z.string().max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH })).nullable().optional(),
+      plateformeId: z.string().max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH })).optional(),
+      nomEntrepriseVendeur: z.string().max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH })).optional(),
+      siteWebEntrepriseVendeur: z.string().max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH })).optional(),
       annonceDocument: z.array(z.instanceof(File)).optional(),
       annonceDocumentIndisponible: z.boolean().optional(),
-      raisonAbsenceAnnonce: z.string().optional(),
+      raisonAbsenceAnnonce: z.string().max(TEXTAREA_MAX_LENGTH, t("validation.longueurMax", { max: TEXTAREA_MAX_LENGTH })).optional(),
       moyenPaiement: z.string().optional(),
-      moyenPaiementAutre: z.string().nullable().optional(),
-      ibanBeneficiaire: z.string().optional(),
-      comptePaypalBeneficiaire: z.string().optional(),
-      numeroTwintBeneficiaire: z.string().optional(),
-      adresseWalletCrypto: z.string().optional(),
-      hashTransactionCrypto: z.string().optional(),
-      societeBeneficiaire: z.string().nullable().optional(),
-      nomBeneficiaire: z.string().nullable().optional(),
-      prenomBeneficiaire: z.string().nullable().optional(),
+      moyenPaiementAutre: z.string().max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH })).nullable().optional(),
+      ibanBeneficiaire: z.string().max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH })).optional(),
+      comptePaypalBeneficiaire: z.string().max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH })).optional(),
+      numeroTwintBeneficiaire: z.string().max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH })).optional(),
+      adresseWalletCrypto: z.string().max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH })).optional(),
+      hashTransactionCrypto: z.string().max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH })).optional(),
+      societeBeneficiaire: z.string().max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH })).nullable().optional(),
+      nomBeneficiaire: z.string().max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH })).nullable().optional(),
+      prenomBeneficiaire: z.string().max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH })).nullable().optional(),
       dateOperation: z
         .string()
         .nullable()
@@ -620,21 +669,21 @@ export const createEvenementInfoSchema = (t: ComposerTranslation) =>
         .refine(val => !val || isValidBoundedDate(val), { message: t(VALIDATION_FORMAT_DATE_INVALIDE) }),
       preuvePaiementDocument: z.array(z.instanceof(File)).optional(),
       preuvePaiementIndisponible: z.boolean().optional(),
-      raisonAbsencePreuvePaiement: z.string().optional(),
+      raisonAbsencePreuvePaiement: z.string().max(TEXTAREA_MAX_LENGTH, t("validation.longueurMax", { max: TEXTAREA_MAX_LENGTH })).optional(),
       copieIdentiteTransmiseAuteur: z.boolean().nullish(),
       copieIdentiteTransmiseAuteurDocument: z.array(z.instanceof(File)).optional(),
       copieIdentiteAuteurTransmise: z.boolean().nullish(),
       copieIdentiteAuteurDocument: z.array(z.instanceof(File)).optional(),
-      titreAnnonce: z.string().nullable().optional(),
-      nomBailleur: z.string().nullable().optional(),
+      titreAnnonce: z.string().max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH })).nullable().optional(),
+      nomBailleur: z.string().max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH })).nullable().optional(),
       emailBailleurInconnu: z.boolean().optional(),
-      emailBailleur: z.string().nullable().optional(),
+      emailBailleur: z.string().max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH })).nullable().optional(),
       telephoneBailleurInconnu: z.boolean().optional(),
-      telephoneBailleur: z.string().nullable().optional(),
-      adresseBienImmobilier: z.string().nullable().optional(),
-      montantDemande: z.string().nullable().optional(),
-      modePaiementDemande: z.string().nullable().optional(),
-      urlComplete: z.string().nullable().optional(),
+      telephoneBailleur: z.string().max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH })).nullable().optional(),
+      adresseBienImmobilier: z.string().max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH })).nullable().optional(),
+      montantDemande: optionalStringFromForm(t),
+      modePaiementDemande: z.string().max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH })).nullable().optional(),
+      urlComplete: z.string().max(TEXT_FIELD_MAX_LENGTH, t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH })).nullable().optional(),
     })
     .refine(
       data =>
@@ -645,35 +694,66 @@ export const createEvenementInfoSchema = (t: ComposerTranslation) =>
       },
     )
     .superRefine((data, ctx) => {
-      if (
-        data.typeIncident !== "cybercrime" &&
-        data.adresseConnue &&
-        (!data.adresseEvenement || data.adresseEvenement.length < MIN_ADRESSE_EVENEMENT_TAILLE)
-      ) {
-        addCustomIssue(ctx, "adresseEvenement", t("validation.adresseEvenementRequise"));
-      }
-
-      if (data.typeIncident !== "cybercrime" && data.adresseConnue) {
-        const value = data.adressePostaleEvenement?.trim() ?? "";
-        if (!/^[a-zA-Z0-9\s]*$/.test(value)) {
-          addCustomIssue(ctx, "adressePostaleEvenement", t("validation.numeroPostalFormat"));
+      if (data.typeIncident !== "cybercrime") {
+        if (data.adresseLesee === null) {
+          addCustomIssue(ctx, "adresseLesee", t("validation.champRequis"));
         }
-      }
 
-      if (data.typeIncident !== "cybercrime" && data.adresseConnue && !data.localiteEvenement) {
-        addCustomIssue(ctx, "localiteEvenement", t("validation.localiteRequise"));
-      }
+        if (data.adresseLesee === false) {
+          if (data.adresseConnue === null) {
+            addCustomIssue(ctx, "adresseConnue", t("validation.champRequis"));
+          }
+          if (data.typeLieu === null) {
+            addCustomIssue(ctx, "typeLieu", t("validation.champRequis"));
+          }
 
-      if (
-        data.typeIncident !== "cybercrime" &&
-        data.adresseConnue &&
-        (!data.npaEvenement || data.npaEvenement.length < 4)
-      ) {
-        addCustomIssue(ctx, "npaEvenement", t("validation.npaFormat"));
-      }
+          if (data.adresseConnue || data.isTrajet) {
+            if (!data.adresseEvenement || data.adresseEvenement.length < MIN_ADRESSE_EVENEMENT_TAILLE) {
+              addCustomIssue(ctx, "adresseEvenement", t("validation.adresseEvenementRequise"));
+            }
 
-      if (data.typeIncident !== "cybercrime" && data.adresseLesee === null) {
-        addCustomIssue(ctx, "adresseLesee", t("validation.champRequis"));
+            const value = data.adressePostaleEvenement?.trim() ?? "";
+            if (!/^[a-zA-Z0-9\s]*$/.test(value)) {
+              addCustomIssue(ctx, "adressePostaleEvenement", t("validation.numeroPostalFormat"));
+            }
+
+            if (!data.localiteEvenement) {
+              addCustomIssue(ctx, "localiteEvenement", t("validation.localiteRequise"));
+            }
+
+            if (!data.npaEvenement || data.npaEvenement.length < 4) {
+              addCustomIssue(ctx, "npaEvenement", t("validation.npaFormat"));
+            }
+          }
+
+          if (data.adresseConnue === false && data.isTrajet === null) {
+            addCustomIssue(ctx, "isTrajet", t("validation.champRequis"));
+          }
+        }
+
+        if (data.adresseLesee === false && data.adresseConnue === false) {
+          if (data.isTrajet) {
+            if (!data.adresseEvenementSecondaire || data.adresseEvenementSecondaire.length < MIN_ADRESSE_EVENEMENT_TAILLE) {
+              addCustomIssue(ctx, "adresseEvenementSecondaire", t("validation.adresseEvenementRequise"));
+            }
+
+            const value = data.adressePostaleEvenementSecondaire?.trim() ?? "";
+            if (!/^[a-zA-Z0-9\s]*$/.test(value)) {
+              addCustomIssue(ctx, "adressePostaleEvenementSecondaire", t("validation.numeroPostalFormat"));
+            }
+
+            if (!data.localiteEvenementSecondaire) {
+              addCustomIssue(ctx, "localiteEvenementSecondaire", t("validation.localiteRequise"));
+            }
+
+            if (!data.npaEvenementSecondaire || data.npaEvenementSecondaire.length < 4) {
+              addCustomIssue(ctx, "npaEvenementSecondaire", t("validation.npaFormat"));
+            }
+          }
+          if (data.isTrajet === false && data.lieuOrigine === null) {
+            addCustomIssue(ctx, "lieuOrigine", t("validation.champRequis"));
+          }
+        }
       }
     })
     .superRefine((data, ctx) => {
@@ -750,11 +830,19 @@ export const createEvenementInfoSchema = (t: ComposerTranslation) =>
     .superRefine((data, ctx) => validateAchatNonRecuCybercrime(data, ctx, addCustomIssue, t))
     .superRefine((data, ctx) => {
       if (data.typeCybercrime === "fausse-annonce") {
-        if (
-          data.urlComplete?.trim() &&
-          !isUrlWebAvecDomaine(data.urlComplete)
-        ) {
+        if (!data.urlComplete?.trim()) {
+          addCustomIssue(ctx, "urlComplete", t("validation.urlCompleteRequise"));
+        }
+        else if (!isUrlWebAvecDomaine(data.urlComplete)) {
           addCustomIssue(ctx, "urlComplete", t("validation.plateformeUrlOuIdInvalide"));
+        }
+
+        if (!data.titreAnnonce?.trim()) {
+          addCustomIssue(ctx, "titreAnnonce", t("validation.titreAnnonceRequis"));
+        }
+
+        if (!data.nomBailleur?.trim()) {
+          addCustomIssue(ctx, "nomBailleur", t("validation.nomBailleurRequis"));
         }
 
         const hasEmail = data.emailBailleur?.trim();
@@ -771,6 +859,18 @@ export const createEvenementInfoSchema = (t: ComposerTranslation) =>
         if (!data.telephoneBailleurInconnu && !hasTelephone) {
           addCustomIssue(ctx, "telephoneBailleur", t("validation.telephoneBailleurRequis"));
         }
+
+        if (!data.adresseBienImmobilier?.trim()) {
+          addCustomIssue(ctx, "adresseBienImmobilier", t("validation.adresseBienImmobilierRequise"));
+        }
+
+        if (!data.montantDemande?.trim()) {
+          addCustomIssue(ctx, "montantDemande", t("validation.montantDemandeRequis"));
+        }
+
+        if (!data.modePaiementDemande?.trim()) {
+          addCustomIssue(ctx, "modePaiementDemande", t("validation.modePaiementDemandeRequis"));
+        }
       }
     });
 
@@ -781,8 +881,12 @@ export const createIncidentSchema = (t: ComposerTranslation, nationalite: string
   };
 
   return createEvenementInfoSchema(t).superRefine((data, ctx) => {
-    if (!(isCH(data.paysEvenement) || isCH(nationalite))) {
+    const personneLeseeSuisse = isCH(nationalite);
+    if (!(isCH(data.paysEvenement) || personneLeseeSuisse)) {
       addCustomIssue(ctx, "paysEvenement", t("validation.paysOuNationaliteSuisse"));
+    }
+    if (data.isTrajet && !(isCH(data.paysEvenementSecondaire) || personneLeseeSuisse)) {
+      addCustomIssue(ctx, "paysEvenementSecondaire", t("validation.paysOuNationaliteSuisse"));
     }
   });
 };

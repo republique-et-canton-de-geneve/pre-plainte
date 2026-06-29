@@ -1,9 +1,11 @@
 <template>
   <div>
-    <h3 class="text-h5 text-md-h5 mb-4">{{ t("incidentTypes.titreBlocAjoutObjetVole") }}</h3>
+    <h3 v-if="objetIndex === undefined" class="text-h5 text-md-h5 mb-4">
+      {{ t("incidentTypes.titreBlocAjoutObjetVole") }}
+    </h3>
     <v-sheet class="pa-4 mb-4 objet-vole-brouillon">
       <p class="text-subtitle-1 font-weight-medium mb-4">
-        {{ t("incidentTypes.objetVoleNumero", { n: (brouillon.objetsVolesValides?.length ?? 0) + 1 }) }}
+        {{ t("incidentTypes.objetVoleNumero", { n: numeroObjet }) }}
       </p>
 
       <AccessibleVSelect
@@ -22,6 +24,7 @@
 
       <VehiculeDetailsField
         v-if="brouillon.categorieObjet === VOL_OBJET_CATEGORIE.VEHICULE"
+        type-incident="vol"
         v-model:sous-categorie="brouillon.sousCategorie"
         :sous-categorie-error="brouillon.sousCategorieError"
         :categorie-objet="VOL_OBJET_CATEGORIE.VEHICULE"
@@ -77,6 +80,7 @@
           :error-messages="brouillon.sousCategorieError"
           :hint="t('sousCategories.hint')"
           persistent-hint
+          clearable
         />
         <RipolAutocomplete
           v-model="brouillon.typeObjet"
@@ -107,6 +111,7 @@
           v-if="brouillon.isAutreFabricant"
           v-model="brouillon.fabricantAutre"
           :label="t('incidentTypes.fabricantAutre')"
+          :error-messages="brouillon.fabricantAutreError"
           :hint="t('incidentTypes.hintFabricantAutre')"
           variant="outlined"
           persistent-hint
@@ -131,6 +136,7 @@
           v-if="brouillon.isAutreModele"
           v-model="brouillon.modeleAutre"
           :label="t('incidentTypes.modeleAutre')"
+          :error-messages="brouillon.modeleAutreError"
           :hint="t('incidentTypes.hintModeleAutre')"
           variant="outlined"
           persistent-hint
@@ -139,7 +145,7 @@
         <RipolAutocomplete
           v-model="brouillon.couleur"
           :key="brouillon.colourKey"
-          :label="t('incidentTypes.couleur')"
+          :label="requiredLabel(t('incidentTypes.couleur'))"
           :fetch-fn="brouillon.fetchColours"
           :error-messages="brouillon.couleurError"
           :hint="t('incidentTypes.hintCouleur')"
@@ -163,6 +169,7 @@
         v-if="brouillon.categorieObjet && brouillon.isBijouxCategory"
         v-model="brouillon.gravure"
         :label="t('incidentTypes.gravure')"
+        :error-messages="brouillon.gravureError"
         :hint="t('incidentTypes.hintGravure')"
         variant="outlined"
         persistent-hint
@@ -215,7 +222,7 @@
             variant="outlined"
             :hint="t('incidentTypes.hintNumeroImei')"
             persistent-hint
-            maxlength="15"
+            :maxlength=NUMERO_IMEI_MAX_LENGTH
             inputmode="numeric"
           >
             <template #append-inner>
@@ -245,6 +252,7 @@
               v-model="brouillon.justificationAbsenceIMEI"
               :label="t('incidentTypes.justificationAbsenceIMEI')"
               :hint="t('incidentTypes.hintJustificationAbsenceIMEI')"
+              :error-messages="brouillon.justificationAbsenceIMEIError"
               variant="outlined"
               persistent-hint
               class="my-4"
@@ -264,9 +272,10 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from "vue";
 import { useI18n } from "vue-i18n";
 import { useDisplay } from "vuetify/framework";
-import { VOL_OBJET_CATEGORIE } from "@/constants/constant";
+import { NUMERO_IMEI_MAX_LENGTH, VOL_OBJET_CATEGORIE } from "@/constants/constant";
 import AccessibleVSelect from "@/components/accessibility/AccessibleVSelect.vue";
 import RipolAutocomplete from "@/components/ripol/RipolAutocomplete.vue";
 import VehiculeDetailsField from "@/components/pre-plainte-component/event-info/VehiculeDetailsField.vue";
@@ -274,13 +283,19 @@ import type { VolObjetVoleDraftBrouillon } from "@/types/volObjetVoleBrouillon.t
 import { requiredLabel } from "@/utils/helpers/labelHelpers";
 import { formatLicensePlate } from "@/composables/useLicencePlate.ts";
 
-const { t } = useI18n();
-const { mobile } = useDisplay();
-
 const props = defineProps<{
   brouillon: VolObjetVoleDraftBrouillon;
   activePrefixes: readonly string[];
+  objetIndex?: number;
 }>();
+
+const { t } = useI18n();
+const { mobile } = useDisplay();
+const numeroObjet = computed(() =>
+  props.objetIndex !== undefined
+    ? props.objetIndex + 1
+    : (props.brouillon.objetsVolesValides?.length ?? 0) + 1,
+);
 
 defineEmits<{
   "update:brouillon": [value: VolObjetVoleDraftBrouillon];

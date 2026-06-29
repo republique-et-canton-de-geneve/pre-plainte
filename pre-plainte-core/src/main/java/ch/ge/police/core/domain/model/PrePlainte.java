@@ -10,6 +10,10 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import static ch.ge.police.core.domain.util.validation.ChampValidator.verifierChampObligatoire;
+import static ch.ge.police.core.domain.util.validation.ChampValidator.verifierLongueurMax;
+import static ch.ge.police.core.domain.util.validation.ValidationConstants.TEXT_FIELD_MAX_LENGTH;
+
 /**
  * Représente une pré-plainte complète.
  * Contient :
@@ -36,9 +40,8 @@ public class PrePlainte {
   }
 
   public void validateChampsPresPlainte() {
-    if (demandeId == null) {
-      throw new ValidationMetierException("L'id de demande est obligatoire.");
-    }
+    verifierChampObligatoire(demandeId, "L'id de demande est obligatoire.");
+    verifierLongueurMax(demandeId, TEXT_FIELD_MAX_LENGTH, "demandeId");
 
     if (informationsPersonnelles == null) {
       throw new ValidationMetierException("Les informations personnelles sont obligatoires.");
@@ -49,6 +52,10 @@ public class PrePlainte {
       throw new ValidationMetierException("Un incident doit être renseigné.");
     }
     incident.validate();
+
+    if (creneauRendezVous != null) {
+      creneauRendezVous.validate();
+    }
 
     if (informationsPersonnelles.hasTiers() && informationsPersonnelles.getTiers() == null) {
       throw new ValidationMetierException("Les informations du tiers sont manquantes alors qu’un lien avec un tiers est indiqué.");

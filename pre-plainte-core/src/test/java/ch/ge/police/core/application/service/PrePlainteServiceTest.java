@@ -72,6 +72,7 @@ class PrePlainteServiceTest {
 
     ObjetIncident objet = new ObjetIncident();
     objet.setType(new RipolCode("1", "Téléphone"));
+    objet.setCouleur(new RipolCode("123", "Blanc"));
 
     Vol vol = new Vol();
     vol.setDateDebutEvent("2025-01-01");
