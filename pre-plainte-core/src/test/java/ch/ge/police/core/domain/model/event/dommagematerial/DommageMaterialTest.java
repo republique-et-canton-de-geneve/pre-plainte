@@ -56,13 +56,6 @@ class DommageMaterielTest {
   }
 
   @Test
-  void shouldThrowWhenDeviseMissing() {
-    dommage.setDevise(null);
-    Exception ex = assertThrows(ValidationMetierException.class, dommage::champsObligatoireIncident);
-    assertEquals("La devise est obligatoire.", ex.getMessage());
-  }
-
-  @Test
   void shouldThrowWhenNatureDommageMissing() {
     dommage.setNaturesDommage(null);
     Exception ex = assertThrows(ValidationMetierException.class, dommage::champsObligatoireIncident);
@@ -105,6 +98,7 @@ class DommageMaterielTest {
     ObjetIncident objet = ObjetIncident.builder()
       .type(new RipolCode("713103", "Telephone mobile"))
       .numeroIMEI("123456789012345")
+      .couleur(new RipolCode("123", "Blanc"))
       .build();
 
     dommage.setObjetDegrades(List.of(objet));

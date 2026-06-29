@@ -232,11 +232,28 @@ public class SuisseEpoliceRelationsMapper {
 
   /**
    * Construit les relations pour une déclaration individuelle.
+   * Avec véhicule : schéma Suisse ePolice (personLink, involvedParty lésé/représentant/informant, insurerRef=3).
    */
   private void buildIndividualRelations(List<Person> persons, String eventRef, String businessCaseRef,
                                         List<ObjectItem> objects, List<VehicleItem> vehicles,
                                         Relations.RelationsBuilder builder) {
-    String victimRef = persons.stream().findFirst().map(Person::getKey).orElse(null);
+    String victimRef = findPersonRefByKey(persons, Ech051Constants.PERSON_KEY_TIERS);
+    if (victimRef == null) {
+      victimRef = persons.stream().findFirst().map(Person::getKey).orElse(null);
+    }
+    String declarantRef = findPersonRefByKey(persons, Ech051Constants.PERSON_KEY_DECLARANT_ENTREPRISE);
+
+    if (declarantRef != null) {
+      String informantRef = findPersonRefByKey(persons, Ech051Constants.PERSON_KEY_INFORMANT);
+      buildPersonLink(declarantRef, victimRef, builder);
+      buildPersonLinkInformant(informantRef, victimRef, builder);
+      buildInvolvedPartyVictim(victimRef, eventRef, businessCaseRef, builder);
+      buildInvolvedPartyRepresentative(declarantRef, eventRef, businessCaseRef, builder);
+      buildInvolvedPartyInformant(informantRef, eventRef, businessCaseRef, builder);
+      buildObjectRelationsEntreprise(objects, eventRef, declarantRef, builder);
+      buildVehicleRelationsEntreprise(vehicles, eventRef, victimRef, builder);
+      return;
+    }
 
     buildInvolvedPartyVictim(victimRef, eventRef, businessCaseRef, builder);
     buildObjectRelationsIndividual(objects, eventRef, victimRef, builder);
@@ -251,12 +268,15 @@ public class SuisseEpoliceRelationsMapper {
                                    Relations.RelationsBuilder builder) {
     String tiersRef = !persons.isEmpty() ? persons.get(0).getKey() : null;
     String declarantRef = persons.size() > 1 ? persons.get(1).getKey() : null;
+    String insurerRef = vehicles != null && !vehicles.isEmpty()
+        ? Ech051Constants.INSURER_REF_VEHICLE
+        : Ech051Constants.INSURER_REF;
 
     buildPersonLink(declarantRef, tiersRef, builder);
     buildInvolvedPartyVictim(tiersRef, eventRef, businessCaseRef, builder);
     buildInvolvedPartyRepresentative(declarantRef, eventRef, businessCaseRef, builder);
-    buildObjectRelationsTiers(objects, eventRef, tiersRef, declarantRef, builder);
-    buildVehicleRelationsTiers(vehicles, eventRef, tiersRef, declarantRef, builder);
+    buildObjectRelationsTiers(objects, eventRef, tiersRef, declarantRef, insurerRef, builder);
+    buildVehicleRelationsTiers(vehicles, eventRef, tiersRef, declarantRef, insurerRef, builder);
   }
 
   /**
@@ -505,7 +525,7 @@ public class SuisseEpoliceRelationsMapper {
    * Construit les relations objets pour une déclaration tiers.
    */
   private void buildObjectRelationsTiers(List<ObjectItem> objects, String eventRef,
-                                         String tiersRef, String declarantRef,
+                                         String tiersRef, String declarantRef, String insurerRef,
                                          Relations.RelationsBuilder builder) {
     for (ObjectItem object : objects) {
       buildEventObjectLink(object, eventRef, builder);
@@ -514,7 +534,7 @@ public class SuisseEpoliceRelationsMapper {
         builder.objectPersonLink(
             ObjectPersonLink.builder()
                 .objectRef(object.getKey())
-                .insurerRef(Ech051Constants.INSURER_REF)
+                .insurerRef(insurerRef)
                 .personRef(tiersRef)
                 .build()
         );
@@ -524,7 +544,7 @@ public class SuisseEpoliceRelationsMapper {
         builder.objectPersonLink(
             ObjectPersonLink.builder()
                 .objectRef(object.getKey())
-                .insurerRef(Ech051Constants.INSURER_REF)
+                .insurerRef(insurerRef)
                 .personRef(declarantRef)
                 .build()
         );
@@ -539,7 +559,7 @@ public class SuisseEpoliceRelationsMapper {
                     Ech051Constants.INVOLVEMENT_TYPE_VICTIM_LABEL,
                     Ech051Constants.INVOLVEMENT_SOURCE_TABLE
                 ))
-                .insurerRef(Ech051Constants.INSURER_REF)
+                .insurerRef(insurerRef)
                 .personRef(tiersRef)
                 .build()
         );
@@ -554,7 +574,7 @@ public class SuisseEpoliceRelationsMapper {
                     Ech051Constants.INVOLVEMENT_TYPE_REPRESENTATIVE_LABEL,
                     Ech051Constants.INVOLVEMENT_SOURCE_TABLE
                 ))
-                .insurerRef(Ech051Constants.INSURER_REF)
+                .insurerRef(insurerRef)
                 .personRef(declarantRef)
                 .build()
         );
@@ -604,7 +624,7 @@ public class SuisseEpoliceRelationsMapper {
    * Construit les relations véhicules pour une déclaration tiers.
    */
   private void buildVehicleRelationsTiers(List<VehicleItem> vehicles, String eventRef,
-                                          String tiersRef, String declarantRef,
+                                          String tiersRef, String declarantRef, String insurerRef,
                                           Relations.RelationsBuilder builder) {
     for (VehicleItem vehicle : vehicles) {
       buildEventVehicleLink(vehicle, eventRef, builder);
@@ -613,7 +633,7 @@ public class SuisseEpoliceRelationsMapper {
         builder.vehiclePersonLink(
             VehiclePersonLink.builder()
                 .vehicleRef(vehicle.getKey())
-                .insurerRef(Ech051Constants.INSURER_REF)
+                .insurerRef(insurerRef)
                 .personRef(tiersRef)
                 .build()
         );
@@ -623,7 +643,7 @@ public class SuisseEpoliceRelationsMapper {
         builder.vehiclePersonLink(
             VehiclePersonLink.builder()
                 .vehicleRef(vehicle.getKey())
-                .insurerRef(Ech051Constants.INSURER_REF)
+                .insurerRef(insurerRef)
                 .personRef(declarantRef)
                 .build()
         );
@@ -638,7 +658,7 @@ public class SuisseEpoliceRelationsMapper {
                     Ech051Constants.INVOLVEMENT_TYPE_VICTIM_LABEL,
                     Ech051Constants.INVOLVEMENT_SOURCE_TABLE
                 ))
-                .insurerRef(Ech051Constants.INSURER_REF)
+                .insurerRef(insurerRef)
                 .personRef(tiersRef)
                 .build()
         );
@@ -653,7 +673,7 @@ public class SuisseEpoliceRelationsMapper {
                     Ech051Constants.INVOLVEMENT_TYPE_REPRESENTATIVE_LABEL,
                     Ech051Constants.INVOLVEMENT_SOURCE_TABLE
                 ))
-                .insurerRef(Ech051Constants.INSURER_REF)
+                .insurerRef(insurerRef)
                 .personRef(declarantRef)
                 .build()
         );

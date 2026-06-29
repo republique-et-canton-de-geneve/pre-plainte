@@ -95,7 +95,7 @@ export class IncidentMapper {
       adresseIncident,
       adresseIncidentSecondaire: this.hasAdresse(adresseIncidentSecondaire) ? adresseIncidentSecondaire : undefined,
       typeLieu: form.typeLieu ?? undefined,
-      lieuOrigine: form.lieuOrigine?.code ?? undefined,
+      lieuOrigine: form.lieuOrigine?.label ?? undefined,
       adresseConnue: form.adresseConnue ?? undefined,
       adresseLesee: form.adresseLesee ?? undefined,
       isTrajet: form.isTrajet ?? undefined,
@@ -162,7 +162,7 @@ export class IncidentMapper {
   }
 
   private static resolveModeleAutre(form: PrePlainteFormFields) {
-    if (!this.isAutre(form.modele?.code)) {
+    if (form.modele !== null && !this.isAutre(form.modele?.code)) {
       return undefined;
     }
     return this.toOptionalString(form.modeleAutre);

@@ -1,12 +1,15 @@
 <template>
   <div>
-    <h3 class="text-h5 text-md-h5 mb-4">{{ t("dommages.titreBlocAjoutVehiculeEndommage") }}</h3>
+    <h3 v-if="objetIndex === undefined" class="text-h5 text-md-h5 mb-4">
+      {{ t("dommages.titreBlocAjoutVehiculeEndommage") }}
+    </h3>
     <v-sheet class="pa-4 mb-4 objet-degrade-brouillon">
       <p class="text-subtitle-1 font-weight-medium mb-4">
-        {{ t("dommages.vehiculeEndommageNumero", { n: objetsCount + 1 }) }}
+        {{ t("dommages.vehiculeEndommageNumero", { n: numeroObjet }) }}
       </p>
 
       <VehiculeDetailsField
+        type-incident="degat-delit"
         :sous-categorie="sousCategorie"
         @update:sous-categorie="emit('update:sousCategorie', $event)"
         :sous-categorie-error="sousCategorieError"
@@ -38,11 +41,13 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from "vue";
 import { useI18n } from "vue-i18n";
 import VehiculeDetailsField from "@/components/pre-plainte-component/event-info/VehiculeDetailsField.vue";
 
-defineProps<{
+const props = defineProps<{
   objetsCount: number;
+  objetIndex?: number;
   sousCategorie: string;
   sousCategorieError?: string;
   categorieObjet: string;
@@ -59,4 +64,7 @@ const emit = defineEmits<{
 }>();
 
 const { t } = useI18n();
+const numeroObjet = computed(() =>
+  props.objetIndex !== undefined ? props.objetIndex + 1 : props.objetsCount + 1,
+);
 </script>

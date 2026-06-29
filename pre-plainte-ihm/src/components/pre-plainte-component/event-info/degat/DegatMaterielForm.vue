@@ -1,19 +1,5 @@
 <template>
   <div class="inputs-fields">
-    <AccessibleVSelect
-      :label="t('dommages.typeDommage')"
-      required
-      v-model="typeDommage"
-      :items="typeDommageOptions"
-      :error-messages="typeDommageError"
-      :multiple="false"
-      item-title="label"
-      item-value="value"
-      class="mb-8"
-      persistent-hint
-      :hint="t('dommages.hintTypeDommage')"
-    />
-
     <BaseRadioGroup
       v-model="constatPresent"
       :label="t('dommages.constat')"
@@ -50,19 +36,36 @@
     </template>
 
     <template v-if="typeDommage === 'dommage-vehicule'">
-      <DegatVehiculeEndommageResumeSheet
-        v-for="(obj, index) in objetsDegradesValides"
-        :key="`obj-deg-${index}`"
-        :obj="obj"
-        :index="index"
-        :libelle-resume-champ-absent="libelleResumeChampAbsent"
-        :show-ajouter-autre-button="index === dernierIndexValide"
-        @modifier="ouvrirDialogModifier"
-        @supprimer="ouvrirDialogSupprimer"
-        @ajouter-autre="scrollVersSaisie"
-      />
+      <template v-for="(obj, index) in objetsDegradesValides" :key="`obj-deg-${index}`">
+        <div v-if="editingIndex === index" :ref="definirDraftPanelRef">
+          <DegatVehiculeEndommageDraftPanel
+            :objets-count="objetsDegradesValides?.length ?? 0"
+            :objet-index="index"
+            :sous-categorie="sousCategorie"
+            :sous-categorie-error="sousCategorieError"
+            :categorie-objet="categorieObjet"
+            :sub-categorie-options="subCategorieOptions"
+            :active-prefixes="activePrefixes"
+            :valeur-reelle="valeurReelle"
+            :valeur-reelle-error="valeurReelleError"
+            :on-validate="validerVehiculeDommage"
+            @update:sous-categorie="sousCategorie = $event"
+            @update:valeurReelle="valeurReelle = $event"
+          />
+        </div>
+        <DegatVehiculeEndommageResumeSheet
+          v-else
+          :obj="obj"
+          :index="index"
+          :libelle-resume-champ-absent="libelleResumeChampAbsent"
+          :show-ajouter-autre-button="editingIndex === null && index === dernierIndexValide"
+          @modifier="ouvrirDialogModifier"
+          @supprimer="ouvrirDialogSupprimer"
+          @ajouter-autre="scrollVersSaisie"
+        />
+      </template>
 
-      <div v-if="afficherFicheSaisie" ref="draftPanelRef">
+      <div v-if="afficherFicheSaisie && editingIndex === null" :ref="definirDraftPanelRef">
         <DegatVehiculeEndommageDraftPanel
           :objets-count="objetsDegradesValides?.length ?? 0"
           :sous-categorie="sousCategorie"
@@ -82,6 +85,7 @@
     <v-text-field
       :label="t('dommages.montantEstime')"
       v-model="montantEstime"
+      type="number"
       :error-messages="montantEstimeError"
       class="mb-8"
       variant="outlined"
@@ -90,7 +94,6 @@
     />
     <AccessibleVSelect
       :label="t('incidentTypes.devise')"
-      required
       v-model="devise"
       :items="deviseOptions"
       :error-messages="deviseError"
@@ -165,11 +168,12 @@ import { computed, nextTick, ref, watch, onMounted, toRaw } from "vue";
 import { useField, useFormContext } from "vee-validate";
 import { useI18n } from "vue-i18n";
 import {
-  TYPES_DOMMAGE,
   DEVISES,
   CATEGORIES_OBJETS,
   VOL_OBJET_CATEGORIE,
   EMPTY_VALUE_EM_DASH,
+  TEXT_FIELD_MAX_LENGTH,
+  VEHICULE_CATEGORIES_AVEC_VIN,
 } from "@/constants/constant";
 import AccessibleVSelect from "@/components/accessibility/AccessibleVSelect.vue";
 import { applyDateMask } from "@/utils/helpers/dateHelpers.ts";
@@ -181,7 +185,8 @@ import DegatVehiculeEndommageDraftPanel from "./DegatVehiculeEndommageDraftPanel
 import DegatVehiculeEndommageResumeSheet from "./DegatVehiculeEndommageResumeSheet.vue";
 import { toTranslatedOptions } from "@/utils/helpers/traductionHelper";
 import { requiredLabel } from "@/utils/helpers/labelHelpers";
-import { validerPlaqueVehicule } from "@/utils/helpers/volObjetVolHelpers";
+import { checkLength, validerPlaqueVehicule } from "@/utils/helpers/volObjetVolHelpers";
+import { RipolService } from "@/services/ripolService.ts";
 
 const TEXTE_VIDE = "";
 
@@ -200,7 +205,7 @@ const { t } = useI18n();
 const libelleResumeChampAbsent = computed(() => EMPTY_VALUE_EM_DASH);
 const { setFieldValue, setFieldError } = useFormContext<PrePlainteFormFields>();
 
-const { value: typeDommage, errorMessage: typeDommageError } = useField<string>("typeDommage", undefined, {
+const { value: typeDommage } = useField<string>("typeDommage", undefined, {
   keepValueOnUnmount: true,
 });
 const { value: montantEstime, errorMessage: montantEstimeError } = useField("montantEstime");
@@ -243,10 +248,15 @@ const { value: objetsDegradesValides } = useField<VolObjetFormSnapshot[]>("objet
 
 const afficherFicheSaisie = ref((objetsDegradesValides.value?.length ?? 0) === 0);
 const draftPanelRef = ref<HTMLElement | null>(null);
+const definirDraftPanelRef = (element: unknown) => {
+  draftPanelRef.value = element instanceof HTMLElement ? element : null;
+};
 const editingIndex = ref<number | null>(null);
 const isRestoring = ref(false);
 
-const typeDommageOptions = computed(() => toTranslatedOptions(TYPES_DOMMAGE, t));
+const isVeloCategory = computed(() => sousCategorie.value === "velos");
+const hasVin = computed(() => VEHICULE_CATEGORIES_AVEC_VIN.includes(sousCategorie.value) ?? !isVeloCategory.value);
+
 const deviseOptions = computed(() => toTranslatedOptions(DEVISES, t));
 const natureDommageOptions = computed(() => [
   { label: t("dommages.degradations"), value: "degradations" },
@@ -411,35 +421,55 @@ const clearDraftApresValidation = () => {
   stopRestoringOnNextTick();
 };
 
-const validerVehiculeDommage = () => {
+const validerVehiculeDommage = async (): Promise<boolean> => {
   effacerErreursBrouillon();
 
   if (!sousCategorie.value?.trim()) {
     setFieldError("sousCategorie", t("validation.champRequis"));
-    return;
+    return false;
   }
 
   if (!typeObjet.value?.code) {
     setFieldError("typeObjet", t("validation.typeObjetRequis"));
-    return;
+    return false;
   }
 
   if (!fabricant.value?.code) {
     setFieldError("fabricant", t("validation.fabricantRequis"));
-    return;
+    return false;
   }
   if (fabricant.value.code === "AUTRE" && !chaineFormulaire(fabricantAutre.value).trim()) {
     setFieldError("fabricantAutre", t("validation.champRequis"));
-    return;
+    return false;
   }
-  if (!modele.value?.code) {
-    setFieldError("modele", t("validation.modeleRequis"));
-    return;
+
+  if (fabricant.value.code !== "AUTRE") {
+    const models = await RipolService.searchVehicleModels(fabricant.value.code);
+    if (models.length > 0 && !modele.value?.code) {
+      setFieldError("modele", t("validation.modeleRequis"));
+      return false;
+    }
+    if ((modele.value?.code === "AUTRE" || models.length === 0) && !chaineFormulaire(modeleAutre.value).trim()) {
+      setFieldError("modeleAutre", t("validation.champRequis"));
+      return false;
+    }
   }
-  if (modele.value.code === "AUTRE" && !chaineFormulaire(modeleAutre.value).trim()) {
-    setFieldError("modeleAutre", t("validation.champRequis"));
-    return;
+
+  if (!couleur.value?.code) {
+    setFieldError("couleur", t("validation.couleurRequise"));
+    return false;
   }
+
+  if (isVeloCategory.value && !numeroCadreInconnu.value && !chaineFormulaire(numeroCadre.value).trim()) {
+    setFieldError("numeroCadre", t("validation.numeroCadreRequis"));
+    return false;
+  }
+
+  if (hasVin.value && !vinInconnu.value && !chaineFormulaire(vin.value).trim()) {
+    setFieldError("vin", t("validation.vinRequis"));
+    return false;
+  }
+
   if (
     !validerPlaqueVehicule(
       {
@@ -453,7 +483,52 @@ const validerVehiculeDommage = () => {
       t,
     )
   ) {
-    return;
+    return false;
+  }
+
+  if (!checkLength(fabricantAutre.value, TEXT_FIELD_MAX_LENGTH)) {
+    setFieldError("fabricantAutre", t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH }));
+    return false;
+  }
+
+  if (!checkLength(modeleAutre.value, TEXT_FIELD_MAX_LENGTH)) {
+    setFieldError("modeleAutre", t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH }));
+    return false;
+  }
+
+  if (!checkLength(vin.value, TEXT_FIELD_MAX_LENGTH)) {
+    setFieldError("vin", t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH }));
+    return false;
+  }
+
+  if (!checkLength(numeroCadre.value, TEXT_FIELD_MAX_LENGTH)) {
+    setFieldError("numeroCadre", t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH }));
+    return false;
+  }
+
+  if (!checkLength(velofinderId.value, TEXT_FIELD_MAX_LENGTH)) {
+    setFieldError("velofinderId", t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH }));
+    return false;
+  }
+
+  if (!checkLength(assureurAutre.value, TEXT_FIELD_MAX_LENGTH)) {
+    setFieldError("assureurAutre", t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH }));
+    return false;
+  }
+
+  if (!checkLength(numeroAssurance.value, TEXT_FIELD_MAX_LENGTH)) {
+    setFieldError("numeroAssurance", t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH }));
+    return false;
+  }
+
+  if (!checkLength(numeroVignette.value, TEXT_FIELD_MAX_LENGTH)) {
+    setFieldError("numeroVignette", t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH }));
+    return false;
+  }
+
+  if (!checkLength(numeroMaster.value, TEXT_FIELD_MAX_LENGTH)) {
+    setFieldError("numeroMaster", t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH }));
+    return false;
   }
 
   const snapshot = buildSnapshotFromDraft();
@@ -470,8 +545,21 @@ const validerVehiculeDommage = () => {
   editingIndex.value = null;
   clearDraftApresValidation();
   afficherFicheSaisie.value = false;
+  return true;
 };
 
+const validerBrouillonAvantNavigation = async (): Promise<boolean> => {
+  if (typeDommage.value !== "dommage-vehicule" || !afficherFicheSaisie.value) {
+    return true;
+  }
+  const brouillonValide = await validerVehiculeDommage();
+  if (!brouillonValide) {
+    void nextTick(() => draftPanelRef.value?.scrollIntoView({ behavior: "smooth", block: "start" }));
+  }
+  return brouillonValide;
+};
+
+defineExpose({ validerBrouillonAvantNavigation });
 const dernierIndexValide = computed(() => {
   const n = objetsDegradesValides.value?.length ?? 0;
   return n > 0 ? n - 1 : -1;
@@ -517,6 +605,26 @@ watch(
   },
   { immediate: true },
 );
+
+watch(modele, newVal => {
+  if (isRestoring.value || !newVal) {
+    return;
+  }
+
+  if (modeleAutre.value) {
+    modeleAutre.value = "";
+  }
+});
+
+watch(modeleAutre, newVal => {
+  if (isRestoring.value || !newVal) {
+    return;
+  }
+
+  if (modele.value?.code !== "AUTRE") {
+    modele.value = null;
+  }
+});
 
 type ActionDialog = "modifier" | "supprimer";
 

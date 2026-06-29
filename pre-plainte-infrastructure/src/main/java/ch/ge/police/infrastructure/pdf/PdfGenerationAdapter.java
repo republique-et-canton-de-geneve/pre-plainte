@@ -117,7 +117,7 @@ public class PdfGenerationAdapter implements PdfGenerationUseCase {
   private static final String CATEGORIE_DOCUMENTS = "documents";
   private static final String CATEGORIE_PLAQUE = "plaque";
   private static final String PDF_NON_STRUCTURED_OBJECTS_LABEL = "Objets sans identification";
-  private static final String PDF_NON_STRUCTURED_OBJECTS_CHAIN_SEPARATOR = " - ";
+  private static final String PDF_NON_STRUCTURED_OBJECTS_BULLET_PREFIX = "- ";
 
   @Override
   public byte[] generatePdf(final PrePlainte prePlainte) {
@@ -396,7 +396,7 @@ public class PdfGenerationAdapter implements PdfGenerationUseCase {
     IntStream.range(0, structuredCount)
         .mapToObj(i -> Map.entry(i, structuredObjects.get(i)))
         .forEach(e -> addStructuredObjectToPdf(rows, structuredObjectLabelPrefix, includeVolFields, e, structuredCount));
-    addIfNotNull(rows, PDF_NON_STRUCTURED_OBJECTS_LABEL, formatChainedNonStructuredObjects(nonStructuredObjects));
+    addIfNotNull(rows, PDF_NON_STRUCTURED_OBJECTS_LABEL, formatBulletedNonStructuredObjects(nonStructuredObjects));
   }
 
   private void addStructuredObjectToPdf(List<String[]> rows, String structuredObjectLabelPrefix, boolean includeVolFields, Map.Entry<Integer, ObjetIncident> e, int structuredCount) {
@@ -411,15 +411,17 @@ public class PdfGenerationAdapter implements PdfGenerationUseCase {
     }
   }
 
-  private String formatChainedNonStructuredObjects(List<ObjetIncident> objects) {
+  private String formatBulletedNonStructuredObjects(List<ObjetIncident> objects) {
     if (objects == null || objects.isEmpty()) {
       return null;
     }
-    return objects.stream()
+    String formatted = objects.stream()
         .map(this::formatNonStructuredObjectSegment)
         .filter(segment -> segment != null && !segment.isBlank())
-        .reduce((left, right) -> left + PDF_NON_STRUCTURED_OBJECTS_CHAIN_SEPARATOR + right)
+        .map(segment -> PDF_NON_STRUCTURED_OBJECTS_BULLET_PREFIX + segment)
+        .reduce((left, right) -> left + "\n" + right)
         .orElse(null);
+    return formatted == null || formatted.isBlank() ? null : formatted;
   }
 
   private String formatNonStructuredObjectSegment(ObjetIncident objet) {
@@ -503,9 +505,11 @@ public class PdfGenerationAdapter implements PdfGenerationUseCase {
     if (marque != null && !marque.isBlank()) {
       parts.add(marque.trim());
     }
-    String modele = RIPOL_AUTRE.equals(o.getModeleCode()) ? o.getModeleAutre() : o.getModeleLabel();
-    if (modele != null && !modele.isBlank()) {
-      parts.add(modele.trim());
+    if (!RIPOL_AUTRE.equals(o.getFabricantCode())) {
+      String modele = (o.getModele() == null || RIPOL_AUTRE.equals(o.getModeleCode())) ? o.getModeleAutre() : o.getModeleLabel();
+      if (modele != null && !modele.isBlank()) {
+        parts.add(modele.trim());
+      }
     }
     return parts.isEmpty() ? null : String.join(" ", parts);
   }
@@ -550,20 +554,25 @@ public class PdfGenerationAdapter implements PdfGenerationUseCase {
 
   private void addLieuEvent(List<String[]> rows, IncidentBase details, String suffixeAdressePrincipale) {
     addBooleanOuiNonPdf(rows, "Adresse de la personne lesée ?", details.getAdresseLesee());
-    addIfNotNull(rows, "Type de lieu",
-      Optional.ofNullable(details.getTypeLieu())
-        .map(RipolCode::label)
-        .orElse(null));
-    addBooleanOuiNonPdf(rows, "Connaissez-vous l'adresse exacte du vol ou du dommage ?",
-      details.getAdresseConnue());
+    if (Boolean.FALSE.equals(details.getAdresseLesee())) {
+      addIfNotNull(rows, "Type de lieu",
+        Optional.ofNullable(details.getTypeLieu())
+          .map(RipolCode::label)
+          .orElse(null));
+      addBooleanOuiNonPdf(rows, "Connaissez-vous l'adresse exacte du vol ou du dommage ?",
+        details.getAdresseConnue());
 
-    if (Boolean.TRUE.equals(details.getIsTrajet())) {
-      addAdresseEvenement("de départ", details.getAdresseIncident(), rows);
-      addAdresseEvenement("d'arrivée", details.getAdresseIncidentSecondaire(), rows);
-      return;
+      if (Boolean.TRUE.equals(details.getAdresseConnue())) {
+        addAdresseEvenement(suffixeAdressePrincipale, details.getAdresseIncident(), rows);
+      } else {
+        if (Boolean.TRUE.equals(details.getIsTrajet())) {
+          addAdresseEvenement("de départ", details.getAdresseIncident(), rows);
+          addAdresseEvenement("d'arrivée", details.getAdresseIncidentSecondaire(), rows);
+        } else {
+          addIfNotNull(rows, "Commune de l'événement", details.getLieuOrigine());
+        }
+      }
     }
-
-    addAdresseEvenement(suffixeAdressePrincipale, details.getAdresseIncident(), rows);
   }
 
   private void handleCybercrime(List<String[]> rows, Cybercrime c) {

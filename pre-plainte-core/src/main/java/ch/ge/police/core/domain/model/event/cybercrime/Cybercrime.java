@@ -1,11 +1,11 @@
 package ch.ge.police.core.domain.model.event.cybercrime;
 
+import ch.ge.police.core.domain.model.common.error.ValidationMetierException;
 import ch.ge.police.core.domain.model.event.IncidentBase;
 import ch.ge.police.core.domain.model.event.common.TypeIncident;
 import ch.ge.police.core.domain.model.event.cybercrime.common.AchatNonRecu;
 import ch.ge.police.core.domain.model.event.cybercrime.common.CommandeFrauduleuse;
 import ch.ge.police.core.domain.model.event.cybercrime.common.FausseAnnonce;
-import ch.ge.police.core.domain.model.common.error.ValidationMetierException;
 import ch.ge.police.core.domain.model.event.cybercrime.common.TypeCybercrime;
 import ch.ge.police.core.domain.model.fichier.Fichier;
 import lombok.Data;
@@ -13,6 +13,11 @@ import lombok.EqualsAndHashCode;
 
 import java.util.List;
 import java.util.Locale;
+
+import static ch.ge.police.core.domain.util.validation.ChampValidator.verifierChampObligatoire;
+import static ch.ge.police.core.domain.util.validation.ChampValidator.verifierLongueurMax;
+import static ch.ge.police.core.domain.util.validation.ValidationConstants.TEXTAREA_MAX_LENGTH;
+import static ch.ge.police.core.domain.util.validation.ValidationConstants.TEXT_FIELD_MAX_LENGTH;
 
 /**
  * Représente un incident de type Cybercrime.
@@ -38,22 +43,21 @@ public class Cybercrime extends IncidentBase {
 
   @Override
   public void champsObligatoireIncident() {
-    verifierNonVide(typeCybercrime != null ? typeCybercrime.getCode() : null, "Le type de cybercrime est obligatoire.");
-    verifierNonVide(descriptionCybercrime, "La description du cybercrime est obligatoire.");
+    verifierChampsObligatoires();
+    verifierLongueurs();
 
-    // Validation selon le type de cybercrime
     switch (typeCybercrime.getCode().toLowerCase(Locale.ROOT)) {
       case "fausse-annonce":
         verifierDatesContact();
-        verifierEtValider(fausseAnnonce, "fausse annonce");
+        verifierSousType(fausseAnnonce, "fausse annonce");
         break;
       case "achat-non-recu":
         verifierDatesContact();
-        verifierEtValider(achatNonRecu, "achat non reçu");
+        verifierSousType(achatNonRecu, "achat non reçu");
         break;
       case "commande-frauduleuse":
         verifierDatesEvenement();
-        verifierEtValider(commandeFrauduleuse, "commande frauduleuse");
+        verifierSousType(commandeFrauduleuse, "commande frauduleuse");
         break;
       case "cyberharcelement", "rancongiciel", "autre":
         // Ces types n'ont pas de sous-objets spécifiques, validation basique seulement
@@ -63,26 +67,36 @@ public class Cybercrime extends IncidentBase {
     }
   }
 
+  @Override
+  protected void verifierChampsObligatoires() {
+    super.verifierChampsObligatoires();
+
+    verifierChampObligatoire(typeCybercrime, "Le type de cybercrime est obligatoire.");
+    verifierChampObligatoire(descriptionCybercrime, "La description du cybercrime est obligatoire.");
+  }
+
+  @Override
+  protected void verifierLongueurs() {
+    super.verifierLongueurs();
+
+    verifierLongueurMax(descriptionCybercrime, TEXTAREA_MAX_LENGTH, "descriptionCybercrime");
+    verifierLongueurMax(datePremierContact, TEXT_FIELD_MAX_LENGTH, "datePremierContact");
+    verifierLongueurMax(dateDernierContact, TEXT_FIELD_MAX_LENGTH, "dateDernierContact");
+  }
+
   private void verifierDatesContact() {
-    verifierNonVide(datePremierContact, "La date de premier contact est obligatoire.");
-    verifierNonVide(dateDernierContact, "La date de dernier contact est obligatoire.");
+    verifierChampObligatoire(datePremierContact, "La date de premier contact est obligatoire.");
+    verifierChampObligatoire(dateDernierContact, "La date de dernier contact est obligatoire.");
   }
 
   private void verifierDatesEvenement() {
-    verifierNonVide(getDateDebutEvent(), "La date de début d'événement est obligatoire.");
-    verifierNonVide(getDateFinEvent(), "La date de fin d'événement est obligatoire.");
+    verifierChampObligatoire(getDateDebutEvent(), "La date de début d'événement est obligatoire.");
+    verifierChampObligatoire(getDateFinEvent(), "La date de fin d'événement est obligatoire.");
   }
 
-  private void verifierNonVide(String champ, String messageErreur) {
-    if (champ == null || champ.isBlank()) {
-      throw new ValidationMetierException(messageErreur);
-    }
-  }
+  private void verifierSousType(Object sousType, String nomSousType) {
+    verifierChampObligatoire(sousType, "Le sous-type " + nomSousType + " doit être renseigné.");
 
-  private void verifierEtValider(Object sousType, String nomSousType) {
-    if (sousType == null) {
-      throw new ValidationMetierException("Le sous-type " + nomSousType + " doit être renseigné.");
-    }
     if (sousType instanceof FausseAnnonce f) {
       f.champsObligatoireCybercrime();
     }

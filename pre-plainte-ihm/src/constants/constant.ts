@@ -5,6 +5,10 @@ export const DEMARCHE_PLAINTE_URL = "https://www.ge.ch/vol-cambriolage-dommage-p
 export const EMPTY_VALUE_DISPLAY = "-";
 export const EMPTY_VALUE_EM_DASH = "—";
 
+export const NUMERO_IMEI_MAX_LENGTH = 15;
+export const TEXT_FIELD_MAX_LENGTH = 100;
+export const TEXTAREA_MAX_LENGTH = 2000;
+
 export const STEPS = [
   { titleKey: "steps.informationsGenerales" },
   { titleKey: "steps.verificationEmail" },
@@ -181,13 +185,14 @@ export const CATEGORIES_OBJETS = [
       { value: "avions", labelKey: "sousCategories.avions", prefixes: ["400", "401", "403"] },
     ],
   },
+/* La catégorie plaque ne doit pas être disponible pour la V1 mais sera certainement demandée par la suite
   {
     value: "plaque",
     labelKey: "categoriesObjets.plaque",
     prefixes: [],
     useVehicleTypes: false,
     subCategories: [],
-  },
+  },*/
   {
     value: "vetements",
     labelKey: "categoriesObjets.vetements",
@@ -337,6 +342,10 @@ export const TYPES_DOMMAGE = [
   { value: "dommage-propriete", labelKey: "typesDommage.dommagePropriete" },
   { value: "autre", labelKey: "typesDommage.autre" },
 ] as const;
+
+export const POSTES_POLICE_URL =
+  "https://app2.ge.ch/tergeoportal/apps/instant/sidebar/index.html?appid=7e0a80479c7744eba90795bc97c8ccd4";
+export const FRIENDLY_CAPTCHA_API_ENDPOINT = "eu";
 
 export const DEVISES = [
   { value: "CHF", labelKey: "incidentTypes.chf" },

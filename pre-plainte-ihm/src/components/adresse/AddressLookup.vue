@@ -2,14 +2,15 @@
   <v-sheet variant="outlined" class="address-lookup-sheet mb-4 w-100" rounded="lg">
     <v-autocomplete
       :model-value="displayValue"
-      :items="prioritizedCountryOptions"
+      :items="countryOptions"
       :loading="countriesLoading"
       :label="t('informationsPersonnelles.pays')"
       variant="outlined"
       class="address-lookup-autocomplete mb-4"
       item-title="label"
       item-value="value"
-      clearable
+      :clearable="!countrySelectionLocked"
+      :disabled="countrySelectionLocked"
       persistent-clear
       hide-no-data
       @update:model-value="onCountryChange"
@@ -137,6 +138,10 @@ interface Emits {
 const emit = defineEmits<Emits>();
 const { t } = useI18n();
 
+const props = defineProps<{
+  allowedCountryCodes?: string[];
+}>();
+
 const addressAcRef = ref<any>(null);
 const { addresses, isLoading, isError, search, setCountry, reset, searchText } = useAddressSearch();
 
@@ -152,6 +157,17 @@ const {
 
 const selectedAddress = ref<AddressResult | null>(null);
 const selectedRipolCode = ref(RIPOL.PAYS_SUISSE);
+
+const countryOptions = computed(() => {
+  if (!props.allowedCountryCodes?.length) {
+    return prioritizedCountryOptions.value;
+  }
+  return prioritizedCountryOptions.value.filter(country =>
+    props.allowedCountryCodes?.includes(country.value),
+  );
+});
+
+const countrySelectionLocked = computed(() => countryOptions.value.length === 1);
 
 const displayValue = computed(() => {
   if (!countries.value || countries.value.length === 0) {
@@ -216,6 +232,16 @@ const onCountryChange = (ripolCode: string) => {
     reset();
   }
 };
+
+watch(
+  countryOptions,
+  options => {
+    if (options.length === 1 && selectedRipolCode.value !== options[0].value) {
+      onCountryChange(options[0].value);
+    }
+  },
+  { immediate: true },
+);
 </script>
 
 <style scoped>

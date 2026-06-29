@@ -65,6 +65,44 @@ class SuisseEpoliceRelationsMapperTest {
   }
 
   @Test
+  void shouldBuildIndividualRelationsWithVehicleUsingPhysicalPersonSchema() {
+    List<Person> persons = List.of(
+        person(Ech051Constants.PERSON_KEY_TIERS),
+        person(Ech051Constants.PERSON_KEY_DECLARANT_ENTREPRISE),
+        person(Ech051Constants.PERSON_KEY_INFORMANT),
+        person(Ech051Constants.INSURER_KEY_VEHICLE)
+    );
+    List<Event> events = List.of(event("E1"));
+    List<ObjectItem> objects = List.of(object("O1"));
+    List<VehicleItem> vehicles = List.of(vehicle("V1"));
+    BusinessCase businessCase = businessCase("B1");
+
+    Relations result = mapper.buildRelations(persons, events, objects, vehicles, businessCase, DeclarationType.INDIVIDUAL, null);
+
+    assertNotNull(result);
+    assertEquals(2, size(result.getPersonLinks()));
+    assertEquals(3, size(result.getInvolvedParties()));
+    assertEquals(1, size(result.getObjectPersonLinks()));
+    assertEquals(1, size(result.getVehiclePersonLinks()));
+
+    assertEquals(Ech051Constants.PERSON_KEY_DECLARANT_ENTREPRISE, result.getPersonLinks().getFirst().getPerson1Ref());
+    assertEquals(Ech051Constants.PERSON_KEY_TIERS, result.getPersonLinks().getFirst().getPerson2Ref());
+
+    assertTrue(result.getInvolvedParties().stream()
+        .anyMatch(i -> Ech051Constants.PERSON_KEY_TIERS.equals(i.getPersonRef())));
+    assertTrue(result.getInvolvedParties().stream()
+        .anyMatch(i -> Ech051Constants.PERSON_KEY_DECLARANT_ENTREPRISE.equals(i.getPersonRef())));
+    assertTrue(result.getInvolvedParties().stream()
+        .anyMatch(i -> Ech051Constants.PERSON_KEY_INFORMANT.equals(i.getPersonRef())));
+
+    assertEquals(Ech051Constants.PERSON_KEY_DECLARANT_ENTREPRISE, result.getObjectPersonLinks().getFirst().getPersonRef());
+    assertEquals(Ech051Constants.PERSON_KEY_ASSURANCE_ENTREPRISE, result.getObjectPersonLinks().getFirst().getInsurerRef());
+
+    assertEquals(Ech051Constants.PERSON_KEY_TIERS, result.getVehiclePersonLinks().getFirst().getPersonRef());
+    assertEquals(Ech051Constants.PERSON_KEY_ASSURANCE_ENTREPRISE, result.getVehiclePersonLinks().getFirst().getInsurerRef());
+  }
+
+  @Test
   void shouldBuildTiersRelations() {
     List<Person> persons = List.of(person("P1"), person("P2"));
     List<Event> events = List.of(event("E1"));
@@ -88,6 +126,25 @@ class SuisseEpoliceRelationsMapperTest {
 
     assertTrue(result.getInvolvedParties().stream().anyMatch(i -> "P1".equals(i.getPersonRef())));
     assertTrue(result.getInvolvedParties().stream().anyMatch(i -> "P2".equals(i.getPersonRef())));
+
+    assertTrue(result.getObjectPersonLinks().stream()
+        .allMatch(link -> Ech051Constants.INSURER_REF_VEHICLE.equals(link.getInsurerRef())));
+    assertTrue(result.getVehiclePersonLinks().stream()
+        .allMatch(link -> Ech051Constants.INSURER_REF_VEHICLE.equals(link.getInsurerRef())));
+  }
+
+  @Test
+  void shouldUseDefaultInsurerRefForTiersWithoutVehicle() {
+    List<Person> persons = List.of(person("P1"), person("P2"));
+    List<Event> events = List.of(event("E1"));
+    List<ObjectItem> objects = List.of(object("O1"));
+
+    Relations result = mapper.buildRelations(
+        persons, events, objects, List.of(), businessCase("B1"), DeclarationType.TIERS, null);
+
+    assertNotNull(result);
+    assertTrue(result.getObjectPersonLinks().stream()
+        .allMatch(link -> Ech051Constants.INSURER_REF.equals(link.getInsurerRef())));
   }
 
   @Test

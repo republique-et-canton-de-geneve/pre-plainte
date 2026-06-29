@@ -86,6 +86,7 @@ public class Ech0051DocumentXml {
   @Getter
   @Setter
   @XmlAccessorType(XmlAccessType.FIELD)
+  @XmlType(propOrder = {"key", "sourceId", "natural", "legal", "address", "communications", "additionalInformation"})
   public static class PersonXml {
     public PersonXml() {
       // JAXB requires an explicit no-arg constructor.
@@ -93,6 +94,9 @@ public class Ech0051DocumentXml {
 
     @XmlElement(name = "key", namespace = SepNamespaces.ECH_0051_NS)
     private String key;
+
+    @XmlElement(name = "sourceID", namespace = SepNamespaces.ECH_0051_NS)
+    private SourceIdXml sourceId;
 
     @XmlElement(name = "natural", namespace = SepNamespaces.ECH_0051_NS)
     private NaturalXml natural;
@@ -401,7 +405,7 @@ public class Ech0051DocumentXml {
     @XmlElement(name = "mobile", namespace = SepNamespaces.ECH_0051_NS)
     private PhoneXml mobile;
 
-    @XmlElement(name = "phone", namespace = SepNamespaces.ECH_0051_NS)
+    @XmlElement(name = "telephone", namespace = SepNamespaces.ECH_0051_NS)
     private PhoneXml phone;
 
     @XmlElement(name = "uri", namespace = SepNamespaces.ECH_0051_NS)
@@ -675,10 +679,7 @@ public class Ech0051DocumentXml {
     private RipolValueXml modelType;
 
     @XmlElement(name = "colour", namespace = SepNamespaces.ECH_0051_NS)
-    private RipolValueXml colour;
-
-    @XmlElement(name = "colourSecondary", namespace = SepNamespaces.SEP_NS)
-    private RipolValueXml colourSecondary;
+    private List<RipolValueXml> colours = new ArrayList<>();
 
     @XmlElement(name = "masterNumber", namespace = SepNamespaces.ECH_0051_NS)
     private String masterNumber;
@@ -747,10 +748,7 @@ public class Ech0051DocumentXml {
     private MarkedValueXml material;
 
     @XmlElement(name = "colour", namespace = SepNamespaces.ECH_0051_NS)
-    private RipolValueXml colour;
-
-    @XmlElement(name = "colourSecondary", namespace = SepNamespaces.SEP_NS)
-    private RipolValueXml colourSecondary;
+    private List<RipolValueXml> colours = new ArrayList<>();
 
     @XmlElement(name = "realValue", namespace = SepNamespaces.ECH_0051_NS)
     private RealValueXml realValue;

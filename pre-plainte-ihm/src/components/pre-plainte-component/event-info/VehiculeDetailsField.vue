@@ -25,6 +25,7 @@
     :error-messages="sousCategorieError"
     :hint="t('sousCategories.hint')"
     persistent-hint
+    clearable
   />
 
   <RipolAutocomplete
@@ -93,7 +94,7 @@
   <RipolAutocomplete
     v-model="couleur"
     :key="colourKey"
-    :label="t('incidentTypes.couleur')"
+    :label="requiredLabel(t('incidentTypes.couleur'))"
     :fetch-fn="fetchColours"
     :error-messages="couleurError"
     :hint="t('incidentTypes.hintCouleur')"
@@ -115,10 +116,11 @@
 
   <template v-if="isVeloCategory">
     <v-text-field
-      :label="t('incidentTypes.numeroCadre')"
+      :label="(numeroCadreInconnu ? t('incidentTypes.numeroCadre') : requiredLabel(t('incidentTypes.numeroCadre')))"
       v-model="numeroCadre"
       :disabled="numeroCadreInconnu"
       class="mb-2"
+      :error-messages="numeroCadreError"
       variant="outlined"
       :hint="t('incidentTypes.hintNumeroCadre')"
       persistent-hint
@@ -128,7 +130,7 @@
 
   <template v-if="hasVin">
     <v-text-field
-      :label="t('incidentTypes.vin')"
+      :label="(vinInconnu ? t('incidentTypes.vin') : requiredLabel(t('incidentTypes.vin')))"
       v-model="vin"
       :disabled="vinInconnu"
       class="mb-2"
@@ -145,6 +147,7 @@
     :label="t('incidentTypes.velofinderId')"
     v-model="velofinderId"
     class="mb-8"
+    :error-messages="velofinderIdError"
     variant="outlined"
     :hint="t('incidentTypes.hintVelofinderId')"
     persistent-hint
@@ -191,6 +194,7 @@
     <v-text-field
       v-model="numeroAssurance"
       :label="t('incidentTypes.numeroAssurance')"
+      :error-messages="numeroAssuranceError"
       class="mb-4"
       variant="outlined"
       :hint="t('incidentTypes.hintNumeroAssurance')"
@@ -200,6 +204,7 @@
     <v-text-field
       v-model="numeroVignette"
       :label="t('incidentTypes.numeroVignette')"
+      :error-messages="numeroVignetteError"
       class="mb-4"
       variant="outlined"
       :hint="t('incidentTypes.hintNumeroVignette')"
@@ -209,6 +214,7 @@
     <v-text-field
       v-model="numeroMaster"
       :label="t('incidentTypes.numeroMaster')"
+      :error-messages="numeroMasterError"
       class="mb-8"
       variant="outlined"
       :hint="t('incidentTypes.hintNumeroMaster')"
@@ -270,7 +276,7 @@ import { useI18n } from "vue-i18n";
 import RipolAutocomplete from "@/components/ripol/RipolAutocomplete.vue";
 import { useVehicleDetailsRipol } from "@/composables/useVehicleDetailsRipol";
 import AccessibleVSelect from "@/components/accessibility/AccessibleVSelect.vue";
-import { CATEGORIES_OBJETS, VEHICLE_INSURER_SUGGESTIONS } from "@/constants/constant";
+import { CATEGORIES_OBJETS, VEHICLE_INSURER_SUGGESTIONS, VEHICULE_CATEGORIES_AVEC_PLAQUE } from "@/constants/constant";
 import { applyDateMask } from "@/utils/helpers/dateHelpers.ts";
 import { filterNationalities } from "@/utils/helpers/ripolHelpers.ts";
 import { requiredLabel } from "@/utils/helpers/labelHelpers";
@@ -285,6 +291,7 @@ type SubCatOption = {
 };
 
 const props = defineProps({
+  typeIncident: { type: String, required: true },
   sousCategorie: { type: String, required: true },
   sousCategorieError: { type: String },
   categorieObjet: { type: String, default: "vehicule" },
@@ -314,13 +321,25 @@ const selectedCategorie = computed(() => CATEGORIES_OBJETS.find(cat => cat.value
 
 const computedSubCategorieOptions = computed<SubCatOption[]>(() => {
   if (props.subCategorieOptions && props.subCategorieOptions.length > 0) {
-    return props.subCategorieOptions;
+    if (props.typeIncident === 'vol') {
+      return props.subCategorieOptions.filter(
+        sub => !VEHICULE_CATEGORIES_AVEC_PLAQUE.includes(sub.value)
+      );
+    } else {
+      return props.subCategorieOptions;
+    }
   }
+
   const cat = selectedCategorie.value;
   if (!cat?.subCategories) {
     return [];
   }
-  return cat.subCategories.map(sub => ({
+
+  const subCategories = props.typeIncident === "vol"
+    ? cat.subCategories.filter(sub => !VEHICULE_CATEGORIES_AVEC_PLAQUE.includes(sub.value))
+    : cat.subCategories;
+
+  return subCategories.map(sub => ({
     value: sub.value,
     label: t(sub.labelKey),
     prefixes: sub.prefixes,
@@ -367,11 +386,13 @@ const {
   couleurError,
   couleurSecondaire,
   numeroCadre,
+  numeroCadreError,
   numeroCadreInconnu,
   vin,
   vinError,
   vinInconnu,
   velofinderId,
+  velofinderIdError,
   dateAchat,
   dateAchatError,
   plaqueNumero,
@@ -385,8 +406,11 @@ const {
   assureurAutre,
   assureurAutreError,
   numeroAssurance,
+  numeroAssuranceError,
   numeroVignette,
+  numeroVignetteError,
   numeroMaster,
+  numeroMasterError,
 
   objetTypeKey,
   brandKey,
