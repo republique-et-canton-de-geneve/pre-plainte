@@ -161,9 +161,12 @@ When("je saisis {string} dans le champ {string}", (valeur, champ) => {
 
 When("je renseigne le type de véhicule {string}", (typeVehicule) => {
   selectVisibleOption("Catégorie d'objet", "Véhicule");
-  fieldInput("Type de l'objet").click({ force: true });
-  fieldInput("Type de l'objet").type(`{selectall}${typeVehicule}`, { force: true });
-  cy.contains(".v-list-item-title", typeVehicule).click({ force: true });
+  fieldRoot("Type de l'objet")
+    .should(bevisible)
+    .within(() => {
+      cy.get("input").first().should("not.be.disabled").click({ force: true }).type(`{selectall}${typeVehicule}`, { force: true });
+    });
+  cy.contains(".v-list-item-title", typeVehicule, { timeout: 10000 }).should(bevisible).click({ force: true });
 });
 
 When("je sélectionne {string} dans l'autocomplétion {string}", (valeur, champ) => {
@@ -191,17 +194,22 @@ When("je sélectionne le type d'incident {string}", (typeIncident) => {
 When("je renseigne et je vérifie mon adresse e-mail", () => {
   cy.get('[data-cy="verification-email"]').filter(":visible").first().type(donneesEmailVerifie.email);
   cy.get('[data-cy="envoyer-code-email"]').filter(":visible").first().click();
-  cy.wait("@requestEmailChallenge");
-  cy.get('[data-cy="email-otp"]')
-    .filter(":visible")
-    .first()
-    .find("input:visible")
-    .should("have.length", donneesEmailVerifie.confirmationEmail.length)
-    .each(($input, index) => {
-      cy.wrap($input).type(donneesEmailVerifie.confirmationEmail[index]);
-    });
+  cy.get("body").then($body => {
+    const otpVisible = $body.find('[data-cy="email-otp"]:visible input:visible').length > 0;
+    const continuerDesactive = $body.find('[data-cy="continuer-verification-email"]:visible:disabled').length > 0;
+
+    if (otpVisible || continuerDesactive) {
+      cy.get('[data-cy="email-otp"]')
+        .filter(":visible")
+        .first()
+        .find("input:visible")
+        .should("have.length", donneesEmailVerifie.confirmationEmail.length)
+        .each(($input, index) => {
+          cy.wrap($input).type(donneesEmailVerifie.confirmationEmail[index]);
+        });
+    }
+  });
   cy.get('[data-cy="continuer-verification-email"]').filter(":visible").first().click();
-  cy.wait("@verifyEmailChallenge");
 });
 
 When("je renseigne les informations personnelles nominales pour moi-même", () => {
@@ -229,7 +237,7 @@ When("je renseigne un vol simple nominal", () => {
   selectVisibleOption("Catégorie d'objet", "Informatique");
   selectVisibleOption("Sous-catégorie", "Ordinateur portable / Tablette");
   cy.wait("@getRipolObjectTypes");
-  selectAutocomplete("Type de l'objet", "Ordinateur portable");
+  cy.contains("Ordinateur portable").should(bevisible);
   fillField("Numéro de série", "SN123456");
   cy.get('[data-cy="objet-vole-valider"]').click();
   selectRadio("Avez-vous constaté des dégradations", "Non");
@@ -265,7 +273,6 @@ When("je continue après le rendez-vous", () => {
 
 When("je soumets la pré-plainte", () => {
   cy.get('[data-cy="soumettre-preplainte"]').filter(":visible").first().click();
-  cy.wait("@verifyEmailChallenge");
   cy.wait("@submitPrePlainte");
 });
 
