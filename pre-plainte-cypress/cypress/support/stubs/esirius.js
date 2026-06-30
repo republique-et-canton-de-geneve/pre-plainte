@@ -54,3 +54,10 @@ export const stubEsiriusOk = (options = {}) => {
   }).as("getEsiriusAvailabilities");
   cy.intercept("POST", "**/api/esirius/appointments", appointment).as("createEsiriusAppointment");
 };
+
+export const stubCreationRendezVousIndisponible = () => {
+  cy.intercept("POST", "**/api/esirius/appointments", {
+    statusCode: 200,
+    body: {},
+  }).as("createEsiriusAppointment");
+};
