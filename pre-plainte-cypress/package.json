@@ -8,8 +8,9 @@
     "esbuild": "^0.25.9"
   },
   "scripts": {
-    "cy:open": "cypress open",
-    "cy:run": "cypress run --headless --e2e --spec cypress/e2e/*.feature",
+    "cy:open": "node scripts/validate-features.js && cypress open",
+    "cy:lint": "node scripts/validate-features.js",
+    "cy:run": "node scripts/validate-features.js && node scripts/check-backend.js && cypress run --headless --e2e --spec \"cypress/e2e/*.feature\"",
     "cy:verify": "cypress verify"
   }
 }

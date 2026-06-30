@@ -8,6 +8,9 @@
     "build": "vite build",
     "build-only": "vite build",
     "preview": "vite preview",
+    "test:unit": "vitest run",
+    "docs:rules": "node --import jiti/register scripts/generate-business-rules-doc.ts",
+    "docs:rules:check": "node --import jiti/register scripts/generate-business-rules-doc.ts --check",
     "coverage": "vitest run --coverage"
   },
   "dependencies": {
@@ -61,6 +64,9 @@
     "vite-plugin-vue-devtools": "8.0.5",
     "vitest": "^3.2.4",
     "vue-tsc": "^2.2.10"
+  },
+  "optionalDependencies": {
+    "@rollup/rollup-linux-x64-gnu": "4.60.4"
   },
   "overrides": {
     "@vue/devtools-core": "8.0.5",

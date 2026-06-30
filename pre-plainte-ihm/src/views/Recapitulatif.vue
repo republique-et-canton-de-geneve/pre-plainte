@@ -1603,6 +1603,7 @@
         class="w-100"
         :loading="isSubmitting"
         :disabled="isSubmitDisabled"
+        data-cy="soumettre-preplainte"
         @click="submit"
       >
         {{ t("submission.soumettrePrePlainte") }}
@@ -1615,6 +1616,7 @@
         variant="flat"
         :loading="isSubmitting"
         :disabled="isSubmitDisabled"
+        data-cy="soumettre-preplainte"
         @click="submit"
       >
         {{ t("submission.soumettrePrePlainte") }}
@@ -1663,6 +1665,7 @@ import {
 import { formatDateTimeFrench, toIsoDate } from "@/utils/helpers/dateHelpers.ts";
 import ExitActionsForm from "@/components/actions/ExitActionsForm.vue";
 import EmailChallengeOtpSection from "@/components/email/EmailChallengeOtpSection.vue";
+import { generateUuid } from "@/utils/helpers/randomHelpers";
 
 const { t } = useI18n();
 const { getCountryByCode } = useCountries();
@@ -2098,7 +2101,7 @@ const isChallengeError = (status: string) => ["INVALID", "EXPIRED", "LOCKED", "N
 const onResendCodeFromRecap = async () => {
   resendInProgress.value = true;
   try {
-    const key = store.keyChallenge ?? crypto.randomUUID();
+    const key = store.keyChallenge ?? generateUuid();
     if (!store.keyChallenge) {
       store.setKeyChallenge(key);
     }

@@ -55,7 +55,7 @@ class PdfGenerationAdapterTest {
     InformationsPersonnelles ip = new InformationsPersonnelles();
     ip.setNom("TEST");
     ip.setPrenom("Test");
-    ip.setGenre(new RipolCode("F", "Femme"));
+    ip.setGenre(new RipolCode("F", "Féminin"));
     ip.setNationalite(new RipolCode("FR", "France"));
     ip.setDateNaissance("1990-01-01");
     ip.setAdresse(new Adresse("Rue Test", "1", "1200", "Genève", "1200", "Suisse", "8212"));

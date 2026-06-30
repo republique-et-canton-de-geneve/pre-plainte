@@ -17,7 +17,7 @@ class InformationsPersonnellesTest {
     InformationsPersonnelles info = new InformationsPersonnelles();
     info.setNom("Toure");
     info.setPrenom("Maka");
-    info.setGenre(new RipolCode("1", "Homme"));
+    info.setGenre(new RipolCode("1", "Masculin"));
     info.setNationalite(new RipolCode("8100", "Suisse"));
     info.setDateNaissance("1993-11-27");
     info.setAdresse(new Adresse("Route des Fayards", "Versoix", "1290", "CH", "1234", "Suisse", "8212"));
@@ -56,7 +56,7 @@ class InformationsPersonnellesTest {
     Tiers tiers = new Tiers();
     tiers.setNom("Dupont");
     tiers.setPrenom("Jean");
-    tiers.setGenre(new RipolCode("1", "Homme"));
+    tiers.setGenre(new RipolCode("1", "Masculin"));
     tiers.setNationalite(new RipolCode("8200", "France"));
     tiers.setDateNaissance("1980-05-05");
     tiers.setAdresse(new Adresse("Rue du Lac", "Genève", "1200", "CH", "1234", "Suisse", "8212"));

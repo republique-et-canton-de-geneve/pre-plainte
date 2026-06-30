@@ -191,9 +191,9 @@
         <v-btn variant="outlined" color="primary" class="me-4" @click="handleCancelClick">
           {{ t("common.precedent") }}
         </v-btn>
-        <v-btn type="submit" variant="flat" color="primary">
-          {{ t("common.poursuivre") }}
-        </v-btn>
+          <v-btn type="submit" variant="flat" color="primary" data-cy="continuer-evenement">
+            {{ t("common.poursuivre") }}
+          </v-btn>
       </v-col>
     </v-row>
   </v-form>

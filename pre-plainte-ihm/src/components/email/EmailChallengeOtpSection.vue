@@ -23,6 +23,7 @@
           type="number"
           :autofocus="autofocus"
           :error="!!errorMessage"
+          data-cy="email-otp"
           @update:model-value="onUpdate"
         />
       </div>
