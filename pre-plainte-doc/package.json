@@ -5,8 +5,10 @@
   "type": "module",
   "scripts": {
     "docs:rules": "npm --prefix ../pre-plainte-ihm run docs:rules",
-    "docs:dev": "npm run docs:rules && vitepress dev --host 0.0.0.0",
-    "docs:build": "npm run docs:rules && vitepress build",
+    "docs:cypress": "node scripts/generate-cypress-coverage-doc.js",
+    "docs:generate": "npm run docs:rules && npm run docs:cypress",
+    "docs:dev": "npm run docs:generate && vitepress dev --host 0.0.0.0",
+    "docs:build": "npm run docs:generate && vitepress build",
     "docs:preview": "vitepress preview --host 0.0.0.0"
   },
   "devDependencies": {
