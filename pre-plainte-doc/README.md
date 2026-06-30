@@ -2,6 +2,20 @@
 
 Ce module contient la documentation technique du projet.
 
+## POC VitePress
+
+Le module peut etre expose sous forme de site statique VitePress pour mettre en avant les regles metier couvertes par les tests frontend.
+
+Commandes :
+
+```sh
+npm install
+npm run docs:dev
+npm run docs:build
+```
+
+Les commandes `docs:dev` et `docs:build` regenerent `regles-metier-formulaire.md` depuis `pre-plainte-ihm/src/test/business-rules` avant de lancer VitePress.
+
 ## Structure
 
 - `guides/` : guides pratiques, par exemple l'ajout d'un champ.
