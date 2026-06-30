@@ -1,65 +1,409 @@
 import { Given, Then, When } from "@badeball/cypress-cucumber-preprocessor";
+import {
+  fieldInput,
+  fieldRoot,
+  fillField,
+  selectAutocomplete,
+  selectNative,
+  selectRadio,
+} from "../../support/helpers/vuetify";
+import { ripol, ripolSelection, stubRipol } from "../../support/stubs/ripol";
+import { emailChallengeState, stubEmailChallengeOk } from "../../support/stubs/email-challenge";
+import { stubEsiriusOk } from "../../support/stubs/esirius";
+import { stubSoumissionPrePlainteOk } from "../../support/stubs/pre-plainte";
+import { declarantSuisseValide, donneesEmailVerifie } from "../../support/data/pre-plainte";
 
 const bevisible = "be.visible";
-const notbevisible = "not.be.visible";
 const bedisabled = "be.disabled";
+const beenabled = "be.enabled";
 
-Given("je suis sur le formulaire", () => {
-  cy.visit("/");
+const donneesEvenementVolVehicule = {
+  nationalite: ripolSelection("8100", "Suisse"),
+  typeIncident: "vol",
+  dateDebutEvenement: "20.05.2026",
+  heureDebutEvenement: "10:00",
+  dateFinEvenement: "20.05.2026",
+  heureFinEvenement: "11:00",
+  adresseConnue: false,
+  adresseLesee: true,
+  paysEvenement: "8100",
+  volDansVehicule: false,
+  categorieObjet: "vehicule",
+  sousCategorie: "",
+  typeObjet: null,
+  fabricant: {},
+  fabricantAutre: "",
+  modele: null,
+  modeleAutre: "",
+  isVehicle: true,
+  avezVousDegradation: false,
+  objetsVolesValides: [],
+};
+
+const valeursTypePersonne = {
+  Tiers: "TIERS",
+  Entreprise: "ENTREPRISE",
+};
+
+const libellesChamps = {
+  "Coordonnées du tiers concerné": "Coordonnées du tiers",
+};
+
+const selectVisibleOption = (champ, valeur) => {
+  fieldRoot(champ).find(".v-field").click({ force: true });
+  cy.contains(".v-list-item-title", valeur).click({ force: true });
+};
+
+const boutonVisibleActif = ($body, selector) =>
+  $body.find(selector).filter((_, element) => {
+    const button = element;
+    return (
+      Cypress.$(button).is(":visible") &&
+      !button.disabled &&
+      button.getAttribute("aria-disabled") !== "true" &&
+      !button.classList.contains("v-btn--disabled")
+    );
+  }).length > 0;
+
+const etatVerificationEmail = ($body) => {
+  const envoyerCodeEmail = $body.find('[data-cy="envoyer-code-email"]').filter(":visible").first();
+  const continuerVerificationEmail = $body.find('[data-cy="continuer-verification-email"]').filter(":visible").first();
+
+  return {
+    otpVisible: $body.find('[data-cy="email-otp"]:visible input:visible').length > 0,
+    continuerActif: boutonVisibleActif($body, '[data-cy="continuer-verification-email"]'),
+    requestCount: emailChallengeState.requestCount,
+    verifyCount: emailChallengeState.verifyCount,
+    envoyerDisabled: envoyerCodeEmail.prop("disabled") === true,
+    envoyerClasses: envoyerCodeEmail.attr("class") ?? "",
+    continuerDisabled: continuerVerificationEmail.prop("disabled") === true,
+    continuerClasses: continuerVerificationEmail.attr("class") ?? "",
+    alertes: $body
+      .find(".v-alert:visible")
+      .map((_, element) => Cypress.$(element).text().trim().replace(/\s+/g, " "))
+      .get()
+      .join(" | "),
+  };
+};
+
+const verificationEmailPrete = etat => etat.otpVisible || etat.continuerActif;
+
+const messageEtatVerificationEmail = etat =>
+  [
+    `otpVisible=${etat.otpVisible}`,
+    `continuerActif=${etat.continuerActif}`,
+    `requestCount=${etat.requestCount}`,
+    `verifyCount=${etat.verifyCount}`,
+    `envoyerDisabled=${etat.envoyerDisabled}`,
+    `envoyerClasses=${etat.envoyerClasses}`,
+    `continuerDisabled=${etat.continuerDisabled}`,
+    `continuerClasses=${etat.continuerClasses}`,
+    `alertes=${etat.alertes}`,
+  ].join("; ");
+
+const cliquerEnvoyerCodeEmail = () =>
+  cy.get('[data-cy="envoyer-code-email"]', { timeout: 15000 })
+    .filter(":visible")
+    .first()
+    .should($button => {
+      expect($button[0].disabled).to.eq(false);
+      expect($button[0].getAttribute("aria-disabled")).not.to.eq("true");
+      expect($button[0].classList.contains("v-btn--disabled")).to.eq(false);
+    })
+    .click();
+
+const donneesInformationsPersonnellesInvalides = {
+  "age inferieur a 16 ans": {
+    dateNaissance: "01.01.2015",
+  },
+  "nationalite etrangere sans titre de sejour": {
+    nationalite: ripolSelection("2500", "France"),
+    titreSejour: "",
+  },
+  "numero de document manquant": {
+    numeroDocumentIdentite: "",
+  },
+  "telephone invalide": {
+    telephone: "abc",
+  },
+};
+
+Given("je démarre un parcours nominal complet", () => {
+  stubRipol({
+    objectTypes: [ripol("722100", "Ordinateur portable")],
+    brands: [],
+    models: [],
+    objectColours: [ripol("NOIR", "Noir")],
+  });
+  stubEmailChallengeOk();
+  stubEsiriusOk();
+  stubSoumissionPrePlainteOk();
+  cy.demarrerPrePlainteAEtape(1);
 });
 
-Then("je vois {string} dans la page", (texte) => {
-  cy.contains(texte).should(bevisible);
+Given("je suis sur l'étape informations générales", () => {
+  stubRipol();
+  cy.demarrerPrePlainteAEtape(1);
 });
 
-Given('que je sélectionne {string} dans le type de personne', (type) => {
-  cy.get('[data-cy="type-personne"]').select(type);
+Given("je suis sur la section vol de véhicule", () => {
+  stubRipol({
+    objectTypes: [],
+    objectColours: [],
+  });
+  cy.demarrerPrePlainteAEtape(4, donneesEvenementVolVehicule);
+  cy.contains("Informations sur l'événement").should(bevisible);
+  cy.contains("Ajouter un objet volé").should(bevisible);
 });
 
-Then('les champs {string} sont affichés', (liste) => {
-  liste.split(",").forEach((champ) => {
-    cy.contains(champ.trim()).should(bevisible);
+Given("je suis sur l'étape informations personnelles", () => {
+  stubRipol();
+  cy.demarrerPrePlainteAEtape(3, donneesEmailVerifie, { emailChallengeKey: "challenge-cypress" });
+});
+
+Given("je suis sur l'étape informations personnelles avec des données invalides {string}", (casValidation) => {
+  const surcharge = donneesInformationsPersonnellesInvalides[casValidation];
+
+  expect(surcharge, `cas de validation ${casValidation}`).to.exist;
+  stubRipol();
+  cy.demarrerPrePlainteAEtape(
+    3,
+    {
+      ...declarantSuisseValide,
+      ...surcharge,
+    },
+    { emailChallengeKey: "challenge-cypress" },
+  );
+});
+
+Given("que je sélectionne {string} dans le type de personne", (type) => {
+  cy.get('[data-cy="type-personne-native"]').select(valeursTypePersonne[type] ?? type, { force: true });
+});
+
+Given("je sélectionne {string} dans le type de personne", (type) => {
+  cy.get('[data-cy="type-personne-native"]').select(valeursTypePersonne[type] ?? type, { force: true });
+});
+
+Given("que je coche la confirmation d'identité", () => {
+  cy.get('[data-cy="confirmation-identite"]').click("topRight", { force: true });
+});
+
+Given("je coche la confirmation d'identité", () => {
+  cy.get('[data-cy="confirmation-identite"]').click("topRight", { force: true });
+});
+
+Given("que je coche la confirmation de situation", () => {
+  cy.get('[data-cy="confirmation-situation"]').click("topRight", { force: true });
+});
+
+Given("je coche la confirmation de situation", () => {
+  cy.get('[data-cy="confirmation-situation"]').click("topRight", { force: true });
+});
+
+Then("les champs {string} sont affichés", (liste) => {
+  liste.split(",").forEach(champ => {
+    const libelle = champ.trim();
+    cy.contains(libellesChamps[libelle] ?? libelle).should(bevisible);
   });
 });
 
-Then('les champs {string} sont masqués', (liste) => {
-  liste.split(",").forEach((champ) => {
-    cy.contains(champ.trim()).should(notbevisible);
+Then("les champs {string} sont masqués", (liste) => {
+  liste.split(",").forEach(champ => {
+    cy.contains(champ.trim()).should("not.exist");
   });
 });
 
-When('je saisis {string} dans le champ {string}*', (valeur, champ) => {
-  cy.contains("label", champ).parent().find("input, textarea, select").clear().type(valeur);
+When("je saisis {string} dans le champ {string}", (valeur, champ) => {
+  fillField(champ, valeur);
 });
 
-When('je laisse vide le champ {string}*', (champ) => {
-  cy.contains("label", champ).parent().find("input, textarea").clear();
+When("je renseigne le type de véhicule {string}", (typeVehicule) => {
+  selectVisibleOption("Catégorie d'objet", "Véhicule");
+  fieldRoot("Type de l'objet")
+    .should(bevisible)
+    .within(() => {
+      cy.get("input").first().should("not.be.disabled").click({ force: true }).type(`{selectall}${typeVehicule}`, { force: true });
+    });
+  cy.contains(".v-list-item-title", typeVehicule, { timeout: 10000 }).should(bevisible).click({ force: true });
 });
 
-Then('le message {string} s\'affiche sous le champ {string}', (message, champ) => {
-  cy.contains("label", champ).parent().within(() => {
+When("je sélectionne {string} dans l'autocomplétion {string}", (valeur, champ) => {
+  selectAutocomplete(champ, valeur);
+});
+
+When("je valide l'objet volé", () => {
+  cy.get('[data-cy="objet-vole-valider"]').click();
+});
+
+When("je clique sur le bouton continuer des informations générales", () => {
+  cy.get('[data-cy="continuer-informations-generales"]').filter(":visible").first().click();
+});
+
+When("je sélectionne le type d'incident {string}", (typeIncident) => {
+  const valeursTypeIncident = {
+    Vol: "vol",
+    Dommage: "degat-delit",
+    Cybercrime: "cybercrime",
+  };
+
+  selectNative("Type d'incident", valeursTypeIncident[typeIncident] ?? typeIncident);
+});
+
+When("je renseigne et je vérifie mon adresse e-mail", () => {
+  cy.get('[data-cy="verification-email"]').filter(":visible").first().type(donneesEmailVerifie.email);
+  cliquerEnvoyerCodeEmail();
+  cy.wait(500);
+  cy.get("body").then($body => {
+    const etat = etatVerificationEmail($body);
+
+    if (!verificationEmailPrete(etat) && etat.requestCount === 0) {
+      return cliquerEnvoyerCodeEmail();
+    }
+
+    return undefined;
+  });
+  cy.get("body", { timeout: 15000 }).should($body => {
+    const etat = etatVerificationEmail($body);
+
+    expect(verificationEmailPrete(etat), messageEtatVerificationEmail(etat)).to.eq(true);
+  }).then($body => {
+    const otpVisible = $body.find('[data-cy="email-otp"]:visible input:visible').length > 0;
+
+    if (otpVisible) {
+      cy.get('[data-cy="email-otp"]')
+        .filter(":visible")
+        .first()
+        .find("input:visible")
+        .should("have.length", donneesEmailVerifie.confirmationEmail.length)
+        .each(($input, index) => {
+          cy.wrap($input).type(donneesEmailVerifie.confirmationEmail[index]);
+        });
+    }
+  });
+  cy.get('[data-cy="continuer-verification-email"]', { timeout: 15000 })
+    .filter(":visible")
+    .first()
+    .should($button => {
+      expect($button[0].disabled).to.eq(false);
+      expect($button[0].getAttribute("aria-disabled")).not.to.eq("true");
+      expect($button[0].classList.contains("v-btn--disabled")).to.eq(false);
+    })
+    .click();
+});
+
+When("je renseigne les informations personnelles nominales pour moi-même", () => {
+  cy.get('[data-cy="type-personne-native"]').select("MOI_MEME", { force: true });
+  fillField("Numéro de téléphone", "0791234567");
+  fillField("Nom", "Martin");
+  fillField("Prénom", "Anne");
+  selectAutocomplete("Genre", "Féminin");
+  selectAutocomplete("Nationalité", "Suisse");
+  fillField("Date de naissance", "15.04.1985");
+  fillField("Adresse", "Rue du Marche 10");
+  fillField("Numéro de rue", "10");
+  fillField("NPA", "1201");
+  fillField("Localité", "Geneve");
+  cy.get('[data-cy="type-document-identite-native"]').select("carte_identite", { force: true });
+  fillField("Numéro de carte d'identité", "ID1234567");
+});
+
+When("je continue après les informations personnelles", () => {
+  cy.get('[data-cy="continuer-informations-personnelles"]').filter(":visible").first().click();
+});
+
+When("je renseigne un vol simple nominal", () => {
+  selectRadio("Certains objets que vous allez déclarer", "Non");
+  selectVisibleOption("Catégorie d'objet", "Informatique");
+  selectVisibleOption("Sous-catégorie", "Ordinateur portable / Tablette");
+  cy.wait("@getRipolObjectTypes");
+  cy.contains("Ordinateur portable").should(bevisible);
+  fillField("Numéro de série", "SN123456");
+  cy.get('[data-cy="objet-vole-valider"]').click();
+  selectRadio("Avez-vous constaté des dégradations", "Non");
+  fillField("Date de début de l'événement", "20.05.2026");
+  fillField("Heure de début de l'événement", "10:00");
+  fillField("Date de fin de l'événement", "20.05.2026");
+  fillField("Heure de fin de l'événement", "11:00");
+  selectRadio("L'adresse correspond à", "L'adresse de la personne lesée");
+  cy.contains("Ordinateur portable").should(bevisible);
+  cy.contains("button", /Continuer|Poursuivre/).last().click({ force: true });
+});
+
+When("je sélectionne le premier créneau disponible", () => {
+  cy.wait("@getEsiriusServices");
+  cy.wait("@getEsiriusAvailabilities");
+  cy.get('[data-cy="creneau-row-0"]')
+    .filter(":visible")
+    .first()
+    .within(() => {
+      cy.get('[data-cy="creneau-radio-0"] input[type="radio"]').click({ force: true });
+    });
+});
+
+When("je continue après le rendez-vous", () => {
+  cy.get('[data-cy="continuer-rendez-vous"]').filter(":visible").first().click();
+  cy.window().its("localStorage").invoke("getItem", "pp-step").should("eq", "6");
+  cy.window().its("localStorage").invoke("getItem", "pp-data").then(data => {
+    const parsedData = JSON.parse(data ?? "{}");
+    expect(parsedData.selectedCreneau).to.exist;
+    expect(parsedData.selectedCreneau.lieu).to.eq("Poste PPEL");
+  });
+});
+
+When("je soumets la pré-plainte", () => {
+  cy.get('[data-cy="soumettre-preplainte"]').filter(":visible").first().click();
+  cy.wait("@submitPrePlainte");
+});
+
+Then("le message {string} s'affiche sous le champ {string}", (message, champ) => {
+  fieldRoot(champ).within(() => {
     cy.contains(message).should(bevisible);
   });
 });
 
-When('je clique sur {string}', (texte) => {
-  cy.contains("button", texte).click();
+Then("le message {string} s'affiche", (message) => {
+  cy.contains(message).should(bevisible);
 });
 
-Then('le bouton {string} est désactivé', (texte) => {
-  cy.contains("button", texte).should(bedisabled);
+Then("l'objet volé est enregistré", () => {
+  cy.contains("Le champ est requis").should("not.exist");
+  cy.contains("Objet n° 1").should(bevisible);
 });
 
-Then('je vois l\'étape {string}', (etape) => {
+Then("aucune erreur de champ obligatoire n'est affichée", () => {
+  cy.contains("Le champ est requis").should("not.exist");
+});
+
+Then("je vois l'étape {string}", (etape) => {
   cy.contains(etape).should(bevisible);
 });
 
-Given("que je renseigne tous les champs obligatoires avec des valeurs valides", (dataTable) => {
-  dataTable.hashes().forEach(({ Champ, Valeur }) => {
-    cy.contains("label", Champ).parent().find("input, textarea, select").clear().type(Valeur);
-  });
+Then("je reste sur l'étape informations personnelles", () => {
+  cy.contains("Informations personnelles").should(bevisible);
+  cy.get('[data-cy="continuer-informations-personnelles"]').filter(":visible").first().should(bevisible);
+  cy.window().its("localStorage").invoke("getItem", "pp-step").should("eq", "3");
 });
 
-Given("que j'ai des champs en erreur", () => {
-  cy.contains("label", "Nom").parent().find("input").clear().type("A");
+Then("le récapitulatif du parcours nominal est affiché", () => {
+  cy.contains("#recap-title", "Validation").should(bevisible);
+  cy.contains("MARTIN").should(bevisible);
+  cy.contains("Anne").should(bevisible);
+  cy.contains("Ordinateur portable").should(bevisible);
+  cy.contains("Poste PPEL").should(bevisible);
+});
+
+Then("le rendez-vous est créé", () => {
+  cy.wait("@createEsiriusAppointment");
+});
+
+Then("je vois la validation finale", () => {
+  cy.contains("Votre demande de pré-plainte a bien été reçue").should(bevisible);
+});
+
+Then("le bouton continuer des informations générales est désactivé", () => {
+  cy.get('[data-cy="continuer-informations-generales"]').filter(":visible").first().should(bedisabled);
+});
+
+Then("le bouton continuer des informations générales est actif", () => {
+  cy.get('[data-cy="continuer-informations-generales"]').filter(":visible").first().should(beenabled);
 });
