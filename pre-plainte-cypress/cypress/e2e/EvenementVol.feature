@@ -1,6 +1,16 @@
 # language: fr
 Fonctionnalité: Informations sur l'événement - vol
 
+  Règle: La date de début de l'événement est obligatoire pour déclarer un vol.
+
+  Règle: La fin de l'événement doit être postérieure au début.
+
+  Règle: L'information sur les dégradations est obligatoire pour un objet volé.
+
+  Règle: La catégorie de l'objet volé est obligatoire.
+
+  Règle: Les champs de plaque sont affichés lorsqu'une plaque volée est déclarée.
+
   Scénario: BVA - date de début de l'événement absente
     Etant donné que je suis sur l'étape informations sur l'événement avec un vol invalide "date de debut absente"
     Quand je continue après les informations sur l'événement
