@@ -1,6 +1,14 @@
 # language: fr
 Fonctionnalité: Parcours nominal complet
 
+  Règle: Une pré-plainte nominale avec rendez-vous peut être soumise jusqu'à la validation finale.
+
+  Règle: Une erreur serveur lors de la soumission est affichée au citoyen sans quitter le récapitulatif.
+
+  Règle: Un créneau devenu indisponible au moment de la soumission est signalé au citoyen.
+
+  Règle: Le citoyen peut revenir à l'étape rendez-vous lorsqu'un créneau est devenu indisponible.
+
   Scénario: Soumettre une pré-plainte nominale pour un vol simple
     Etant donné que je démarre un parcours nominal complet
     # Etape 1 -> disclaimers

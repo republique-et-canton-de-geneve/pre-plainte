@@ -1,6 +1,10 @@
 # language: fr
 Fonctionnalité: Rendez-vous
 
+  Règle: Un créneau horaire doit être sélectionné pour continuer après l'étape rendez-vous.
+
+  Règle: Les services de rendez-vous proposés dépendent du type d'incident déclaré.
+
   Scénario: BVA - aucun créneau sélectionné
     Etant donné que je suis sur l'étape rendez-vous avec un vol simple valide
     Quand je tente de continuer après le rendez-vous
