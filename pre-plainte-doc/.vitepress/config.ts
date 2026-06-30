@@ -11,6 +11,7 @@ export default defineConfig({
       { text: "Accueil", link: "/" },
       { text: "Regles metier", link: "/regles-metier-formulaire" },
       { text: "Plan Cypress", link: "/plan-cypress" },
+      { text: "API", link: "/api/swagger-api" },
     ],
     sidebar: [
       {
@@ -26,14 +27,28 @@ export default defineConfig({
         text: "Guides",
         items: [
           { text: "Ajout d'un champ", link: "/guides/ajout-champ" },
-          { text: "Regles metier declaration vol", link: "/guides/regles-metier-declaration-vol" },
+          { text: "Mapping codes RIPOL myAbi", link: "/guides/mapping-codes-ripol-myabi" },
+        ],
+      },
+      {
+        text: "API",
+        items: [
+          { text: "Swagger / OpenAPI", link: "/api/swagger-api" },
         ],
       },
       {
         text: "Architecture",
         items: [
           { text: "CI/CD", link: "/architecture/ci-cd" },
+          { text: "Communication eSirius rendez-vous", link: "/architecture/communication-esirius-rendez-vous" },
+          { text: "Control-M S3 NAS", link: "/architecture/control-m-s3-nas" },
           { text: "Stockage S3", link: "/architecture/stockage-s3" },
+        ],
+      },
+      {
+        text: "ADR",
+        items: [
+          { text: "ADR 001 - Ajout d'un champ", link: "/adr/adr-001-ajout-champ" },
         ],
       },
     ],
