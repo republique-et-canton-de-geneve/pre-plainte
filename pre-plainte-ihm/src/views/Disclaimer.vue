@@ -182,6 +182,12 @@ import ExitActionsForm from "@/components/actions/ExitActionsForm.vue";
 import AccessibleVSelect from "@/components/accessibility/AccessibleVSelect.vue";
 import { POSTES_POLICE_URL, TYPES_DOMMAGE } from "@/constants/constant.ts";
 import { toTranslatedOptions } from "@/utils/helpers/traductionHelper.ts";
+import {
+  canContinueDisclaimer,
+  shouldResetTypeCybercrime,
+  shouldResetTypeDommage,
+  TYPE_CYBERCRIME_AUTRE,
+} from "@/utils/workflows/disclaimer-workflow";
 
 const { t } = useI18n();
 const { mobile } = useDisplay();
@@ -206,7 +212,6 @@ const { value: typeIncident, errorMessage: typeIncidentError } = useField<string
 const { value: typeDommage, errorMessage: typeDommageError } = useField<string>("typeDommage");
 const { value: typeCybercrime, errorMessage: typeCybercrimeError } = useField<string>("typeCybercrime");
 
-const TYPE_CYBERCRIME_AUTRE = "autre";
 const typeDommageOptions = computed(() => toTranslatedOptions(TYPES_DOMMAGE, t));
 const typeCybercrimeOptions = computed(() => [
   { label: t("cybercrime.commandeFrauduleuse"), value: "commande-frauduleuse" },
@@ -216,14 +221,15 @@ const typeCybercrimeOptions = computed(() => [
 ]);
 
 const canContinue = computed(
-  () =>
-    Boolean(typeIncident.value) &&
-    (typeIncident.value !== "degat-delit" || Boolean(typeDommage.value)) &&
-    (typeIncident.value !== "cybercrime" || Boolean(typeCybercrime.value)) &&
-    typeCybercrime.value !== TYPE_CYBERCRIME_AUTRE &&
-    confirmeIdentite.value &&
-    confirmeSituation.value &&
-    (!captchaEnabled || Boolean(captchaToken.value)),
+  () => canContinueDisclaimer({
+    typeIncident: typeIncident.value,
+    typeDommage: typeDommage.value,
+    typeCybercrime: typeCybercrime.value,
+    confirmeIdentite: Boolean(confirmeIdentite.value),
+    confirmeSituation: Boolean(confirmeSituation.value),
+    captchaEnabled,
+    captchaToken: captchaToken.value,
+  }),
 );
 
 const onSubmit = handleSubmit(formValues => {
@@ -249,10 +255,10 @@ const onSubmit = handleSubmit(formValues => {
 });
 
 watch(typeIncident, incident => {
-  if (incident !== "degat-delit") {
+  if (shouldResetTypeDommage(incident)) {
     setFieldValue("typeDommage", "");
   }
-  if (incident !== "cybercrime") {
+  if (shouldResetTypeCybercrime(incident)) {
     setFieldValue("typeCybercrime", "");
   }
 });
