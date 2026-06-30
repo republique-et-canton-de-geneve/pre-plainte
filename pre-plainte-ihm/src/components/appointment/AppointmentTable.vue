@@ -49,8 +49,8 @@
             </v-alert>
           </td>
         </tr>
-        <tr v-else v-for="(creneau, index) in creneauxPagines" :key="index">
-          <td><v-radio :value="index" hide-details :aria-label="getCreneauRadioAriaLabel(creneau)" /></td>
+        <tr v-else v-for="(creneau, index) in creneauxPagines" :key="index" :data-cy="`creneau-row-${index}`">
+          <td><v-radio :value="index" hide-details :aria-label="getCreneauRadioAriaLabel(creneau)" :data-cy="`creneau-radio-${index}`" /></td>
           <td>{{ formatDate(creneau.beginDateTime) }}</td>
           <td>{{ formatHeure(creneau.beginDateTime) }}</td>
           <td>{{ formatHeure(creneau.endDateTime) }}</td>
@@ -74,7 +74,7 @@
       </v-alert>
 
       <v-list v-else class="pa-0 bg-transparent" density="comfortable">
-        <v-list-item v-for="(creneau, index) in creneauxPagines" :key="index" class="pa-0 mb-2">
+        <v-list-item v-for="(creneau, index) in creneauxPagines" :key="index" class="pa-0 mb-2" :data-cy="`creneau-row-${index}`">
           <v-card
             variant="outlined"
             rounded="lg"
@@ -92,6 +92,7 @@
                   @click.stop
                   class="me-3"
                   :aria-label="getCreneauRadioAriaLabel(creneau)"
+                  :data-cy="`creneau-radio-${index}`"
                 />
                 <div class="flex-grow-1">
                   <div class="text-body-1 font-weight-medium mb-1 text-primary">

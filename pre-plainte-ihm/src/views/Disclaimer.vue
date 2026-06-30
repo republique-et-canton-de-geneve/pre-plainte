@@ -30,6 +30,7 @@
         :elevation="isDarkMode ? 2 : 1"
         :variant="isDarkMode ? 'tonal' : 'flat'"
         :class="['confirmation-card', 'mb-4', { 'confirmation-card--selected': confirmeIdentite }]"
+        data-cy="confirmation-identite"
         @click="confirmeIdentite = !confirmeIdentite"
       >
         <v-card-text class="d-flex align-center pa-2 pa-md-4">
@@ -49,6 +50,7 @@
         :elevation="isDarkMode ? 2 : 1"
         :variant="isDarkMode ? 'tonal' : 'flat'"
         :class="['confirmation-card', 'mb-6', { 'confirmation-card--selected': confirmeSituation }]"
+        data-cy="confirmation-situation"
         @click="confirmeSituation = !confirmeSituation"
       >
         <v-card-text class="d-flex align-center pa-2 pa-md-4">
@@ -67,6 +69,7 @@
       <h3>{{ t("informationsEvenement.typeIncident") }}</h3>
       <AccessibleVSelect
         v-model="typeIncident"
+        data-cy="type-incident"
         :label="t('informationsEvenement.typeIncident')"
         required
         :items="[
@@ -146,13 +149,13 @@
       </div>
 
       <div class="d-none d-md-flex justify-end mt-6">
-        <v-btn color="primary" variant="flat" size="large" :disabled="!canContinue" @click="onSubmit">
+        <v-btn color="primary" variant="flat" size="large" :disabled="!canContinue" data-cy="continuer-informations-generales" @click="onSubmit">
           {{ t("common.continuer") }}
         </v-btn>
       </div>
 
       <div class="d-md-none mt-4">
-        <v-btn color="primary" variant="flat" class="w-100" :disabled="!canContinue" @click="onSubmit">
+        <v-btn color="primary" variant="flat" class="w-100" :disabled="!canContinue" data-cy="continuer-informations-generales" @click="onSubmit">
           {{ t("common.continuer") }}
         </v-btn>
       </div>
