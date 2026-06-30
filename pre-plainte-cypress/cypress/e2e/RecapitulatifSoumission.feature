@@ -22,3 +22,16 @@ Fonctionnalité: Parcours nominal complet
     Quand je soumets la pré-plainte
     Alors le rendez-vous est créé
     Et je vois la validation finale
+
+  Scénario: Soumission pré-plainte en erreur serveur
+    Etant donné que je suis sur le récapitulatif avec une soumission en erreur
+    Quand je soumets la pré-plainte
+    Alors le message "Une erreur technique s'est produite sur le serveur" s'affiche
+    Et je reste sur le récapitulatif
+
+  Scénario: Créneau eSirius devenu indisponible au récapitulatif
+    Etant donné que je suis sur le récapitulatif avec un rendez-vous devenu indisponible
+    Quand je soumets la pré-plainte
+    Alors le rendez-vous est signalé indisponible
+    Quand je retourne sélectionner un autre rendez-vous
+    Alors je reste sur l'étape rendez-vous
