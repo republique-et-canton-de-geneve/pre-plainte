@@ -1,6 +1,18 @@
 # language: fr
 Fonctionnalité: Informations personnelles
 
+  Règle: Selon le type de représentation (tiers, entreprise), on affiche le formulaire correspondant.
+
+  Règle: Des informations personnelles valides permettent de passer à l'étape suivante.
+
+  Règle: La date de naissance doit correspondre à un âge compris entre 16 et 120 ans
+
+  Règle: Un titre de séjour est obligatoire pour une nationalité non suisse
+
+  Règle: Le numéro du document d'identité est obligatoire
+
+  Règle: Le format du numéro de téléphone est vérifié
+
   Scénario: Affichage conditionnel des champs Tiers
     Etant donné que je suis sur l'étape informations personnelles
     Et que je sélectionne "Tiers" dans le type de personne
