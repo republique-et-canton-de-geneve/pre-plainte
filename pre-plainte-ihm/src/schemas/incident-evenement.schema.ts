@@ -188,7 +188,7 @@ const validateVehicleBrandAndModel = (
       message: t(VALIDATION_CHAMP_REQUIS),
     });
   }
-  if (data.fabricant.code !== "AUTRE") {
+  if (data.fabricant?.code !== "AUTRE") {
     if (data.modele?.code === "AUTRE" && !data.modeleAutre?.trim()) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,

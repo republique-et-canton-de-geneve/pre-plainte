@@ -33,6 +33,7 @@
         :disabled="disabled || readonly"
         :aria-disabled="disabled || readonly"
         :value="nativeValue"
+        :data-cy="nativeDataCy"
         @change="onNativeChange"
       >
         <option v-if="clearable" value="">—</option>
@@ -49,7 +50,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, useId } from "vue";
+import { computed, useAttrs, useId } from "vue";
 import type { PropType } from "vue";
 import { requiredLabel } from "@/utils/helpers/labelHelpers";
 
@@ -98,6 +99,8 @@ const emit = defineEmits<{
   "update:modelValue": [value: unknown];
 }>();
 
+const attrs = useAttrs();
+
 const proxy = computed({
   get: () => {
     if (!props.returnObject && props.modelValue === "") {
@@ -116,6 +119,7 @@ const proxy = computed({
 
 const uid = useId();
 const nativeId = computed(() => (props.id ? `${props.id}-native` : `native-${uid}`));
+const nativeDataCy = computed(() => (attrs["data-cy"] ? `${String(attrs["data-cy"])}-native` : undefined));
 const displayLabel = computed(() => (props.required ? requiredLabel(props.label) : props.label));
 
 const firstError = computed(() => {

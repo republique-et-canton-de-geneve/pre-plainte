@@ -61,7 +61,7 @@ class PrePlainteServiceTest {
     ip.setLienAvecPersonne(LienAvecPersonne.MOI_MEME);
     ip.setNom("TEST");
     ip.setPrenom("Test");
-    ip.setGenre(new RipolCode("2", "Femme"));
+    ip.setGenre(new RipolCode("2", "Féminin"));
     ip.setNationalite(new RipolCode("8100", "Suisse"));
     ip.setDateNaissance("1993-01-01");
     ip.setAdresse(new Adresse("Rue du Test 1", null, "1200", "CH", null, "Suisse", null));

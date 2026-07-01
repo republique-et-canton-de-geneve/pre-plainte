@@ -30,6 +30,7 @@
         :elevation="isDarkMode ? 2 : 1"
         :variant="isDarkMode ? 'tonal' : 'flat'"
         :class="['confirmation-card', 'mb-4', { 'confirmation-card--selected': confirmeIdentite }]"
+        data-cy="confirmation-identite"
         @click="confirmeIdentite = !confirmeIdentite"
       >
         <v-card-text class="d-flex align-center pa-2 pa-md-4">
@@ -49,6 +50,7 @@
         :elevation="isDarkMode ? 2 : 1"
         :variant="isDarkMode ? 'tonal' : 'flat'"
         :class="['confirmation-card', 'mb-6', { 'confirmation-card--selected': confirmeSituation }]"
+        data-cy="confirmation-situation"
         @click="confirmeSituation = !confirmeSituation"
       >
         <v-card-text class="d-flex align-center pa-2 pa-md-4">
@@ -67,6 +69,7 @@
       <h3>{{ t("informationsEvenement.typeIncident") }}</h3>
       <AccessibleVSelect
         v-model="typeIncident"
+        data-cy="type-incident"
         :label="t('informationsEvenement.typeIncident')"
         required
         :items="[
@@ -146,13 +149,13 @@
       </div>
 
       <div class="d-none d-md-flex justify-end mt-6">
-        <v-btn color="primary" variant="flat" size="large" :disabled="!canContinue" @click="onSubmit">
+        <v-btn color="primary" variant="flat" size="large" :disabled="!canContinue" data-cy="continuer-informations-generales" @click="onSubmit">
           {{ t("common.continuer") }}
         </v-btn>
       </div>
 
       <div class="d-md-none mt-4">
-        <v-btn color="primary" variant="flat" class="w-100" :disabled="!canContinue" @click="onSubmit">
+        <v-btn color="primary" variant="flat" class="w-100" :disabled="!canContinue" data-cy="continuer-informations-generales" @click="onSubmit">
           {{ t("common.continuer") }}
         </v-btn>
       </div>
@@ -179,6 +182,12 @@ import ExitActionsForm from "@/components/actions/ExitActionsForm.vue";
 import AccessibleVSelect from "@/components/accessibility/AccessibleVSelect.vue";
 import { POSTES_POLICE_URL, TYPES_DOMMAGE } from "@/constants/constant.ts";
 import { toTranslatedOptions } from "@/utils/helpers/traductionHelper.ts";
+import {
+  canContinueDisclaimer,
+  shouldResetTypeCybercrime,
+  shouldResetTypeDommage,
+  TYPE_CYBERCRIME_AUTRE,
+} from "@/utils/workflows/disclaimer-workflow";
 
 const { t } = useI18n();
 const { mobile } = useDisplay();
@@ -197,16 +206,11 @@ const form = useForm<PrePlainteFormFields>({
 
 const { handleSubmit, setFieldError, setFieldValue } = form;
 
-const DEGAT_DELIT_INCIDENT = "degat-delit";
-const CYBERCRIME_INCIDENT = "cybercrime";
-const TYPE_CYBERCRIME_AUTRE = "autre";
-
 const { value: confirmeIdentite } = useField("confirmeIdentite");
 const { value: confirmeSituation } = useField("confirmeSituation");
 const { value: typeIncident, errorMessage: typeIncidentError } = useField<string>("typeIncident");
 const { value: typeDommage, errorMessage: typeDommageError } = useField<string>("typeDommage");
 const { value: typeCybercrime, errorMessage: typeCybercrimeError } = useField<string>("typeCybercrime");
-
 
 const typeDommageOptions = computed(() => toTranslatedOptions(TYPES_DOMMAGE, t));
 const typeCybercrimeOptions = computed(() => [
@@ -216,51 +220,27 @@ const typeCybercrimeOptions = computed(() => [
   { label: t("cybercrime.autre"), value: TYPE_CYBERCRIME_AUTRE },
 ]);
 
-const isDegatDelit = computed(() => typeIncident.value === DEGAT_DELIT_INCIDENT);
-const isCybercrime = computed(() => typeIncident.value === CYBERCRIME_INCIDENT);
-
-const isDamageTypeValid = computed(
-  () => !isDegatDelit.value || Boolean(typeDommage.value),
-);
-
-const isCybercrimeTypeValid = computed(
-  () => (!isCybercrime.value || Boolean(typeCybercrime.value)) &&
-    typeCybercrime.value !== TYPE_CYBERCRIME_AUTRE,
-);
-
-const isCaptchaValid = computed(
-  () => !captchaEnabled || Boolean(captchaToken.value),
-);
-
-const isIncidentValid = computed(
-  () =>
-    Boolean(typeIncident.value) &&
-    isDamageTypeValid.value &&
-    isCybercrimeTypeValid.value,
-);
-
-const isConfirmationValid = computed(
-  () =>
-    confirmeIdentite.value &&
-    confirmeSituation.value,
-);
-
 const canContinue = computed(
-  () =>
-    isIncidentValid.value &&
-    isConfirmationValid.value &&
-    isCaptchaValid.value,
+  () => canContinueDisclaimer({
+    typeIncident: typeIncident.value,
+    typeDommage: typeDommage.value,
+    typeCybercrime: typeCybercrime.value,
+    confirmeIdentite: Boolean(confirmeIdentite.value),
+    confirmeSituation: Boolean(confirmeSituation.value),
+    captchaEnabled,
+    captchaToken: captchaToken.value,
+  }),
 );
 
 const onSubmit = handleSubmit(formValues => {
   setFieldError("typeIncident", typeIncident.value ? undefined : t("validation.typeIncidentRequis"));
   setFieldError(
     "typeDommage",
-    typeIncident.value === DEGAT_DELIT_INCIDENT && !typeDommage.value ? t("validation.typeDommageRequis") : undefined,
+    typeIncident.value === "degat-delit" && !typeDommage.value ? t("validation.typeDommageRequis") : undefined,
   );
   setFieldError(
     "typeCybercrime",
-    typeIncident.value === CYBERCRIME_INCIDENT && !typeCybercrime.value ? t("validation.typeCybercrimeRequis") : undefined,
+    typeIncident.value === "cybercrime" && !typeCybercrime.value ? t("validation.typeCybercrimeRequis") : undefined,
   );
 
   if (!canContinue.value) {
@@ -275,10 +255,10 @@ const onSubmit = handleSubmit(formValues => {
 });
 
 watch(typeIncident, incident => {
-  if (incident !== DEGAT_DELIT_INCIDENT) {
+  if (shouldResetTypeDommage(incident)) {
     setFieldValue("typeDommage", "");
   }
-  if (incident !== CYBERCRIME_INCIDENT) {
+  if (shouldResetTypeCybercrime(incident)) {
     setFieldValue("typeCybercrime", "");
   }
 });
