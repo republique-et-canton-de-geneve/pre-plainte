@@ -95,7 +95,7 @@ Configuration principale :
 - base d'analyse : `work` ;
 - dossier de travail Sonar : `.scannerwork-frontend` ;
 - exclusions : code Java, tests et ressources mail ;
-- exclusions de couverture : frontend Vue et Cypress ;
+- exclusions de couverture : toutes les sources du projet Sonar frontend ;
 - règles ignorées explicitement pour le Dockerfile et certains imports TypeScript/Vue.
 - attente de la Quality Gate Sonar activée, avec échec du job si la gate est refusée.
 
