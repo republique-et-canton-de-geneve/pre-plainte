@@ -46,6 +46,28 @@ export interface UseLeafletMapProps {
 
 type TFunction = (key: string, params?: Record<string, any>) => string;
 
+const DefaultIcon = L.icon({
+  iconUrl: defaultMarkerIcon,
+  shadowUrl: iconShadow,
+  iconSize: [DEFAULT_ICON_WIDTH, DEFAULT_ICON_HEIGHT],
+  iconAnchor: [DEFAULT_ICON_ANCHOR_X, DEFAULT_ICON_ANCHOR_Y],
+  popupAnchor: [POPUP_ANCHOR_X, POPUP_ANCHOR_Y],
+  shadowSize: [SHADOW_WIDTH, SHADOW_HEIGHT],
+});
+
+const RedIcon = L.divIcon({
+  className: "custom-red-marker",
+  html: `
+      <svg width="25" height="41" viewBox="0 0 25 41" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12.5 0C5.6 0 0 5.6 0 12.5c0 12.5 12.5 28.5 12.5 28.5s12.5-16 12.5-28.5C25 5.6 19.4 0 12.5 0z" fill="#dc2626"/>
+        <circle cx="12.5" cy="12.5" r="6" fill="white"/>
+      </svg>
+    `,
+  iconSize: [SELECTED_ICON_WIDTH, SELECTED_ICON_HEIGHT],
+  iconAnchor: [SELECTED_ICON_ANCHOR_X, SELECTED_ICON_ANCHOR_Y],
+  popupAnchor: [POPUP_ANCHOR_X, POPUP_ANCHOR_Y],
+});
+
 export function useLeafletMap(
   containerRef: Ref<HTMLElement | null>,
   props: UseLeafletMapProps,
@@ -59,28 +81,6 @@ export function useLeafletMap(
   let markers: Marker[] = [];
   let selectedMarker: Marker | null = null;
   let observer: MutationObserver | null = null;
-
-  const DefaultIcon = L.icon({
-    iconUrl: defaultMarkerIcon,
-    shadowUrl: iconShadow,
-    iconSize: [DEFAULT_ICON_WIDTH, DEFAULT_ICON_HEIGHT],
-    iconAnchor: [DEFAULT_ICON_ANCHOR_X, DEFAULT_ICON_ANCHOR_Y],
-    popupAnchor: [POPUP_ANCHOR_X, POPUP_ANCHOR_Y],
-    shadowSize: [SHADOW_WIDTH, SHADOW_HEIGHT],
-  });
-
-  const RedIcon = L.divIcon({
-    className: "custom-red-marker",
-    html: `
-      <svg width="25" height="41" viewBox="0 0 25 41" xmlns="http://www.w3.org/2000/svg">
-        <path d="M12.5 0C5.6 0 0 5.6 0 12.5c0 12.5 12.5 28.5 12.5 28.5s12.5-16 12.5-28.5C25 5.6 19.4 0 12.5 0z" fill="#dc2626"/>
-        <circle cx="12.5" cy="12.5" r="6" fill="white"/>
-      </svg>
-    `,
-    iconSize: [SELECTED_ICON_WIDTH, SELECTED_ICON_HEIGHT],
-    iconAnchor: [SELECTED_ICON_ANCHOR_X, SELECTED_ICON_ANCHOR_Y],
-    popupAnchor: [POPUP_ANCHOR_X, POPUP_ANCHOR_Y],
-  });
 
   L.Marker.prototype.options.icon = DefaultIcon;
 

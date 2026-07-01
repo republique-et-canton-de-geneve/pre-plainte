@@ -107,6 +107,7 @@ import { useFormErrorScroll } from "@/composables/useFormErrorScroll.ts";
 import { useDisplay } from "vuetify/framework";
 import ExitActionsForm from "@/components/actions/ExitActionsForm.vue";
 import { hasVehiculeVoleAvecPlaque } from "@/utils/helpers/volObjetVolHelpers.ts";
+import { DAY_END, DAY_START, MONTH_END, MONTH_START, TIME_START, YEAR_END, YEAR_START } from "@/constants/constant.ts";
 import {
   filterCompatibleCreneaux,
   filterCreneauxByPosteAndDate,
@@ -114,13 +115,6 @@ import {
   getRendezVousWarning,
 } from "@/utils/workflows/rendez-vous-workflow";
 
-const YEAR_START = 0;
-const YEAR_END = 4;
-const MONTH_START = 4;
-const MONTH_END = 6;
-const DAY_START = 6;
-const DAY_END = 8;
-const HOUR_MINUTE_START = 9;
 const RENDEZ_VOUS_DATE_WINDOW_DAYS = 15;
 const SCROLL_AFTER_SELECT_DELAY_MS = 300;
 
@@ -146,13 +140,11 @@ onMounted(async () => {
   await esiriusStore.loadAllAvailabilitiesForPPEL();
 });
 
-const servicesDisponibles = computed(() => {
-  return filterServicesByIncident(esiriusStore.services, esiriusStore.allAvailabilities, store.userFormData.typeIncident);
-});
+const servicesDisponibles = computed(() =>
+  filterServicesByIncident(esiriusStore.services, esiriusStore.allAvailabilities, store.userFormData.typeIncident)
+);
 
-const rendezVousWarning = computed(() => {
-  return getRendezVousWarning(store.userFormData, aucunCreneauVehiculeAvecPlaque.value);
-});
+const rendezVousWarning = computed(() => getRendezVousWarning(store.userFormData, aucunCreneauVehiculeAvecPlaque.value));
 
 const isVehiculeVoleAvecPlaque = computed(() => hasVehiculeVoleAvecPlaque(store.userFormData));
 
@@ -173,9 +165,9 @@ const availabilitiesByPoste = computed(() => {
   );
 });
 
-const creneauxCompatiblesIncident = computed(() => {
-  return filterCompatibleCreneaux(esiriusStore.allAvailabilities, esiriusStore.services, store.userFormData);
-});
+const creneauxCompatiblesIncident = computed(() =>
+  filterCompatibleCreneaux(esiriusStore.allAvailabilities, esiriusStore.services, store.userFormData)
+);
 
 const creneauxFiltres = computed(() => {
   return filterCreneauxByPosteAndDate(
@@ -270,7 +262,7 @@ watch(
     }
 
     let cancelled = false;
-    const scrollTimeout = window.setTimeout(() => {
+    const scrollTimeout = globalThis.setTimeout(() => {
       void nextTick(() => {
         if (!cancelled) {
           creneauxSection.value?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -280,7 +272,7 @@ watch(
 
     onCleanup(() => {
       cancelled = true;
-      window.clearTimeout(scrollTimeout);
+      globalThis.clearTimeout(scrollTimeout);
     });
   },
   { flush: "post" },
@@ -320,8 +312,8 @@ const onSubmit = handleSubmit(
     showCreneauError.value = false;
 
     const rawDate = `${c.beginDateTime.slice(YEAR_START, YEAR_END)}-${c.beginDateTime.slice(MONTH_START, MONTH_END)}-${c.beginDateTime.slice(DAY_START, DAY_END)}`;
-    const heureDebut = c.beginDateTime.substring(HOUR_MINUTE_START).trim();
-    const heureFin = c.endDateTime.substring(HOUR_MINUTE_START).trim();
+    const heureDebut = c.beginDateTime.substring(TIME_START).trim();
+    const heureFin = c.endDateTime.substring(TIME_START).trim();
     const dateAffichee = `${rawDate.split("-").reverse().join(".")}`;
 
     const selectedCreneau = {

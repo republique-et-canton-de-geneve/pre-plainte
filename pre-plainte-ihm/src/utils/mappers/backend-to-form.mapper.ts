@@ -1,4 +1,4 @@
-import type { PrePlainteDTO, FichierDTO } from "@/types/preplainte-payload-interface";
+import type { PrePlainteDTO, FichierDTO, AdresseDTO } from "@/types/preplainte-payload-interface";
 import type { PrePlainteFormFields, VolObjetFormSnapshot } from "@/types/pre-plainte.interface";
 import { AdresseMapper } from "./adresse.mapper.ts";
 import { toSafeString, toStringArray } from "@/utils/validations/field-validation.utils";
@@ -17,6 +17,13 @@ type IncidentContext = {
   isVol: boolean;
   isDom: boolean;
   isCyber: boolean;
+};
+
+type IncidentCommonInfoData = {
+  debutEvenement: ReturnType<typeof splitIsoDateTime>;
+  finEvenement: ReturnType<typeof splitIsoDateTime>;
+  addrEvent: ReturnType<typeof AdresseMapper.fromBackendAdresse>;
+  addrEventSecondaire: ReturnType<typeof AdresseMapper.fromBackendAdresse>;
 };
 
 /**
@@ -45,6 +52,13 @@ export class ReverseMapper {
     const addrEvent = AdresseMapper.fromBackendAdresse(det?.adresseIncident);
     const addrEventSecondaire = AdresseMapper.fromBackendAdresse(det?.adresseIncidentSecondaire);
 
+    const incidentData = {
+      debutEvenement,
+      finEvenement,
+      addrEvent,
+      addrEventSecondaire,
+    };
+
     return {
       ...base,
       ...this.mapIdentityInfo(infos, base, addrPers),
@@ -55,10 +69,7 @@ export class ReverseMapper {
         base,
         typeIncident,
         context,
-        debutEvenement,
-        finEvenement,
-        addrEvent,
-        addrEventSecondaire,
+        incidentData,
       ),
       ...this.mapIncidentSpecificFields(det, base, context),
       ...this.mapRendezVousInfo(base),
@@ -118,38 +129,75 @@ export class ReverseMapper {
     base: PrePlainteFormFields,
     typeIncident: IncidentFormType,
     context: IncidentContext,
-    debutEvenement: ReturnType<typeof splitIsoDateTime>,
-    finEvenement: ReturnType<typeof splitIsoDateTime>,
-    addrEvent: ReturnType<typeof AdresseMapper.fromBackendAdresse>,
-    addrEventSecondaire: ReturnType<typeof AdresseMapper.fromBackendAdresse>,
+    data: IncidentCommonInfoData,
   ) {
     const incidentAddressSource = context.isVol || context.isDom;
 
     return {
       typeIncident,
-      dateDebutEvenement: toSafeString(debutEvenement.date, base.dateDebutEvenement),
-      heureDebutEvenement: toSafeString(debutEvenement.heure, base.heureDebutEvenement),
-      dateFinEvenement: toSafeString(finEvenement.date, base.dateFinEvenement),
-      heureFinEvenement: toSafeString(finEvenement.heure, base.heureFinEvenement),
-      adresseLesee: incidentAddressSource ? det?.adresseLesee : base.adresseLesee,
-      typeLieu: incidentAddressSource ? det?.typeLieu : base.typeLieu,
-      adresseConnue: incidentAddressSource ? det?.adresseConnue : base.adresseConnue,
-      isTrajet: incidentAddressSource ? det?.isTrajet : base.isTrajet,
-      adresseEvenement: incidentAddressSource ? addrEvent.adresse : base.adresseEvenement,
-      adressePostaleEvenement: incidentAddressSource ? addrEvent.adressePostale : base.adressePostaleEvenement,
-      npaEvenement: incidentAddressSource ? addrEvent.npa : base.npaEvenement,
-      localiteEvenement: incidentAddressSource ? addrEvent.localite : base.localiteEvenement,
-      paysEvenement: incidentAddressSource ? addrEvent.pays : base.paysEvenement,
-      lieuOrigine: incidentAddressSource ? det?.lieuOrigine : base.lieuOrigine,
-      adresseEvenementSecondaire: incidentAddressSource ? addrEventSecondaire.adresse : base.adresseEvenementSecondaire,
-      adressePostaleEvenementSecondaire: incidentAddressSource
-        ? addrEventSecondaire.adressePostale
-        : base.adressePostaleEvenementSecondaire,
-      npaEvenementSecondaire: incidentAddressSource ? addrEventSecondaire.npa : base.npaEvenementSecondaire,
-      localiteEvenementSecondaire: incidentAddressSource
-        ? addrEventSecondaire.localite
-        : base.localiteEvenementSecondaire,
-      paysEvenementSecondaire: incidentAddressSource ? addrEventSecondaire.pays : base.paysEvenementSecondaire,
+      ...this.mapIncidentDates(base, data.debutEvenement, data.finEvenement),
+      ...this.mapIncidentMainAddress(det, base, data.addrEvent, incidentAddressSource),
+      ...this.mapIncidentSecondaryAddress(
+        base,
+        data.addrEventSecondaire,
+        incidentAddressSource,
+      ),
+    };
+  }
+
+  private static mapIncidentDates(
+    base: PrePlainteFormFields,
+    debut: ReturnType<typeof splitIsoDateTime>,
+    fin: ReturnType<typeof splitIsoDateTime>,
+  ) {
+    return {
+      dateDebutEvenement: toSafeString(debut.date, base.dateDebutEvenement),
+      heureDebutEvenement: toSafeString(debut.heure, base.heureDebutEvenement),
+      dateFinEvenement: toSafeString(fin.date, base.dateFinEvenement),
+      heureFinEvenement: toSafeString(fin.heure, base.heureFinEvenement),
+    };
+  }
+
+  private static mapIncidentMainAddress(
+    det: any,
+    base: PrePlainteFormFields,
+    addrEvent: ReturnType<typeof AdresseMapper.fromBackendAdresse>,
+    source: boolean,
+  ) {
+    const value = <T>(a: T, b: T) => (source ? a : b);
+
+    return {
+      adresseLesee: value(det?.adresseLesee, base.adresseLesee),
+      typeLieu: value(det?.typeLieu, base.typeLieu),
+      adresseConnue: value(det?.adresseConnue, base.adresseConnue),
+      isTrajet: value(det?.isTrajet, base.isTrajet),
+
+      adresseEvenement: value(addrEvent.adresse, base.adresseEvenement),
+      adressePostaleEvenement: value(addrEvent.adressePostale, base.adressePostaleEvenement),
+      npaEvenement: value(addrEvent.npa, base.npaEvenement),
+      localiteEvenement: value(addrEvent.localite, base.localiteEvenement),
+      paysEvenement: value(addrEvent.pays, base.paysEvenement),
+
+      lieuOrigine: value(det?.lieuOrigine, base.lieuOrigine),
+    };
+  }
+
+  private static mapIncidentSecondaryAddress(
+    base: PrePlainteFormFields,
+    addrEventSecondaire: ReturnType<typeof AdresseMapper.fromBackendAdresse>,
+    source: boolean,
+  ) {
+    const value = <T>(a: T, b: T) => (source ? a : b);
+
+    return {
+      adresseEvenementSecondaire: value(addrEventSecondaire.adresse, base.adresseEvenementSecondaire),
+      adressePostaleEvenementSecondaire: value(
+        addrEventSecondaire.adressePostale,
+        base.adressePostaleEvenementSecondaire,
+      ),
+      npaEvenementSecondaire: value(addrEventSecondaire.npa, base.npaEvenementSecondaire),
+      localiteEvenementSecondaire: value(addrEventSecondaire.localite, base.localiteEvenementSecondaire),
+      paysEvenementSecondaire: value(addrEventSecondaire.pays, base.paysEvenementSecondaire),
     };
   }
 
@@ -363,18 +411,18 @@ export class ReverseMapper {
       gravure: "",
       valeurReelle: "",
       numeroSerie: "",
-      numeroSerieInconnu: undefined,
+      numeroSerieInconnu: false,
       numeroIMEI: "",
-      numeroIMEIInconnu: undefined,
+      numeroIMEIInconnu: false,
       justificationAbsenceIMEI: "",
       numeroCadre: "",
-      numeroCadreInconnu: undefined,
+      numeroCadreInconnu: false,
       vin: "",
-      vinInconnu: undefined,
+      vinInconnu: false,
       velofinderId: "",
       dateAchat: "",
       plaqueNumero: "",
-      plaqueInconnu: undefined,
+      plaqueInconnu: false,
       plaquePays: null,
       plaqueCanton: null,
       assuranceAucune: false,
@@ -542,18 +590,34 @@ export class ReverseMapper {
 
   private static mapCybercrimeAchatNonRecuVendeurFields(det: any, base: PrePlainteFormFields, achatNonRecu: any) {
     return {
+      ...this.mapCybercrimeAchatNonRecuVendeurIdentite(det, achatNonRecu),
+      ...this.mapCybercrimeAchatNonRecuVendeurContact(det, base, achatNonRecu),
+      ...this.extractVendeurAdresseFields(achatNonRecu, det, base),
+      ...this.mapCybercrimeAchatNonRecuVendeurEntreprise(det, achatNonRecu),
+    };
+  }
+
+  private static mapCybercrimeAchatNonRecuVendeurIdentite(det: any, achatNonRecu: any) {
+    return {
       prenomVendeur: toSafeString(achatNonRecu?.prenomVendeur ?? det?.prenomVendeur),
       nomVendeur: toSafeString(achatNonRecu?.nomVendeur ?? det?.nomVendeur),
-      telephoneVendeurInconnu:
-        achatNonRecu?.telephoneVendeurInconnu ?? det?.telephoneVendeurInconnu ?? base.telephoneVendeurInconnu,
-      telephoneVendeur: toSafeString(achatNonRecu?.telephoneVendeur ?? det?.telephoneVendeur),
+    };
+  }
+
+  private static mapCybercrimeAchatNonRecuVendeurContact(det: any, base: PrePlainteFormFields, achatNonRecu: any,) {
+    return {
+      telephoneVendeurInconnu: achatNonRecu?.telephoneVendeurInconnu ?? det?.telephoneVendeurInconnu ?? base.telephoneVendeurInconnu,
+      telephoneVendeur: toSafeString(achatNonRecu?.telephoneVendeur ?? det?.telephoneVendeur,),
       emailVendeurInconnu: achatNonRecu?.emailVendeurInconnu ?? det?.emailVendeurInconnu ?? base.emailVendeurInconnu,
-      emailVendeur: toSafeString(achatNonRecu?.emailVendeur ?? det?.emailVendeur),
-      adresseVendeurInconnue:
-        achatNonRecu?.adresseVendeurInconnue ?? det?.adresseVendeurInconnue ?? base.adresseVendeurInconnue,
-      ...this.extractVendeurAdresseFields(achatNonRecu, det, base),
-      nomEntrepriseVendeur: toSafeString(achatNonRecu?.nomEntrepriseVendeur ?? det?.nomEntrepriseVendeur),
-      siteWebEntrepriseVendeur: toSafeString(achatNonRecu?.siteWebEntrepriseVendeur ?? det?.siteWebEntrepriseVendeur),
+      emailVendeur: toSafeString(achatNonRecu?.emailVendeur ?? det?.emailVendeur,),
+      adresseVendeurInconnue: achatNonRecu?.adresseVendeurInconnue ?? det?.adresseVendeurInconnue ?? base.adresseVendeurInconnue,
+    };
+  }
+
+  private static mapCybercrimeAchatNonRecuVendeurEntreprise(det: any, achatNonRecu: any,) {
+    return {
+      nomEntrepriseVendeur: toSafeString(achatNonRecu?.nomEntrepriseVendeur ?? det?.nomEntrepriseVendeur,),
+      siteWebEntrepriseVendeur: toSafeString(achatNonRecu?.siteWebEntrepriseVendeur ?? det?.siteWebEntrepriseVendeur,),
     };
   }
 
@@ -571,24 +635,39 @@ export class ReverseMapper {
     };
   }
 
-  private static mapCybercrimeAchatNonRecuPaiementFields(det: any, base: PrePlainteFormFields, achatNonRecu: any) {
+  private static mapCybercrimeAchatNonRecuPaiementFields(det: any, base: PrePlainteFormFields, achatNonRecu: any,) {
     return {
-      moyenPaiement: toSafeString(achatNonRecu?.moyenPaiement ?? det?.moyenPaiement),
-      moyenPaiementAutre: toSafeString(achatNonRecu?.moyenPaiementAutre ?? det?.moyenPaiementAutre),
-      ibanBeneficiaire: toSafeString(achatNonRecu?.ibanBeneficiaire ?? det?.ibanBeneficiaire),
-      comptePaypalBeneficiaire: toSafeString(achatNonRecu?.comptePaypalBeneficiaire ?? det?.comptePaypalBeneficiaire),
-      numeroTwintBeneficiaire: toSafeString(achatNonRecu?.numeroTwintBeneficiaire ?? det?.numeroTwintBeneficiaire),
-      adresseWalletCrypto: toSafeString(achatNonRecu?.adresseWalletCrypto ?? det?.adresseWalletCrypto),
-      hashTransactionCrypto: toSafeString(achatNonRecu?.hashTransactionCrypto ?? det?.hashTransactionCrypto),
-      societeBeneficiaire: toSafeString(achatNonRecu?.societeBeneficiaire ?? det?.societeBeneficiaire),
-      nomBeneficiaire: toSafeString(achatNonRecu?.nomBeneficiaire ?? det?.nomBeneficiaire),
-      prenomBeneficiaire: toSafeString(achatNonRecu?.prenomBeneficiaire ?? det?.prenomBeneficiaire),
-      dateOperation: fromIsoDate(achatNonRecu?.dateOperation ?? det?.dateOperation),
-      preuvePaiementIndisponible:
-        achatNonRecu?.preuvePaiementIndisponible ?? det?.preuvePaiementIndisponible ?? base.preuvePaiementIndisponible,
-      raisonAbsencePreuvePaiement: toSafeString(
-        achatNonRecu?.raisonAbsencePreuvePaiement ?? det?.raisonAbsencePreuvePaiement,
-      ),
+      ...this.mapCybercrimePaiementMoyen(det, achatNonRecu),
+      ...this.mapCybercrimePaiementBeneficiaire(det, achatNonRecu),
+      ...this.mapCybercrimePaiementPreuve(det, base, achatNonRecu),
+    };
+  }
+
+  private static mapCybercrimePaiementMoyen(det: any, achatNonRecu: any) {
+    return {
+      moyenPaiement: toSafeString(achatNonRecu?.moyenPaiement ?? det?.moyenPaiement,),
+      moyenPaiementAutre: toSafeString(achatNonRecu?.moyenPaiementAutre ?? det?.moyenPaiementAutre,),
+      dateOperation: fromIsoDate(achatNonRecu?.dateOperation ?? det?.dateOperation,),
+    };
+  }
+
+  private static mapCybercrimePaiementBeneficiaire(det: any, achatNonRecu: any,) {
+    return {
+      ibanBeneficiaire: toSafeString(achatNonRecu?.ibanBeneficiaire ?? det?.ibanBeneficiaire,),
+      comptePaypalBeneficiaire: toSafeString(achatNonRecu?.comptePaypalBeneficiaire ?? det?.comptePaypalBeneficiaire,),
+      numeroTwintBeneficiaire: toSafeString(achatNonRecu?.numeroTwintBeneficiaire ?? det?.numeroTwintBeneficiaire,),
+      adresseWalletCrypto: toSafeString(achatNonRecu?.adresseWalletCrypto ?? det?.adresseWalletCrypto,),
+      hashTransactionCrypto: toSafeString(achatNonRecu?.hashTransactionCrypto ?? det?.hashTransactionCrypto,),
+      societeBeneficiaire: toSafeString(achatNonRecu?.societeBeneficiaire ?? det?.societeBeneficiaire,),
+      nomBeneficiaire: toSafeString(achatNonRecu?.nomBeneficiaire ?? det?.nomBeneficiaire,),
+      prenomBeneficiaire: toSafeString(achatNonRecu?.prenomBeneficiaire ?? det?.prenomBeneficiaire,),
+    };
+  }
+
+  private static mapCybercrimePaiementPreuve(det: any, base: PrePlainteFormFields, achatNonRecu: any,) {
+    return {
+      preuvePaiementIndisponible: achatNonRecu?.preuvePaiementIndisponible ?? det?.preuvePaiementIndisponible ?? base.preuvePaiementIndisponible,
+      raisonAbsencePreuvePaiement: toSafeString(achatNonRecu?.raisonAbsencePreuvePaiement ?? det?.raisonAbsencePreuvePaiement,),
     };
   }
 
@@ -730,6 +809,15 @@ export class ReverseMapper {
     };
   }
 
+  private static isAdresseVendeurInconnue(achatNonRecu: Record<string, unknown>, det: Record<string, unknown>,
+  ): boolean {
+    return achatNonRecu?.adresseVendeurInconnue === true || det?.adresseVendeurInconnue === true;
+  }
+
+  private static isBackendAdresse(value: unknown,): value is AdresseDTO {
+    return (value !== null && typeof value === "object" && !Array.isArray(value));
+  }
+
   private static extractVendeurAdresseFields(
     achatNonRecu: Record<string, unknown>,
     det: Record<string, unknown>,
@@ -743,28 +831,40 @@ export class ReverseMapper {
     | "vendeurLocaliteCode"
     | "vendeurPays"
   > {
-    if (achatNonRecu?.adresseVendeurInconnue === true || det?.adresseVendeurInconnue === true) {
-      return {
-        vendeurAdresse: "",
-        vendeurAdressePostale: "",
-        vendeurNpa: "",
-        vendeurLocalite: "",
-        vendeurLocaliteCode: "",
-        vendeurPays: "",
-      };
+    if (this.isAdresseVendeurInconnue(achatNonRecu, det)) {
+      return this.emptyVendeurAdresse();
     }
     const rawAddr = achatNonRecu?.adresseVendeur ?? det?.adresseVendeur;
-    if (rawAddr && typeof rawAddr === "object" && !Array.isArray(rawAddr)) {
+    if (this.isBackendAdresse(rawAddr)) {
       const a = AdresseMapper.fromBackendAdresse(rawAddr as any);
-      return {
-        vendeurAdresse: a.adresse,
-        vendeurAdressePostale: a.adressePostale,
-        vendeurNpa: a.npa,
-        vendeurLocalite: a.localite,
-        vendeurLocaliteCode: a.localiteCode,
-        vendeurPays: a.paysCode,
-      };
+      return this.mapBackendVendeurAdresse(a);
     }
+    return this.mapLegacyVendeurAdresse(rawAddr, det, base);
+  }
+
+  private static emptyVendeurAdresse() {
+    return {
+      vendeurAdresse: "",
+      vendeurAdressePostale: "",
+      vendeurNpa: "",
+      vendeurLocalite: "",
+      vendeurLocaliteCode: "",
+      vendeurPays: "",
+    };
+  }
+
+  private static mapBackendVendeurAdresse(a: AdresseDTO) {
+    return {
+      vendeurAdresse: a.adresse,
+      vendeurAdressePostale: a.adressePostale,
+      vendeurNpa: a.npa,
+      vendeurLocalite: a.localite,
+      vendeurLocaliteCode: a.localiteCode,
+      vendeurPays: a.paysCode,
+    };
+  }
+
+  private static mapLegacyVendeurAdresse(rawAddr: any, det: Record<string, unknown>, base: PrePlainteFormFields) {
     const legacyLine = typeof rawAddr === "string" ? toSafeString(rawAddr) : "";
     const legacyPays = toSafeString((det as { paysVendeur?: string })?.paysVendeur);
     return {

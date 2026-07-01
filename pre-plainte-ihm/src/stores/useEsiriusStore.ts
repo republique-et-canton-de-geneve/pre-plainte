@@ -16,7 +16,7 @@ export const useEsiriusStore = defineStore("esirius", {
     currentAppointment: null as any,
     loading: false,
     error: null as string | null,
-    errorMessage: "" as string,
+    errorMessage: "",
   }),
 
   getters: {

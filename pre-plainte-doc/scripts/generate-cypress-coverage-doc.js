@@ -47,7 +47,7 @@ const parseFeature = (fileName) => {
   return feature;
 };
 
-const escapeCell = (value) => value.replaceAll("|", "\\|");
+const escapeCell = (value) => value.replaceAll("|", String.raw`\|`);
 const renderList = (values) => values.map(escapeCell).join("<br><br>");
 
 const renderRules = (rules) => {
@@ -58,8 +58,8 @@ const renderRules = (rules) => {
   return renderList(rules);
 };
 
-const renderDocument = (features) => {
-  const scenarioCount = features.reduce((total, feature) => total + feature.scenarios.length, 0);
+const renderDocument = (documentedFeatures) => {
+  const scenarioCount = documentedFeatures.reduce((total, feature) => total + feature.scenarios.length, 0);
 
   return [
     "# Couverture Cypress des parcours frontend",
@@ -68,7 +68,7 @@ const renderDocument = (features) => {
     "",
     `Scénarios Cypress documentés : ${scenarioCount}.`,
     "",
-    ...features.map(renderFeature),
+    ...documentedFeatures.map(renderFeature),
     "",
   ].join("\n");
 };

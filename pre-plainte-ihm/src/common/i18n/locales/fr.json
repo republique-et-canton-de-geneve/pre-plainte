@@ -879,7 +879,6 @@
     "dateFinEvenementRequise": "La date de fin de l'événement est requise",
     "heureFinEvenementRequise": "L'heure de fin de l'événement est requise",
     "dateFinEvenementApresDebut": "La fin de l'événement doit être postérieure au début",
-    "detailsPlainteDeposeeRequis": "Les détails de la plainte sont requis lorsque vous avez déjà déposé une plainte",
     "champRequis": "Le champ est requis",
     "modeOperatoireRequis": "Le mode opératoire est requis",
     "volDansVehiculeRequis": "Veuillez indiquer si l'objet a été volé dans ou sur un véhicule",
