@@ -10,7 +10,7 @@ export default defineConfig({
     nav: [
       { text: "Accueil", link: "/" },
       { text: "Regles metier", link: "/regles-metier-formulaire" },
-      { text: "Plan Cypress", link: "/plan-cypress" },
+      { text: "Couverture Cypress", link: "/couverture-cypress" },
       { text: "API", link: "/api/swagger-api" },
     ],
     sidebar: [
@@ -19,8 +19,8 @@ export default defineConfig({
         items: [
           { text: "Vue d'ensemble", link: "/" },
           { text: "Regles metier du formulaire", link: "/regles-metier-formulaire" },
-          { text: "Plan Cypress", link: "/plan-cypress" },
-          { text: "Liste des champs citoyen", link: "/liste-champs-citoyen" },
+          { text: "Couverture Cypress", link: "/couverture-cypress" },
+          { text: "ROI tests et documentation", link: "/roi-tests-documentation" },
         ],
       },
       {

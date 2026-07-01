@@ -129,9 +129,13 @@ import {
 } from "@/utils/validations/field-validation.utils";
 import { createVerificationEmailPageSchema } from "@/schemas/verification-email-page.schema.ts";
 import { isDevEmailChallengeBypassed } from "@/config/dev-flags";
-import { EMAIL_CHALLENGE_CODE_LENGTH } from "@/constants/constant";
 import { requiredLabel } from "@/utils/helpers/labelHelpers";
 import { generateUuid } from "@/utils/helpers/randomHelpers";
+import {
+  canContinueEmailVerification,
+  resolveDevBypassConfirmation,
+  shouldResetEmailChallenge,
+} from "@/utils/workflows/email-verification-workflow";
 
 const devBypassEmail = isDevEmailChallengeBypassed();
 const EMAIL_CHALLENGE_GENERIC_ERROR_KEY = "emailChallenge.erreurVerification";
@@ -200,15 +204,13 @@ function messageForVerifyStatus(status: VerifyStatus): string {
 }
 
 const canContinue = computed(() => {
-  if (!hasSendError.value && devBypassEmail && emailValide.value) {
-    return true;
-  }
-  return (
-    !hasSendError.value &&
-    codeSent.value &&
-    emailValide.value &&
-    isValidEmailChallengeCodeFormat(String(confirmationEmail.value ?? ""))
-  );
+  return canContinueEmailVerification({
+    hasSendError: hasSendError.value,
+    devBypassEmail,
+    emailValide: emailValide.value,
+    codeSent: codeSent.value,
+    confirmationEmail: confirmationEmail.value,
+  });
 });
 
 watch(
@@ -220,7 +222,7 @@ watch(
     if (!codeSent.value || !challengeEmailSnapshot.value) {
       return;
     }
-    if (newVal !== challengeEmailSnapshot.value) {
+    if (shouldResetEmailChallenge(newVal, codeSent.value, challengeEmailSnapshot.value)) {
       codeSent.value = false;
       confirmationEmail.value = "";
       challengeEmailSnapshot.value = "";
@@ -290,13 +292,6 @@ function ensureDevBypassKeyChallenge() {
   if (!keyChallenge.value) {
     store.setKeyChallenge(generateUuid());
   }
-}
-
-function resolveDevBypassConfirmation(confirmation: string): string {
-  if (isValidEmailChallengeCodeFormat(confirmation)) {
-    return confirmation;
-  }
-  return "0".repeat(EMAIL_CHALLENGE_CODE_LENGTH);
 }
 
 function getKeyChallengeOrError(): { ok: true; key: string } | { ok: false; message: string } {

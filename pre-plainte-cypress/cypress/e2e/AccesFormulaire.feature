@@ -1,6 +1,14 @@
 # language: fr
 Fonctionnalité: Accès au formulaire
 
+  Règle: La confirmation d'identité est obligatoire pour démarrer une pré-plainte.
+
+  Règle: La confirmation de situation est obligatoire pour démarrer une pré-plainte.
+
+  Règle: Le type d'incident est obligatoire pour démarrer une pré-plainte.
+
+  Règle: Des informations générales valides permettent d'accéder à la vérification de l'adresse e-mail.
+
   Scénario: Démarrer une pré-plainte
     Etant donné que je suis sur l'étape informations générales
     Alors le bouton continuer des informations générales est désactivé
