@@ -124,7 +124,6 @@ import {
 import type { VerifyStatus } from "@/services/challengeEmailService";
 import {
   getEmailChallengeCodeValidationMessage,
-  isValidEmailChallengeCodeFormat,
   sanitizeEmailChallengeCodeInput,
 } from "@/utils/validations/field-validation.utils";
 import { createVerificationEmailPageSchema } from "@/schemas/verification-email-page.schema.ts";

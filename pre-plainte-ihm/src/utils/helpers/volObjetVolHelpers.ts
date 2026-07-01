@@ -124,7 +124,7 @@ export function validerNumeroPlaque(
     const numeroPlaque = champs.plaqueNumero
       .trim()
       .toUpperCase()
-      .replace(/\s+/g, " ");
+      .replaceAll(/\s+/g, " ");
 
     const paysCode = champs.plaquePays?.code;
 

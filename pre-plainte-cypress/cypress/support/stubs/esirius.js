@@ -1,21 +1,24 @@
+const HEURE_DEBUT_CRENEAU = 10;
+const HEURE_FIN_CRENEAU = 11;
+
 const futureBeginDateTime = () => {
   const date = new Date();
   date.setDate(date.getDate() + 2);
-  date.setHours(10, 0, 0, 0);
+  date.setHours(HEURE_DEBUT_CRENEAU, 0, 0, 0);
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
-  return `${year}${month}${day} 10:00`;
+  return `${year}${month}${day} ${HEURE_DEBUT_CRENEAU}:00`;
 };
 
 const futureEndDateTime = () => {
   const date = new Date();
   date.setDate(date.getDate() + 2);
-  date.setHours(11, 0, 0, 0);
+  date.setHours(HEURE_FIN_CRENEAU, 0, 0, 0);
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
-  return `${year}${month}${day} 11:00`;
+  return `${year}${month}${day} ${HEURE_FIN_CRENEAU}:00`;
 };
 
 export const esiriusServiceVol = {
