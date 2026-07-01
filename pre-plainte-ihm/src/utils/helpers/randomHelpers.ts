@@ -1,6 +1,7 @@
 const UUID_FALLBACK_RADIX = 36;
 const UUID_RANDOM_BYTE_MASK = 15;
 const UUID_RANDOM_BYTE_DIVISOR = 4;
+let fallbackUuidCounter = 0;
 
 export function generateUuid(): string {
   if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
@@ -13,5 +14,6 @@ export function generateUuid(): string {
     );
   }
 
-  return `fallback-${Date.now().toString(UUID_FALLBACK_RADIX)}-${Math.random().toString(UUID_FALLBACK_RADIX).slice(2)}`;
+  fallbackUuidCounter += 1;
+  return `fallback-${Date.now().toString(UUID_FALLBACK_RADIX)}-${fallbackUuidCounter.toString(UUID_FALLBACK_RADIX)}`;
 }

@@ -83,6 +83,7 @@ Configuration principale :
 - exclusions : `**/test/**` ;
 - dépendance de build : `build_app` ;
 - exécution depuis le dossier `work`.
+- attente de la Quality Gate Sonar activée, avec échec du job si la gate est refusée.
 
 ### Analyse Sonar frontend
 
@@ -95,6 +96,7 @@ Configuration principale :
 - dossier de travail Sonar : `.scannerwork-frontend` ;
 - exclusions : code Java, tests et ressources mail ;
 - règles ignorées explicitement pour le Dockerfile et certains imports TypeScript/Vue.
+- attente de la Quality Gate Sonar activée, avec échec du job si la gate est refusée.
 
 Le job est raccordé aux artefacts de `checkout_remote_ref`.
 
