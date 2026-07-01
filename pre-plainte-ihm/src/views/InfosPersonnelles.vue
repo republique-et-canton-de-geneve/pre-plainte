@@ -19,6 +19,7 @@
           :hint="t('informationsPersonnelles.hintLienAvecPersonne')"
           persistent-hint
           prepend-inner-icon="mdi-check-circle-outline"
+          data-cy="type-personne"
         />
         <TiersRepresentationForm v-if="showTypeRepresentation" />
         <EntrepriseRepresentationForm v-if="showPosteOuFonction" />
@@ -26,10 +27,10 @@
 
         <div v-if="!showTiersSection && !showOrganisationSection" class="d-md-none mt-4">
           <div class="pre-plainte-mobile-step-actions d-flex flex-column gap-4 mb-4">
-            <v-btn variant="outlined" color="primary" class="w-100" @click="$emit('cancel')">
+            <v-btn variant="outlined" color="primary" class="w-100" data-cy="precedent-informations-personnelles" @click="$emit('cancel')">
               {{ t("common.precedent") }}
             </v-btn>
-            <v-btn type="submit" variant="flat" color="primary" class="w-100" @click="onSubmit">
+            <v-btn type="submit" variant="flat" color="primary" class="w-100" data-cy="continuer-informations-personnelles" @click="onSubmit">
               {{ t("common.continuer") }}
             </v-btn>
           </div>
@@ -44,10 +45,10 @@
         <template #buttons>
           <div class="d-md-none mt-4">
             <div class="pre-plainte-mobile-step-actions d-flex flex-column gap-4 mb-4">
-              <v-btn variant="outlined" color="primary" class="w-100" @click="$emit('cancel')">
+              <v-btn variant="outlined" color="primary" class="w-100" data-cy="precedent-informations-personnelles" @click="$emit('cancel')">
                 {{ t("common.precedent") }}
               </v-btn>
-              <v-btn type="submit" variant="flat" color="primary" class="w-100" @click="onSubmit">
+              <v-btn type="submit" variant="flat" color="primary" class="w-100" data-cy="continuer-informations-personnelles" @click="onSubmit">
                 {{ t("common.continuer") }}
               </v-btn>
             </div>
@@ -64,10 +65,10 @@
         <template #buttons>
           <div class="d-md-none mt-4">
             <div class="pre-plainte-mobile-step-actions d-flex flex-column gap-4 mb-4">
-              <v-btn variant="outlined" color="primary" class="w-100" @click="$emit('cancel')">
+              <v-btn variant="outlined" color="primary" class="w-100" data-cy="precedent-informations-personnelles" @click="$emit('cancel')">
                 {{ t("common.precedent") }}
               </v-btn>
-              <v-btn type="submit" variant="flat" color="primary" class="w-100" @click="onSubmit">
+              <v-btn type="submit" variant="flat" color="primary" class="w-100" data-cy="continuer-informations-personnelles" @click="onSubmit">
                 {{ t("common.continuer") }}
               </v-btn>
             </div>
@@ -92,10 +93,10 @@
         </v-col>
         <v-spacer />
         <v-col cols="12" md="auto" class="d-flex justify-end">
-          <v-btn variant="outlined" color="primary" class="me-4" @click="$emit('cancel')">
+          <v-btn variant="outlined" color="primary" class="me-4" data-cy="precedent-informations-personnelles" @click="$emit('cancel')">
             {{ t("common.precedent") }}
           </v-btn>
-          <v-btn type="submit" variant="flat" color="primary">
+          <v-btn type="submit" variant="flat" color="primary" data-cy="continuer-informations-personnelles">
             {{ t("common.poursuivre") }}
           </v-btn>
         </v-col>

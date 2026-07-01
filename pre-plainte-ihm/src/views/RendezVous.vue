@@ -42,10 +42,10 @@
 
       <div class="d-md-none mt-4">
         <div class="pre-plainte-mobile-step-actions d-flex flex-column gap-4 mb-2">
-          <v-btn variant="outlined" color="primary" class="w-100" @click="$emit('cancel')">
+          <v-btn variant="outlined" color="primary" class="w-100" data-cy="precedent-rendez-vous" @click="$emit('cancel')">
             {{ t("common.precedent") }}
           </v-btn>
-          <v-btn type="submit" variant="flat" color="primary" class="w-100">
+          <v-btn type="submit" variant="flat" color="primary" class="w-100" data-cy="continuer-rendez-vous">
             {{ t("common.continuer") }}
           </v-btn>
         </div>
@@ -69,10 +69,10 @@
       </v-col>
       <v-spacer />
       <v-col cols="12" md="auto" class="d-flex justify-end">
-        <v-btn variant="outlined" color="primary" class="me-4" @click="$emit('cancel')">
+        <v-btn variant="outlined" color="primary" class="me-4" data-cy="precedent-rendez-vous" @click="$emit('cancel')">
           {{ t("common.precedent") }}
         </v-btn>
-        <v-btn type="submit" variant="flat" color="primary">
+        <v-btn type="submit" variant="flat" color="primary" data-cy="continuer-rendez-vous">
           {{ t("common.poursuivre") }}
         </v-btn>
       </v-col>
@@ -107,9 +107,20 @@ import { useFormErrorScroll } from "@/composables/useFormErrorScroll.ts";
 import { useDisplay } from "vuetify/framework";
 import ExitActionsForm from "@/components/actions/ExitActionsForm.vue";
 import { hasVehiculeVoleAvecPlaque } from "@/utils/helpers/volObjetVolHelpers.ts";
-import { DAY_END, DAY_START, MONTH_END, MONTH_START, TIME_START, YEAR_END, YEAR_START } from "@/constants/constant.ts";
+import {
+  filterCompatibleCreneaux,
+  filterCreneauxByPosteAndDate,
+  filterServicesByIncident,
+  getRendezVousWarning,
+} from "@/utils/workflows/rendez-vous-workflow";
 
-const VEHICULE_PLAQUE_MAX_RENDEZ_VOUS_HOURS = 24;
+const YEAR_START = 0;
+const YEAR_END = 4;
+const MONTH_START = 4;
+const MONTH_END = 6;
+const DAY_START = 6;
+const DAY_END = 8;
+const HOUR_MINUTE_START = 9;
 const RENDEZ_VOUS_DATE_WINDOW_DAYS = 15;
 const SCROLL_AFTER_SELECT_DELAY_MS = 300;
 
@@ -136,64 +147,11 @@ onMounted(async () => {
 });
 
 const servicesDisponibles = computed(() => {
-  const incident = (store.userFormData.typeIncident || "").toLowerCase();
-
-  const servicesAvecDispos = new Set(
-    esiriusStore.allAvailabilities
-      .filter((a: any) => a.availabilities && a.availabilities.length > 0)
-      .map((a: any) => a.serviceId),
-  );
-
-  const servicesFiltrables = esiriusStore.services.filter((s: any) => servicesAvecDispos.has(s.key));
-
-  if (!incident) {
-    return servicesFiltrables;
-  }
-
-  return servicesFiltrables.filter((service: any) => {
-    const name = (service.name || "").toLowerCase();
-
-    if (incident.includes("vol")) {
-      return name.includes("vol");
-    }
-    if (incident.includes("degat") || incident.includes("dommage")) {
-      return name.includes("dommage");
-    }
-    if (incident.includes("cyber")) {
-      return name.includes("cybercrime");
-    }
-
-    if (incident.includes("dommage-cybercrime")) {
-      return name.includes("dommage") || name.includes("cybercrime");
-    }
-
-    return false;
-  });
+  return filterServicesByIncident(esiriusStore.services, esiriusStore.allAvailabilities, store.userFormData.typeIncident);
 });
 
 const rendezVousWarning = computed(() => {
-  if (store.userFormData.typeIncident !== "vol") {
-    return null;
-  }
-
-  if (aucunCreneauVehiculeAvecPlaque.value) {
-    return {
-      type: "warning" as const,
-      messageKey: "rendezVous.warningVolVehiculePlaqueSansCreneau",
-    };
-  }
-
-  if (isVehiculeVoleAvecPlaque.value) {
-    return {
-      type: "error" as const,
-      messageKey: "rendezVous.warningVolVehiculePlaque",
-    };
-  }
-
-  return {
-    type: "info" as const,
-    messageKey: "rendezVous.warningAutreVol",
-  };
+  return getRendezVousWarning(store.userFormData, aucunCreneauVehiculeAvecPlaque.value);
 });
 
 const isVehiculeVoleAvecPlaque = computed(() => hasVehiculeVoleAvecPlaque(store.userFormData));
@@ -216,54 +174,15 @@ const availabilitiesByPoste = computed(() => {
 });
 
 const creneauxCompatiblesIncident = computed(() => {
-  const incident = (store.userFormData.typeIncident || "").toLowerCase();
-  const allAvail = esiriusStore.allAvailabilities.flatMap((serviceAvailabilities: any) =>
-    (serviceAvailabilities.availabilities || []).map((creneau: any) => ({
-      ...creneau,
-      serviceId: creneau.serviceId ?? serviceAvailabilities.serviceId,
-      siteCode: creneau.siteCode ?? "PPEL",
-    }))
-  );
-
-  const now = new Date();
-  now.setHours(now.getHours() + 1);
-  const limiteVehiculeAvecPlaque = new Date();
-  limiteVehiculeAvecPlaque.setHours(limiteVehiculeAvecPlaque.getHours() + VEHICULE_PLAQUE_MAX_RENDEZ_VOUS_HOURS);
-
-  return allAvail.filter((c: any) => {
-    const dateCreneau = parseCreneauDate(c?.beginDateTime);
-    if (!dateCreneau || dateCreneau <= now) {
-      return false;
-    }
-
-    if (!isInRollingAppointmentWindow(dateCreneau)) {
-      return false;
-    }
-
-    if (isVehiculeVoleAvecPlaque.value && dateCreneau > limiteVehiculeAvecPlaque) {
-      return false;
-    }
-
-    const service = esiriusStore.services.find((s: any) => s.key === c.serviceId);
-    const serviceName = (service?.name || "").toLowerCase();
-
-    return matchIncidentWithService(incident, serviceName);
-  });
+  return filterCompatibleCreneaux(esiriusStore.allAvailabilities, esiriusStore.services, store.userFormData);
 });
 
 const creneauxFiltres = computed(() => {
-  const idsCreneauxCompatibles = new Set(creneauxCompatiblesIncident.value.map((c: any) => getCreneauKey(c)));
-  const allAvail = availabilitiesByPoste.value.flatMap((serviceAvailabilities: any) =>
-    (serviceAvailabilities.availabilities || []).map((creneau: any) => ({
-      ...creneau,
-      serviceId: creneau.serviceId ?? serviceAvailabilities.serviceId,
-      siteCode: creneau.siteCode ?? "PPEL",
-    }))
-  );
-
-  return allAvail.filter((c: any) =>
-    idsCreneauxCompatibles.has(getCreneauKey(c)) &&
-    isSameSelectedDate(c.beginDateTime, dateSouhaitee.value)
+  return filterCreneauxByPosteAndDate(
+    availabilitiesByPoste.value,
+    creneauxCompatiblesIncident.value,
+    poste.value,
+    dateSouhaitee.value,
   );
 });
 
@@ -289,41 +208,6 @@ const { handleSubmit, validate } = useForm({
   validationSchema,
 });
 
-function getCreneauKey(creneau: any): string {
-  return `${creneau.serviceId ?? ""}|${creneau.beginDateTime ?? ""}|${creneau.resource?.key ?? ""}`;
-}
-
-function parseCreneauDate(beginDateTime?: string): Date | null {
-  if (!beginDateTime) {
-    return null;
-  }
-
-  const dateStr = `${beginDateTime.slice(YEAR_START, YEAR_END)}-${beginDateTime.slice(MONTH_START, MONTH_END)}-${beginDateTime.slice(DAY_START, DAY_END)}T${beginDateTime.slice(TIME_START)}:00`;
-
-  const date = new Date(dateStr);
-  return Number.isNaN(date.getTime()) ? null : date;
-}
-
-function isSameSelectedDate(beginDateTime: string, selectedDate?: string): boolean {
-  if (!selectedDate) {
-    return true;
-  }
-
-  const dateCreneauJour = `${beginDateTime.slice(YEAR_START, YEAR_END)}-${beginDateTime.slice(MONTH_START, MONTH_END)}-${beginDateTime.slice(DAY_START, DAY_END)}`;
-
-  return dateCreneauJour === (toIsoDate(selectedDate) ?? selectedDate);
-}
-
-function isInRollingAppointmentWindow(date: Date): boolean {
-  const start = new Date();
-  start.setHours(0, 0, 0, 0);
-  const end = new Date(start);
-  end.setDate(start.getDate() + RENDEZ_VOUS_DATE_WINDOW_DAYS - 1);
-  const dateOnly = new Date(date);
-  dateOnly.setHours(0, 0, 0, 0);
-  return dateOnly >= start && dateOnly <= end;
-}
-
 function addDays(date: Date, days: number): Date {
   const next = new Date(date);
   next.setHours(0, 0, 0, 0);
@@ -336,30 +220,6 @@ function formatIsoDate(date: Date): string {
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
-}
-
-function matchIncidentWithService(incident: string, serviceName: string): boolean {
-  if (!incident) {
-    return true;
-  }
-
-  if (incident.includes("vol")) {
-    return serviceName.includes("vol");
-  }
-
-  if (incident.includes("degat") || incident.includes("dommage")) {
-    return serviceName.includes("dommage");
-  }
-
-  if (incident.includes("cyber")) {
-    return serviceName.includes("cybercrime");
-  }
-
-  if (incident.includes("dommage-cybercrime")) {
-    return serviceName.includes("dommage") || serviceName.includes("cybercrime");
-  }
-
-  return false;
 }
 
 const totalPages = computed(() => Math.ceil(creneauxFiltres.value.length / itemsParPage));
@@ -410,7 +270,7 @@ watch(
     }
 
     let cancelled = false;
-    const scrollTimeout = globalThis.setTimeout(() => {
+    const scrollTimeout = window.setTimeout(() => {
       void nextTick(() => {
         if (!cancelled) {
           creneauxSection.value?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -420,7 +280,7 @@ watch(
 
     onCleanup(() => {
       cancelled = true;
-      globalThis.clearTimeout(scrollTimeout);
+      window.clearTimeout(scrollTimeout);
     });
   },
   { flush: "post" },
@@ -460,8 +320,8 @@ const onSubmit = handleSubmit(
     showCreneauError.value = false;
 
     const rawDate = `${c.beginDateTime.slice(YEAR_START, YEAR_END)}-${c.beginDateTime.slice(MONTH_START, MONTH_END)}-${c.beginDateTime.slice(DAY_START, DAY_END)}`;
-    const heureDebut = c.beginDateTime.substring(TIME_START).trim();
-    const heureFin = c.endDateTime.substring(TIME_START).trim();
+    const heureDebut = c.beginDateTime.substring(HOUR_MINUTE_START).trim();
+    const heureFin = c.endDateTime.substring(HOUR_MINUTE_START).trim();
     const dateAffichee = `${rawDate.split("-").reverse().join(".")}`;
 
     const selectedCreneau = {

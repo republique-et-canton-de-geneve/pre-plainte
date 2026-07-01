@@ -2,6 +2,20 @@
 
 Ce module contient la documentation technique du projet.
 
+## POC VitePress
+
+Le module peut etre expose sous forme de site statique VitePress pour mettre en avant les regles metier couvertes par les tests frontend.
+
+Commandes :
+
+```sh
+npm install
+npm run docs:dev
+npm run docs:build
+```
+
+Les commandes `docs:dev` et `docs:build` regenerent `regles-metier-formulaire.md` depuis `pre-plainte-ihm/src/test/business-rules` avant de lancer VitePress.
+
 ## Structure
 
 - `guides/` : guides pratiques, par exemple l'ajout d'un champ.
@@ -17,14 +31,12 @@ Ce module contient la documentation technique du projet.
 - [Stockage S3](architecture/stockage-s3.md)
 - [Guide technique - Ajout d'un champ](guides/ajout-champ.md)
 - [Mapping des codes RIPOL vers MyABI](guides/mapping-codes-ripol-myabi.md)
-- [Règles métier - Déclaration de vol](guides/regles-metier-declaration-vol.md)
 - [Documentation Swagger / OpenAPI des routes backend](api/swagger-api.md)
 - [ADR 001 - Ajout d'un champ](adr/adr-001-ajout-champ.md)
 
 ## Objectif
 
 Centraliser la connaissance technique et faciliter :
-
-- l'onboarding ;
-- la maintenance ;
-- l'évolution du projet.
+- l’onboarding
+- la maintenance
+- l’évolution du projet

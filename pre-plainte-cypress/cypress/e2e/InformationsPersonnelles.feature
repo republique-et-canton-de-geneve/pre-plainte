@@ -1,102 +1,57 @@
-Feature: Formulaire "Informations personnelles" – Service de pré-plainte
+# language: fr
+Fonctionnalité: Informations personnelles
 
-  Context:
-    Etant donné que je suis sur le formulaire
+  Règle: Selon le type de représentation (tiers, entreprise), on affiche le formulaire correspondant.
 
-  Scenario: 1 - Affichage conditionnel des champs "Tiers"
-    Etant donné que je sélectionne "Tiers" dans le type de personne
-    Alors les champs "Nationalité du tiers", "Nom du tiers" sont affichés
-    Et les champs "Raison sociale", "Numéro de TVA" sont masqués
+  Règle: Des informations personnelles valides permettent de passer à l'étape suivante.
 
-  Scenario: 2 - Affichage conditionnel des champs "Entreprise"
-    Etant donné que je sélectionne "Entreprise" dans le type de personne
-    Alors les champs "Raison sociale", "Numéro de TVA" sont affichés
-    Et les champs "Nationalité du tiers", "Nom du tiers" sont masqués
+  Règle: La date de naissance doit correspondre à un âge compris entre 16 et 120 ans.
 
-  Scenario: 3 - Contrôle longueur du Nom (personne signalant)
-    Quand je saisis "A" dans le champ "Nom" (personne signalant)
-    Alors le message "Le nom doit contenir au moins 2 caractères" s'affiche sous le champ "Nom"
+  Règle: Un titre de séjour est obligatoire pour une nationalité non suisse.
 
-  Scenario: 4 - Contrôle longueur du Prénom (personne signalant)
-    Quand je saisis "B" dans le champ "Prénom" (personne signalant)
-    Alors le message "Le prénom doit contenir au moins 2 caractères" s'affiche sous le champ "Prénom"
+  Règle: Le numéro du document d'identité est obligatoire.
 
-  Scenario: 5 - Adresse postale requise (personne signalant)
-    Quand je laisse vide le champ "Adresse" (adresse de la personne signalant)
-    Alors le message "L'adresse postale est requise" s'affiche sous le champ "Adresse"
+  Règle: Le format du numéro de téléphone est vérifié.
 
-  Scenario: 6 - Localité requise (personne signalant)
-    Quand je laisse vide le champ "Localité" (adresse de la personne signalant)
-    Alors le message "La localité est requise" s'affiche sous le champ "Localité"
+  Scénario: Affichage conditionnel des champs Tiers
+    Etant donné que je suis sur l'étape informations personnelles
+    Et que je sélectionne "Tiers" dans le type de personne
+    Alors les champs "Identité du tiers concerné, Coordonnées du tiers concerné" sont affichés
+    Et les champs "Informations de l'organisation, Nom de l'organisation" sont masqués
 
-  Scenario: 7 - NPA – 4 chiffres requis (personne signalant)
-    Quand je saisis "121" dans le champ "NPA" (adresse de la personne signalant)
-    Alors le message "NPA doit contenir 4 chiffres" s'affiche sous le champ "NPA"
+  Scénario: Affichage conditionnel des champs Entreprise
+    Etant donné que je suis sur l'étape informations personnelles
+    Et que je sélectionne "Entreprise" dans le type de personne
+    Alors les champs "Informations de l'organisation, Nom de l'organisation" sont affichés
+    Et les champs "Identité du tiers concerné, Coordonnées du tiers concerné" sont masqués
 
-  Scenario: 8 - Format du téléphone (personne signalant)
-    Quand je saisis "079" dans le champ "Numéro de téléphone" (personne signalant)
-    Alors le message "Format de téléphone invalide" s'affiche sous le champ "Numéro de téléphone"
+  Scénario: Informations personnelles nominales pour soi-même
+    Etant donné que je suis sur l'étape informations personnelles
+    Quand je renseigne les informations personnelles nominales pour moi-même
+    Et je continue après les informations personnelles
+    Alors aucune erreur de champ obligatoire n'est affichée
+    Et je vois l'étape "Informations sur l'événement"
 
-  Scenario: 9 - Format de l'email (personne signalant)
-    Quand je saisis "mauvais-mail@example" dans le champ "Email" (personne signalant)
-    Alors le message "Format d'email invalide" s'affiche sous le champ "Email"
+  Scénario: BVA - date de naissance inférieure à 16 ans
+    Etant donné que je suis sur l'étape informations personnelles avec des données invalides "age inferieur a 16 ans"
+    Quand je continue après les informations personnelles
+    Alors le message "L'âge doit être entre 16 et 120 ans" s'affiche sous le champ "Date de naissance"
+    Et je reste sur l'étape informations personnelles
 
-  Scenario: 10 - Format de l'email – confirmation (personne signalant)
-    Quand je saisis "mauvais-mail@example" dans le champ "Confirmation email" (personne signalant)
-    Alors le message "Format d'email invalide" s'affiche sous le champ "Confirmation email"
+  Scénario: BVA - nationalité non suisse sans titre de séjour
+    Etant donné que je suis sur l'étape informations personnelles avec des données invalides "nationalite etrangere sans titre de sejour"
+    Quand je continue après les informations personnelles
+    Alors le message "Le titre de séjour est requis" s'affiche sous le champ "Titre de séjour"
+    Et je reste sur l'étape informations personnelles
 
-  Scenario: 11 - Nationalité requise (tiers concerné)
-    Quand je laisse vide le champ "Nationalité" (identité du tiers concerné)
-    Alors le message "La nationalité est requise" s'affiche sous le champ "Nationalité"
+  Scénario: BVA - numéro de document manquant
+    Etant donné que je suis sur l'étape informations personnelles avec des données invalides "numero de document manquant"
+    Quand je continue après les informations personnelles
+    Alors le message "Le numéro de document est requis" s'affiche sous le champ "Numéro de carte d'identité"
+    Et je reste sur l'étape informations personnelles
 
-  Scenario: 12 - Contrôle longueur du Nom (tiers concerné)
-    Etant donné que je sélectionne "Tiers" dans le type de personne
-    Quand je saisis "C" dans le champ "Nom" (identité du tiers concerné)
-    Alors le message "Le nom doit contenir au moins 2 caractères" s'affiche sous le champ "Nom"
-
-  Scenario: 13 - Contrôle longueur du Prénom (tiers concerné)
-    Etant donné que je sélectionne "Tiers" dans le type de personne
-    Quand je saisis "D" dans le champ "Prénom" (identité du tiers concerné)
-    Alors le message "Le prénom doit contenir au moins 2 caractères" s'affiche sous le champ "Prénom"
-
-  Scenario: 14 - Adresse – minimum 5 caractères (tiers concerné)
-    Etant donné que je sélectionne "Tiers" dans le type de personne
-    Quand je saisis "Rue" dans le champ "Adresse" (coordonnées du tiers concerné)
-    Alors le message "L'adresse doit contenir au moins 5 caractères" s'affiche sous le champ "Adresse"
-
-  Scenario: 15 - Localité requise (tiers concerné)
-    Etant donné que je sélectionne "Tiers" dans le type de personne
-    Quand je laisse vide le champ "Localité" (coordonnées du tiers concerné)
-    Alors le message "La localité est requise" s'affiche sous le champ "Localité"
-
-  Scenario: 16 - NPA – 4 chiffres requis (tiers concerné)
-    Etant donné que je sélectionne "Tiers" dans le type de personne
-    Quand je saisis "12" dans le champ "NPA" (coordonnées du tiers concerné)
-    Alors le message "NPA doit contenir 4 chiffres" s'affiche sous le champ "NPA"
-
-  Scenario: 17 - Bouton "Poursuivre" désactivé en cas d'erreurs
-    Etant donné que j'ai des champs en erreur
-    Alors le bouton "Poursuivre" est désactivé
-
-  Scenario: 18 - Je peux passer à la page suivante
-    Etant donné que je renseigne tous les champs obligatoires avec des valeurs valides
-      | Section                              | Champ               | Valeur                  |
-      | Identité de la personne signalant    | Nom                 | Martin                  |
-      | Identité de la personne signalant    | Prénom              | Anne                    |
-      | Identité de la personne signalant    | Genre               | Femme                   |
-      | Identité de la personne signalant    | Nationalité         | Suisse                  |
-      | Adresse de la personne signalant     | Adresse             | rue du Marché 10        |
-      | Adresse de la personne signalant     | NPA                 | 1201                    |
-      | Adresse de la personne signalant     | Localité            | Genève                  |
-      | Coordonnées de la personne signalant | Numéro de téléphone | 0791234567              |
-      | Coordonnées de la personne signalant | Email               | anne.martin@example.org |
-      | Coordonnées de la personne signalant | Confirmation email  | anne.martin@example.org |
-      | Identité du tiers concerné           | Nom                 | Durand                  |
-      | Identité du tiers concerné           | Prénom              | Paul                    |
-      | Identité du tiers concerné           | Nationalité         | Suisse                  |
-      | Coordonnées du tiers concerné        | Adresse             | 20 avenue du Rhône      |
-      | Coordonnées du tiers concerné        | NPA                 | 1207                    |
-      | Coordonnées du tiers concerné        | Localité            | Genève                  |
-      | Coordonnées du tiers concerné        | Numéro de téléphone | 0221234567              |
-    Quand je clique sur "Poursuivre"
-    Alors je vois l'étape "Informations sur l'événement"
+  Scénario: BVA - numéro de téléphone invalide
+    Etant donné que je suis sur l'étape informations personnelles avec des données invalides "telephone invalide"
+    Quand je continue après les informations personnelles
+    Alors le message "Veuillez saisir un numéro valide (ex: 078 905 44 34)" s'affiche sous le champ "Numéro de téléphone"
+    Et je reste sur l'étape informations personnelles
