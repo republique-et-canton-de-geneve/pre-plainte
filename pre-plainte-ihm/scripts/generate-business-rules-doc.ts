@@ -1,7 +1,14 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { reglesDisclaimerWorkflow } from "../src/test/business-rules/disclaimer-workflow.rules";
+import { reglesEmailVerificationWorkflow } from "../src/test/business-rules/email-verification-workflow.rules";
+import { reglesEvenement } from "../src/test/business-rules/evenement.rules";
 import { reglesInformationsPersonnelles } from "../src/test/business-rules/informations-personnelles.rules";
+import { reglesRendezVous } from "../src/test/business-rules/rendez-vous.rules";
+import { reglesRendezVousWorkflow } from "../src/test/business-rules/rendez-vous-workflow.rules";
+import { reglesVerificationEmail } from "../src/test/business-rules/verification-email.rules";
+import { reglesVolHelpers } from "../src/test/business-rules/vol-helper.rules";
 import type { BusinessRule } from "../src/test/business-rules/business-rule.types";
 
 const currentDir = dirname(fileURLToPath(import.meta.url));
@@ -24,21 +31,32 @@ function groupBySection(rules: BusinessRule[]): Map<string, BusinessRule[]> {
 function renderSection(section: string, rules: BusinessRule[]): string {
   const rows = rules.map(rule => {
     const examples = rule.examples?.map(example => example.label).join("<br>") ?? "";
+    const kind = rule.kind ?? "schema";
 
-    return `| ${escapeCell(rule.champDemande)} | ${rule.obligatoire} | ${escapeCell(rule.precision)} | ${escapeCell(examples)} |`;
+    return `| ${escapeCell(rule.champDemande)} | ${kind} | ${rule.obligatoire} | ${escapeCell(rule.precision)} | ${escapeCell(examples)} |`;
   });
 
   return [
     `## ${section}`,
     "",
-    "| Champ demande | Obligatoire | Precision | Exemples testes |",
-    "| --- | --- | --- | --- |",
+    "| Champ demande | Type de regle | Obligatoire | Precision | Exemples testes |",
+    "| --- | --- | --- | --- | --- |",
     ...rows,
   ].join("\n");
 }
 
 function renderDocument(): string {
-  const sections = [...groupBySection(reglesInformationsPersonnelles).entries()]
+  const rules = [
+    ...reglesInformationsPersonnelles,
+    ...reglesEvenement,
+    ...reglesDisclaimerWorkflow,
+    ...reglesVerificationEmail,
+    ...reglesEmailVerificationWorkflow,
+    ...reglesRendezVous,
+    ...reglesRendezVousWorkflow,
+    ...reglesVolHelpers,
+  ];
+  const sections = [...groupBySection(rules).entries()]
     .map(([section, rules]) => renderSection(section, rules));
 
   return [
