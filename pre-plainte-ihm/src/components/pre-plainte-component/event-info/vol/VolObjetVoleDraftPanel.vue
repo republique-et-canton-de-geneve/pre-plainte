@@ -263,7 +263,7 @@
       </template>
 
       <div v-if="brouillon.categorieObjet" class="d-flex justify-start mt-2">
-        <v-btn color="primary" variant="outlined" @click="brouillon.validerObjetVole">
+        <v-btn color="primary" variant="outlined" data-cy="objet-vole-valider" @click="brouillon.validerObjetVole">
           {{ t("incidentTypes.validerObjetVole") }}
         </v-btn>
       </div>

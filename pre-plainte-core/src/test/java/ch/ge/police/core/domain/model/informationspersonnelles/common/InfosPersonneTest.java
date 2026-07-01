@@ -13,7 +13,7 @@ class InfosPersonneTest {
     InfosPersonne p = new InfosPersonne();
     p.setNom("Toure");
     p.setPrenom("Maka");
-    p.setGenre(new RipolCode("1", "Homme"));
+    p.setGenre(new RipolCode("1", "Masculin"));
     p.setNationalite(new RipolCode("8100", "Suisse"));
     p.setDateNaissance("1993-11-27");
     p.setAdresse(new Adresse("Route des Fayards", "Versoix", "1290", "CH", null, "Suisse", null));
