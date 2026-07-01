@@ -6,6 +6,14 @@ const DATE_EVENEMENT = "20.05.2026";
 const HEURE_DEBUT_EVENEMENT = "10:00";
 const HEURE_FIN_EVENEMENT = "11:00";
 const PAYS_SUISSE = "8100";
+const ADRESSE_RUE = "Rue du Marche 10";
+const ADRESSE_NUMERO = "10";
+const ADRESSE_NPA = "1201";
+const ADRESSE_LOCALITE = "Geneve";
+const CODE_ORDINATEUR_PORTABLE = "722100";
+const LIBELLE_ORDINATEUR_PORTABLE = "Ordinateur portable";
+const CODE_COULEUR_NOIR = "NOIR";
+const LIBELLE_COULEUR_NOIR = "Noir";
 const DATE_RENDEZ_VOUS = "2026-07-02";
 const HEURE_DEBUT_RENDEZ_VOUS = HEURE_DEBUT_EVENEMENT;
 const HEURE_FIN_RENDEZ_VOUS = HEURE_FIN_EVENEMENT;
@@ -30,10 +38,10 @@ export const declarantSuisseValide = {
   nationalite: ripolSelection(PAYS_SUISSE, "Suisse"),
   dateNaissance: "15.04.1985",
   pays: PAYS_SUISSE,
-  adresse: "Rue du Marche 10",
-  adressePostale: "10",
-  npa: "1201",
-  localite: "Geneve",
+  adresse: ADRESSE_RUE,
+  adressePostale: ADRESSE_NUMERO,
+  npa: ADRESSE_NPA,
+  localite: ADRESSE_LOCALITE,
   typeDocumentIdentite: "carte_identite",
   numeroDocumentIdentite: "ID1234567",
 };
@@ -41,12 +49,12 @@ export const declarantSuisseValide = {
 export const objetInformatiqueVoleValide = {
   categorieObjet: "informatique",
   sousCategorie: "ordinateur_portable",
-  typeObjet: ripolSelection("722100", "Ordinateur portable"),
+  typeObjet: ripolSelection(CODE_ORDINATEUR_PORTABLE, LIBELLE_ORDINATEUR_PORTABLE),
   fabricant: null,
   fabricantAutre: "",
   modele: null,
   modeleAutre: "",
-  couleur: ripolSelection("NOIR", "Noir"),
+  couleur: ripolSelection(CODE_COULEUR_NOIR, LIBELLE_COULEUR_NOIR),
   couleurSecondaire: null,
   gravure: "",
   valeurReelle: "",
@@ -132,7 +140,7 @@ export const evenementCybercrimeAchatNonRecu = {
   heureDernierContact: HEURE_FIN_EVENEMENT,
   montantDelitAchatLigne: "250",
   descriptionCybercrime: "Achat paye en ligne mais aucun article recu apres plusieurs relances",
-  articleNonLivreDescription: "Ordinateur portable annonce comme neuf",
+  articleNonLivreDescription: `${LIBELLE_ORDINATEUR_PORTABLE} annonce comme neuf`,
   prenomVendeur: "Paul",
   nomVendeur: "Durand",
   telephoneVendeurInconnu: true,
@@ -187,10 +195,10 @@ export const brouillonVolSimpleDto = {
     nationalite: ripolSelection(PAYS_SUISSE, "Suisse"),
     dateNaissance: "1985-04-15",
     adresse: {
-      adresse: "Rue du Marche 10",
-      adressePostale: "10",
-      npa: "1201",
-      localite: "Geneve",
+      adresse: ADRESSE_RUE,
+      adressePostale: ADRESSE_NUMERO,
+      npa: ADRESSE_NPA,
+      localite: ADRESSE_LOCALITE,
       pays: PAYS_SUISSE,
     },
     telephone: "+41791234567",
@@ -207,10 +215,10 @@ export const brouillonVolSimpleDto = {
       adresseLesee: true,
       adresseConnue: false,
       adresseIncident: {
-        adresse: "Rue du Marche 10",
-        adressePostale: "10",
-        npa: "1201",
-        localite: "Geneve",
+        adresse: ADRESSE_RUE,
+        adressePostale: ADRESSE_NUMERO,
+        npa: ADRESSE_NPA,
+        localite: ADRESSE_LOCALITE,
         pays: PAYS_SUISSE,
       },
       volDansVehicule: false,

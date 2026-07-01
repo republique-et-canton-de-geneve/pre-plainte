@@ -19,6 +19,18 @@ type UseVehicleDetailsRipolArgs = {
 
 type VehicleDetailsFields = ReturnType<typeof useVehicleDetailsFields>;
 
+type VehicleDetailsWatchersContext = {
+  fields: VehicleDetailsFields;
+  sousCategorie: Ref<string>;
+  hasPlateNumber: Ref<boolean>;
+  resetVehicleCaches: () => void;
+  appliquerPaysVehiculeDefaut: () => void;
+  hasBrands: Ref<boolean>;
+  hasModels: Ref<boolean>;
+  allBrandsCache: Ref<Ripol[] | null>;
+  allModelsCache: Ref<Ripol[] | null>;
+};
+
 function useVehicleDetailsFields() {
   const { value: typeObjet, errorMessage: typeObjetError } = useField<RipolSelection | null>("typeObjet");
   const { value: fabricant, errorMessage: fabricantError } = useField<RipolSelection | null>("fabricant");
@@ -102,17 +114,17 @@ function createVehicleDetailsResult<TState extends Record<string, unknown>>(
   };
 }
 
-function setupVehicleDetailsWatchers(
-  fields: VehicleDetailsFields,
-  sousCategorie: Ref<string>,
-  hasPlateNumber: Ref<boolean>,
-  resetVehicleCaches: () => void,
-  appliquerPaysVehiculeDefaut: () => void,
-  hasBrands: Ref<boolean>,
-  hasModels: Ref<boolean>,
-  allBrandsCache: Ref<Ripol[] | null>,
-  allModelsCache: Ref<Ripol[] | null>,
-) {
+function setupVehicleDetailsWatchers({
+  fields,
+  sousCategorie,
+  hasPlateNumber,
+  resetVehicleCaches,
+  appliquerPaysVehiculeDefaut,
+  hasBrands,
+  hasModels,
+  allBrandsCache,
+  allModelsCache,
+}: VehicleDetailsWatchersContext) {
   watch(sousCategorie, () => {
     fields.typeObjet.value = null;
     fields.fabricant.value = null;
@@ -290,7 +302,7 @@ export function useVehicleDetailsRipol({ sousCategorie, activePrefixes }: UseVeh
     }
   };
 
-  setupVehicleDetailsWatchers(
+  setupVehicleDetailsWatchers({
     fields,
     sousCategorie,
     hasPlateNumber,
@@ -300,7 +312,7 @@ export function useVehicleDetailsRipol({ sousCategorie, activePrefixes }: UseVeh
     hasModels,
     allBrandsCache,
     allModelsCache,
-  );
+  });
 
   return createVehicleDetailsResult(fields, {
     objetTypeKey,
