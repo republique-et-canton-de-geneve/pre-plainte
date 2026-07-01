@@ -1,6 +1,17 @@
 import { nextTick } from "vue";
 import { SCROLL_CONFIG, CONDITIONAL_FIELD_PATTERNS } from "@/constants/constant";
 
+const ERROR_SELECTORS = [
+  ".v-messages__message",
+  ".text-error",
+  ".v-field--error",
+  ".v-input--error",
+  ".v-select--error",
+  ".v-textarea--error",
+  ".v-checkbox--error",
+  ".v-radio-group--error",
+];
+
 const extractValidationErrors = (errors: any): Record<string, any> => {
   if (!errors || typeof errors !== "object") {
     return {};
@@ -22,83 +33,131 @@ const isConditionalField = (fieldName: string): boolean => {
   return CONDITIONAL_FIELD_PATTERNS.some(pattern => lowerFieldName.includes(pattern));
 };
 
+const findFirstVisibleError = (): Element | null => {
+  for (const selector of ERROR_SELECTORS) {
+    const elements = document.querySelectorAll(selector);
+
+    for (const element of Array.from(elements)) {
+      if (element.textContent?.trim()) {
+        return element;
+      }
+    }
+  }
+
+  return null;
+};
+
+type FormInputElement = | HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;
+
+const focusInput = (input: FormInputElement | null) => {
+  if (!input) {
+    return;
+  }
+
+  setTimeout(() => {
+    input.focus();
+  }, SCROLL_CONFIG.FOCUS_DELAY);
+};
+
+const scrollToError = (errorElement: Element) => {
+  const formElement = errorElement.closest(
+    ".v-field, .v-input, .v-select, .v-textarea, .v-checkbox, .v-radio-group, .v-form",
+  );
+
+  if (!formElement) {
+    return;
+  }
+
+  const conditionalSection = formElement.closest(".inputs-container, .inputs-fields");
+
+  (conditionalSection ?? formElement).scrollIntoView({
+    behavior: "smooth",
+    block: conditionalSection ? "start" : "center",
+    inline: "nearest",
+  });
+
+  const input = formElement.querySelector(
+    "input, textarea, select",
+  ) as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement | null;
+
+  focusInput(input);
+};
+
+const scrollToFirstRequiredField = () => {
+  const requiredFields = document.querySelectorAll(
+    "input[required], select[required], textarea[required]",
+  );
+
+  for (const field of Array.from(requiredFields)) {
+    const input = field as
+      | HTMLInputElement
+      | HTMLSelectElement
+      | HTMLTextAreaElement;
+
+    if (input.value?.trim()) {
+      continue;
+    }
+
+    input.scrollIntoView({
+      behavior: "smooth",
+      block: "center",
+      inline: "nearest",
+    });
+
+    focusInput(input);
+    return;
+  }
+};
+
+const findFieldElement = (field: string): Element | null => {
+  const selectors = [
+    `[name="${field}"]`,
+    `#${field}`,
+    `[data-field="${field}"]`,
+    `input[name="${field}"]`,
+    `select[name="${field}"]`,
+    `textarea[name="${field}"]`,
+  ];
+
+  for (const selector of selectors) {
+    const element = document.querySelector(selector);
+
+    if (element) {
+      return element;
+    }
+  }
+
+  return null;
+};
+
+const findElementFromErrorMessage = (message: string): Element | null => {
+  const errorElements = document.querySelectorAll(
+    ".v-messages__message, .text-error, .v-field--error",
+  );
+
+  for (const errorElement of Array.from(errorElements)) {
+    if (errorElement.textContent?.includes(message)) {
+      return errorElement.closest(
+        ".v-field, .v-input, .v-select, .v-textarea, .v-checkbox, .v-radio-group",
+      );
+    }
+  }
+
+  return null;
+};
+
 export function useFormErrorScroll() {
   const scrollToFirstVisibleError = async () => {
     await nextTick();
 
-    const errorSelectors = [
-      ".v-messages__message",
-      ".text-error",
-      ".v-field--error",
-      ".v-input--error",
-      ".v-select--error",
-      ".v-textarea--error",
-      ".v-checkbox--error",
-      ".v-radio-group--error",
-    ];
+    const firstError = findFirstVisibleError();
 
-    let firstErrorElement: Element | null = null;
-
-    for (const selector of errorSelectors) {
-      const elements = document.querySelectorAll(selector);
-
-      for (const element of Array.from(elements)) {
-        if (element.textContent?.trim()) {
-          firstErrorElement = element;
-          break;
-        }
-      }
-      if (firstErrorElement) {
-        break;
-      }
+    if (firstError) {
+      scrollToError(firstError);
+      return;
     }
 
-    if (firstErrorElement) {
-      const formElement = firstErrorElement.closest(
-        ".v-field, .v-input, .v-select, .v-textarea, .v-checkbox, .v-radio-group, .v-form",
-      );
-
-      if (formElement) {
-        const conditionalSection = formElement.closest(".inputs-container, .inputs-fields");
-        if (conditionalSection) {
-          conditionalSection.scrollIntoView({
-            behavior: "smooth",
-            block: "start",
-            inline: "nearest",
-          });
-        } else {
-          formElement.scrollIntoView({
-            behavior: "smooth",
-            block: "center",
-            inline: "nearest",
-          });
-        }
-
-        const inputElement = formElement.querySelector("input, textarea, select") as HTMLElement;
-        if (inputElement && typeof inputElement.focus === "function") {
-          setTimeout(() => {
-            inputElement.focus();
-          }, SCROLL_CONFIG.FOCUS_DELAY);
-        }
-      }
-    } else {
-      const requiredFields = document.querySelectorAll("input[required], select[required], textarea[required]");
-
-      for (const field of Array.from(requiredFields)) {
-        const input = field as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
-        if (!input.value || input.value.trim() === "") {
-          input.scrollIntoView({
-            behavior: "smooth",
-            block: "center",
-            inline: "nearest",
-          });
-          setTimeout(() => {
-            input.focus();
-          }, 300);
-          break;
-        }
-      }
-    }
+    scrollToFirstRequiredField();
   };
 
   const scrollToTopOnConditionalErrors = async (errors: any) => {
@@ -139,58 +198,30 @@ export function useFormErrorScroll() {
       return;
     }
 
-    const firstErrorField = Object.keys(validationErrors).find(field => validationErrors[field]);
+    const firstErrorField = Object.keys(validationErrors).find(
+      field => validationErrors[field],
+    );
 
-    if (firstErrorField) {
-      let element =
-        document.querySelector(`[name="${firstErrorField}"]`) ||
-        document.querySelector(`#${firstErrorField}`) ||
-        document.querySelector(`[data-field="${firstErrorField}"]`) ||
-        document.querySelector(`input[name="${firstErrorField}"]`) ||
-        document.querySelector(`select[name="${firstErrorField}"]`) ||
-        document.querySelector(`textarea[name="${firstErrorField}"]`);
+    if (!firstErrorField) {
+      return;
+    }
 
-      if (!element) {
-        const errorMessage = validationErrors[firstErrorField];
+    let element = findFieldElement(firstErrorField);
 
-        if (typeof errorMessage === "string") {
-          const errorElements = document.querySelectorAll(".v-messages__message, .text-error, .v-field--error");
+    if (!element) {
+      const message = validationErrors[firstErrorField];
 
-          for (const errorEl of Array.from(errorElements)) {
-            if (errorEl.textContent?.includes(errorMessage)) {
-              element = errorEl.closest(".v-field, .v-input, .v-select, .v-textarea, .v-checkbox, .v-radio-group");
-              break;
-            }
-          }
-        }
-      }
-
-      if (element) {
-        const conditionalSection = element.closest(".inputs-container, .inputs-fields");
-        if (conditionalSection) {
-          conditionalSection.scrollIntoView({
-            behavior: "smooth",
-            block: "start",
-            inline: "nearest",
-          });
-        } else {
-          element.scrollIntoView({
-            behavior: "smooth",
-            block: "center",
-            inline: "nearest",
-          });
-        }
-
-        const inputElement = element.querySelector("input, textarea, select") as HTMLElement;
-        if (inputElement && typeof inputElement.focus === "function") {
-          setTimeout(() => {
-            inputElement.focus();
-          }, SCROLL_CONFIG.FOCUS_DELAY);
-        }
-      } else {
-        await scrollToFirstVisibleError();
+      if (typeof message === "string") {
+        element = findElementFromErrorMessage(message);
       }
     }
+
+    if (!element) {
+      await scrollToFirstVisibleError();
+      return;
+    }
+
+    scrollToError(element);
   };
 
   return {

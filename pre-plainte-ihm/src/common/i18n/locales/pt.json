@@ -879,7 +879,6 @@
     "dateFinEvenementRequise": "A data de fim do evento é obrigatória",
     "heureFinEvenementRequise": "A hora de fim do evento é obrigatória",
     "dateFinEvenementApresDebut": "O fim do evento deve ser posterior ao início",
-    "detailsPlainteDeposeeRequis": "Os detalhes da queixa são obrigatórios quando já apresentou uma queixa",
     "champRequis": "O campo é obrigatório",
     "modeOperatoireRequis": "O modo operatório é obrigatório",
     "volDansVehiculeRequis": "Indique se o objeto foi roubado dentro de um veículo ou sobre um veículo",

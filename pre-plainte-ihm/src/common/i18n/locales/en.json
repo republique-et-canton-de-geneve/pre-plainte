@@ -879,7 +879,6 @@
     "dateFinEvenementRequise": "The event end date is required",
     "heureFinEvenementRequise": "The event end time is required",
     "dateFinEvenementApresDebut": "The end of the event must be after the start",
-    "detailsPlainteDeposeeRequis": "Complaint details are required when you have already filed a complaint",
     "champRequis": "This field is required",
     "modeOperatoireRequis": "The method used is required",
     "volDansVehiculeRequis": "Please indicate whether the object was stolen in or on a vehicle",

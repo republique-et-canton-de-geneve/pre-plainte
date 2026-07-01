@@ -39,9 +39,4 @@ export const resetConditions = {
   },
 
   eventInfo: (data: PrePlainteFormFields) => !data.typeIncident && !data.dateDebutEvenement && !data.dateFinEvenement,
-
-  global: (data: PrePlainteFormFields) =>
-    Object.values(data).every(
-      value => value === "" || value === null || value === undefined || (Array.isArray(value) && value.length === 0),
-    ),
 };

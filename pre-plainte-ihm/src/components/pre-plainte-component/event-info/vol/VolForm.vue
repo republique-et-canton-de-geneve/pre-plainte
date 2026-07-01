@@ -100,13 +100,38 @@ import { filterNationalities, sortRipolByLabelFr } from "@/utils/helpers/ripolHe
 import type { RipolSelection, Ripol } from "@/types/ripol.interface";
 import type { PrePlainteFormFields, VolObjetFormSnapshot } from "@/types/pre-plainte.interface";
 import BaseRadioGroup from "@/components/radio/BaseRadioGroup.vue";
-import { checkLength, validerNumeroPlaque, validerPlaqueVehicule } from "@/utils/helpers/volObjetVolHelpers";
+import {
+  chaineFormulaire,
+  texteOuVide,
+  validerNumeroPlaque,
+  validerPlaqueVehicule
+} from "@/utils/helpers/volObjetVolHelpers";
+import {
+  validateFabricantEtModele,
+  validateLongueurs,
+  validateNumeroCadreEtVin
+} from "@/utils/helpers/vehiculeValidationHelper.ts";
 
 const TEXTE_VIDE = "";
 const NUMERO_IMEI_REGEX = /^\d{15}$/;
+const VALIDATION_LONGUEUR_MAX = "validation.longueurMax";
+const VALIDATION_CHAMP_REQUIS = "validation.champRequis";
+const CHAMP_REQUIS_ERREUR = "validation.champRequis";
 
-const chaineFormulaire = (v: unknown) => String(v ?? TEXTE_VIDE);
-const texteOuVide = (v: string | undefined | null) => v ?? TEXTE_VIDE;
+const LONGUEURS_FIELDS = [
+  { field: "fabricantAutre", value: () => fabricantAutre.value, max: TEXT_FIELD_MAX_LENGTH },
+  { field: "modeleAutre", value: () => modeleAutre.value, max: TEXT_FIELD_MAX_LENGTH },
+  { field: "numeroSerie", value: () => numeroSerie.value, max: TEXT_FIELD_MAX_LENGTH },
+  { field: "justificationAbsenceIMEI", value: () => justificationAbsenceIMEI.value, max: TEXTAREA_MAX_LENGTH },
+  { field: "gravure", value: () => gravure.value, max: TEXT_FIELD_MAX_LENGTH },
+  { field: "vin", value: () => vin.value, max: TEXT_FIELD_MAX_LENGTH },
+  { field: "numeroCadre", value: () => numeroCadre.value, max: TEXT_FIELD_MAX_LENGTH },
+  { field: "velofinderId", value: () => velofinderId.value, max: TEXT_FIELD_MAX_LENGTH },
+  { field: "assureurAutre", value: () => assureurAutre.value, max: TEXT_FIELD_MAX_LENGTH },
+  { field: "numeroAssurance", value: () => numeroAssurance.value, max: TEXT_FIELD_MAX_LENGTH },
+  { field: "numeroVignette", value: () => numeroVignette.value, max: TEXT_FIELD_MAX_LENGTH },
+  { field: "numeroMaster", value: () => numeroMaster.value, max: TEXT_FIELD_MAX_LENGTH },
+];
 
 const cloneRipol = (sel: RipolSelection | null): RipolSelection | null => {
   if (!sel) {
@@ -140,9 +165,9 @@ const { value: couleur, errorMessage: couleurError } = useField<RipolSelection |
 const { value: couleurSecondaire } = useField<RipolSelection | null>("couleurSecondaire");
 const { value: valeurReelle, errorMessage: valeurReelleError } = useField<string>("valeurReelle");
 const { value: gravure, errorMessage: gravureError } = useField<string>("gravure");
-const { value: numeroSerie, errorMessage: numeroSerieError } = useField("numeroSerie");
+const { value: numeroSerie, errorMessage: numeroSerieError } = useField<string>("numeroSerie");
 const { value: numeroSerieInconnu } = useField<boolean>("numeroSerieInconnu");
-const { value: numeroIMEI, errorMessage: numeroIMEIError } = useField("numeroIMEI");
+const { value: numeroIMEI, errorMessage: numeroIMEIError } = useField<string>("numeroIMEI");
 const { value: numeroIMEIInconnu } = useField<boolean>("numeroIMEIInconnu");
 const { value: justificationAbsenceIMEI, errorMessage: justificationAbsenceIMEIError } = useField<string>("justificationAbsenceIMEI");
 const { value: isVehicle } = useField<boolean>("isVehicle");
@@ -235,8 +260,8 @@ const fetchBrands = async () => {
   if (!typeObjet.value?.code) {
     return [];
   }
-  const isVehicle = selectedCategorie.value?.useVehicleTypes === true;
-  const results = isVehicle
+  const isVehicleType = selectedCategorie.value?.useVehicleTypes === true;
+  const results = isVehicleType
     ? await RipolService.searchVehicleBrands(undefined, typeObjet.value.code)
     : await RipolService.search("brands", undefined, {
         masterValue: typeObjet.value.code,
@@ -255,10 +280,10 @@ const fetchModels = async () => {
   if (!fabricant.value?.code) {
     return [];
   }
-  const isVehicle = selectedCategorie.value?.useVehicleTypes === true;
+  const isVehicleType = selectedCategorie.value?.useVehicleTypes === true;
   modelsLoading.value = true;
   try {
-    const results = isVehicle
+    const results = isVehicleType
       ? await RipolService.searchVehicleModels(fabricant.value.code)
       : await RipolService.search("models", undefined, {
           masterValue: fabricant.value.code,
@@ -513,27 +538,30 @@ const numeroIMEIRequis = computed(
 );
 
 const validerBrouillonObjetVole = async (): Promise<boolean> => {
-  if (!categorieObjet.value?.trim()) {
-    setFieldError("categorieObjet", t("validation.champRequis"));
+  if (!await validateChampsObligatoires()) {
     return false;
   }
 
-  if (isPlaqueCategory.value) {
-    if (!plaquePays.value?.code) {
-      setFieldError("plaquePays", t("validation.champRequis"));
-      return false;
-    }
-    return validerNumeroPlaque(
-      {
-        sousCategorie: sousCategorie.value,
-        plaqueInconnu: plaqueInconnu.value,
-        plaqueNumero: plaqueNumero.value,
-        plaquePays: plaquePays.value,
-        plaqueCanton: plaqueCanton.value,
-      },
-      setFieldError as (field: string, message: string) => void,
-      t,
-    );
+  if (!validateNumeroSerieEtIMEI()) {
+    return false;
+  }
+
+  return validateLongueurs(
+    LONGUEURS_FIELDS,
+    setFieldError as any,
+    t,
+    VALIDATION_LONGUEUR_MAX,
+  );
+};
+
+const validateChampsObligatoires = async (): Promise<boolean> => {
+  if (!categorieObjet.value?.trim()) {
+    setFieldError("categorieObjet", t(VALIDATION_CHAMP_REQUIS));
+    return false;
+  }
+
+  if (!validatePlaque()) {
+    return false;
   }
 
   if (!typeObjet.value?.code) {
@@ -541,132 +569,112 @@ const validerBrouillonObjetVole = async (): Promise<boolean> => {
     return false;
   }
 
-  if (categorieObjet.value === VOL_OBJET_CATEGORIE.VEHICULE) {
-    if (!fabricant.value?.code) {
-      setFieldError("fabricant", t("validation.fabricantRequis"));
-      return false;
-    }
-    if (fabricant.value.code === "AUTRE" && !chaineFormulaire(fabricantAutre.value).trim()) {
-      setFieldError("fabricantAutre", t("validation.champRequis"));
-      return false;
-    }
-    if (fabricant.value.code !== "AUTRE") {
-      const models = await RipolService.searchVehicleModels(fabricant.value.code);
-      if (models.length > 0 && !modele.value?.code) {
-        setFieldError("modele", t("validation.modeleRequis"));
-        return false;
-      }
-      if ((modele.value?.code === "AUTRE" || models.length === 0) && !chaineFormulaire(modeleAutre.value).trim()) {
-        setFieldError("modeleAutre", t("validation.champRequis"));
-        return false;
-      }
-    }
+  return !(categorieObjet.value === VOL_OBJET_CATEGORIE.VEHICULE
+    && !await validateVehicule());
 
-    if (!couleur.value?.code) {
-      setFieldError("couleur", t("validation.couleurRequise"));
-      return false;
-    }
 
-    if (isVeloCategory.value && !numeroCadreInconnu.value && !chaineFormulaire(numeroCadre.value).trim()) {
-      setFieldError("numeroCadre", t("validation.numeroCadreRequis"));
-      return false;
-    }
+};
 
-    if (hasVin.value && !vinInconnu.value && !chaineFormulaire(vin.value).trim()) {
-      setFieldError("vin", t("validation.vinRequis"));
-      return false;
-    }
-
-    if (
-      !validerPlaqueVehicule(
-        {
-          sousCategorie: sousCategorie.value,
-          plaqueInconnu: plaqueInconnu.value,
-          plaqueNumero: plaqueNumero.value,
-          plaquePays: plaquePays.value,
-          plaqueCanton: plaqueCanton.value,
-        },
-        setFieldError as (field: string, message: string) => void,
-        t,
-      )
-    ) {
-      return false;
-    }
+const validatePlaque = (): boolean => {
+  if (!isPlaqueCategory.value) {
+    return true;
   }
 
-  if (numeroSerieRequis.value && !numeroSerieInconnu.value && !chaineFormulaire(numeroSerie.value).trim()) {
+  if (!plaquePays.value?.code) {
+    setFieldError("plaquePays", t(VALIDATION_CHAMP_REQUIS));
+    return false;
+  }
+
+  return validerNumeroPlaque(
+    {
+      sousCategorie: sousCategorie.value,
+      plaqueInconnu: plaqueInconnu.value,
+      plaqueNumero: plaqueNumero.value,
+      plaquePays: plaquePays.value,
+      plaqueCanton: plaqueCanton.value,
+    },
+    setFieldError as (field: string, message: string) => void,
+    t,
+  );
+};
+
+const validateVehicule = async (): Promise<boolean> => {
+  if (
+    !await validateFabricantEtModele({
+      fabricant: fabricant.value,
+      fabricantAutre: fabricantAutre.value,
+      modele: modele.value,
+      modeleAutre: modeleAutre.value,
+      setFieldError: setFieldError as any,
+      t,
+      champRequisErreur: CHAMP_REQUIS_ERREUR,
+    })
+  ) {
+    return false;
+  }
+
+  if (!couleur.value?.code) {
+    setFieldError("couleur", t("validation.couleurRequise"));
+    return false;
+  }
+
+  if (
+    !validateNumeroCadreEtVin({
+      isVeloCategory: isVeloCategory.value,
+      numeroCadreInconnu: numeroCadreInconnu.value,
+      numeroCadre: numeroCadre.value,
+      hasVin: hasVin.value,
+      vinInconnu: vinInconnu.value,
+      vin: vin.value,
+      setFieldError: setFieldError as any,
+      t,
+    })
+  ) {
+    return false;
+  }
+
+  return validerPlaqueVehicule(
+    {
+      sousCategorie: sousCategorie.value,
+      plaqueInconnu: plaqueInconnu.value,
+      plaqueNumero: plaqueNumero.value,
+      plaquePays: plaquePays.value,
+      plaqueCanton: plaqueCanton.value,
+    },
+    setFieldError as (field: string, message: string) => void,
+    t,
+  );
+};
+
+const validateNumeroSerieEtIMEI = (): boolean => {
+  if (
+    numeroSerieRequis.value
+    && !numeroSerieInconnu.value
+    && !chaineFormulaire(numeroSerie.value).trim()
+  ) {
     setFieldError("numeroSerie", t("validation.numeroSerieRequis"));
     return false;
   }
 
-  if (numeroIMEIRequis.value && !chaineFormulaire(numeroIMEI.value).trim()) {
-    setFieldError("numeroIMEI", t("validation.numeroIMEIRequis", { max: NUMERO_IMEI_MAX_LENGTH }));
+  if (
+    numeroIMEIRequis.value
+    && !chaineFormulaire(numeroIMEI.value).trim()
+  ) {
+    setFieldError(
+      "numeroIMEI",
+      t("validation.numeroIMEIRequis", { max: NUMERO_IMEI_MAX_LENGTH }),
+    );
     return false;
   }
 
   const numeroIMEITrim = chaineFormulaire(numeroIMEI.value).trim();
-  if (!numeroIMEIInconnu.value && numeroIMEITrim && !NUMERO_IMEI_REGEX.test(numeroIMEITrim)) {
+
+  if (
+    !numeroIMEIInconnu.value
+    && numeroIMEITrim
+    && !NUMERO_IMEI_REGEX.test(numeroIMEITrim)
+  ) {
     setFieldError("numeroIMEI", t("validation.numeroIMEIFormat"));
-    return false;
-  }
-
-  if (!checkLength(fabricantAutre.value, TEXT_FIELD_MAX_LENGTH)) {
-    setFieldError("fabricantAutre", t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH }));
-    return false;
-  }
-
-  if (!checkLength(modeleAutre.value, TEXT_FIELD_MAX_LENGTH)) {
-    setFieldError("modeleAutre", t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH }));
-    return false;
-  }
-
-  if (!checkLength(numeroSerie.value, TEXT_FIELD_MAX_LENGTH)) {
-    setFieldError("numeroSerie", t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH }));
-    return false;
-  }
-
-  if (!checkLength(justificationAbsenceIMEI.value, TEXTAREA_MAX_LENGTH)) {
-    setFieldError("justificationAbsenceIMEI", t("validation.longueurMax", { max: TEXTAREA_MAX_LENGTH }));
-    return false;
-  }
-
-  if (!checkLength(gravure.value, TEXT_FIELD_MAX_LENGTH)) {
-    setFieldError("gravure", t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH }));
-    return false;
-  }
-
-  if (!checkLength(vin.value, TEXT_FIELD_MAX_LENGTH)) {
-    setFieldError("vin", t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH }));
-    return false;
-  }
-
-  if (!checkLength(numeroCadre.value, TEXT_FIELD_MAX_LENGTH)) {
-    setFieldError("numeroCadre", t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH }));
-    return false;
-  }
-
-  if (!checkLength(velofinderId.value, TEXT_FIELD_MAX_LENGTH)) {
-    setFieldError("velofinderId", t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH }));
-    return false;
-  }
-
-  if (!checkLength(assureurAutre.value, TEXT_FIELD_MAX_LENGTH)) {
-    setFieldError("assureurAutre", t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH }));
-    return false;
-  }
-
-  if (!checkLength(numeroAssurance.value, TEXT_FIELD_MAX_LENGTH)) {
-    setFieldError("numeroAssurance", t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH }));
-    return false;
-  }
-
-  if (!checkLength(numeroVignette.value, TEXT_FIELD_MAX_LENGTH)) {
-    setFieldError("numeroVignette", t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH }));
-    return false;
-  }
-
-  if (!checkLength(numeroMaster.value, TEXT_FIELD_MAX_LENGTH)) {
-    setFieldError("numeroMaster", t("validation.longueurMax", { max: TEXT_FIELD_MAX_LENGTH }));
     return false;
   }
 

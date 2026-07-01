@@ -754,6 +754,36 @@ class SqliteRipolAdapterTest {
   }
 
   @Test
+  void getCodesByGroupType_shouldExcludeInactiveRowsWhenOnlyActiveColumnPresent() throws Exception {
+    SqliteRipolAdapter adapter = newAdapterWithUsabilityColumns(
+        "ACTIVE TEXT",
+        "ACTIVE",
+        "'1'",
+        "'0'"
+    );
+
+    List<Ripol> codes = adapter.getCodesByGroupType("11");
+
+    assertEquals(1, codes.size());
+    assertEquals("CH", codes.getFirst().code());
+  }
+
+  @Test
+  void getCodesByGroupType_shouldExcludeUnselectableRowsWhenOnlySelectableColumnPresent() throws Exception {
+    SqliteRipolAdapter adapter = newAdapterWithUsabilityColumns(
+        "SELECTABLE TEXT",
+        "SELECTABLE",
+        "'1'",
+        "'0'"
+    );
+
+    List<Ripol> codes = adapter.getCodesByGroupType("11");
+
+    assertEquals(1, codes.size());
+    assertEquals("CH", codes.getFirst().code());
+  }
+
+  @Test
   void getCodesByGroupType_shouldExcludeInactiveRowsWhenActiveColumnPresent() throws Exception {
     Path db = Files.createTempFile("ripol-usable-test-", ".db");
     db.toFile().deleteOnExit();
@@ -805,6 +835,56 @@ class SqliteRipolAdapterTest {
 
     assertEquals(1, codes.size());
     assertEquals("CH", codes.getFirst().code());
+  }
+
+  private static SqliteRipolAdapter newAdapterWithUsabilityColumns(
+      String extraColumnDefinitions,
+      String extraColumnNames,
+      String keptExtraValues,
+      String rejectedExtraValues
+  ) throws Exception {
+    Path db = Files.createTempFile("ripol-usability-test-", ".db");
+    db.toFile().deleteOnExit();
+    String jdbcUrl = "jdbc:sqlite:" + db.toAbsolutePath();
+
+    try (Connection conn = DriverManager.getConnection(jdbcUrl); Statement st = conn.createStatement()) {
+      st.execute("""
+          CREATE TABLE TBINCIDENTCODE (
+            ID INTEGER PRIMARY KEY,
+            GROUPTYPE TEXT,
+            CODEVALUE TEXT,
+            TEXT TEXT,
+            MASTERTYPE TEXT,
+            MASTERVALUE TEXT,
+            %s
+          )
+        """.formatted(extraColumnDefinitions));
+      st.execute("""
+          CREATE TABLE TBLOCALIZATION (
+            PK INTEGER,
+            GROUPTYPE TEXT,
+            LOCALE_ID INTEGER,
+            TRANSLATION TEXT
+          )
+        """);
+      st.execute("""
+          INSERT INTO TBINCIDENTCODE (ID, GROUPTYPE, CODEVALUE, TEXT, %s)
+          VALUES (1, '11', 'CH', 'Schweiz', %s)
+        """.formatted(extraColumnNames, keptExtraValues));
+      st.execute("""
+          INSERT INTO TBLOCALIZATION (PK, GROUPTYPE, LOCALE_ID, TRANSLATION)
+          VALUES (1, '11', 3, 'Suisse')
+        """);
+      st.execute("""
+          INSERT INTO TBINCIDENTCODE (ID, GROUPTYPE, CODEVALUE, TEXT, %s)
+          VALUES (2, '11', 'XX', 'Filtered', %s)
+        """.formatted(extraColumnNames, rejectedExtraValues));
+    }
+
+    String classpathLocation = "bdd/dbppel3";
+    ResourceLoader loader =
+      new SingleResourceLoader("classpath:" + classpathLocation, new FileSystemResource(db.toFile()));
+    return new SqliteRipolAdapter(loader, classpathLocation);
   }
 
   private static SqliteRipolAdapter newAdapterPointingToTempDb() throws Exception {
