@@ -14,9 +14,19 @@ import type { BusinessRule } from "../src/test/business-rules/business-rule.type
 const currentDir = dirname(fileURLToPath(import.meta.url));
 const outputPath = resolve(currentDir, "../../pre-plainte-doc/regles-metier-formulaire.md");
 const checkMode = process.argv.includes("--check");
+const kindLabels = {
+  schema: "Validation des champs",
+  workflow: "Blocage",
+  helper: "Branchement",
+  component: "Composant",
+} satisfies Record<NonNullable<BusinessRule["kind"]>, string>;
 
 function escapeCell(value: string): string {
   return value.replaceAll("|", "\\|");
+}
+
+function renderList(values: string[]): string {
+  return values.map(escapeCell).join("<br><br>");
 }
 
 function groupBySection(rules: BusinessRule[]): Map<string, BusinessRule[]> {
@@ -30,10 +40,10 @@ function groupBySection(rules: BusinessRule[]): Map<string, BusinessRule[]> {
 
 function renderSection(section: string, rules: BusinessRule[]): string {
   const rows = rules.map(rule => {
-    const examples = rule.examples?.map(example => example.label).join("<br>") ?? "";
-    const kind = rule.kind ?? "schema";
+    const examples = rule.examples ? renderList(rule.examples.map(example => example.label)) : "";
+    const kind = kindLabels[rule.kind ?? "schema"];
 
-    return `| ${escapeCell(rule.champDemande)} | ${kind} | ${rule.obligatoire} | ${escapeCell(rule.precision)} | ${escapeCell(examples)} |`;
+    return `| ${escapeCell(rule.champDemande)} | ${kind} | ${rule.obligatoire} | ${escapeCell(rule.precision)} | ${examples} |`;
   });
 
   return [
