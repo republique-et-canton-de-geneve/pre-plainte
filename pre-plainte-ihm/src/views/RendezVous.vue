@@ -140,13 +140,11 @@ onMounted(async () => {
   await esiriusStore.loadAllAvailabilitiesForPPEL();
 });
 
-const servicesDisponibles = computed(() => {
-  return filterServicesByIncident(esiriusStore.services, esiriusStore.allAvailabilities, store.userFormData.typeIncident);
-});
+const servicesDisponibles = computed(() =>
+  filterServicesByIncident(esiriusStore.services, esiriusStore.allAvailabilities, store.userFormData.typeIncident)
+);
 
-const rendezVousWarning = computed(() => {
-  return getRendezVousWarning(store.userFormData, aucunCreneauVehiculeAvecPlaque.value);
-});
+const rendezVousWarning = computed(() => getRendezVousWarning(store.userFormData, aucunCreneauVehiculeAvecPlaque.value));
 
 const isVehiculeVoleAvecPlaque = computed(() => hasVehiculeVoleAvecPlaque(store.userFormData));
 
@@ -167,9 +165,9 @@ const availabilitiesByPoste = computed(() => {
   );
 });
 
-const creneauxCompatiblesIncident = computed(() => {
-  return filterCompatibleCreneaux(esiriusStore.allAvailabilities, esiriusStore.services, store.userFormData);
-});
+const creneauxCompatiblesIncident = computed(() =>
+  filterCompatibleCreneaux(esiriusStore.allAvailabilities, esiriusStore.services, store.userFormData)
+);
 
 const creneauxFiltres = computed(() => {
   return filterCreneauxByPosteAndDate(
@@ -264,7 +262,7 @@ watch(
     }
 
     let cancelled = false;
-    const scrollTimeout = window.setTimeout(() => {
+    const scrollTimeout = globalThis.setTimeout(() => {
       void nextTick(() => {
         if (!cancelled) {
           creneauxSection.value?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -274,7 +272,7 @@ watch(
 
     onCleanup(() => {
       cancelled = true;
-      window.clearTimeout(scrollTimeout);
+      globalThis.clearTimeout(scrollTimeout);
     });
   },
   { flush: "post" },

@@ -104,8 +104,9 @@ const submitCancellation = async (code: string) => {
     const message = t("annulation.messageSucces", { code });
     showAlert(message, "success");
     emit("cancelled", message);
-  } catch (error) {
-    showAlert(t("annulation.messageErreur"), "error");
+  } catch (error: unknown) {
+    const message = error instanceof Error && error.message ? error.message : t("annulation.messageErreur");
+    showAlert(message, "error");
   } finally {
     resetCaptcha();
   }

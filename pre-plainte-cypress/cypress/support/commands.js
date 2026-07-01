@@ -2,7 +2,7 @@ import { setPrePlainteStep } from "./helpers/local-storage";
 import { applyGeThemeVariables } from "./helpers/ge-theme";
 
 Cypress.Commands.add("demarrerPrePlainteAEtape", (step, data = {}, options = {}) => {
-  const visitOptions = { ...(options.visitOptions ?? {}) };
+  const visitOptions = options.visitOptions ?? {};
   const originalOnBeforeLoad = visitOptions.onBeforeLoad;
 
   cy.visit(options.path ?? "/", {

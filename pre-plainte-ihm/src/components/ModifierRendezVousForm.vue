@@ -480,12 +480,7 @@ const handleConfirm = async () => {
 
   isUpdating.value = true;
   prePlainteIsLoading.value = true;
-  try {
-    await handleUpdateAppointment();
-  } catch (error) {
-    isUpdating.value = false;
-    prePlainteIsLoading.value = false;
-  }
+  await handleUpdateAppointment();
 };
 const formatDateTimeFrench = (dateString: string): string => {
   if (!dateString) {
@@ -546,7 +541,6 @@ const handleUpdateAppointment = async (): Promise<void> => {
     showAlert(errorMsg, "error");
     isUpdating.value = false;
     prePlainteIsLoading.value = false;
-    throw error;
   }
 };
 </script>
