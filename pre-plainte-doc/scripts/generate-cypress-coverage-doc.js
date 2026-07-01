@@ -48,13 +48,14 @@ const parseFeature = (fileName) => {
 };
 
 const escapeCell = (value) => value.replaceAll("|", "\\|");
+const renderList = (values) => values.map(escapeCell).join("<br><br>");
 
 const renderRules = (rules) => {
   if (rules.length === 0) {
     return "Aucune règle métier documentée dans le fichier `.feature`.";
   }
 
-  return rules.map(escapeCell).join("<br>");
+  return renderList(rules);
 };
 
 const renderDocument = (features) => {
@@ -73,7 +74,7 @@ const renderDocument = (features) => {
 };
 
 const renderFeature = (feature) => {
-  const scenarios = feature.scenarios.map(escapeCell).join("<br>");
+  const scenarios = renderList(feature.scenarios);
 
   return [
     `## ${feature.title}`,
