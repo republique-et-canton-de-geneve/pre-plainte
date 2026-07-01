@@ -1,6 +1,12 @@
 # language: fr
 Fonctionnalité: Vol d'objet - véhicule
 
+  Règle: Le type de véhicule est obligatoire pour enregistrer un véhicule volé.
+
+  Règle: Le fabricant doit être précisé lorsque la valeur "Autre" est sélectionnée.
+
+  Règle: Le modèle doit être précisé lorsque la valeur "Autre" est sélectionnée.
+
   Contexte:
     Etant donné que je suis sur la section vol de véhicule
 

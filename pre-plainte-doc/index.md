@@ -3,32 +3,32 @@ layout: home
 
 hero:
   name: Tests frontend
-  text: Regles metier documentees depuis les cas Vitest
-  tagline: Une source TypeScript alimente les tests unitaires et la documentation Markdown publiee par VitePress.
+  text: Couverture testee du formulaire citoyen
+  tagline: Les regles Vitest documentent les validations fines, les scenarios Cypress documentent les parcours frontend executes de bout en bout.
   actions:
     - theme: brand
+      text: Voir la couverture Cypress
+      link: /couverture-cypress
+    - theme: alt
       text: Voir les regles metier
       link: /regles-metier-formulaire
-    - theme: alt
-      text: Voir le plan Cypress
-      link: /plan-cypress
 
 features:
-  - title: Source unique
-    details: Les regles de `src/test/business-rules` pilotent les tests Vitest et la page Markdown generee.
-  - title: Synchronisation visible
-    details: Le script `docs:rules` regenere `regles-metier-formulaire.md` avant le lancement ou le build du site.
-  - title: Publication statique
-    details: VitePress produit un site HTML autonome qui peut etre servi comme artefact de documentation.
+  - title: Parcours Cypress
+    details: Les fichiers `.feature` exposent les parcours citoyens testes et les regles metier couvertes de bout en bout.
+  - title: Regles Vitest
+    details: Les regles de `src/test/business-rules` pilotent les tests unitaires frontend et la page Markdown generee.
+  - title: Documentation publiee
+    details: Le build VitePress regenere les pages de couverture avant de produire le site statique servi par GitLab Pages.
 ---
 
 ## Boucle proposee
 
 1. Declarer ou modifier une regle dans `pre-plainte-ihm/src/test/business-rules`.
-2. Executer les tests unitaires frontend avec `npm run test:unit` dans `pre-plainte-ihm`.
+2. Declarer ou modifier une `Règle:` dans les fichiers `pre-plainte-cypress/cypress/e2e/*.feature`.
 3. Regenerer et visualiser la documentation avec `npm run docs:dev` dans `pre-plainte-doc`.
 
-## Commandes du POC
+## Commandes
 
 ```sh
 cd pre-plainte-doc

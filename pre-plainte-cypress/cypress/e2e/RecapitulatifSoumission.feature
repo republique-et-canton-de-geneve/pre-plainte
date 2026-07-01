@@ -1,6 +1,14 @@
 # language: fr
 Fonctionnalité: Parcours nominal complet
 
+  Règle: Une pré-plainte nominale avec rendez-vous peut être soumise jusqu'à la validation finale.
+
+  Règle: Une erreur serveur lors de la soumission est affichée au citoyen sans quitter le récapitulatif.
+
+  Règle: Un créneau devenu indisponible au moment de la soumission est signalé au citoyen.
+
+  Règle: Le citoyen peut revenir à l'étape rendez-vous lorsqu'un créneau est devenu indisponible.
+
   Scénario: Soumettre une pré-plainte nominale pour un vol simple
     Etant donné que je démarre un parcours nominal complet
     # Etape 1 -> disclaimers
@@ -22,3 +30,16 @@ Fonctionnalité: Parcours nominal complet
     Quand je soumets la pré-plainte
     Alors le rendez-vous est créé
     Et je vois la validation finale
+
+  Scénario: Soumission pré-plainte en erreur serveur
+    Etant donné que je suis sur le récapitulatif avec une soumission en erreur
+    Quand je soumets la pré-plainte
+    Alors le message "Une erreur technique s'est produite sur le serveur" s'affiche
+    Et je reste sur le récapitulatif
+
+  Scénario: Créneau eSirius devenu indisponible au récapitulatif
+    Etant donné que je suis sur le récapitulatif avec un rendez-vous devenu indisponible
+    Quand je soumets la pré-plainte
+    Alors le rendez-vous est signalé indisponible
+    Quand je retourne sélectionner un autre rendez-vous
+    Alors je reste sur l'étape rendez-vous

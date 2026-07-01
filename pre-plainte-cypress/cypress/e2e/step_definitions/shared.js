@@ -9,9 +9,22 @@ import {
 } from "../../support/helpers/vuetify";
 import { ripol, ripolSelection, stubRipol } from "../../support/stubs/ripol";
 import { emailChallengeState, stubEmailChallengeOk } from "../../support/stubs/email-challenge";
-import { stubEsiriusOk } from "../../support/stubs/esirius";
-import { stubSoumissionPrePlainteOk } from "../../support/stubs/pre-plainte";
-import { declarantSuisseValide, donneesEmailVerifie } from "../../support/data/pre-plainte";
+import { stubCreationRendezVousIndisponible, stubEsiriusOk } from "../../support/stubs/esirius";
+import {
+  stubRepriseBrouillon,
+  stubSoumissionPrePlainteErreur,
+  stubSoumissionPrePlainteOk,
+} from "../../support/stubs/pre-plainte";
+import {
+  brouillonVolSimpleDto,
+  declarantSuisseValide,
+  donneesEmailVerifie,
+  evenementCybercrimeAchatNonRecu,
+  evenementDommageAvecConstat,
+  evenementPlaqueVolee,
+  evenementVolSimpleValide,
+  recapitulatifVolSimpleAvecRendezVous,
+} from "../../support/data/pre-plainte";
 
 const bevisible = "be.visible";
 const bedisabled = "be.disabled";
@@ -128,6 +141,58 @@ const donneesInformationsPersonnellesInvalides = {
   },
 };
 
+const donneesEvenementInvalides = {
+  "date de debut absente": {
+    dateDebutEvenement: "",
+  },
+  "fin avant debut": {
+    heureDebutEvenement: "11:00",
+    heureFinEvenement: "10:00",
+  },
+  "degradation non renseignee": {
+    avezVousDegradation: null,
+  },
+  "categorie objet absente": {
+    objetsVolesValides: [],
+    categorieObjet: "",
+  },
+};
+
+const formatDateTimeEsirius = (daysFromNow, hour) => {
+  const date = new Date();
+  date.setDate(date.getDate() + daysFromNow);
+  date.setHours(hour, 0, 0, 0);
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  const time = String(hour).padStart(2, "0");
+
+  return `${year}${month}${day} ${time}:00`;
+};
+
+const creneauEsirius = (service, daysFromNow, hour) => ({
+  serviceId: service.key,
+  siteCode: "PPEL",
+  beginDateTime: formatDateTimeEsirius(daysFromNow, hour),
+  endDateTime: formatDateTimeEsirius(daysFromNow, hour + 1),
+  resource: {
+    key: `POSTE-${service.key}`,
+    name: service.name,
+  },
+});
+
+const assertTexteVisible = (texte) => {
+  cy.get("body").should($body => {
+    const elementsVisibles = $body
+      .find("label, span, p, div, h1, h2, h3, h4, h5, legend, button, td, th")
+      .filter((_, element) => Cypress.$(element).is(":visible"))
+      .filter((_, element) => (element.textContent ?? "").includes(texte));
+
+    expect(elementsVisibles.length, `texte visible "${texte}"`).to.be.greaterThan(0);
+  });
+};
+
 Given("je démarre un parcours nominal complet", () => {
   stubRipol({
     objectTypes: [ripol("722100", "Ordinateur portable")],
@@ -176,6 +241,148 @@ Given("je suis sur l'étape informations personnelles avec des données invalide
   );
 });
 
+Given("je suis sur l'étape informations sur l'événement avec un vol invalide {string}", (casValidation) => {
+  const surcharge = donneesEvenementInvalides[casValidation];
+
+  expect(surcharge, `cas de validation ${casValidation}`).to.exist;
+  stubRipol({
+    objectTypes: [ripol("722100", "Ordinateur portable")],
+    objectColours: [ripol("NOIR", "Noir")],
+  });
+  cy.demarrerPrePlainteAEtape(
+    4,
+    {
+      ...evenementVolSimpleValide,
+      ...surcharge,
+    },
+    { emailChallengeKey: "challenge-cypress" },
+  );
+});
+
+Given("je suis sur l'étape rendez-vous avec un vol simple valide", () => {
+  stubEsiriusOk();
+  cy.demarrerPrePlainteAEtape(
+    5,
+    evenementVolSimpleValide,
+    { emailChallengeKey: "challenge-cypress" },
+  );
+});
+
+Given("je suis sur l'étape informations sur l'événement avec une plaque volée", () => {
+  stubRipol({
+    cantons: [ripol("GE", "Geneve")],
+    nationalities: [ripol("8100", "Suisse")],
+  });
+  cy.demarrerPrePlainteAEtape(
+    4,
+    evenementPlaqueVolee,
+    { emailChallengeKey: "challenge-cypress" },
+  );
+});
+
+Given("je suis sur l'étape informations sur l'événement avec un dommage et un constat présent", () => {
+  stubRipol();
+  cy.demarrerPrePlainteAEtape(
+    4,
+    evenementDommageAvecConstat,
+    { emailChallengeKey: "challenge-cypress" },
+  );
+});
+
+Given("je suis sur l'étape informations sur l'événement avec un cybercrime achat non reçu", () => {
+  stubRipol();
+  cy.demarrerPrePlainteAEtape(
+    4,
+    evenementCybercrimeAchatNonRecu,
+    { emailChallengeKey: "challenge-cypress" },
+  );
+});
+
+Given("je suis sur l'étape rendez-vous avec des services pour chaque type d'incident et un {string}", (incident) => {
+  const services = [
+    { key: "VOL-1", name: "Service vol", existAvailabilities: true },
+    { key: "DOMMAGE-1", name: "Service dommage", existAvailabilities: true },
+    { key: "CYBER-1", name: "Service cybercrime", existAvailabilities: true },
+  ];
+  const dataParIncident = {
+    vol: evenementVolSimpleValide,
+    dommage: {
+      ...evenementDommageAvecConstat,
+      fichiers: [new File(["constat"], "constat.pdf", { type: "application/pdf" })],
+    },
+    cybercrime: {
+      ...evenementCybercrimeAchatNonRecu,
+      ibanBeneficiaire: "CH9300762011623852957",
+    },
+  };
+
+  const data = dataParIncident[incident];
+
+  expect(data, `incident ${incident}`).to.exist;
+  stubEsiriusOk({
+    services,
+    availabilities: services.map((service, index) => ({
+      serviceId: service.key,
+      serviceName: service.name,
+      availabilities: [creneauEsirius(service, index + 2, 10)],
+    })),
+  });
+  cy.demarrerPrePlainteAEtape(
+    5,
+    data,
+    { emailChallengeKey: "challenge-cypress" },
+  );
+});
+
+Given("je suis sur le récapitulatif avec un vol simple et un rendez-vous", () => {
+  stubRipol();
+  stubEmailChallengeOk();
+  stubSoumissionPrePlainteOk();
+  stubEsiriusOk();
+  cy.demarrerPrePlainteAEtape(
+    6,
+    recapitulatifVolSimpleAvecRendezVous,
+    { emailChallengeKey: "challenge-cypress" },
+  );
+});
+
+Given("je suis sur le récapitulatif avec une soumission en erreur", () => {
+  stubRipol();
+  stubEmailChallengeOk();
+  stubSoumissionPrePlainteErreur();
+  stubEsiriusOk();
+  cy.demarrerPrePlainteAEtape(
+    6,
+    recapitulatifVolSimpleAvecRendezVous,
+    { emailChallengeKey: "challenge-cypress" },
+  );
+});
+
+Given("je suis sur le récapitulatif avec un rendez-vous devenu indisponible", () => {
+  stubRipol();
+  stubEmailChallengeOk();
+  stubSoumissionPrePlainteOk();
+  stubCreationRendezVousIndisponible();
+  cy.demarrerPrePlainteAEtape(
+    6,
+    recapitulatifVolSimpleAvecRendezVous,
+    { emailChallengeKey: "challenge-cypress" },
+  );
+});
+
+Given("je reprends un brouillon depuis l'URL", () => {
+  stubRipol();
+  stubRepriseBrouillon("DRAFT-123", brouillonVolSimpleDto);
+  cy.demarrerPrePlainteAEtape(
+    3,
+    {},
+    {
+      path: "/?demandeId=DRAFT-123",
+      emailChallengeKey: "challenge-cypress",
+    },
+  );
+});
+
 Given("que je sélectionne {string} dans le type de personne", (type) => {
   cy.get('[data-cy="type-personne-native"]').select(valeursTypePersonne[type] ?? type, { force: true });
 });
@@ -203,7 +410,7 @@ Given("je coche la confirmation de situation", () => {
 Then("les champs {string} sont affichés", (liste) => {
   liste.split(",").forEach(champ => {
     const libelle = champ.trim();
-    cy.contains(libellesChamps[libelle] ?? libelle).should(bevisible);
+    assertTexteVisible(libellesChamps[libelle] ?? libelle);
   });
 });
 
@@ -229,6 +436,10 @@ When("je renseigne le type de véhicule {string}", (typeVehicule) => {
 
 When("je sélectionne {string} dans l'autocomplétion {string}", (valeur, champ) => {
   selectAutocomplete(champ, valeur);
+});
+
+When("je sélectionne la valeur {string} dans la liste {string}", (valeur, champ) => {
+  selectNative(champ, valeur);
 });
 
 When("je valide l'objet volé", () => {
@@ -311,6 +522,10 @@ When("je continue après les informations personnelles", () => {
   cy.get('[data-cy="continuer-informations-personnelles"]').filter(":visible").first().click();
 });
 
+When("je continue après les informations sur l'événement", () => {
+  cy.get('[data-cy="continuer-evenement"]').filter(":visible").first().click();
+});
+
 When("je renseigne un vol simple nominal", () => {
   selectRadio("Certains objets que vous allez déclarer", "Non");
   selectVisibleOption("Catégorie d'objet", "Informatique");
@@ -350,9 +565,17 @@ When("je continue après le rendez-vous", () => {
   });
 });
 
+When("je tente de continuer après le rendez-vous", () => {
+  cy.get('[data-cy="continuer-rendez-vous"]').filter(":visible").first().click();
+});
+
 When("je soumets la pré-plainte", () => {
   cy.get('[data-cy="soumettre-preplainte"]').filter(":visible").first().click();
   cy.wait("@submitPrePlainte");
+});
+
+When("je retourne sélectionner un autre rendez-vous", () => {
+  cy.contains("button", "Sélectionner un autre rendez-vous").click();
 });
 
 Then("le message {string} s'affiche sous le champ {string}", (message, champ) => {
@@ -378,10 +601,40 @@ Then("je vois l'étape {string}", (etape) => {
   cy.contains(etape).should(bevisible);
 });
 
+Then("je reste sur le récapitulatif", () => {
+  cy.get('[data-cy="soumettre-preplainte"]').filter(":visible").first().should(bevisible);
+  cy.window().its("localStorage").invoke("getItem", "pp-step").should("eq", "6");
+});
+
 Then("je reste sur l'étape informations personnelles", () => {
   cy.contains("Informations personnelles").should(bevisible);
   cy.get('[data-cy="continuer-informations-personnelles"]').filter(":visible").first().should(bevisible);
   cy.window().its("localStorage").invoke("getItem", "pp-step").should("eq", "3");
+});
+
+Then("je reste sur l'étape informations sur l'événement", () => {
+  cy.contains("Informations sur l'événement").should(bevisible);
+  cy.get('[data-cy="continuer-evenement"]').filter(":visible").first().should(bevisible);
+  cy.window().its("localStorage").invoke("getItem", "pp-step").should("eq", "4");
+});
+
+Then("je reste sur l'étape rendez-vous", () => {
+  cy.get('[data-cy="continuer-rendez-vous"]').filter(":visible").first().should(bevisible);
+  cy.window().its("localStorage").invoke("getItem", "pp-step").should("eq", "5");
+});
+
+Then("le service de rendez-vous {string} est proposé", (service) => {
+  cy.get("#poste-native option", { timeout: 15000 }).should($options => {
+    const labels = [...$options].map(option => option.textContent?.trim() ?? "");
+    expect(labels).to.include(service);
+  });
+});
+
+Then("le service de rendez-vous {string} n'est pas proposé", (service) => {
+  cy.get("#poste-native option").then($options => {
+    const labels = [...$options].map(option => option.textContent?.trim() ?? "");
+    expect(labels).not.to.include(service);
+  });
 });
 
 Then("le récapitulatif du parcours nominal est affiché", () => {
@@ -394,6 +647,25 @@ Then("le récapitulatif du parcours nominal est affiché", () => {
 
 Then("le rendez-vous est créé", () => {
   cy.wait("@createEsiriusAppointment");
+});
+
+Then("le rendez-vous est signalé indisponible", () => {
+  cy.wait("@createEsiriusAppointment");
+  cy.contains("Attention : Le rendez-vous sélectionné n’est plus disponible. Merci de sélectionner un autre rendez-vous et de soumettre à nouveau votre pré-plainte.").should(bevisible);
+  cy.contains("button", "Sélectionner un autre rendez-vous").should(bevisible);
+});
+
+Then("le brouillon est restauré dans le parcours", () => {
+  cy.wait("@getBrouillonPrePlainte");
+  cy.window().its("localStorage").should(storage => {
+    const data = storage.getItem("pp-data");
+    const parsedData = JSON.parse(data ?? "{}");
+    expect(parsedData.nom).to.eq("Martin");
+    expect(parsedData.prenom).to.eq("Anne");
+    expect(parsedData.typeIncident).to.eq("vol");
+    expect(parsedData.objetsVolesValides).to.have.length(1);
+    expect(parsedData.objetsVolesValides[0].typeObjet.label).to.eq("Ordinateur portable");
+  });
 });
 
 Then("je vois la validation finale", () => {
