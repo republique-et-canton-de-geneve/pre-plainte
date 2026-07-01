@@ -184,6 +184,8 @@ import { POSTES_POLICE_URL, TYPES_DOMMAGE } from "@/constants/constant.ts";
 import { toTranslatedOptions } from "@/utils/helpers/traductionHelper.ts";
 import {
   canContinueDisclaimer,
+  CYBERCRIME_INCIDENT,
+  DEGAT_DELIT_INCIDENT,
   shouldResetTypeCybercrime,
   shouldResetTypeDommage,
   TYPE_CYBERCRIME_AUTRE,
@@ -236,11 +238,11 @@ const onSubmit = handleSubmit(formValues => {
   setFieldError("typeIncident", typeIncident.value ? undefined : t("validation.typeIncidentRequis"));
   setFieldError(
     "typeDommage",
-    typeIncident.value === "degat-delit" && !typeDommage.value ? t("validation.typeDommageRequis") : undefined,
+    typeIncident.value === DEGAT_DELIT_INCIDENT && !typeDommage.value ? t("validation.typeDommageRequis") : undefined,
   );
   setFieldError(
     "typeCybercrime",
-    typeIncident.value === "cybercrime" && !typeCybercrime.value ? t("validation.typeCybercrimeRequis") : undefined,
+    typeIncident.value === CYBERCRIME_INCIDENT && !typeCybercrime.value ? t("validation.typeCybercrimeRequis") : undefined,
   );
 
   if (!canContinue.value) {
