@@ -1,7 +1,30 @@
 import { ripolSelection } from "../stubs/ripol";
 
+const EMAIL_VERIFIE = "anne.martin@example.org";
+const TYPE_INCIDENT_VOL = "vol";
+const DATE_EVENEMENT = "20.05.2026";
+const HEURE_DEBUT_EVENEMENT = "10:00";
+const HEURE_FIN_EVENEMENT = "11:00";
+const PAYS_SUISSE = "8100";
+const ADRESSE_RUE = "Rue du Marche 10";
+const ADRESSE_NUMERO = "10";
+const ADRESSE_NPA = "1201";
+const ADRESSE_LOCALITE = "Geneve";
+const CODE_ORDINATEUR_PORTABLE = "722100";
+const LIBELLE_ORDINATEUR_PORTABLE = "Ordinateur portable";
+const CODE_COULEUR_NOIR = "NOIR";
+const LIBELLE_COULEUR_NOIR = "Noir";
+const DATE_RENDEZ_VOUS = "2026-07-02";
+const HEURE_DEBUT_RENDEZ_VOUS = HEURE_DEBUT_EVENEMENT;
+const HEURE_FIN_RENDEZ_VOUS = HEURE_FIN_EVENEMENT;
+const BEGIN_DATE_TIME_RENDEZ_VOUS = `20260702 ${HEURE_DEBUT_RENDEZ_VOUS}`;
+const END_DATE_TIME_RENDEZ_VOUS = `20260702 ${HEURE_FIN_RENDEZ_VOUS}`;
+const CRENEAU_PREFERE_RENDEZ_VOUS = `02.07.2026 ${HEURE_DEBUT_RENDEZ_VOUS} - ${HEURE_FIN_RENDEZ_VOUS} @ Poste PPEL`;
+const DATE_DEBUT_EVENT_DTO = `2026-05-20T${HEURE_DEBUT_EVENEMENT}:00`;
+const DATE_FIN_EVENT_DTO = `2026-05-20T${HEURE_FIN_EVENEMENT}:00`;
+
 export const donneesEmailVerifie = {
-  email: "anne.martin@example.org",
+  email: EMAIL_VERIFIE,
   confirmationEmail: "123456",
 };
 
@@ -12,13 +35,13 @@ export const declarantSuisseValide = {
   nom: "Martin",
   prenom: "Anne",
   genre: ripolSelection("2", "Féminin"),
-  nationalite: ripolSelection("8100", "Suisse"),
+  nationalite: ripolSelection(PAYS_SUISSE, "Suisse"),
   dateNaissance: "15.04.1985",
-  pays: "8100",
-  adresse: "Rue du Marche 10",
-  adressePostale: "10",
-  npa: "1201",
-  localite: "Geneve",
+  pays: PAYS_SUISSE,
+  adresse: ADRESSE_RUE,
+  adressePostale: ADRESSE_NUMERO,
+  npa: ADRESSE_NPA,
+  localite: ADRESSE_LOCALITE,
   typeDocumentIdentite: "carte_identite",
   numeroDocumentIdentite: "ID1234567",
 };
@@ -26,12 +49,12 @@ export const declarantSuisseValide = {
 export const objetInformatiqueVoleValide = {
   categorieObjet: "informatique",
   sousCategorie: "ordinateur_portable",
-  typeObjet: ripolSelection("722100", "Ordinateur portable"),
+  typeObjet: ripolSelection(CODE_ORDINATEUR_PORTABLE, LIBELLE_ORDINATEUR_PORTABLE),
   fabricant: null,
   fabricantAutre: "",
   modele: null,
   modeleAutre: "",
-  couleur: ripolSelection("NOIR", "Noir"),
+  couleur: ripolSelection(CODE_COULEUR_NOIR, LIBELLE_COULEUR_NOIR),
   couleurSecondaire: null,
   gravure: "",
   valeurReelle: "",
@@ -45,15 +68,15 @@ export const objetInformatiqueVoleValide = {
 
 export const evenementVolSimpleValide = {
   ...declarantSuisseValide,
-  typeIncident: "vol",
-  dateDebutEvenement: "20.05.2026",
-  heureDebutEvenement: "10:00",
-  dateFinEvenement: "20.05.2026",
-  heureFinEvenement: "11:00",
+  typeIncident: TYPE_INCIDENT_VOL,
+  dateDebutEvenement: DATE_EVENEMENT,
+  heureDebutEvenement: HEURE_DEBUT_EVENEMENT,
+  dateFinEvenement: DATE_EVENEMENT,
+  heureFinEvenement: HEURE_FIN_EVENEMENT,
   adresseLesee: true,
   adresseConnue: false,
   isTrajet: false,
-  paysEvenement: "8100",
+  paysEvenement: PAYS_SUISSE,
   volDansVehicule: false,
   categorieObjet: "",
   sousCategorie: "",
@@ -67,18 +90,18 @@ export const evenementVolSimpleValide = {
 
 export const evenementPlaqueVolee = {
   ...declarantSuisseValide,
-  typeIncident: "vol",
-  dateDebutEvenement: "20.05.2026",
-  heureDebutEvenement: "10:00",
-  dateFinEvenement: "20.05.2026",
-  heureFinEvenement: "11:00",
+  typeIncident: TYPE_INCIDENT_VOL,
+  dateDebutEvenement: DATE_EVENEMENT,
+  heureDebutEvenement: HEURE_DEBUT_EVENEMENT,
+  dateFinEvenement: DATE_EVENEMENT,
+  heureFinEvenement: HEURE_FIN_EVENEMENT,
   adresseLesee: true,
   adresseConnue: false,
   isTrajet: false,
-  paysEvenement: "8100",
+  paysEvenement: PAYS_SUISSE,
   volDansVehicule: false,
   categorieObjet: "plaque",
-  plaquePays: ripolSelection("8100", "Suisse"),
+  plaquePays: ripolSelection(PAYS_SUISSE, "Suisse"),
   plaqueCanton: null,
   plaqueNumero: "",
   plaqueInconnu: false,
@@ -90,14 +113,14 @@ export const evenementDommageAvecConstat = {
   ...declarantSuisseValide,
   typeIncident: "degat-delit",
   typeDommage: "dommage-propriete",
-  dateDebutEvenement: "20.05.2026",
-  heureDebutEvenement: "10:00",
-  dateFinEvenement: "20.05.2026",
-  heureFinEvenement: "11:00",
+  dateDebutEvenement: DATE_EVENEMENT,
+  heureDebutEvenement: HEURE_DEBUT_EVENEMENT,
+  dateFinEvenement: DATE_EVENEMENT,
+  heureFinEvenement: HEURE_FIN_EVENEMENT,
   adresseLesee: true,
   adresseConnue: false,
   isTrajet: false,
-  paysEvenement: "8100",
+  paysEvenement: PAYS_SUISSE,
   constatPresent: true,
   dateConstat: "21.05.2026",
   fichiers: [],
@@ -111,13 +134,13 @@ export const evenementCybercrimeAchatNonRecu = {
   ...declarantSuisseValide,
   typeIncident: "cybercrime",
   typeCybercrime: "achat-non-recu",
-  datePremierContact: "20.05.2026",
-  heurePremierContact: "10:00",
+  datePremierContact: DATE_EVENEMENT,
+  heurePremierContact: HEURE_DEBUT_EVENEMENT,
   dateDernierContact: "21.05.2026",
-  heureDernierContact: "11:00",
+  heureDernierContact: HEURE_FIN_EVENEMENT,
   montantDelitAchatLigne: "250",
   descriptionCybercrime: "Achat paye en ligne mais aucun article recu apres plusieurs relances",
-  articleNonLivreDescription: "Ordinateur portable annonce comme neuf",
+  articleNonLivreDescription: `${LIBELLE_ORDINATEUR_PORTABLE} annonce comme neuf`,
   prenomVendeur: "Paul",
   nomVendeur: "Durand",
   telephoneVendeurInconnu: true,
@@ -132,7 +155,7 @@ export const evenementCybercrimeAchatNonRecu = {
   raisonAbsenceAnnonce: "Annonce supprimee par la plateforme",
   moyenPaiement: "iban",
   ibanBeneficiaire: "",
-  dateOperation: "20.05.2026",
+  dateOperation: DATE_EVENEMENT,
   preuvePaiementIndisponible: true,
   raisonAbsencePreuvePaiement: "Preuve indisponible dans l'immediat",
   copieIdentiteTransmiseAuteur: false,
@@ -141,10 +164,10 @@ export const evenementCybercrimeAchatNonRecu = {
 
 export const creneauRendezVousValide = {
   id: "creneau-cypress",
-  date: "2026-07-02",
+  date: DATE_RENDEZ_VOUS,
   dateAffichee: "02.07.2026",
-  heureDebut: "10:00",
-  heureFin: "11:00",
+  heureDebut: HEURE_DEBUT_RENDEZ_VOUS,
+  heureFin: HEURE_FIN_RENDEZ_VOUS,
   lieu: "Poste PPEL",
   serviceId: "VOL-1",
   siteCode: "PPEL",
@@ -152,14 +175,14 @@ export const creneauRendezVousValide = {
     key: "POSTE-PPEL",
     name: "Poste PPEL",
   },
-  beginDateTime: "20260702 10:00",
-  endDateTime: "20260702 11:00",
+  beginDateTime: BEGIN_DATE_TIME_RENDEZ_VOUS,
+  endDateTime: END_DATE_TIME_RENDEZ_VOUS,
 };
 
 export const recapitulatifVolSimpleAvecRendezVous = {
   ...evenementVolSimpleValide,
-  dateSouhaitee: "2026-07-02",
-  creneauPrefere: "02.07.2026 10:00 - 11:00 @ Poste PPEL",
+  dateSouhaitee: DATE_RENDEZ_VOUS,
+  creneauPrefere: CRENEAU_PREFERE_RENDEZ_VOUS,
   selectedCreneau: creneauRendezVousValide,
 };
 
@@ -169,34 +192,34 @@ export const brouillonVolSimpleDto = {
     nom: "Martin",
     prenom: "Anne",
     genre: ripolSelection("2", "Feminin"),
-    nationalite: ripolSelection("8100", "Suisse"),
+    nationalite: ripolSelection(PAYS_SUISSE, "Suisse"),
     dateNaissance: "1985-04-15",
     adresse: {
-      adresse: "Rue du Marche 10",
-      adressePostale: "10",
-      npa: "1201",
-      localite: "Geneve",
-      pays: "8100",
+      adresse: ADRESSE_RUE,
+      adressePostale: ADRESSE_NUMERO,
+      npa: ADRESSE_NPA,
+      localite: ADRESSE_LOCALITE,
+      pays: PAYS_SUISSE,
     },
     telephone: "+41791234567",
-    email: "anne.martin@example.org",
+    email: EMAIL_VERIFIE,
     typeDocumentIdentite: "carte_identite",
     numeroDocumentIdentite: "ID1234567",
   },
   incident: {
     typeIncident: "vol",
     details: {
-      typeIncident: "vol",
-      dateDebutEvent: "2026-05-20T10:00:00",
-      dateFinEvent: "2026-05-20T11:00:00",
+      typeIncident: TYPE_INCIDENT_VOL,
+      dateDebutEvent: DATE_DEBUT_EVENT_DTO,
+      dateFinEvent: DATE_FIN_EVENT_DTO,
       adresseLesee: true,
       adresseConnue: false,
       adresseIncident: {
-        adresse: "Rue du Marche 10",
-        adressePostale: "10",
-        npa: "1201",
-        localite: "Geneve",
-        pays: "8100",
+        adresse: ADRESSE_RUE,
+        adressePostale: ADRESSE_NUMERO,
+        npa: ADRESSE_NPA,
+        localite: ADRESSE_LOCALITE,
+        pays: PAYS_SUISSE,
       },
       volDansVehicule: false,
       categorieObjet: "informatique",

@@ -64,13 +64,15 @@ import { useI18n } from "vue-i18n";
 import Captcha from "@/components/captcha/Captcha.vue";
 import { getCaptchaSitekey } from "@/config/config.ts";
 
+const RDV_CODE_MIN_LENGTH = 6;
+
 const emit = defineEmits<{ cancelled: [message: string] }>();
 const { t } = useI18n();
 
 const form = useForm({
   validationSchema: toTypedSchema(
     z.object({
-      rdvCode: z.string({ message: t("validation.champRequis")}).min(6, { message: t("annulation.codeObligatoire") }),
+      rdvCode: z.string({ message: t("validation.champRequis")}).min(RDV_CODE_MIN_LENGTH, { message: t("annulation.codeObligatoire") }),
     }),
   ),
 });
@@ -102,9 +104,10 @@ const submitCancellation = async (code: string) => {
     const message = t("annulation.messageSucces", { code });
     showAlert(message, "success");
     emit("cancelled", message);
-    resetCaptcha();
-  } catch (error) {
-    showAlert(t("annulation.messageErreur"), "error");
+  } catch (error: unknown) {
+    const message = error instanceof Error && error.message ? error.message : t("annulation.messageErreur");
+    showAlert(message, "error");
+  } finally {
     resetCaptcha();
   }
 };

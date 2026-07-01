@@ -19,7 +19,7 @@ import { getInitialFormData } from "@/utils/form/initial-form-data";
 
 export const useCreatePrePlainteStore = defineStore("createPrePlainte", () => {
   const initialFormData = getInitialFormData();
-  const savedData = loadFormData() as Partial<PrePlainteFormFields>;
+  const savedData = loadFormData();
   const userFormData = reactive<PrePlainteFormFields>({
     ...initialFormData,
     ...savedData,

@@ -16,11 +16,13 @@ import { RipolService } from "@/services/ripolService";
 import { useDocumentTitleSync } from "./composables/useDocumentTitleSync";
 import { VAutocomplete } from "vuetify/components";
 
+const SEVEN_DAYS = 7;
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 24 * 60 * 60 * 1000, // 24 heures - données RIPOL mises à jour ~1x/mois
-      gcTime: 7 * 24 * 60 * 60 * 1000, // 7 jours - garde en mémoire
+      gcTime: SEVEN_DAYS * 24 * 60 * 60 * 1000, // 7 jours - garde en mémoire
       retry: 2,
       refetchOnWindowFocus: false,
     },
@@ -35,7 +37,7 @@ await registerVuetifyPlugin(app, {
   hostUrl: "https://static.app.ge.ch/",
   loadCssFiles: true,
   mode: 3,
-  nonce: undefined,
+  nonce: "",
 });
 
 app.component("VAutocomplete", VAutocomplete);
@@ -54,6 +56,6 @@ useDocumentTitleSync();
 app.mount("#app");
 
 // Préchargement des données RIPOL courantes (en arrière-plan)
-RipolService.preload().catch(() => {
+await RipolService.preload().catch(() => {
   // Ignore les erreurs - les données seront chargées à la demande
 });

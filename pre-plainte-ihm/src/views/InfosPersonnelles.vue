@@ -139,9 +139,7 @@ const liensAvecPersonneOptions = computed(() =>
   })),
 );
 
-const validationSchema = computed(() => {
-  return toTypedSchema(createInfosPersonnellesSchema(t));
-});
+const validationSchema = computed(() => toTypedSchema(createInfosPersonnellesSchema(t)));
 
 const form = useForm<PrePlainteFormFields>({
   initialValues: store.userFormData,

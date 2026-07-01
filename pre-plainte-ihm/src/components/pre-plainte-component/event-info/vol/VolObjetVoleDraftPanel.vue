@@ -292,9 +292,9 @@ const props = defineProps<{
 const { t } = useI18n();
 const { mobile } = useDisplay();
 const numeroObjet = computed(() =>
-  props.objetIndex !== undefined
-    ? props.objetIndex + 1
-    : (props.brouillon.objetsVolesValides?.length ?? 0) + 1,
+  props.objetIndex === undefined
+    ? (props.brouillon.objetsVolesValides?.length ?? 0) + 1
+    : props.objetIndex + 1,
 );
 
 defineEmits<{

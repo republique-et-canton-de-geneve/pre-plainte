@@ -35,8 +35,6 @@ export type InfosPersonneDTO = {
   numeroDocumentIdentite?: string;
 };
 
-export type TiersDTO = InfosPersonneDTO;
-
 export type InfosOrganisationDTO = {
   nom: string;
   telephone: string;
@@ -50,7 +48,7 @@ export type InformationsPersonnellesDTO = InfosPersonneDTO & {
   postePersonneMorale?: string;
   justificatifPersonneMorale?: FichierDTO;
 
-  tiers?: TiersDTO | null;
+  tiers?: InfosPersonneDTO | null;
   organisation?: InfosOrganisationDTO | null;
 };
 

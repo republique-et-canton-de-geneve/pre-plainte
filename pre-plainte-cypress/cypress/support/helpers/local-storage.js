@@ -6,7 +6,9 @@ export const STORAGE_KEYS = [
 ];
 
 export const clearPrePlainteStorage = (storage) => {
-  STORAGE_KEYS.forEach(key => storage.removeItem(key));
+  for (const key of STORAGE_KEYS) {
+    storage.removeItem(key);
+  }
 };
 
 export const setPrePlainteStep = (storage, step, data = {}, options = {}) => {

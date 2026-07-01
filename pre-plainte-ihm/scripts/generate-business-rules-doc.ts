@@ -22,7 +22,7 @@ const kindLabels = {
 } satisfies Record<NonNullable<BusinessRule["kind"]>, string>;
 
 function escapeCell(value: string): string {
-  return value.replaceAll("|", "\\|");
+  return value.replaceAll("|", String.raw`\|`);
 }
 
 function renderList(values: string[]): string {
@@ -56,7 +56,7 @@ function renderSection(section: string, rules: BusinessRule[]): string {
 }
 
 function renderDocument(): string {
-  const rules = [
+  const businessRules = [
     ...reglesInformationsPersonnelles,
     ...reglesEvenement,
     ...reglesDisclaimerWorkflow,
@@ -66,8 +66,8 @@ function renderDocument(): string {
     ...reglesRendezVousWorkflow,
     ...reglesVolHelpers,
   ];
-  const sections = [...groupBySection(rules).entries()]
-    .map(([section, rules]) => renderSection(section, rules));
+  const sections = [...groupBySection(businessRules).entries()]
+    .map(([section, sectionRules]) => renderSection(section, sectionRules));
 
   return [
     "# Regles metier du formulaire",

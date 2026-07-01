@@ -133,20 +133,10 @@ import { computed } from "vue";
 import { useI18n } from "vue-i18n";
 import { useDisplay } from "vuetify";
 import { useEsiriusStore } from "@/stores/useEsiriusStore";
+import { DAY_END, DAY_START, MONTH_END, MONTH_START, TIME_START, YEAR_END, YEAR_START } from "@/constants/constant.ts";
 
 const DATE_MIN_LENGTH = 8;
 const DATETIME_MIN_LENGTH = 10;
-
-const YEAR_START_INDEX = 0;
-const YEAR_END_INDEX = 4;
-
-const MONTH_START_INDEX = 4;
-const MONTH_END_INDEX = 6;
-
-const DAY_START_INDEX = 6;
-const DAY_END_INDEX = 8;
-
-const TIME_START_INDEX = 9;
 
 interface Props {
   creneauxPagines: any[];
@@ -182,9 +172,9 @@ const formatDate = (dateTime?: string) => {
     return "-";
   }
   if (dateTime.length >= DATE_MIN_LENGTH && !dateTime.includes("-")) {
-    const year = dateTime.slice(YEAR_START_INDEX, YEAR_END_INDEX);
-    const month = dateTime.slice(MONTH_START_INDEX, MONTH_END_INDEX);
-    const day = dateTime.slice(DAY_START_INDEX, DAY_END_INDEX);
+    const year = dateTime.slice(YEAR_START, YEAR_END);
+    const month = dateTime.slice(MONTH_START, MONTH_END);
+    const day = dateTime.slice(DAY_START, DAY_END);
     return `${day}.${month}.${year}`;
   }
   if (dateTime.includes("-")) {
@@ -198,7 +188,7 @@ const formatHeure = (dateTime?: string) => {
   if (!dateTime || dateTime.length < DATETIME_MIN_LENGTH) {
     return "-";
   }
-  const timePart = dateTime.substring(TIME_START_INDEX).trim();
+  const timePart = dateTime.substring(TIME_START).trim();
   return timePart.replace(":", "h");
 };
 

@@ -43,6 +43,8 @@ const { startLoading, stopLoading } = useRipolLoading();
 const LOCAL_FILTER_THRESHOLD = 300;
 const MAX_VISIBLE_ITEMS = 100;
 
+const EMIT_UPDATE_MODEL_VALUE = "update:modelValue" as const;
+
 interface Props {
   modelValue: RipolSelection | null;
   label: string;
@@ -116,7 +118,7 @@ const noDataText = computed(() => {
 const selectedValue = computed({
   get: () => props.modelValue,
   set: (value: RipolSelection | null) => {
-    emit("update:modelValue", value);
+    emit(EMIT_UPDATE_MODEL_VALUE, value);
   },
 });
 
@@ -164,7 +166,7 @@ const applyLocalFilter = (search?: string) => {
 
 const setItemsFromFetch = (newItems: RipolSelection[]) => {
   if (props.autoSelectWhenSingleResult && !props.modelValue && newItems.length === 1) {
-    emit("update:modelValue", newItems[0]);
+    emit(EMIT_UPDATE_MODEL_VALUE, newItems[0]);
   }
 
   if (newItems.length > LOCAL_FILTER_THRESHOLD) {

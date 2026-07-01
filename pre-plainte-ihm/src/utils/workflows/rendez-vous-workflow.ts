@@ -1,6 +1,7 @@
 import { toIsoDate } from "@/utils/helpers/dateHelpers";
 import { hasVehiculeVoleAvecPlaque } from "@/utils/helpers/volObjetVolHelpers";
 import type { PrePlainteFormFields } from "@/types/pre-plainte.interface";
+import { DAY_END, DAY_START, MONTH_END, MONTH_START, TIME_START, YEAR_END, YEAR_START } from "@/constants/constant";
 
 export interface RendezVousService {
   key: string;
@@ -26,13 +27,6 @@ export interface RendezVousWarning {
   messageKey: string;
 }
 
-const YEAR_START = 0;
-const YEAR_END = 4;
-const MONTH_START = 4;
-const MONTH_END = 6;
-const DAY_START = 6;
-const DAY_END = 8;
-const HOUR_MINUTE_START = 9;
 const VEHICULE_PLAQUE_MAX_RENDEZ_VOUS_HOURS = 24;
 const RENDEZ_VOUS_DATE_WINDOW_DAYS = 15;
 
@@ -152,7 +146,7 @@ export function parseCreneauDate(beginDateTime?: string): Date | null {
     return null;
   }
 
-  const dateStr = `${beginDateTime.slice(YEAR_START, YEAR_END)}-${beginDateTime.slice(MONTH_START, MONTH_END)}-${beginDateTime.slice(DAY_START, DAY_END)}T${beginDateTime.slice(HOUR_MINUTE_START)}:00`;
+  const dateStr = `${beginDateTime.slice(YEAR_START, YEAR_END)}-${beginDateTime.slice(MONTH_START, MONTH_END)}-${beginDateTime.slice(DAY_START, DAY_END)}T${beginDateTime.slice(TIME_START)}:00`;
   const date = new Date(dateStr);
   return Number.isNaN(date.getTime()) ? null : date;
 }
