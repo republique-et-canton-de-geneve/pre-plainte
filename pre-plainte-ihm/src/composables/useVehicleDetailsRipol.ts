@@ -17,7 +17,9 @@ type UseVehicleDetailsRipolArgs = {
   activePrefixes: Ref<readonly string[]>;
 };
 
-export function useVehicleDetailsRipol({ sousCategorie, activePrefixes }: UseVehicleDetailsRipolArgs) {
+type VehicleDetailsFields = ReturnType<typeof useVehicleDetailsFields>;
+
+function useVehicleDetailsFields() {
   const { value: typeObjet, errorMessage: typeObjetError } = useField<RipolSelection | null>("typeObjet");
   const { value: fabricant, errorMessage: fabricantError } = useField<RipolSelection | null>("fabricant");
   const { value: fabricantAutre, errorMessage: fabricantAutreError } = useField<string>("fabricantAutre");
@@ -46,6 +48,133 @@ export function useVehicleDetailsRipol({ sousCategorie, activePrefixes }: UseVeh
   const { value: numeroAssurance, errorMessage: numeroAssuranceError } = useField<string>("numeroAssurance");
   const { value: numeroVignette, errorMessage: numeroVignetteError } = useField<string>("numeroVignette");
   const { value: numeroMaster, errorMessage: numeroMasterError } = useField<string>("numeroMaster");
+
+  return {
+    typeObjet,
+    typeObjetError,
+    fabricant,
+    fabricantError,
+    fabricantAutre,
+    fabricantAutreError,
+    modele,
+    modeleError,
+    modeleAutre,
+    modeleAutreError,
+    couleur,
+    couleurError,
+    couleurSecondaire,
+    numeroCadre,
+    numeroCadreError,
+    numeroCadreInconnu,
+    vin,
+    vinError,
+    vinInconnu,
+    velofinderId,
+    velofinderIdError,
+    dateAchat,
+    dateAchatError,
+    plaqueNumero,
+    plaqueNumeroError,
+    plaqueInconnu,
+    plaquePays,
+    plaquePaysError,
+    plaqueCanton,
+    plaqueCantonError,
+    assuranceAucune,
+    assureurAutre,
+    assureurAutreError,
+    numeroAssurance,
+    numeroAssuranceError,
+    numeroVignette,
+    numeroVignetteError,
+    numeroMaster,
+    numeroMasterError,
+  };
+}
+
+function createVehicleDetailsResult<TState extends Record<string, unknown>>(
+  fields: VehicleDetailsFields,
+  state: TState,
+): VehicleDetailsFields & TState {
+  return {
+    ...fields,
+    ...state,
+  };
+}
+
+function setupVehicleDetailsWatchers(
+  fields: VehicleDetailsFields,
+  sousCategorie: Ref<string>,
+  hasPlateNumber: Ref<boolean>,
+  resetVehicleCaches: () => void,
+  appliquerPaysVehiculeDefaut: () => void,
+  hasBrands: Ref<boolean>,
+  hasModels: Ref<boolean>,
+  allBrandsCache: Ref<Ripol[] | null>,
+  allModelsCache: Ref<Ripol[] | null>,
+) {
+  watch(sousCategorie, () => {
+    fields.typeObjet.value = null;
+    fields.fabricant.value = null;
+    fields.modele.value = null;
+    hasBrands.value = true;
+    hasModels.value = false;
+    resetVehicleCaches();
+
+    fields.plaqueNumero.value = "";
+    fields.plaquePays.value = null;
+    fields.plaqueCanton.value = null;
+    fields.plaqueInconnu.value = false;
+
+    fields.vin.value = "";
+    fields.vinInconnu.value = false;
+
+    fields.numeroCadre.value = "";
+    fields.numeroCadreInconnu.value = false;
+
+    appliquerPaysVehiculeDefaut();
+  });
+
+  watch(hasPlateNumber, show => {
+    if (show) {
+      appliquerPaysVehiculeDefaut();
+    }
+  });
+
+  watch(fields.typeObjet, () => {
+    fields.fabricant.value = null;
+    fields.modele.value = null;
+    hasBrands.value = true;
+    hasModels.value = false;
+    allBrandsCache.value = null;
+    allModelsCache.value = null;
+  });
+
+  watch(fields.fabricant, () => {
+    fields.modele.value = null;
+    hasModels.value = true;
+    allModelsCache.value = null;
+  });
+
+  watch(fields.assuranceAucune, isNone => {
+    if (!isNone) {
+      return;
+    }
+    fields.assureurAutre.value = "";
+    fields.numeroAssurance.value = "";
+    fields.numeroVignette.value = "";
+    fields.numeroMaster.value = "";
+  });
+}
+
+export function useVehicleDetailsRipol({ sousCategorie, activePrefixes }: UseVehicleDetailsRipolArgs) {
+  const fields = useVehicleDetailsFields();
+  const {
+    typeObjet,
+    fabricant,
+    modele,
+    plaquePays,
+  } = fields;
 
   const objetTypeKey = computed(() => `vehicule-objets-${sousCategorie.value}`);
   const brandKey = computed(() => `vehicule-brand-${typeObjet.value?.code ?? ""}`);
@@ -161,100 +290,19 @@ export function useVehicleDetailsRipol({ sousCategorie, activePrefixes }: UseVeh
     }
   };
 
-  watch(sousCategorie, () => {
-    typeObjet.value = null;
-    fabricant.value = null;
-    modele.value = null;
-    hasBrands.value = true;
-    hasModels.value = false;
-    resetVehicleCaches();
+  setupVehicleDetailsWatchers(
+    fields,
+    sousCategorie,
+    hasPlateNumber,
+    resetVehicleCaches,
+    appliquerPaysVehiculeDefaut,
+    hasBrands,
+    hasModels,
+    allBrandsCache,
+    allModelsCache,
+  );
 
-    plaqueNumero.value = "";
-    plaquePays.value = null;
-    plaqueCanton.value = null;
-    plaqueInconnu.value = false;
-
-    vin.value = "";
-    vinInconnu.value = false;
-
-    numeroCadre.value = "";
-    numeroCadreInconnu.value = false;
-
-    appliquerPaysVehiculeDefaut();
-  });
-
-  watch(hasPlateNumber, show => {
-    if (show) {
-      appliquerPaysVehiculeDefaut();
-    }
-  });
-
-  watch(typeObjet, () => {
-    fabricant.value = null;
-    modele.value = null;
-    hasBrands.value = true;
-    hasModels.value = false;
-    allBrandsCache.value = null;
-    allModelsCache.value = null;
-  });
-
-  watch(fabricant, () => {
-    modele.value = null;
-    hasModels.value = true;
-    allModelsCache.value = null;
-  });
-
-  watch(assuranceAucune, isNone => {
-    if (!isNone) {
-      return;
-    }
-    assureurAutre.value = "";
-    numeroAssurance.value = "";
-    numeroVignette.value = "";
-    numeroMaster.value = "";
-  });
-
-  return {
-    typeObjet,
-    typeObjetError,
-    fabricant,
-    fabricantError,
-    fabricantAutre,
-    fabricantAutreError,
-    modele,
-    modeleError,
-    modeleAutre,
-    modeleAutreError,
-    couleur,
-    couleurError,
-    couleurSecondaire,
-    numeroCadre,
-    numeroCadreError,
-    numeroCadreInconnu,
-    vin,
-    vinError,
-    vinInconnu,
-    velofinderId,
-    velofinderIdError,
-    dateAchat,
-    dateAchatError,
-    plaqueNumero,
-    plaqueNumeroError,
-    plaqueInconnu,
-    plaquePays,
-    plaquePaysError,
-    plaqueCanton,
-    plaqueCantonError,
-    assuranceAucune,
-    assureurAutre,
-    assureurAutreError,
-    numeroAssurance,
-    numeroAssuranceError,
-    numeroVignette,
-    numeroVignetteError,
-    numeroMaster,
-    numeroMasterError,
-
+  return createVehicleDetailsResult(fields, {
     objetTypeKey,
     brandKey,
     modelKey,
@@ -276,5 +324,5 @@ export function useVehicleDetailsRipol({ sousCategorie, activePrefixes }: UseVeh
     fetchModelsWithAutre,
     fetchColours,
     RipolService,
-  };
+  });
 }

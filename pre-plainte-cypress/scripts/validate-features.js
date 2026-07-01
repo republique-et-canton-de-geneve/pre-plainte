@@ -51,7 +51,7 @@ for (const file of featureFiles(featureDir)) {
   let currentScenario = null;
   let currentScenarioHasStep = false;
 
-  lines.forEach((line, index) => {
+  for (const [index, line] of lines.entries()) {
     const lineNumber = index + 1;
 
     if (englishKeyword.test(line)) {
@@ -64,13 +64,13 @@ for (const file of featureFiles(featureDir)) {
       }
       currentScenario = { line: lineNumber, name: line.trim() };
       currentScenarioHasStep = false;
-      return;
+      continue;
     }
 
     if (currentScenario && frenchStep.test(line)) {
       currentScenarioHasStep = true;
     }
-  });
+  }
 
   if (currentScenario && !currentScenarioHasStep) {
     errors.push(`${relative}:${currentScenario.line}: scénario sans step exécutable: "${currentScenario.name}".`);
