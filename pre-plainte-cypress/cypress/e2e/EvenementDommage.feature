@@ -10,4 +10,4 @@ Fonctionnalité: Informations sur l'événement - dommage
     Alors les champs "Date du constat, Constat de police" sont masqués
     Et le message "Fortement recommandé" s'affiche
     Quand je continue après les informations sur l'événement
-    Alors je vois l'étape "Prendre rendez-vous"
+    Alors je vois l'étape "Date et lieu de rendez-vous"
