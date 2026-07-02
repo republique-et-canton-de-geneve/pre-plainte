@@ -1752,6 +1752,10 @@ async function tryCreateEsiriusAppointment(demandeId: string): Promise<{ success
       });
       return { success: true, error: "" };
     }
+    const esiriusErrorMessage = getEsiriusErrorMessage(esiriusResult);
+    if (esiriusErrorMessage) {
+      return { success: false, error: esiriusErrorMessage };
+    }
     isRdvConflict.value = true;
     return { success: false, error: t("submission.erreurRendezVousNonDispo") };
   } catch (err) {
@@ -1761,6 +1765,29 @@ async function tryCreateEsiriusAppointment(demandeId: string): Promise<{ success
     };
   }
 }
+
+const getEsiriusErrorMessage = (result: any) => {
+  if (!result) {
+    return "";
+  }
+
+  if (typeof result.message === "string" && result.message.trim()) {
+    return result.message;
+  }
+
+  const details = typeof result.details === "string" ? result.details : "";
+
+  if (details.trim().startsWith("{")) {
+    try {
+      const parsed = JSON.parse(details);
+      return parsed.message || "";
+    } catch {
+      return "";
+    }
+  }
+
+  return details;
+};
 
 const submit = async () => {
   isSubmitting.value = true;
