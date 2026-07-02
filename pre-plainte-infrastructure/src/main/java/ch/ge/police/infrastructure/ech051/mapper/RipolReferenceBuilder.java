@@ -31,4 +31,19 @@ public final class RipolReferenceBuilder {
     }
     return RipolReference.ofIso(code, label, sourceTable);
   }
+
+  /**
+   * Crée une référence avec source ARMADA (rôles Fournisseur / Destinataire cybercrime).
+   */
+  public static RipolReference ofArmada(String code, String label, String sourceTable) {
+    if (code == null) {
+      return null;
+    }
+    return RipolReference.builder()
+        .code(code)
+        .label(label)
+        .sourceTable(sourceTable)
+        .source("ARMADA")
+        .build();
+  }
 }
