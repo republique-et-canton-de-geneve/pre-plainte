@@ -36,27 +36,27 @@
         <v-row class="mb-4" align="center" dense>
           <v-col cols="12" md="6">
             <v-text-field
-              :label="requiredLabel(t('informationsEvenement.dateDebutEvenement'))"
+              :label="requiredLabel(dateDebutEvenementLabel)"
               v-model="dateDebutEvenement"
               :error-messages="dateDebutEvenementError"
               type="text"
               placeholder="JJ.MM.AAAA"
               variant="outlined"
               prepend-inner-icon="mdi-calendar"
-              :hint="t('informationsEvenement.hintDateDebutEvenement')"
+              :hint="dateDebutEvenementHint"
               persistent-hint
               @input="onDateDebutEvenementInput"
             />
           </v-col>
           <v-col cols="12" md="6" class="mt-4 mt-md-0">
             <v-text-field
-              :label="requiredLabel(t('informationsEvenement.heureDebutEvenement'))"
+              :label="requiredLabel(heureDebutEvenementLabel)"
               v-model="heureDebutEvenement"
               :error-messages="heureDebutEvenementError"
               type="text"
               placeholder="HH:MM"
               variant="outlined"
-              :hint="t('informationsEvenement.hintHeureDebutEvenement')"
+              :hint="heureDebutEvenementHint"
               persistent-hint
               @input="onHeureDebutEvenementInput"
             />
@@ -66,27 +66,27 @@
         <v-row class="mb-4" align="center" dense>
           <v-col cols="12" md="6">
             <v-text-field
-              :label="requiredLabel(t('informationsEvenement.dateFinEvenement'))"
+              :label="requiredLabel(dateFinEvenementLabel)"
               v-model="dateFinEvenement"
               :error-messages="dateFinEvenementError"
               type="text"
               placeholder="JJ.MM.AAAA"
               variant="outlined"
               prepend-inner-icon="mdi-calendar"
-              :hint="t('informationsEvenement.hintDateFinEvenement')"
+              :hint="dateFinEvenementHint"
               persistent-hint
               @input="onDateFinEvenementInput"
             />
           </v-col>
           <v-col cols="12" md="6" class="mt-4 mt-md-0">
             <v-text-field
-              :label="requiredLabel(t('informationsEvenement.heureFinEvenement'))"
+              :label="requiredLabel(heureFinEvenementLabel)"
               v-model="heureFinEvenement"
               :error-messages="heureFinEvenementError"
               type="text"
               placeholder="HH:MM"
               variant="outlined"
-              :hint="t('informationsEvenement.hintHeureFinEvenement')"
+              :hint="heureFinEvenementHint"
               persistent-hint
               @input="onHeureFinEvenementInput"
             />
@@ -296,6 +296,56 @@ const { value: autresDocuments } = useField<File[]>("autresDocuments");
 const TYPE_CYBERCRIME_COMMANDE_FRAUDULEUSE = "commande-frauduleuse";
 const TYPE_CYBERCRIME_ACHAT_NON_RECU = "achat-non-recu";
 const TYPE_CYBERCRIME_FAUSSE_ANNONCE = "fausse-annonce";
+
+const isCommandeFrauduleuse = computed(() => typeCybercrime.value === TYPE_CYBERCRIME_COMMANDE_FRAUDULEUSE);
+const dateDebutEvenementLabel = computed(() =>
+  t(isCommandeFrauduleuse.value ? "informationsEvenement.dateCommande" : "informationsEvenement.dateDebutEvenement"),
+);
+const heureDebutEvenementLabel = computed(() =>
+  t(isCommandeFrauduleuse.value ? "informationsEvenement.heureCommande" : "informationsEvenement.heureDebutEvenement"),
+);
+const dateFinEvenementLabel = computed(() =>
+  t(
+    isCommandeFrauduleuse.value
+      ? "informationsEvenement.dateLivraisonOuDecouverte"
+      : "informationsEvenement.dateFinEvenement",
+  ),
+);
+const heureFinEvenementLabel = computed(() =>
+  t(
+    isCommandeFrauduleuse.value
+      ? "informationsEvenement.heureLivraisonOuDecouverte"
+      : "informationsEvenement.heureFinEvenement",
+  ),
+);
+const dateDebutEvenementHint = computed(() =>
+  t(
+    isCommandeFrauduleuse.value
+      ? "informationsEvenement.hintDateCommande"
+      : "informationsEvenement.hintDateDebutEvenement",
+  ),
+);
+const heureDebutEvenementHint = computed(() =>
+  t(
+    isCommandeFrauduleuse.value
+      ? "informationsEvenement.hintHeureCommande"
+      : "informationsEvenement.hintHeureDebutEvenement",
+  ),
+);
+const dateFinEvenementHint = computed(() =>
+  t(
+    isCommandeFrauduleuse.value
+      ? "informationsEvenement.hintDateLivraisonOuDecouverte"
+      : "informationsEvenement.hintDateFinEvenement",
+  ),
+);
+const heureFinEvenementHint = computed(() =>
+  t(
+    isCommandeFrauduleuse.value
+      ? "informationsEvenement.hintHeureLivraisonOuDecouverte"
+      : "informationsEvenement.hintHeureFinEvenement",
+  ),
+);
 
 const showCybercrimeUrlDescriptionAndPieces = computed(() => {
   const ty = typeCybercrime.value;
