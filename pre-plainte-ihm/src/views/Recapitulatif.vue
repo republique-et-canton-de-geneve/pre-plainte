@@ -6,7 +6,17 @@
       <h2 id="recap-title" class="pre-plainte-main-card-title text-h2">{{ t("steps.recapitulatif") }}</h2>
     </section>
 
-    <v-card class="pa-2 pa-md-6 mb-4">
+    <v-alert
+      v-if="isRendezVousOnly"
+      type="info"
+      class="mb-4"
+      density="comfortable"
+      :icon="mobile ? false : undefined"
+    >
+      {{ t("dommages.constatRendezVousOnlyInfo") }}
+    </v-alert>
+
+    <v-card v-if="!isRendezVousOnly" class="pa-2 pa-md-6 mb-4">
       <h2 id="recap-personal-info" class="pre-plainte-main-card-title mb-4 text-h2 text-md-h1 text-wrap">
         {{ t("steps.informationsPersonnelles") }}
       </h2>
@@ -420,7 +430,7 @@
       </v-card-actions>
     </v-card>
 
-    <v-card class="pa-2 pa-md-6 mb-4">
+    <v-card v-if="!isRendezVousOnly" class="pa-2 pa-md-6 mb-4">
       <h2 id="recap-event" class="pre-plainte-main-card-title mb-4 text-h2 text-wrap">
         {{ t("informationsEvenement.titre") }}
       </h2>
@@ -1459,24 +1469,6 @@
                   </dd>
                 </v-col>
 
-                <v-col v-if="isFieldVisible('constatPresent') && data.constatPresent !== undefined" cols="12" md="6">
-                  <dt id="lbl-constatPresent">
-                    <v-label class="ge-field-label">{{ t("dommages.constat") }}</v-label>
-                  </dt>
-                  <dd class="ge-field-value text-body-1" aria-labelledby="lbl-constatPresent">
-                    {{ data.constatPresent ? t("common.oui") : t("common.non") }}
-                  </dd>
-                </v-col>
-
-                <v-col v-if="isFieldVisible('dateConstat') && data.dateConstat" cols="12" md="6">
-                  <dt id="lbl-dateConstat">
-                    <v-label class="ge-field-label">{{ t("dommages.constatDate") }}</v-label>
-                  </dt>
-                  <dd class="ge-field-value text-body-1" aria-labelledby="lbl-dateConstat">
-                    {{ data.dateConstat }}
-                  </dd>
-                </v-col>
-
                 <v-col v-if="isFieldVisible('typeCybercrime') && data.typeCybercrime" cols="12">
                   <dt id="lbl-typeCybercrime">
                     <v-label class="ge-field-label">{{ t("cybercrime.type") }}</v-label>
@@ -1606,7 +1598,7 @@
         data-cy="soumettre-preplainte"
         @click="submit"
       >
-        {{ t("submission.soumettrePrePlainte") }}
+        {{ submitButtonLabel }}
       </v-btn>
     </div>
 
@@ -1619,7 +1611,7 @@
         data-cy="soumettre-preplainte"
         @click="submit"
       >
-        {{ t("submission.soumettrePrePlainte") }}
+        {{ submitButtonLabel }}
       </v-btn>
     </div>
 
@@ -1734,6 +1726,10 @@ const isRdvConflict = ref(false);
 const captchaSiteKey = getCaptchaSitekey() || "";
 const captchaEnabled = isCaptchaEnabled();
 const isSubmitDisabled = computed(() => isSubmitting.value || (captchaEnabled && !captchaToken.value));
+const isRendezVousOnly = computed(() => store.isRendezVousOnly());
+const submitButtonLabel = computed(() =>
+  isRendezVousOnly.value ? t("submission.confirmerRendezVous") : t("submission.soumettrePrePlainte"),
+);
 
 const confirmationEmailFixFieldError = ref("");
 
@@ -1778,6 +1774,11 @@ const submit = async () => {
       return;
     }
 
+    if (isRendezVousOnly.value) {
+      await finalizeAppointmentSubmission(buildRendezVousOnlyDemandeId());
+      return;
+    }
+
     const backendData = await buildPrePlainteForBackend(data.value);
     const demandeId = await submitPrePlainte(backendData);
 
@@ -1793,6 +1794,12 @@ const submit = async () => {
   } finally {
     isSubmitting.value = false;
   }
+};
+
+const buildRendezVousOnlyDemandeId = () => {
+  const demandeId = `RDV-${generateUuid()}`;
+  store.setDemandeId(demandeId);
+  return demandeId;
 };
 
 const validateAndVerifyEmailChallengeCode = async (): Promise<{ success: boolean }> => {

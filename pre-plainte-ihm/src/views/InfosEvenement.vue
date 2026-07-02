@@ -157,6 +157,9 @@
 
       <div v-if="typeIncident !== 'cybercrime'" class="mb-8">
         <PieceJointe v-model="fichiers" :label="t('dommages.fichiers')" />
+        <div v-if="typeIncident === 'degat-delit'" class="text-body-2 text-medium-emphasis mt-2">
+          {{ t("dommages.photosRecommandees") }}
+        </div>
       </div>
       <AdresseEvent v-if="typeIncident !== 'cybercrime'" />
 
