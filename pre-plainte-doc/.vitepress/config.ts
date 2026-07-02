@@ -5,7 +5,6 @@ export default defineConfig({
   description: "Documentation des tests frontend et des regles metier du formulaire",
   lang: "fr-CH",
   base: process.env.VITEPRESS_BASE ?? "/",
-  cleanUrls: true,
   themeConfig: {
     nav: [
       { text: "Accueil", link: "/" },
