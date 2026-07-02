@@ -50,6 +50,7 @@ function mapEsiriusUser(userData: any, demandeId: string | null) {
     lastName: userData.nom,
     firstName: userData.prenom,
     personalIdentity: demandeId,
+    fixPhone: demandeId,
     birthday: toIsoDate(userData.dateNaissance),
     email: userData.email,
     phone: normalizePhone(userData.telephone),
@@ -128,6 +129,7 @@ function mapAppointmentUser(appointment: any) {
   return {
     idSys: appointment.user?.idSys,
     personalIdentity: appointment.user?.personalIdentity,
+    fixPhone: appointment.user?.fixPhone,
     additionalPersonalIdentity: appointment.user?.additionalPersonalIdentity ?? [],
     lastName: appointment.user?.lastName,
     civility: appointment.user?.civility ?? "",
