@@ -98,6 +98,7 @@
     "precedent": "Retour",
     "continuer": "Continuer",
     "poursuivre": "Continuer",
+    "confirmer": "Confirmer",
     "sauvegarder": "Enregistrer et revenir plus tard",
     "annuler": "Annuler",
     "quitter": "Quitter",
@@ -145,6 +146,7 @@
     "validation": "Pré-plainte validée"
   },
   "disclaimer": {
+    "intro": "Pour pouvoir bénéficier de la pré-plainte, les conditions ci-dessous doivent être remplies :",
     "intro1": "La pré-plainte en ligne",
     "intro2": "ne doit pas être utilisée",
     "intro3": "dans les situations suivantes :",
@@ -153,7 +155,11 @@
     "condition3": "Votre situation concerne le vol de plaque d'immatriculation.",
     "avantConfirmation": "Avant de poursuivre, veuillez confirmer que votre situation ne correspond à aucun des cas mentionnés ci-dessus :",
     "confirmeIdentite": "Je confirme que je ne connais pas l'identité de l'autrice ou de l'auteur des faits et que je n'ai aucune information à son sujet (pas de signalement, pas d'image ni de vidéo).",
-    "confirmeSituation": "Je confirme que ma situation ne concerne pas le vol d'un véhicule immatriculé ou de plaque.",
+    "confirmeSituation": "Je confirme que ma situation ne concerne pas le vol d'un véhicule immatriculé ou de plaque d'immatriculation.",
+    "confirmeEffraction": "Je confirme que ma situation ne concerne pas une effraction (vol avec dommage dans un bâtiment ou véhicule).",
+    "situationNonEligible": "Au vu de votre situation, merci de vous rendre immédiatement dans un poste de police pour le dépôt de plainte :",
+    "postesPolice": "Postes de police",
+    "warningVolCarte": "Si il s'agit d'un vol de carte de crédit ou débit, prenez contact avec votre banque ou votre émetteur de carte pour bloquer votre carte immédiatement.",
     "casNonTrouve": "Si vous ne trouvez pas votre cas,",
     "prendreRendezVousPoste": "rendez-vous dans un poste de police.",
     "cybercrimeAutreIntroduction": "Dans ce cas, rendez-vous dans un poste de police avec les documents suivants :",
@@ -332,7 +338,7 @@
     "hintLieu": "Sélectionnez le type de lieu où l'incident s'est produit"
   },
   "incidentTypes": {
-    "vol": "Vol",
+    "vol": "Vol (sans effraction)",
     "degatDelit": "Dégât-délit général",
     "cybercrime": "Cybercrime",
     "volDansVehicule": "Certains objets que vous allez déclarer ont-ils été volés dans ou sur un véhicule ?",
@@ -608,7 +614,7 @@
   },
   "typesDommage": {
     "dommagePropriete": "Dommage sur un bâtiment (maison, appartement, local commercial...)",
-    "dommageVehicule": "Dommage sur un véhicule",
+    "dommageVehicule": "Dommage sur un véhicule (hors accident de la circulation)",
     "autre": "Autre"
   },
   "autresElements": {
@@ -660,7 +666,7 @@
     "warningAutreVol": "Afin de traiter votre plainte de manière optimale, il est préférable de prendre RDV le plus tôt possible."
   },
   "cybercrime": {
-    "titre": "Cybercrime",
+    "titre": "Cyber-escroquerie",
     "type": "Type de cybercrime",
     "description": "Description du cybercrime",
     "prestataire": "Prestataire",

@@ -4,6 +4,8 @@ export interface DisclaimerContinueState {
   typeCybercrime?: string | null;
   confirmeIdentite?: boolean;
   confirmeSituation?: boolean;
+  confirmeEffraction?: boolean;
+  disclaimerConfirmed?: boolean;
   captchaEnabled?: boolean;
   captchaToken?: string | null;
 }
@@ -15,7 +17,7 @@ export const CYBERCRIME_INCIDENT = "cybercrime";
 export function canContinueDisclaimer(state: DisclaimerContinueState): boolean {
   const typeIncident = state.typeIncident ?? "";
   return hasValidIncident(state, typeIncident) &&
-    hasConfirmedDisclaimer(state) &&
+    state.disclaimerConfirmed === true &&
     hasValidCaptcha(state);
 }
 
@@ -33,11 +35,17 @@ function hasValidIncident(state: DisclaimerContinueState, typeIncident: string):
 }
 
 function hasConfirmedDisclaimer(state: DisclaimerContinueState): boolean {
-  return state.confirmeIdentite === true && state.confirmeSituation === true;
+  return state.confirmeIdentite === true && state.confirmeSituation === true && state.confirmeEffraction === true;
 }
 
 function hasValidCaptcha(state: DisclaimerContinueState): boolean {
   return state.captchaEnabled !== true || Boolean(state.captchaToken);
+}
+
+export function validateDisclaimerConfirmations(
+  state: Pick<DisclaimerContinueState, "confirmeIdentite" | "confirmeSituation" | "confirmeEffraction">,
+): boolean {
+  return hasConfirmedDisclaimer(state);
 }
 
 export function shouldResetTypeDommage(typeIncident?: string | null): boolean {
