@@ -313,6 +313,10 @@
     "heureDebutEvenement": "Uhrzeit des Beginns",
     "dateFinEvenement": "Ende des Ereignisses",
     "heureFinEvenement": "Uhrzeit des Endes",
+    "dateCommande": "Bestelldatum",
+    "heureCommande": "Uhrzeit der Bestellung",
+    "dateLivraisonOuDecouverte": "Lieferdatum oder Datum der Entdeckung",
+    "heureLivraisonOuDecouverte": "Uhrzeit der Lieferung oder Entdeckung",
     "heureEstimee": "Geschätzte Uhrzeit des Vorfalls",
     "adresseEvenement": "Ort des Ereignisses",
     "adresseSuisseUniquement": "Die Adresse des Ereignisses muss sich ausschliesslich in der Schweiz befinden",
@@ -329,6 +333,10 @@
     "hintHeureDebutEvenement": "Geben Sie die Anfangsuhrzeit des Ereignisses ein",
     "hintDateFinEvenement": "Geben Sie das Enddatum des Ereignisses ein",
     "hintHeureFinEvenement": "Geben Sie die Enduhrzeit des Ereignisses ein",
+    "hintDateCommande": "Geben Sie das Bestelldatum ein",
+    "hintHeureCommande": "Geben Sie die Uhrzeit der Bestellung ein",
+    "hintDateLivraisonOuDecouverte": "Geben Sie das Lieferdatum oder Datum der Entdeckung ein",
+    "hintHeureLivraisonOuDecouverte": "Geben Sie die Uhrzeit der Lieferung oder Entdeckung ein",
     "hintLieu": "Wählen Sie die Art des Ortes aus, an dem sich der Vorfall ereignet hat"
   },
   "incidentTypes": {
