@@ -8,6 +8,7 @@ import ch.ge.police.core.domain.model.event.cybercrime.common.TypeCybercrime;
 import ch.ge.police.infrastructure.ech051.Ech051Constants;
 import ch.ge.police.infrastructure.ech051.dto.Ech0051DocumentPayload.BusinessCase;
 import ch.ge.police.infrastructure.ech051.dto.Ech0051DocumentPayload.Event;
+import ch.ge.police.infrastructure.ech051.dto.Ech0051DocumentPayload.FinancialTransaction;
 import ch.ge.police.infrastructure.ech051.dto.Ech0051DocumentPayload.LegalIdentity;
 import ch.ge.police.infrastructure.ech051.dto.Ech0051DocumentPayload.NaturalIdentity;
 import ch.ge.police.infrastructure.ech051.dto.Ech0051DocumentPayload.ObjectItem;
