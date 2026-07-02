@@ -50,8 +50,8 @@ function mapEsiriusUser(userData: any, demandeId: string | null) {
   return {
     lastName: userData.nom || email || demandeId || "",
     firstName: userData.prenom || "",
-    personalIdentity: null,
-    fixPhone: demandeId,
+    personalIdentity: demandeId,
+    fixPhone: "",
     birthday: toIsoDate(userData.dateNaissance),
     email,
     phone: normalizePhone(userData.telephone),
