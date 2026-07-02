@@ -3,6 +3,7 @@ import type { BusinessRule } from "./business-rule.types";
 export interface DisclaimerWorkflowRuleData extends Record<string, unknown> {
   typeIncident?: string;
   typeDommage?: string;
+  constatPresent?: boolean | null;
   typeCybercrime?: string;
   confirmeIdentite?: boolean;
   confirmeSituation?: boolean;
@@ -45,6 +46,33 @@ export const reglesDisclaimerWorkflow: BusinessRule<DisclaimerWorkflowRuleData>[
           typeDommage: "",
         },
         valid: false,
+      },
+      {
+        label: "dommage vehicule sans indication de constat bloque la continuation",
+        data: {
+          typeIncident: "degat-delit",
+          typeDommage: "dommage-vehicule",
+          constatPresent: null,
+        },
+        valid: false,
+      },
+      {
+        label: "dommage vehicule avec constat autorise la continuation",
+        data: {
+          typeIncident: "degat-delit",
+          typeDommage: "dommage-vehicule",
+          constatPresent: true,
+        },
+        valid: true,
+      },
+      {
+        label: "dommage autre sans indication de constat autorise la continuation",
+        data: {
+          typeIncident: "degat-delit",
+          typeDommage: "autre",
+          constatPresent: null,
+        },
+        valid: true,
       },
       {
         label: "cybercrime autre bloque la continuation",
@@ -105,6 +133,33 @@ export const reglesDisclaimerWorkflow: BusinessRule<DisclaimerWorkflowRuleData>[
         },
         valid: false,
         errorPath: ["typeDommage"],
+      },
+    ],
+  },
+  {
+    kind: "workflow",
+    section: "Informations generales",
+    champDemande: "Parcours rendez-vous seul",
+    obligatoire: "Selon le cas",
+    precision: "Un dommage vehicule ou batiment avec constat deja etabli oriente vers la prise de rendez-vous sans creation de pre-plainte.",
+    examples: [
+      {
+        label: "dommage vehicule avec constat active le parcours rendez-vous seul",
+        data: {
+          typeIncident: "degat-delit",
+          typeDommage: "dommage-vehicule",
+          constatPresent: true,
+        },
+        valid: true,
+      },
+      {
+        label: "dommage vehicule sans constat conserve le parcours pre-plainte",
+        data: {
+          typeIncident: "degat-delit",
+          typeDommage: "dommage-vehicule",
+          constatPresent: false,
+        },
+        valid: false,
       },
     ],
   },

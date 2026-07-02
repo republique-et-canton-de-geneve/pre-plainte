@@ -50,8 +50,8 @@ Ce document est genere depuis les tests unitaires frontend.
 
 | Champ demande | Type de regle | Obligatoire | Precision | Exemples testes |
 | --- | --- | --- | --- | --- |
-| Nature du dommage | Validation des champs | Oui | Un dommage materiel doit indiquer le type de dommage, au moins une nature, une description et le constat de police. | nature du dommage absente est refusee |
-| Constat de police | Validation des champs | Oui | Le constat de police doit etre present et le fichier du constat doit etre fourni. | absence de constat est refusee<br><br>constat sans fichier est refuse |
+| Nature du dommage | Validation des champs | Oui | Un dommage materiel doit indiquer le type de dommage, au moins une nature et une description. | nature du dommage absente est refusee |
+| Constat de police | Validation des champs | Selon le cas | Le constat de police doit etre renseigne pour un dommage vehicule ou batiment. Les fichiers restent optionnels. | dommage vehicule sans indication de constat est refuse<br><br>dommage vehicule sans constat est accepte<br><br>dommage autre sans indication de constat est accepte |
 
 ## Cybercriminalite
 
@@ -81,8 +81,9 @@ Ce document est genere depuis les tests unitaires frontend.
 
 | Champ demande | Type de regle | Obligatoire | Precision | Exemples testes |
 | --- | --- | --- | --- | --- |
-| Bouton continuer | Blocage | Oui | La continuation est autorisee uniquement si les confirmations et le type d'incident requis sont renseignes. | incident vol avec confirmations est autorise<br><br>confirmation d'identite absente bloque la continuation<br><br>dommage sans type de dommage bloque la continuation<br><br>cybercrime autre bloque la continuation<br><br>captcha active sans jeton bloque la continuation<br><br>captcha active avec jeton autorise la continuation |
+| Bouton continuer | Blocage | Oui | La continuation est autorisee uniquement si les confirmations et le type d'incident requis sont renseignes. | incident vol avec confirmations est autorise<br><br>confirmation d'identite absente bloque la continuation<br><br>dommage sans type de dommage bloque la continuation<br><br>dommage vehicule sans indication de constat bloque la continuation<br><br>dommage vehicule avec constat autorise la continuation<br><br>dommage autre sans indication de constat autorise la continuation<br><br>cybercrime autre bloque la continuation<br><br>captcha active sans jeton bloque la continuation<br><br>captcha active avec jeton autorise la continuation |
 | Changement du type d'incident | Blocage | Selon le cas | Les champs specifiques dommage ou cybercriminalite sont reinitialises lorsque le type d'incident ne les concerne plus. | passage vers vol reinitialise le type de dommage<br><br>passage vers vol reinitialise le type de cybercriminalite<br><br>incident dommage conserve le type de dommage |
+| Parcours rendez-vous seul | Blocage | Selon le cas | Un dommage vehicule ou batiment avec constat deja etabli oriente vers la prise de rendez-vous sans creation de pre-plainte. | dommage vehicule avec constat active le parcours rendez-vous seul<br><br>dommage vehicule sans constat conserve le parcours pre-plainte |
 
 ## Verification email
 
