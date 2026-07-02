@@ -81,7 +81,8 @@ Ce document est genere depuis les tests unitaires frontend.
 
 | Champ demande | Type de regle | Obligatoire | Precision | Exemples testes |
 | --- | --- | --- | --- | --- |
-| Bouton continuer | Blocage | Oui | La continuation est autorisee uniquement si les confirmations et le type d'incident requis sont renseignes. | incident vol avec confirmations est autorise<br><br>confirmation d'identite absente bloque la continuation<br><br>dommage sans type de dommage bloque la continuation<br><br>cybercrime autre bloque la continuation<br><br>captcha active sans jeton bloque la continuation<br><br>captcha active avec jeton autorise la continuation |
+| Bouton continuer | Blocage | Oui | La continuation est autorisee uniquement si les confirmations ont ete validees et le type d'incident requis est renseigne. | incident vol avec confirmations validees est autorise<br><br>confirmations non validees bloquent la continuation<br><br>dommage sans type de dommage bloque la continuation<br><br>cybercrime autre bloque la continuation<br><br>captcha active sans jeton bloque la continuation<br><br>captcha active avec jeton autorise la continuation |
+| Bouton confirmer | Blocage | Oui | Le reste de la page est affiche uniquement si les trois confirmations sont cochees. | trois confirmations cochees autorisent l'affichage du formulaire<br><br>confirmation d'identite absente bloque l'affichage du formulaire<br><br>confirmation de situation absente bloque l'affichage du formulaire<br><br>confirmation d'effraction absente bloque l'affichage du formulaire |
 | Changement du type d'incident | Blocage | Selon le cas | Les champs specifiques dommage ou cybercriminalite sont reinitialises lorsque le type d'incident ne les concerne plus. | passage vers vol reinitialise le type de dommage<br><br>passage vers vol reinitialise le type de cybercriminalite<br><br>incident dommage conserve le type de dommage |
 
 ## Verification email

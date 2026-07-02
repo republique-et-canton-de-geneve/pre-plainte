@@ -98,6 +98,7 @@
     "precedent": "Back",
     "continuer": "Continue",
     "poursuivre": "Continue",
+    "confirmer": "Confirm",
     "sauvegarder": "Save and come back later",
     "annuler": "Cancel",
     "quitter": "Leave",
@@ -145,6 +146,7 @@
     "validation": "Pre-complaint validated"
   },
   "disclaimer": {
+    "intro": "To use the pre-complaint service, the conditions below must be met:",
     "intro1": "Online pre-complaint",
     "intro2": "must not be used",
     "intro3": "in the following situations:",
@@ -154,6 +156,10 @@
     "avantConfirmation": "Before continuing, please confirm that your situation does not correspond to any of the cases mentioned above:",
     "confirmeIdentite": "I confirm that I do not know the identity of the person who committed the acts and that I have no information about them (no description, image or video).",
     "confirmeSituation": "I confirm that my situation does not concern the theft of a registered vehicle or a registration plate.",
+    "confirmeEffraction": "I confirm that my situation does not involve a break-in (theft with damage in a building or vehicle).",
+    "situationNonEligible": "Given your situation, please go immediately to a police station to file a complaint:",
+    "postesPolice": "Police stations",
+    "warningVolCarte": "If this is the theft of a credit or debit card, contact your bank or card issuer to block your card immediately.",
     "casNonTrouve": "If you cannot find your case,",
     "prendreRendezVousPoste": "go to a police station.",
     "cybercrimeAutreIntroduction": "In this case, go to a police station with the following documents:",

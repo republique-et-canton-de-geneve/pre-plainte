@@ -98,6 +98,7 @@
     "precedent": "Zurück",
     "continuer": "Weiter",
     "poursuivre": "Weiter",
+    "confirmer": "Bestätigen",
     "sauvegarder": "Speichern und später fortfahren",
     "annuler": "Abbrechen",
     "quitter": "Verlassen",
@@ -145,6 +146,7 @@
     "validation": "Voranzeige bestätigt"
   },
   "disclaimer": {
+    "intro": "Um die Voranzeige nutzen zu können, müssen die folgenden Bedingungen erfüllt sein:",
     "intro1": "Die Online-Voranzeige",
     "intro2": "darf nicht verwendet werden",
     "intro3": "in folgenden Situationen:",
@@ -154,6 +156,10 @@
     "avantConfirmation": "Bevor Sie fortfahren, bestätigen Sie bitte, dass Ihre Situation keinem der oben genannten Fälle entspricht:",
     "confirmeIdentite": "Ich bestätige, dass ich die Identität der mutmasslichen Täterin oder des mutmasslichen Täters nicht kenne und keine Informationen über diese Person habe (weder Signalement noch Bild- oder Videoaufnahmen).",
     "confirmeSituation": "Ich bestätige, dass meine Situation weder den Diebstahl eines eingelösten Fahrzeugs noch eines Kontrollschilds betrifft.",
+    "confirmeEffraction": "Ich bestätige, dass meine Situation keinen Einbruch betrifft (Diebstahl mit Sachschaden in einem Gebäude oder Fahrzeug).",
+    "situationNonEligible": "Aufgrund Ihrer Situation begeben Sie sich bitte unverzüglich auf einen Polizeiposten, um Anzeige zu erstatten:",
+    "postesPolice": "Polizeiposten",
+    "warningVolCarte": "Wenn es sich um den Diebstahl einer Kredit- oder Debitkarte handelt, kontaktieren Sie Ihre Bank oder Ihren Kartenaussteller, um Ihre Karte sofort sperren zu lassen.",
     "casNonTrouve": "Wenn Sie Ihren Fall nicht finden,",
     "prendreRendezVousPoste": "begeben Sie sich auf einen Polizeiposten.",
     "cybercrimeAutreIntroduction": "Begeben Sie sich in diesem Fall mit den folgenden Unterlagen auf einen Polizeiposten:",
