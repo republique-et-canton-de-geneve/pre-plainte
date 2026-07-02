@@ -49,7 +49,7 @@ function mapEsiriusUser(userData: any, demandeId: string | null) {
   return {
     lastName: userData.nom,
     firstName: userData.prenom,
-    personalIdentity: demandeId,
+    personalIdentity: null,
     fixPhone: demandeId,
     birthday: toIsoDate(userData.dateNaissance),
     email: userData.email,
