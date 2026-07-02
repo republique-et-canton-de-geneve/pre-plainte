@@ -98,6 +98,28 @@
         class="mb-8"
       />
 
+      <BaseRadioGroup
+        v-if="showConstatQuestion"
+        v-model="constatPresent"
+        :label="t('dommages.constat')"
+        required
+        :options="[
+          { label: t('common.oui'), value: true },
+          { label: t('common.non'), value: false },
+        ]"
+        :error-messages="constatPresentError"
+      />
+
+      <v-alert
+        v-if="showRendezVousOnlyMessage"
+        type="info"
+        class="mb-6"
+        density="comfortable"
+        :icon="mobile ? false : undefined"
+      >
+        {{ t("dommages.constatRendezVousOnlyInfo") }}
+      </v-alert>
+
       <AccessibleVSelect
         v-if="typeIncident === 'cybercrime'"
         v-model="typeCybercrime"
@@ -180,12 +202,15 @@ import Captcha from "@/components/captcha/Captcha.vue";
 import { storeToRefs } from "pinia";
 import ExitActionsForm from "@/components/actions/ExitActionsForm.vue";
 import AccessibleVSelect from "@/components/accessibility/AccessibleVSelect.vue";
+import BaseRadioGroup from "@/components/radio/BaseRadioGroup.vue";
 import { POSTES_POLICE_URL, TYPES_DOMMAGE } from "@/constants/constant.ts";
 import { toTranslatedOptions } from "@/utils/helpers/traductionHelper.ts";
 import {
   canContinueDisclaimer,
   CYBERCRIME_INCIDENT,
   DEGAT_DELIT_INCIDENT,
+  isRendezVousOnlyDommage,
+  requiresConstatQuestion,
   shouldResetTypeCybercrime,
   shouldResetTypeDommage,
   TYPE_CYBERCRIME_AUTRE,
@@ -212,6 +237,7 @@ const { value: confirmeIdentite } = useField("confirmeIdentite");
 const { value: confirmeSituation } = useField("confirmeSituation");
 const { value: typeIncident, errorMessage: typeIncidentError } = useField<string>("typeIncident");
 const { value: typeDommage, errorMessage: typeDommageError } = useField<string>("typeDommage");
+const { value: constatPresent, errorMessage: constatPresentError } = useField<boolean | null>("constatPresent");
 const { value: typeCybercrime, errorMessage: typeCybercrimeError } = useField<string>("typeCybercrime");
 
 const typeDommageOptions = computed(() => toTranslatedOptions(TYPES_DOMMAGE, t));
@@ -222,10 +248,23 @@ const typeCybercrimeOptions = computed(() => [
   { label: t("cybercrime.autre"), value: TYPE_CYBERCRIME_AUTRE },
 ]);
 
+const showConstatQuestion = computed(() =>
+  typeIncident.value === DEGAT_DELIT_INCIDENT && requiresConstatQuestion(typeDommage.value),
+);
+
+const showRendezVousOnlyMessage = computed(() =>
+  isRendezVousOnlyDommage({
+    typeIncident: typeIncident.value,
+    typeDommage: typeDommage.value,
+    constatPresent: constatPresent.value,
+  }),
+);
+
 const canContinue = computed(
   () => canContinueDisclaimer({
     typeIncident: typeIncident.value,
     typeDommage: typeDommage.value,
+    constatPresent: constatPresent.value,
     typeCybercrime: typeCybercrime.value,
     confirmeIdentite: Boolean(confirmeIdentite.value),
     confirmeSituation: Boolean(confirmeSituation.value),
@@ -239,6 +278,12 @@ const onSubmit = handleSubmit(formValues => {
   setFieldError(
     "typeDommage",
     typeIncident.value === DEGAT_DELIT_INCIDENT && !typeDommage.value ? t("validation.typeDommageRequis") : undefined,
+  );
+  setFieldError(
+    "constatPresent",
+    showConstatQuestion.value && (constatPresent.value === null || constatPresent.value === undefined)
+      ? t("validation.constatRequis")
+      : undefined,
   );
   setFieldError(
     "typeCybercrime",
@@ -259,9 +304,16 @@ const onSubmit = handleSubmit(formValues => {
 watch(typeIncident, incident => {
   if (shouldResetTypeDommage(incident)) {
     setFieldValue("typeDommage", "");
+    setFieldValue("constatPresent", null);
   }
   if (shouldResetTypeCybercrime(incident)) {
     setFieldValue("typeCybercrime", "");
+  }
+});
+
+watch(typeDommage, value => {
+  if (!requiresConstatQuestion(value)) {
+    setFieldValue("constatPresent", null);
   }
 });
 </script>

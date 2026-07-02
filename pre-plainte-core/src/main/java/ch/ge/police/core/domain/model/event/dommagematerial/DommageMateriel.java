@@ -57,11 +57,17 @@ public class DommageMateriel extends IncidentBase {
     verifierChampObligatoire(typeDommage, "Le type de dommage doit être sélectionné.");
     verifierCollectionNonVide(naturesDommage, "Au moins une nature de dommage doit être sélectionnée.");
     verifierChampObligatoire(description, "La description du dommage est obligatoire.");
-    verifierChampObligatoire(constatPresent, "L'indication de constat est obligatoire.");
+    if (constatRequis()) {
+      verifierChampObligatoire(constatPresent, "L'indication de constat est obligatoire.");
+    }
 
     if (Boolean.TRUE.equals(constatPresent)) {
       verifierChampObligatoire(dateConstat,"La date du constat est obligatoire si un constat est présent.");
     }
+  }
+
+  private boolean constatRequis() {
+    return typeDommage == TypeDommage.DOMMAGE_VEHICULE || typeDommage == TypeDommage.DOMMAGE_PROPRIETE;
   }
 
   @Override
