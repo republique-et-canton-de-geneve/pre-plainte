@@ -441,7 +441,7 @@
                 <template v-if="!data.typeCybercrime || (data.typeCybercrime !== 'achat-non-recu' && data.typeCybercrime !== 'fausse-annonce')">
                   <v-col cols="12" md="6">
                     <dt id="lbl-dateDebutEvenement">
-                      <v-label class="ge-field-label">{{ t("informationsEvenement.dateDebutEvenement") }}</v-label>
+                      <v-label class="ge-field-label">{{ dateDebutEvenementLabel }}</v-label>
                     </dt>
                     <dd class="ge-field-value text-body-1" aria-labelledby="lbl-dateDebutEvenement">
                       {{ formatDateTimeFrench(toIsoDate(data.dateDebutEvenement)) }}
@@ -450,7 +450,7 @@
 
                   <v-col cols="12" md="6">
                     <dt id="lbl-dateFinEvenement">
-                      <v-label class="ge-field-label">{{ t("informationsEvenement.dateFinEvenement") }}</v-label>
+                      <v-label class="ge-field-label">{{ dateFinEvenementLabel }}</v-label>
                     </dt>
                     <dd class="ge-field-value text-body-1" aria-labelledby="lbl-dateFinEvenement">
                       {{ formatDateTimeFrench(toIsoDate(data.dateFinEvenement)) }}
@@ -2115,6 +2115,17 @@ const isTrajetRenseigne = computed(() => hasAdresseEvenementPrincipale.value && 
 
 const isTiers = computed(() => data.value.lienAvecPersonne === "TIERS");
 const isEntreprise = computed(() => data.value.lienAvecPersonne === "ENTREPRISE");
+const isCommandeFrauduleuse = computed(() => data.value.typeCybercrime === "commande-frauduleuse");
+const dateDebutEvenementLabel = computed(() =>
+  t(isCommandeFrauduleuse.value ? "informationsEvenement.dateCommande" : "informationsEvenement.dateDebutEvenement"),
+);
+const dateFinEvenementLabel = computed(() =>
+  t(
+    isCommandeFrauduleuse.value
+      ? "informationsEvenement.dateLivraisonOuDecouverte"
+      : "informationsEvenement.dateFinEvenement",
+  ),
+);
 
 const formatLienAvecPersonne = (value?: string) => {
   switch (value) {
