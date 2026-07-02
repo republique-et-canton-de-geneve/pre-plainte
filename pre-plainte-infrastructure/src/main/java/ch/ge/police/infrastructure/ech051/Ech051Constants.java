@@ -10,6 +10,9 @@ public final class Ech051Constants {
   }
 
   // === Constantes générales ===
+  public static final String PRE_PLAINTE_EN_LIGNE = "Pré-plainte en ligne";
+  public static final String SENDING_APPLICATION_MANUFACTURER = "Etat de Genève";
+  public static final String SENDING_APPLICATION_PRODUCT_VERSION = "1.0";
   public static final String PROCESSING_STATUS_GREEN = "GREEN";
   /**
    * Dossier « individuel » : doit être distincte de toutes les {@code person/@key}
@@ -18,6 +21,7 @@ public final class Ech051Constants {
   public static final String BUSINESS_CASE_KEY = "9";
   public static final String BUSINESS_CASE_KEY_TIERS = "10";
   public static final String EVENT_KEY = "1";
+  public static final String EVENT_KEY_PAYMENT = "2";
   
   // === Clés personnes ===
   public static final String PERSON_KEY_TIERS = "4";
@@ -40,6 +44,11 @@ public final class Ech051Constants {
   
   // === Clés objets et véhicules ===
   public static final String OBJECT_KEY_TIERS = "5";
+  public static final String OBJECT_KEY_CYBER_VICTIM_IDENTITY = "6";
+  public static final String OBJECT_KEY_CYBER_FRAUDULENT_ORDER_AMOUNT = "9";
+  public static final String OBJECT_KEY_CYBER_UNDELIVERED_ITEM = "11";
+  public static final String OBJECT_TYPE_CYBER_IDENTITY_CODE = "200300";
+  public static final String OBJECT_TYPE_CYBER_IDENTITY_LABEL = "carte d'identité";
   public static final String VEHICLE_KEY = "2";
   public static final String INSURER_REF = "2";
   public static final String INSURER_REF_VEHICLE = "3";
@@ -63,7 +72,16 @@ public final class Ech051Constants {
   public static final String INVOLVEMENT_TYPE_ACCUSED_LABEL = "Personne accusée";
   public static final String INVOLVEMENT_SOURCE_TABLE = "PERSONALIEN_ART";
   public static final String IDENTITY_CATEGORY_UNKNOWN = "U";
+
+  public static final String INVOLVEMENT_TYPE_SUPPLIER_CODE = "L";
+  public static final String INVOLVEMENT_TYPE_SUPPLIER_LABEL = "Fournisseur";
+  public static final String INVOLVEMENT_TYPE_RECIPIENT_CODE = "E";
+  public static final String INVOLVEMENT_TYPE_RECIPIENT_LABEL = "Destinataire";
+  public static final String INVOLVEMENT_ARMADA_SOURCE_TABLE = "PARA_CODE_T";
   
+  public static final String PAYMENT_TYPE_CRYPTO = "Crypto-monnaie";
+  public static final String URI_PROVIDER_ENTREPRISE_VENDEUR = "Nom de l'entreprise";
+
   public static final String OBJECT_ROLE_SEARCHED_CODE = "10";
   public static final String OBJECT_ROLE_SEARCHED_LABEL = "recherché";
   public static final String OBJECT_ROLE_SOURCE_TABLE = "CODE_SACHE";
@@ -82,6 +100,8 @@ public final class Ech051Constants {
   public static final String TYPE_OF_CRIME_CYBER_FAUSSE_ANNONCE_LABEL = "escroquerie";
   public static final String TYPE_OF_CRIME_CYBER_ACHAT_NON_RECU_CODE = "1000146100";
   public static final String TYPE_OF_CRIME_CYBER_ACHAT_NON_RECU_LABEL = "escroquerie";
+  public static final String TYPE_OF_CRIME_BLANCHIMENT_CODE = "1000305030";
+  public static final String TYPE_OF_CRIME_BLANCHIMENT_LABEL = "blanchiment d'argent";
   public static final String MODE_OPERANDI_DEGRADATIONS_CODE = "4000236";
   public static final String MODE_OPERANDI_DEGRADATIONS_LABEL = "vandalisme";
   public static final String MODE_OPERANDI_TAGS_CODE = "4000900";
@@ -92,6 +112,8 @@ public final class Ech051Constants {
   public static final String MODE_OPERANDI_CYBER_FAUSSE_ANNONCE_LABEL = "cyber-escroquerie: fausse annonce immobilière";
   public static final String MODE_OPERANDI_CYBER_ACHAT_NON_RECU_CODE = "6166530";
   public static final String MODE_OPERANDI_CYBER_ACHAT_NON_RECU_LABEL = "cyber-escroquerie : non-livraison sur des sites de petites annonces (acheteur abusé par une fausse annonce)";
+  public static final String MODE_OPERANDI_CYBER_ACHAT_NON_RECU_MULES_CODE = "6170522";
+  public static final String MODE_OPERANDI_CYBER_ACHAT_NON_RECU_MULES_LABEL = "money/package mules : faire transférer de l'argent ou transporter des marchandises par un tiers";
 
   // === Tables sources RIPOL ===
   public static final class RipolSourceTables {
@@ -111,6 +133,7 @@ public final class Ech051Constants {
     public static final String TYPE_CRIME = "STRAFB_HANDL";
     public static final String PLAQUE_PAYS = "EXT_GPNATI";
     public static final String PLAQUE_CANTON = "SCHILD";
+    public static final String PKS_AUFENTHALT = "PKS_AUFENTHALT";
   }
 
   // === Types de messages ===

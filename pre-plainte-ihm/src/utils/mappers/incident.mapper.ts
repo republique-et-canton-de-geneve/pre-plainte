@@ -417,10 +417,16 @@ export class IncidentMapper {
   }
 
   private static async addCybercrimeFilesIfAny(form: PrePlainteFormFields, result: IncidentCyberDTO): Promise<void> {
+    const includeAutresDocuments =
+      (form.typeCybercrime !== "commande-frauduleuse" && form.typeCybercrime !== "achat-non-recu") ||
+      form.copieIdentiteAuteurTransmise === true;
+
     const rawFiles = [
       ...this.extractRawFiles(form.justificatifsPaiement),
       ...this.extractRawFiles(form.copiesEcran),
-      ...this.extractRawFiles(form.autresDocuments),
+      ...(includeAutresDocuments ? this.extractRawFiles(form.autresDocuments) : []),
+      ...this.extractRawFiles(form.copieIdentiteTransmiseAuteurDocument),
+      ...this.extractRawFiles(form.copieIdentiteAuteurDocument),
     ];
 
     if (!rawFiles.length) {
@@ -454,6 +460,18 @@ export class IncidentMapper {
   }
 
   private static addCommandeFrauduleuse(result: IncidentCyberDTO, form: PrePlainteFormFields) {
+    const adresseContrevenant =
+      form.contrevenantAdresse?.trim() || form.contrevenantNpa?.trim() || form.contrevenantLocalite?.trim()
+        ? AdresseMapper.buildAdresse(
+          form.contrevenantAdresse ?? "",
+          form.contrevenantAdressePostale ?? "",
+          form.contrevenantNpa ?? "",
+          form.contrevenantLocalite ?? "",
+          form.contrevenantPays,
+          form.contrevenantLocaliteCode,
+        )
+        : undefined;
+
     result.commandeFrauduleuse = {
       prestataire: this.toOptionalString(form.prestataire),
       dateDecouverte: toIsoDate(form.dateDecouverte),
@@ -474,7 +492,18 @@ export class IncidentMapper {
             form.livraisonLocalite ?? "",
             form.livraisonPays,
             form.livraisonLocaliteCode,
-          )
+          ),
+      prenomContrevenant: this.toOptionalString(form.prenomContrevenant),
+      nomContrevenant: this.toOptionalString(form.nomContrevenant),
+      adresseContrevenant,
+      siteWebContrevenant: this.toOptionalString(form.siteWebContrevenant),
+      moyenPaiementNumeriqueDebite: form.moyenPaiementNumeriqueDebite ?? undefined,
+      copieIdentiteTransmiseAuteur: form.copieIdentiteTransmiseAuteur ?? undefined,
+      copieIdentiteTransmiseAuteurDocumentIndisponible: form.copieIdentiteTransmiseAuteurDocumentIndisponible ?? undefined,
+      raisonAbsenceCopieIdentiteTransmiseAuteur: this.toOptionalString(form.raisonAbsenceCopieIdentiteTransmiseAuteur),
+      copieIdentiteAuteurTransmise: form.copieIdentiteAuteurTransmise ?? undefined,
+      copieIdentiteAuteurDocumentIndisponible: form.copieIdentiteAuteurDocumentIndisponible ?? undefined,
+      raisonAbsenceCopieIdentiteAuteur: this.toOptionalString(form.raisonAbsenceCopieIdentiteAuteur),
     };
   }
 
@@ -553,7 +582,11 @@ export class IncidentMapper {
       moyenPaiementAutre: this.toOptionalString(form.moyenPaiementAutre),
       ibanBeneficiaire: this.toOptionalString(form.ibanBeneficiaire),
       comptePaypalBeneficiaire: this.toOptionalString(form.comptePaypalBeneficiaire),
+      numeroTransactionPaypal: this.toOptionalString(form.numeroTransactionPaypal),
       numeroTwintBeneficiaire: this.toOptionalString(form.numeroTwintBeneficiaire),
+      typeCryptoMonnaie: this.toOptionalString(form.typeCryptoMonnaie),
+      montantUnitesCrypto: this.toOptionalString(form.montantUnitesCrypto),
+      adresseWalletExpediteur: this.toOptionalString(form.adresseWalletExpediteur),
       adresseWalletCrypto: this.toOptionalString(form.adresseWalletCrypto),
       hashTransactionCrypto: this.toOptionalString(form.hashTransactionCrypto),
       societeBeneficiaire: this.toOptionalString(form.societeBeneficiaire),
@@ -575,7 +608,11 @@ export class IncidentMapper {
   private static mapAchatNonRecuIdentite(form: PrePlainteFormFields) {
     return {
       copieIdentiteTransmiseAuteur: form.copieIdentiteTransmiseAuteur ?? undefined,
+      copieIdentiteTransmiseAuteurDocumentIndisponible: form.copieIdentiteTransmiseAuteurDocumentIndisponible ?? undefined,
+      raisonAbsenceCopieIdentiteTransmiseAuteur: this.toOptionalString(form.raisonAbsenceCopieIdentiteTransmiseAuteur),
       copieIdentiteAuteurTransmise: form.copieIdentiteAuteurTransmise ?? undefined,
+      copieIdentiteAuteurDocumentIndisponible: form.copieIdentiteAuteurDocumentIndisponible ?? undefined,
+      raisonAbsenceCopieIdentiteAuteur: this.toOptionalString(form.raisonAbsenceCopieIdentiteAuteur),
     };
   }
 

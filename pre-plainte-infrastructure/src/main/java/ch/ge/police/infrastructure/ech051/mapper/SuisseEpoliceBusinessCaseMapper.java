@@ -56,7 +56,6 @@ public class SuisseEpoliceBusinessCaseMapper {
 
     return BusinessCase.builder()
       .key(resolveBusinessCaseKey(declarationType, hasVehicles))
-      .caseNumber(prePlainte.getDemandeId() != null ? prePlainte.getDemandeId() : "PPL")
       .file(List.of(file))
       .build();
   }

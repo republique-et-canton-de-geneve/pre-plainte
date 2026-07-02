@@ -170,6 +170,17 @@ export const getInitialFormData = (): PrePlainteFormFields => ({
   livraisonLocaliteCode: "",
   livraisonPays: "",
 
+  prenomContrevenant: "",
+  nomContrevenant: "",
+  siteWebContrevenant: "",
+  contrevenantAdresse: "",
+  contrevenantAdressePostale: "",
+  contrevenantNpa: "",
+  contrevenantLocalite: "",
+  contrevenantLocaliteCode: "",
+  contrevenantPays: "",
+  moyenPaiementNumeriqueDebite: null,
+
   /* Achat non reçu */
   montantDelitAchatLigne: "",
   articleNonLivreDescription: "",
@@ -199,7 +210,11 @@ export const getInitialFormData = (): PrePlainteFormFields => ({
   moyenPaiementAutre: "",
   ibanBeneficiaire: "",
   comptePaypalBeneficiaire: "",
+  numeroTransactionPaypal: "",
   numeroTwintBeneficiaire: "",
+  typeCryptoMonnaie: "",
+  montantUnitesCrypto: "",
+  adresseWalletExpediteur: "",
   adresseWalletCrypto: "",
   hashTransactionCrypto: "",
   societeBeneficiaire: "",
@@ -211,8 +226,12 @@ export const getInitialFormData = (): PrePlainteFormFields => ({
   raisonAbsencePreuvePaiement: "",
   copieIdentiteTransmiseAuteur: null,
   copieIdentiteTransmiseAuteurDocument: [],
+  copieIdentiteTransmiseAuteurDocumentIndisponible: false,
+  raisonAbsenceCopieIdentiteTransmiseAuteur: "",
   copieIdentiteAuteurTransmise: null,
   copieIdentiteAuteurDocument: [],
+  copieIdentiteAuteurDocumentIndisponible: false,
+  raisonAbsenceCopieIdentiteAuteur: "",
 
   /* Fausse annonce */
   urlComplete: "",

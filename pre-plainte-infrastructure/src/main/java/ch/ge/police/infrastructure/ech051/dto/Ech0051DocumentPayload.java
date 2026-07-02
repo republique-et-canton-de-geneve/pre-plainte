@@ -63,10 +63,21 @@ public class Ech0051DocumentPayload {
     PersonType type;
     NaturalIdentity naturalIdentity;
     LegalIdentity legalIdentity;
+  @Singular
+    List<Address> addresses;
     Address address;
     Communication communication;
     Boolean deliveredAbroad;
+    Boolean creditCardUsed;
     String additionalInformation;
+    Boolean onlineShop;
+    String noPaymentProofReason;
+    String noAdImageReason;
+    Boolean reporterIdCopySent;
+    Boolean perpetratorIdCopyReceived;
+    String noIdCopyPresentReason;
+    String noPerpetratorsIdCopyPresentReason;
+    String remark;
   }
 
   public enum PersonType {
@@ -117,6 +128,7 @@ public class Ech0051DocumentPayload {
   @Value
   @Builder(toBuilder = true)
   public static class Address {
+    String addressLine;
     String street;
     String houseNumber;
     RipolLocation place;
@@ -131,6 +143,7 @@ public class Ech0051DocumentPayload {
     String mobile;
     String phone;
     String uri;
+    String uriProvider;
   }
 
   @Value
@@ -171,6 +184,7 @@ public class Ech0051DocumentPayload {
   @Builder(toBuilder = true)
   public static class ObjectItem {
     String key;
+    String description;
     RipolReference typeOfObject;
     RipolReference fabricant;
     String fabricantAutre;
@@ -184,7 +198,14 @@ public class Ech0051DocumentPayload {
     String numeroSerie;
     String gravure;
     Identification identification;
+    OfficialDocument officialDocument;
     String additionalInformation;
+  }
+
+  @Value
+  @Builder(toBuilder = true)
+  public static class OfficialDocument {
+    RipolReference permitCategory;
   }
 
   @Value

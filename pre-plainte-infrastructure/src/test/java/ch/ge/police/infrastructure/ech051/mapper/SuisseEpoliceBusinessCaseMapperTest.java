@@ -53,7 +53,6 @@ class SuisseEpoliceBusinessCaseMapperTest {
     PrePlainte p = new PrePlainte("D-1", baseInfos(), Incident.of(minimalVol()));
     BusinessCase bc = mapper.buildBusinessCase(p, DeclarationType.INDIVIDUAL, false);
     assertEquals(Ech051Constants.BUSINESS_CASE_KEY, bc.getKey());
-    assertEquals("D-1", bc.getCaseNumber());
     assertNotNull(bc.getFile());
   }
 
@@ -79,10 +78,10 @@ class SuisseEpoliceBusinessCaseMapperTest {
   }
 
   @Test
-  void buildBusinessCase_nullDemandeIdFallsBackToPpl() {
+  void buildBusinessCase_nullDemandeIdStillBuildsBusinessCase() {
     PrePlainte p = new PrePlainte(null, baseInfos(), Incident.of(minimalVol()));
     BusinessCase bc = mapper.buildBusinessCase(p, DeclarationType.INDIVIDUAL, false);
-    assertEquals("PPL", bc.getCaseNumber());
+    assertEquals(Ech051Constants.BUSINESS_CASE_KEY, bc.getKey());
   }
 
   @Test

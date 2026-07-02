@@ -27,7 +27,7 @@
         <div v-if="showCybercrimeUrlDescriptionAndPieces" class="mb-8">
           <PieceJointe v-model="copiesEcran" :label="t('cybercrime.copiesEcran')" />
         </div>
-        <div class="mb-8">
+        <div v-if="showAutresDocumentsCybercrime" class="mb-8">
           <PieceJointe v-model="autresDocuments" :label="t('cybercrime.autresDocuments')" />
         </div>
       </div>
@@ -289,6 +289,7 @@ const { value: fichiers } = useField<File[]>("fichiers");
 const { value: justificatifsPaiement } = useField<File[]>("justificatifsPaiement");
 const { value: copiesEcran } = useField<File[]>("copiesEcran");
 const { value: autresDocuments } = useField<File[]>("autresDocuments");
+const { value: copieIdentiteAuteurTransmise } = useField<boolean | null>("copieIdentiteAuteurTransmise");
 
 const TYPE_CYBERCRIME_COMMANDE_FRAUDULEUSE = "commande-frauduleuse";
 const TYPE_CYBERCRIME_ACHAT_NON_RECU = "achat-non-recu";
@@ -297,6 +298,20 @@ const TYPE_CYBERCRIME_FAUSSE_ANNONCE = "fausse-annonce";
 const showCybercrimeUrlDescriptionAndPieces = computed(() => {
   const ty = typeCybercrime.value;
   return !!ty && ty !== TYPE_CYBERCRIME_ACHAT_NON_RECU && !isCybercrimeTypeWithoutDetailFields(ty);
+});
+
+const showAutresDocumentsCybercrime = computed(() => {
+  if (typeIncident.value !== TYPE_INCIDENT.CYBERCRIME) {
+    return false;
+  }
+  const ty = typeCybercrime.value;
+  if (!ty || isCybercrimeTypeWithoutDetailFields(ty)) {
+    return false;
+  }
+  if (ty === TYPE_CYBERCRIME_COMMANDE_FRAUDULEUSE || ty === TYPE_CYBERCRIME_ACHAT_NON_RECU) {
+    return copieIdentiteAuteurTransmise.value === true;
+  }
+  return true;
 });
 
 const createInputHandler = (maskFn: (e: InputEvent, value: any) => void, target: any) => (e: InputEvent) => {
@@ -316,6 +331,12 @@ const onHeureDernierContactInput = createInputHandler(applyTimeMask, heureDernie
 useFormReset(form, resetConditions.eventInfo, () => {
   selectedEventAddress.value = null;
   eventSearchText.value = "";
+});
+
+watch(copieIdentiteAuteurTransmise, received => {
+  if (received !== true) {
+    autresDocuments.value = [];
+  }
 });
 
 watch(
@@ -359,6 +380,27 @@ watch(
       setFieldValue("livraisonLocalite", "");
       setFieldValue("livraisonLocaliteCode", "");
       setFieldValue("livraisonPays", "");
+      setFieldValue("prenomContrevenant", "");
+      setFieldValue("nomContrevenant", "");
+      setFieldValue("siteWebContrevenant", "");
+      setFieldValue("contrevenantAdresse", "");
+      setFieldValue("contrevenantAdressePostale", "");
+      setFieldValue("contrevenantNpa", "");
+      setFieldValue("contrevenantLocalite", "");
+      setFieldValue("contrevenantLocaliteCode", "");
+      setFieldValue("contrevenantPays", "");
+      setFieldValue("moyenPaiementNumeriqueDebite", null);
+    }
+
+    if (cybercrimeType !== TYPE_CYBERCRIME_ACHAT_NON_RECU && cybercrimeType !== TYPE_CYBERCRIME_COMMANDE_FRAUDULEUSE) {
+      setFieldValue("copieIdentiteTransmiseAuteur", null);
+      setFieldValue("copieIdentiteTransmiseAuteurDocument", []);
+      setFieldValue("copieIdentiteTransmiseAuteurDocumentIndisponible", false);
+      setFieldValue("raisonAbsenceCopieIdentiteTransmiseAuteur", "");
+      setFieldValue("copieIdentiteAuteurTransmise", null);
+      setFieldValue("copieIdentiteAuteurDocument", []);
+      setFieldValue("copieIdentiteAuteurDocumentIndisponible", false);
+      setFieldValue("raisonAbsenceCopieIdentiteAuteur", "");
     }
 
     if (cybercrimeType !== TYPE_CYBERCRIME_ACHAT_NON_RECU) {
@@ -390,7 +432,11 @@ watch(
       setFieldValue("moyenPaiementAutre", "");
       setFieldValue("ibanBeneficiaire", "");
       setFieldValue("comptePaypalBeneficiaire", "");
+      setFieldValue("numeroTransactionPaypal", "");
       setFieldValue("numeroTwintBeneficiaire", "");
+      setFieldValue("typeCryptoMonnaie", "");
+      setFieldValue("montantUnitesCrypto", "");
+      setFieldValue("adresseWalletExpediteur", "");
       setFieldValue("adresseWalletCrypto", "");
       setFieldValue("hashTransactionCrypto", "");
       setFieldValue("societeBeneficiaire", "");
@@ -400,10 +446,6 @@ watch(
       setFieldValue("preuvePaiementDocument", []);
       setFieldValue("preuvePaiementIndisponible", false);
       setFieldValue("raisonAbsencePreuvePaiement", "");
-      setFieldValue("copieIdentiteTransmiseAuteur", null);
-      setFieldValue("copieIdentiteTransmiseAuteurDocument", []);
-      setFieldValue("copieIdentiteAuteurTransmise", null);
-      setFieldValue("copieIdentiteAuteurDocument", []);
     }
 
     if (cybercrimeType !== TYPE_CYBERCRIME_FAUSSE_ANNONCE) {
