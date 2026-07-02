@@ -6,7 +6,17 @@
       <h2 id="recap-title" class="pre-plainte-main-card-title text-h2">{{ t("steps.recapitulatif") }}</h2>
     </section>
 
-    <v-card class="pa-2 pa-md-6 mb-4">
+    <v-alert
+      v-if="isRendezVousOnly"
+      type="info"
+      class="mb-4"
+      density="comfortable"
+      :icon="mobile ? false : undefined"
+    >
+      {{ t("dommages.constatRendezVousOnlyInfo") }}
+    </v-alert>
+
+    <v-card v-if="!isRendezVousOnly" class="pa-2 pa-md-6 mb-4">
       <h2 id="recap-personal-info" class="pre-plainte-main-card-title mb-4 text-h2 text-md-h1 text-wrap">
         {{ t("steps.informationsPersonnelles") }}
       </h2>
@@ -420,7 +430,7 @@
       </v-card-actions>
     </v-card>
 
-    <v-card class="pa-2 pa-md-6 mb-4">
+    <v-card v-if="!isRendezVousOnly" class="pa-2 pa-md-6 mb-4">
       <h2 id="recap-event" class="pre-plainte-main-card-title mb-4 text-h2 text-wrap">
         {{ t("informationsEvenement.titre") }}
       </h2>
@@ -441,7 +451,7 @@
                 <template v-if="!data.typeCybercrime || (data.typeCybercrime !== 'achat-non-recu' && data.typeCybercrime !== 'fausse-annonce')">
                   <v-col cols="12" md="6">
                     <dt id="lbl-dateDebutEvenement">
-                      <v-label class="ge-field-label">{{ t("informationsEvenement.dateDebutEvenement") }}</v-label>
+                      <v-label class="ge-field-label">{{ dateDebutEvenementLabel }}</v-label>
                     </dt>
                     <dd class="ge-field-value text-body-1" aria-labelledby="lbl-dateDebutEvenement">
                       {{ formatDateTimeFrench(toIsoDate(data.dateDebutEvenement)) }}
@@ -450,7 +460,7 @@
 
                   <v-col cols="12" md="6">
                     <dt id="lbl-dateFinEvenement">
-                      <v-label class="ge-field-label">{{ t("informationsEvenement.dateFinEvenement") }}</v-label>
+                      <v-label class="ge-field-label">{{ dateFinEvenementLabel }}</v-label>
                     </dt>
                     <dd class="ge-field-value text-body-1" aria-labelledby="lbl-dateFinEvenement">
                       {{ formatDateTimeFrench(toIsoDate(data.dateFinEvenement)) }}
@@ -1459,24 +1469,6 @@
                   </dd>
                 </v-col>
 
-                <v-col v-if="isFieldVisible('constatPresent') && data.constatPresent !== undefined" cols="12" md="6">
-                  <dt id="lbl-constatPresent">
-                    <v-label class="ge-field-label">{{ t("dommages.constat") }}</v-label>
-                  </dt>
-                  <dd class="ge-field-value text-body-1" aria-labelledby="lbl-constatPresent">
-                    {{ data.constatPresent ? t("common.oui") : t("common.non") }}
-                  </dd>
-                </v-col>
-
-                <v-col v-if="isFieldVisible('dateConstat') && data.dateConstat" cols="12" md="6">
-                  <dt id="lbl-dateConstat">
-                    <v-label class="ge-field-label">{{ t("dommages.constatDate") }}</v-label>
-                  </dt>
-                  <dd class="ge-field-value text-body-1" aria-labelledby="lbl-dateConstat">
-                    {{ data.dateConstat }}
-                  </dd>
-                </v-col>
-
                 <v-col v-if="isFieldVisible('typeCybercrime') && data.typeCybercrime" cols="12">
                   <dt id="lbl-typeCybercrime">
                     <v-label class="ge-field-label">{{ t("cybercrime.type") }}</v-label>
@@ -1606,7 +1598,7 @@
         data-cy="soumettre-preplainte"
         @click="submit"
       >
-        {{ t("submission.soumettrePrePlainte") }}
+        {{ submitButtonLabel }}
       </v-btn>
     </div>
 
@@ -1619,7 +1611,7 @@
         data-cy="soumettre-preplainte"
         @click="submit"
       >
-        {{ t("submission.soumettrePrePlainte") }}
+        {{ submitButtonLabel }}
       </v-btn>
     </div>
 
@@ -1734,6 +1726,10 @@ const isRdvConflict = ref(false);
 const captchaSiteKey = getCaptchaSitekey() || "";
 const captchaEnabled = isCaptchaEnabled();
 const isSubmitDisabled = computed(() => isSubmitting.value || (captchaEnabled && !captchaToken.value));
+const isRendezVousOnly = computed(() => store.isRendezVousOnly());
+const submitButtonLabel = computed(() =>
+  isRendezVousOnly.value ? t("submission.confirmerRendezVous") : t("submission.soumettrePrePlainte"),
+);
 
 const confirmationEmailFixFieldError = ref("");
 
@@ -1756,6 +1752,10 @@ async function tryCreateEsiriusAppointment(demandeId: string): Promise<{ success
       });
       return { success: true, error: "" };
     }
+    const esiriusErrorMessage = getEsiriusErrorMessage(esiriusResult);
+    if (esiriusErrorMessage) {
+      return { success: false, error: esiriusErrorMessage };
+    }
     isRdvConflict.value = true;
     return { success: false, error: t("submission.erreurRendezVousNonDispo") };
   } catch (err) {
@@ -1766,6 +1766,29 @@ async function tryCreateEsiriusAppointment(demandeId: string): Promise<{ success
   }
 }
 
+const getEsiriusErrorMessage = (result: any) => {
+  if (!result) {
+    return "";
+  }
+
+  if (typeof result.message === "string" && result.message.trim()) {
+    return result.message;
+  }
+
+  const details = typeof result.details === "string" ? result.details : "";
+
+  if (details.trim().startsWith("{")) {
+    try {
+      const parsed = JSON.parse(details);
+      return parsed.message || "";
+    } catch {
+      return "";
+    }
+  }
+
+  return details;
+};
+
 const submit = async () => {
   isSubmitting.value = true;
   submitError.value = "";
@@ -1775,6 +1798,11 @@ const submit = async () => {
   try {
     const codeCheckResult = await validateAndVerifyEmailChallengeCode();
     if (!codeCheckResult.success) {
+      return;
+    }
+
+    if (isRendezVousOnly.value) {
+      await finalizeAppointmentSubmission(buildRendezVousOnlyDemandeId());
       return;
     }
 
@@ -1793,6 +1821,12 @@ const submit = async () => {
   } finally {
     isSubmitting.value = false;
   }
+};
+
+const buildRendezVousOnlyDemandeId = () => {
+  const demandeId = `RDV-${generateUuid()}`;
+  store.setDemandeId(demandeId);
+  return demandeId;
 };
 
 const validateAndVerifyEmailChallengeCode = async (): Promise<{ success: boolean }> => {
@@ -2115,6 +2149,17 @@ const isTrajetRenseigne = computed(() => hasAdresseEvenementPrincipale.value && 
 
 const isTiers = computed(() => data.value.lienAvecPersonne === "TIERS");
 const isEntreprise = computed(() => data.value.lienAvecPersonne === "ENTREPRISE");
+const isCommandeFrauduleuse = computed(() => data.value.typeCybercrime === "commande-frauduleuse");
+const dateDebutEvenementLabel = computed(() =>
+  t(isCommandeFrauduleuse.value ? "informationsEvenement.dateCommande" : "informationsEvenement.dateDebutEvenement"),
+);
+const dateFinEvenementLabel = computed(() =>
+  t(
+    isCommandeFrauduleuse.value
+      ? "informationsEvenement.dateLivraisonOuDecouverte"
+      : "informationsEvenement.dateFinEvenement",
+  ),
+);
 
 const formatLienAvecPersonne = (value?: string) => {
   switch (value) {

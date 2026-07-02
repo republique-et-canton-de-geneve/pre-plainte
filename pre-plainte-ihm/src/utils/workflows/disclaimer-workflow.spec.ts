@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   canContinueDisclaimer,
+  isRendezVousOnlyDommage,
   shouldResetTypeCybercrime,
   shouldResetTypeDommage,
   validateDisclaimerConfirmations,
@@ -26,6 +27,11 @@ describe("regles metier du workflow informations generales", () => {
 
         if (regle.champDemande === "Bouton confirmer") {
           expect(validateDisclaimerConfirmations(data)).toBe(example.valid);
+          return;
+        }
+
+        if (regle.champDemande === "Parcours rendez-vous seul") {
+          expect(isRendezVousOnlyDommage(data)).toBe(example.valid);
           return;
         }
 

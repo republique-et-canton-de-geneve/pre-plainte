@@ -69,8 +69,6 @@ export const INCIDENT_FIELDS = {
     "devise",
     "naturesDommage",
     "description",
-    "constatPresent",
-    "dateConstat",
     "adresseConnue",
     "adresseLesee",
     "adresseEvenement",

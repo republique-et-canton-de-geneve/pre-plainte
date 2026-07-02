@@ -31,7 +31,14 @@
       >
         {{ t("common.ajouterAgenda") }}
       </v-btn>
-      <v-btn variant="flat" color="primary" append-icon="mdi-download" class="w-100 mb-2" @click="telechargerPdf">
+      <v-btn
+        v-if="!isRendezVousOnly"
+        variant="flat"
+        color="primary"
+        append-icon="mdi-download"
+        class="w-100 mb-2"
+        @click="telechargerPdf"
+      >
         {{ t("common.telechargerPdf") }}
       </v-btn>
     </div>
@@ -50,7 +57,14 @@
       >
         {{ t("common.ajouterAgenda") }}
       </v-btn>
-      <v-btn variant="flat" color="primary" append-icon="mdi-download" class="mr-4" @click="telechargerPdf">
+      <v-btn
+        v-if="!isRendezVousOnly"
+        variant="flat"
+        color="primary"
+        append-icon="mdi-download"
+        class="mr-4"
+        @click="telechargerPdf"
+      >
         {{ t("common.telechargerPdf") }}
       </v-btn>
     </div>
@@ -78,6 +92,7 @@ const props = defineProps<{ customMessage?: string; customTitle?: string }>();
 
 const store = useCreatePrePlainteStore();
 const { userFormData } = storeToRefs(store);
+const isRendezVousOnly = computed(() => store.isRendezVousOnly());
 
 const telechargerPdf = async () => {
   try {
