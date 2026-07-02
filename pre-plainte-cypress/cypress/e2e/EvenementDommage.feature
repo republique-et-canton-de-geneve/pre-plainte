@@ -1,13 +1,13 @@
 # language: fr
 Fonctionnalité: Informations sur l'événement - dommage
 
-  Règle: Les informations du constat de police sont affichées lorsqu'un dommage avec constat présent est déclaré.
+  Règle: La question du constat de police n'est pas affichée dans l'étape informations sur l'événement.
 
-  Règle: Le fichier du constat de police est obligatoire lorsqu'un constat est présent.
+  Règle: Les photos du dommage sont recommandées mais restent optionnelles.
 
-  Scénario: Dommage avec constat présent - le fichier du constat est obligatoire
-    Etant donné que je suis sur l'étape informations sur l'événement avec un dommage et un constat présent
-    Alors les champs "Date du constat, Constat de police" sont affichés
+  Scénario: Dommage - les photos sont optionnelles
+    Etant donné que je suis sur l'étape informations sur l'événement avec un dommage valide
+    Alors les champs "Date du constat, Constat de police" sont masqués
+    Et le message "Fortement recommandé" s'affiche
     Quand je continue après les informations sur l'événement
-    Alors le message "Veuillez télécharger le constat de police" s'affiche
-    Et je reste sur l'étape informations sur l'événement
+    Alors je vois l'étape "Date et lieu de rendez-vous"
