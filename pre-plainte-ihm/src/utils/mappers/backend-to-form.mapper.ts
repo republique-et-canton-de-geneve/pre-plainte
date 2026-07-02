@@ -482,10 +482,11 @@ export class ReverseMapper {
     const dernierContact = splitIsoDateTime(det?.dateDernierContact);
     const descriptionCybercrime = toSafeString(det?.descriptionCybercrime ?? det?.cybercrimeDescription);
     const addrLivraison = AdresseMapper.fromBackendAdresse(commandeFrauduleuse.adresseLivraison);
+    const addrContrevenant = AdresseMapper.fromBackendAdresse(commandeFrauduleuse.adresseContrevenant);
 
     return {
       ...this.mapCybercrimeCommonFields(det, base, descriptionCybercrime, premierContact, dernierContact),
-      ...this.mapCybercrimeCommandeFrauduleuseFields(det, base, commandeFrauduleuse, addrLivraison),
+      ...this.mapCybercrimeCommandeFrauduleuseFields(det, base, commandeFrauduleuse, addrLivraison, addrContrevenant),
       ...this.mapCybercrimeAchatNonRecuFields(det, base, achatNonRecu),
       ...this.mapCybercrimeFausseAnnonceFields(det, base, fausseAnnonce),
       ...this.mapCybercrimeFiles(det, base),
@@ -514,11 +515,41 @@ export class ReverseMapper {
     base: PrePlainteFormFields,
     commandeFrauduleuse: any,
     addrLivraison: ReturnType<typeof AdresseMapper.fromBackendAdresse>,
+    addrContrevenant: ReturnType<typeof AdresseMapper.fromBackendAdresse>,
   ) {
     return {
       ...this.mapCommandeFrauduleuseInfos(det, base, commandeFrauduleuse),
       ...this.mapCommandeFrauduleuseCoordonnees(det, base, commandeFrauduleuse),
       ...this.mapCommandeFrauduleuseAdresse(base, addrLivraison),
+      ...this.mapCommandeFrauduleuseContrevenant(base, commandeFrauduleuse, addrContrevenant),
+      ...this.mapCommandeFrauduleuseIdentiteFields(det, base, commandeFrauduleuse),
+    };
+  }
+
+  private static mapCommandeFrauduleuseIdentiteFields(det: any, base: PrePlainteFormFields, commandeFrauduleuse: any) {
+    return {
+      copieIdentiteTransmiseAuteur:
+        commandeFrauduleuse?.copieIdentiteTransmiseAuteur ??
+        det?.copieIdentiteTransmiseAuteur ??
+        base.copieIdentiteTransmiseAuteur,
+      copieIdentiteTransmiseAuteurDocumentIndisponible:
+        commandeFrauduleuse?.copieIdentiteTransmiseAuteurDocumentIndisponible ??
+        det?.copieIdentiteTransmiseAuteurDocumentIndisponible ??
+        base.copieIdentiteTransmiseAuteurDocumentIndisponible,
+      raisonAbsenceCopieIdentiteTransmiseAuteur: toSafeString(
+        commandeFrauduleuse?.raisonAbsenceCopieIdentiteTransmiseAuteur ?? det?.raisonAbsenceCopieIdentiteTransmiseAuteur,
+      ),
+      copieIdentiteAuteurTransmise:
+        commandeFrauduleuse?.copieIdentiteAuteurTransmise ??
+        det?.copieIdentiteAuteurTransmise ??
+        base.copieIdentiteAuteurTransmise,
+      copieIdentiteAuteurDocumentIndisponible:
+        commandeFrauduleuse?.copieIdentiteAuteurDocumentIndisponible ??
+        det?.copieIdentiteAuteurDocumentIndisponible ??
+        base.copieIdentiteAuteurDocumentIndisponible,
+      raisonAbsenceCopieIdentiteAuteur: toSafeString(
+        commandeFrauduleuse?.raisonAbsenceCopieIdentiteAuteur ?? det?.raisonAbsenceCopieIdentiteAuteur,
+      ),
     };
   }
 
@@ -559,6 +590,26 @@ export class ReverseMapper {
       livraisonLocalite: addrLivraison.localite ?? base.livraisonLocalite,
       livraisonLocaliteCode: addrLivraison.localiteCode ?? base.livraisonLocaliteCode,
       livraisonPays: addrLivraison.pays ?? base.livraisonPays,
+    };
+  }
+
+  private static mapCommandeFrauduleuseContrevenant(
+    base: PrePlainteFormFields,
+    commandeFrauduleuse: any,
+    addrContrevenant: ReturnType<typeof AdresseMapper.fromBackendAdresse>,
+  ) {
+    return {
+      prenomContrevenant: toSafeString(commandeFrauduleuse?.prenomContrevenant ?? base.prenomContrevenant),
+      nomContrevenant: toSafeString(commandeFrauduleuse?.nomContrevenant ?? base.nomContrevenant),
+      siteWebContrevenant: toSafeString(commandeFrauduleuse?.siteWebContrevenant ?? base.siteWebContrevenant),
+      moyenPaiementNumeriqueDebite:
+        commandeFrauduleuse?.moyenPaiementNumeriqueDebite ?? base.moyenPaiementNumeriqueDebite,
+      contrevenantAdresse: addrContrevenant.adresse ?? base.contrevenantAdresse,
+      contrevenantAdressePostale: addrContrevenant.adressePostale ?? base.contrevenantAdressePostale,
+      contrevenantNpa: addrContrevenant.npa ?? base.contrevenantNpa,
+      contrevenantLocalite: addrContrevenant.localite ?? base.contrevenantLocalite,
+      contrevenantLocaliteCode: addrContrevenant.localiteCode ?? base.contrevenantLocaliteCode,
+      contrevenantPays: addrContrevenant.pays ?? base.contrevenantPays,
     };
   }
 
@@ -655,7 +706,11 @@ export class ReverseMapper {
     return {
       ibanBeneficiaire: toSafeString(achatNonRecu?.ibanBeneficiaire ?? det?.ibanBeneficiaire,),
       comptePaypalBeneficiaire: toSafeString(achatNonRecu?.comptePaypalBeneficiaire ?? det?.comptePaypalBeneficiaire,),
+      numeroTransactionPaypal: toSafeString(achatNonRecu?.numeroTransactionPaypal ?? det?.numeroTransactionPaypal,),
       numeroTwintBeneficiaire: toSafeString(achatNonRecu?.numeroTwintBeneficiaire ?? det?.numeroTwintBeneficiaire,),
+      typeCryptoMonnaie: toSafeString(achatNonRecu?.typeCryptoMonnaie ?? det?.typeCryptoMonnaie,),
+      montantUnitesCrypto: toSafeString(achatNonRecu?.montantUnitesCrypto ?? det?.montantUnitesCrypto,),
+      adresseWalletExpediteur: toSafeString(achatNonRecu?.adresseWalletExpediteur ?? det?.adresseWalletExpediteur,),
       adresseWalletCrypto: toSafeString(achatNonRecu?.adresseWalletCrypto ?? det?.adresseWalletCrypto,),
       hashTransactionCrypto: toSafeString(achatNonRecu?.hashTransactionCrypto ?? det?.hashTransactionCrypto,),
       societeBeneficiaire: toSafeString(achatNonRecu?.societeBeneficiaire ?? det?.societeBeneficiaire,),
@@ -677,10 +732,24 @@ export class ReverseMapper {
         achatNonRecu?.copieIdentiteTransmiseAuteur ??
         det?.copieIdentiteTransmiseAuteur ??
         base.copieIdentiteTransmiseAuteur,
+      copieIdentiteTransmiseAuteurDocumentIndisponible:
+        achatNonRecu?.copieIdentiteTransmiseAuteurDocumentIndisponible ??
+        det?.copieIdentiteTransmiseAuteurDocumentIndisponible ??
+        base.copieIdentiteTransmiseAuteurDocumentIndisponible,
+      raisonAbsenceCopieIdentiteTransmiseAuteur: toSafeString(
+        achatNonRecu?.raisonAbsenceCopieIdentiteTransmiseAuteur ?? det?.raisonAbsenceCopieIdentiteTransmiseAuteur,
+      ),
       copieIdentiteAuteurTransmise:
         achatNonRecu?.copieIdentiteAuteurTransmise ??
         det?.copieIdentiteAuteurTransmise ??
         base.copieIdentiteAuteurTransmise,
+      copieIdentiteAuteurDocumentIndisponible:
+        achatNonRecu?.copieIdentiteAuteurDocumentIndisponible ??
+        det?.copieIdentiteAuteurDocumentIndisponible ??
+        base.copieIdentiteAuteurDocumentIndisponible,
+      raisonAbsenceCopieIdentiteAuteur: toSafeString(
+        achatNonRecu?.raisonAbsenceCopieIdentiteAuteur ?? det?.raisonAbsenceCopieIdentiteAuteur,
+      ),
     };
   }
 
@@ -779,7 +848,11 @@ export class ReverseMapper {
       moyenPaiementAutre: base.moyenPaiementAutre,
       ibanBeneficiaire: base.ibanBeneficiaire,
       comptePaypalBeneficiaire: base.comptePaypalBeneficiaire,
+      numeroTransactionPaypal: base.numeroTransactionPaypal,
       numeroTwintBeneficiaire: base.numeroTwintBeneficiaire,
+      typeCryptoMonnaie: base.typeCryptoMonnaie,
+      montantUnitesCrypto: base.montantUnitesCrypto,
+      adresseWalletExpediteur: base.adresseWalletExpediteur,
       adresseWalletCrypto: base.adresseWalletCrypto,
       hashTransactionCrypto: base.hashTransactionCrypto,
       societeBeneficiaire: base.societeBeneficiaire,
@@ -791,8 +864,12 @@ export class ReverseMapper {
       raisonAbsencePreuvePaiement: base.raisonAbsencePreuvePaiement,
       copieIdentiteTransmiseAuteur: base.copieIdentiteTransmiseAuteur,
       copieIdentiteTransmiseAuteurDocument: base.copieIdentiteTransmiseAuteurDocument,
+      copieIdentiteTransmiseAuteurDocumentIndisponible: base.copieIdentiteTransmiseAuteurDocumentIndisponible,
+      raisonAbsenceCopieIdentiteTransmiseAuteur: base.raisonAbsenceCopieIdentiteTransmiseAuteur,
       copieIdentiteAuteurTransmise: base.copieIdentiteAuteurTransmise,
       copieIdentiteAuteurDocument: base.copieIdentiteAuteurDocument,
+      copieIdentiteAuteurDocumentIndisponible: base.copieIdentiteAuteurDocumentIndisponible,
+      raisonAbsenceCopieIdentiteAuteur: base.raisonAbsenceCopieIdentiteAuteur,
       urlComplete: base.urlComplete,
       titreAnnonce: base.titreAnnonce,
       nomBailleur: base.nomBailleur,

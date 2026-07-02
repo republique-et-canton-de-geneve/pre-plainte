@@ -108,7 +108,7 @@ class SuisseEpoliceEventMapperTest {
 
     assertNotNull(result);
     assertEquals(Ech051Constants.EVENT_KEY, result.getKey());
-    assertEquals(TypeIncident.VOL.jsonValue(), result.getDescriptionShort());
+    assertEquals(Ech051Constants.PRE_PLAINTE_EN_LIGNE, result.getDescriptionShort());
     assertEquals(LocalDate.now().toString(), result.getComplaintDate());
     assertEquals("2026-01-01", result.getActionPeriod().getFrom());
     assertEquals("2026-01-02", result.getActionPeriod().getTo());
@@ -117,8 +117,7 @@ class SuisseEpoliceEventMapperTest {
     assertNull(result.getBootyAmount());
     assertNull(result.getLocality());
     assertNull(result.getModeOperandi());
-    assertNotNull(result.getTypeOfCrime());
-    assertEquals(Ech051Constants.TYPE_OF_CRIME_VOL_CODE, result.getTypeOfCrime().getCode());
+    assertNull(result.getTypeOfCrime());
   }
 
   @Test
@@ -303,6 +302,30 @@ class SuisseEpoliceEventMapperTest {
     assertEquals("Route des Acacias 10", result.getActionPlace().getStreet());
     assertEquals("Carouge", result.getActionPlace().getCityArea());
     assertEquals("6608", result.getActionPlace().getPlace().getCode());
+  }
+
+  @Test
+  void shouldBuildTwoEventsForAchatNonRecu() {
+    Cybercrime cybercrime = new Cybercrime();
+    cybercrime.setTypeCybercrime(TypeCybercrime.ACHAT_NON_RECU);
+    cybercrime.setAchatNonRecu(new AchatNonRecu());
+    cybercrime.setDescriptionCybercrime("Déroulement des faits");
+    cybercrime.setDatePremierContact("2026-07-01");
+    cybercrime.setDateDernierContact("2026-07-01");
+
+    List<Event> events = mapper.buildEvents(cybercrime, null);
+
+    assertEquals(2, events.size());
+    assertEquals(Ech051Constants.EVENT_KEY, events.get(0).getKey());
+    assertEquals(Ech051Constants.EVENT_KEY_PAYMENT, events.get(1).getKey());
+    assertEquals("Déroulement des faits", events.get(0).getFacts());
+    assertEquals("Déroulement des faits", events.get(1).getFacts());
+    assertNull(events.get(0).getModeOperandi());
+    assertNull(events.get(0).getTypeOfCrime());
+    assertNull(events.get(1).getModeOperandi());
+    assertNull(events.get(1).getTypeOfCrime());
+    assertNotNull(events.get(1).getActionPlace().getCountry());
+    assertEquals(Ech051Constants.COUNTRY_UNKNOWN_RIPOL_CODE, events.get(1).getActionPlace().getCountry().getCode());
   }
 
   @Test
