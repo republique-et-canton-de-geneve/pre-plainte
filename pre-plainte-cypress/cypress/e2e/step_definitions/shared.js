@@ -454,6 +454,7 @@ When("je saisis {string} dans le champ {string}", (valeur, champ) => {
 
 When("je renseigne le type de véhicule {string}", (typeVehicule) => {
   selectVisibleOption("Catégorie d'objet", "Véhicule");
+  cy.wait("@getRipolVehicleTypes");
   fieldRoot("Type de l'objet")
     .should(bevisible)
     .within(() => {
