@@ -77,6 +77,14 @@ class DommageMaterielTest {
   }
 
   @Test
+  void shouldPassWhenConstatPresentMissingForOtherDamage() {
+    dommage.setTypeDommage(TypeDommage.AUTRE);
+    dommage.setConstatPresent(null);
+
+    assertDoesNotThrow(dommage::champsObligatoireIncident);
+  }
+
+  @Test
   void shouldThrowWhenDateConstatMissingIfConstatTrue() {
     dommage.setConstatPresent(true);
     dommage.setDateConstat(null);
