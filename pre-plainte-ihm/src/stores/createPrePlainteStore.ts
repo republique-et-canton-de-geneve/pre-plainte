@@ -16,6 +16,7 @@ import {
   saveEmailChallengeKey,
 } from "@/utils/validations/field-validation.utils";
 import { getInitialFormData } from "@/utils/form/initial-form-data";
+import { isRendezVousOnlyDommage } from "@/utils/workflows/disclaimer-workflow";
 
 export const useCreatePrePlainteStore = defineStore("createPrePlainte", () => {
   const initialFormData = getInitialFormData();
@@ -77,8 +78,10 @@ export const useCreatePrePlainteStore = defineStore("createPrePlainte", () => {
     resetCaptchaToken();
   };
 
+  const isRendezVousOnly = () => isRendezVousOnlyDommage(userFormData);
+
   const nextStep = () => {
-    const next = getNextStep(step.value);
+    const next = isRendezVousOnly() && step.value === 2 ? 5 : getNextStep(step.value);
     if (next) {
       isLoading.value = true;
       setTimeout(() => {
@@ -91,7 +94,7 @@ export const useCreatePrePlainteStore = defineStore("createPrePlainte", () => {
   };
 
   const prevStep = () => {
-    const prev = getPreviousStep(step.value);
+    const prev = isRendezVousOnly() && step.value === 5 ? 2 : getPreviousStep(step.value);
     if (prev) {
       step.value = prev;
       return true;
@@ -171,5 +174,6 @@ export const useCreatePrePlainteStore = defineStore("createPrePlainte", () => {
     clearCurrentAppointment,
     demandeId,
     setDemandeId,
+    isRendezVousOnly,
   };
 });

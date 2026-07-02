@@ -1,6 +1,7 @@
 export interface DisclaimerContinueState {
   typeIncident?: string | null;
   typeDommage?: string | null;
+  constatPresent?: boolean | null;
   typeCybercrime?: string | null;
   confirmeIdentite?: boolean;
   confirmeSituation?: boolean;
@@ -13,6 +14,8 @@ export interface DisclaimerContinueState {
 export const TYPE_CYBERCRIME_AUTRE = "autre";
 export const DEGAT_DELIT_INCIDENT = "degat-delit";
 export const CYBERCRIME_INCIDENT = "cybercrime";
+export const DOMMAGE_VEHICULE = "dommage-vehicule";
+export const DOMMAGE_PROPRIETE = "dommage-propriete";
 
 export function canContinueDisclaimer(state: DisclaimerContinueState): boolean {
   const typeIncident = state.typeIncident ?? "";
@@ -26,12 +29,29 @@ function hasValidIncident(state: DisclaimerContinueState, typeIncident: string):
     return false;
   }
   if (typeIncident === DEGAT_DELIT_INCIDENT) {
-    return Boolean(state.typeDommage);
+    return Boolean(state.typeDommage) && hasValidDommageConstat(state);
   }
   if (typeIncident === CYBERCRIME_INCIDENT) {
     return Boolean(state.typeCybercrime);
   }
   return true;
+}
+
+function hasValidDommageConstat(state: DisclaimerContinueState): boolean {
+  if (!requiresConstatQuestion(state.typeDommage)) {
+    return true;
+  }
+  return state.constatPresent !== undefined && state.constatPresent !== null;
+}
+
+export function requiresConstatQuestion(typeDommage?: string | null): boolean {
+  return typeDommage === DOMMAGE_VEHICULE || typeDommage === DOMMAGE_PROPRIETE;
+}
+
+export function isRendezVousOnlyDommage(state: DisclaimerContinueState): boolean {
+  return state.typeIncident === DEGAT_DELIT_INCIDENT &&
+    requiresConstatQuestion(state.typeDommage) &&
+    state.constatPresent === true;
 }
 
 function hasConfirmedDisclaimer(state: DisclaimerContinueState): boolean {

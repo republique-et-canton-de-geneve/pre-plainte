@@ -319,6 +319,10 @@
     "heureDebutEvenement": "Hora de início do evento",
     "dateFinEvenement": "Data de fim do evento",
     "heureFinEvenement": "Hora de fim do evento",
+    "dateCommande": "Data da encomenda",
+    "heureCommande": "Hora da encomenda",
+    "dateLivraisonOuDecouverte": "Data de entrega ou data de descoberta",
+    "heureLivraisonOuDecouverte": "Hora de entrega ou de descoberta",
     "heureEstimee": "Hora estimada da ocorrência",
     "adresseEvenement": "Local do evento",
     "adresseSuisseUniquement": "A morada do evento deve situar-se exclusivamente na Suíça",
@@ -335,6 +339,10 @@
     "hintHeureDebutEvenement": "Introduza a hora de início do evento",
     "hintDateFinEvenement": "Introduza a data de fim do evento",
     "hintHeureFinEvenement": "Introduza a hora de fim do evento",
+    "hintDateCommande": "Introduza a data da encomenda",
+    "hintHeureCommande": "Introduza a hora da encomenda",
+    "hintDateLivraisonOuDecouverte": "Introduza a data de entrega ou de descoberta",
+    "hintHeureLivraisonOuDecouverte": "Introduza a hora de entrega ou de descoberta",
     "hintLieu": "Selecione o tipo de local onde o incidente ocorreu"
   },
   "incidentTypes": {
@@ -590,6 +598,8 @@
     "constatDate": "Data do auto",
     "constatPoliceFichiers": "Auto policial",
     "constatPoliceWarning": "Antes de continuar o seu pedido, solicite à polícia a constatação do dano ligando para o 117. Pode guardar o rascunho da pré-queixa para a finalizar depois da redação do auto. Para isso, clique no botão \"Guardar e voltar mais tarde\" situado no fim da página.",
+    "constatRendezVousOnlyInfo": "Já foi elaborado um auto policial. Só tem de marcar uma consulta, sem preencher as etapas de informações pessoais e do evento.",
+    "photosRecommandees": "Fortemente recomendado",
     "hintTypeDommage": "Selecione o tipo de dano",
     "hintMontantEstime": "Indique o montante estimado dos danos em algarismos",
     "hintNatureDommage": "Selecione a natureza do dano observado",
@@ -809,6 +819,7 @@
   },
   "submission": {
     "soumettrePrePlainte": "Submeter a pré-queixa",
+    "confirmerRendezVous": "Confirmar a marcação",
     "formulaireComplet": "O seu pedido de pré-queixa foi recebido",
     "envoiEnCours": "Envio em curso...",
     "envoi": "A enviar...",
