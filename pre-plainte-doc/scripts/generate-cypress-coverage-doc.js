@@ -91,7 +91,7 @@ const describeCoverage = (feature) => {
     "Accès au formulaire": "Conditions d'accès au formulaire et passage vers la vérification de l'adresse e-mail.",
     "Informations personnelles": "Affichages conditionnels et validations bloquantes de l'étape informations personnelles.",
     "Informations sur l'événement - cybercrime": "Champs et validations spécifiques à un achat non reçu.",
-    "Informations sur l'événement - dommage": "Champs et validations spécifiques à un dommage avec constat présent.",
+    "Informations sur l'événement - dommage": "Champs et validations spécifiques à un dommage avec photos optionnelles.",
     "Informations sur l'événement - vol": "Validations bloquantes et affichages conditionnels liés à un vol.",
     "Parcours nominal complet": "Soumission de la pré-plainte et gestion des erreurs d'intégration au récapitulatif.",
     "Rendez-vous": "Sélection obligatoire d'un créneau et filtrage des services de rendez-vous.",

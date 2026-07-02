@@ -46,13 +46,14 @@ function formatTime(datetime: string, fallback: string) {
 }
 
 function mapEsiriusUser(userData: any, demandeId: string | null) {
+  const email = userData.email ?? "";
   return {
-    lastName: userData.nom,
-    firstName: userData.prenom,
+    lastName: userData.nom || email || demandeId || "",
+    firstName: userData.prenom || "",
     personalIdentity: null,
     fixPhone: demandeId,
     birthday: toIsoDate(userData.dateNaissance),
-    email: userData.email,
+    email,
     phone: normalizePhone(userData.telephone),
     address: mapAddress(userData),
   };
