@@ -22,6 +22,7 @@ export const STEPS = [
 export const TOTAL_STEPS = 7;
 
 export const STEP_UPDATE_APPOINTMENT_VALIDATION = 3;
+export const STEP_RENDEZ_VOUS = 5;
 
 export const LIENS_AVEC_PERSONNE = [
   {
@@ -187,7 +188,7 @@ export const CATEGORIES_OBJETS = [
       { value: "avions", labelKey: "sousCategories.avions", prefixes: ["400", "401", "403"] },
     ],
   },
-/* La catégorie plaque ne doit pas être disponible pour la V1 mais sera certainement demandée par la suite
+  /* La catégorie plaque ne doit pas être disponible pour la V1 mais sera certainement demandée par la suite
   {
     value: "plaque",
     labelKey: "categoriesObjets.plaque",
@@ -470,7 +471,7 @@ export const MAX_TOTAL_SIZE_70_MO = MAX_TOTAL_SIZE_UPLOAD_70_MO * BYTES_PER_MEGA
 export const MAX_FILES = 10;
 
 const PDF = { B1: 0x25, B2: 0x50, B3: 0x44, B4: 0x46 } as const;
-const PNG = { B1: 0x89, B2: 0x50, B3: 0x4e, B4: 0x47,} as const;
+const PNG = { B1: 0x89, B2: 0x50, B3: 0x4e, B4: 0x47 } as const;
 const JPG = { B1: 0xff, B2: 0xd8 } as const;
 const TIFF_LE = { B1: 0x49, B2: 0x49 } as const;
 const TIFF_BE = { B1: 0x4d, B2: 0x4d } as const;

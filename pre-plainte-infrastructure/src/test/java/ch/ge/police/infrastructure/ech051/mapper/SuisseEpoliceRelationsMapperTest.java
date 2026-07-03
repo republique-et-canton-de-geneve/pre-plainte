@@ -8,6 +8,7 @@ import ch.ge.police.core.domain.model.event.cybercrime.common.TypeCybercrime;
 import ch.ge.police.infrastructure.ech051.Ech051Constants;
 import ch.ge.police.infrastructure.ech051.dto.Ech0051DocumentPayload.BusinessCase;
 import ch.ge.police.infrastructure.ech051.dto.Ech0051DocumentPayload.Event;
+import ch.ge.police.infrastructure.ech051.dto.Ech0051DocumentPayload.FinancialTransaction;
 import ch.ge.police.infrastructure.ech051.dto.Ech0051DocumentPayload.LegalIdentity;
 import ch.ge.police.infrastructure.ech051.dto.Ech0051DocumentPayload.NaturalIdentity;
 import ch.ge.police.infrastructure.ech051.dto.Ech0051DocumentPayload.ObjectItem;
@@ -215,7 +216,7 @@ class SuisseEpoliceRelationsMapperTest {
         .naturalIdentity(NaturalIdentity.builder().key("8").identityCategory(Ech051Constants.IDENTITY_CATEGORY_UNKNOWN).build())
         .build();
     List<Person> persons = List.of(victim, accused);
-    List<Event> events = List.of(event("E1"));
+    List<Event> events = achatNonRecuEvents();
     BusinessCase businessCase = businessCase("B1");
 
     AchatNonRecu achat = new AchatNonRecu();
@@ -237,11 +238,11 @@ class SuisseEpoliceRelationsMapperTest {
     assertEquals(0, size(result.getObjectPersonLinks()));
     assertEquals("IBAN", result.getFinancialTransactions().getFirst().getPaymentType());
     assertNull(result.getFinancialTransactions().getFirst().getTransactionNumber());
-    assertEquals("Ricardo", result.getFinancialTransactions().getFirst().getPlatformType());
-    assertEquals("RID-778899", result.getFinancialTransactions().getFirst().getPlatformId());
-    assertEquals("inconnu", result.getFinancialTransactions().getFirst().getAccountSend());
+    assertNull(result.getFinancialTransactions().getFirst().getPlatformType());
+    assertNull(result.getFinancialTransactions().getFirst().getPlatformId());
+    assertEquals("Inconnu", result.getFinancialTransactions().getFirst().getAccountSend());
     assertEquals("CH93-0076-2011-6238-5295-7", result.getFinancialTransactions().getFirst().getAccountReceive());
-    assertEquals("E1", result.getFinancialTransactions().getFirst().getEventRef());
+    assertEquals(Ech051Constants.EVENT_KEY_PAYMENT, result.getFinancialTransactions().getFirst().getEventRef());
     assertEquals(Ech051Constants.PERSON_KEY_TIERS, result.getFinancialTransactions().getFirst().getPersonSendRef());
     assertEquals("8", result.getFinancialTransactions().getFirst().getPersonReceiveRef());
   }
@@ -249,10 +250,12 @@ class SuisseEpoliceRelationsMapperTest {
   @Test
   void shouldBuildFinancialTransactionForPaypal() {
     Relations result = buildFinancialTransactionRelations(MoyenPaiement.PAYPAL, achat -> {
-      achat.setComptePaypalBeneficiaire("buyer@paypal.test");
+      achat.setComptePaypalBeneficiaire("adresse-email@beneficiaire.test");
+      achat.setNumeroTransactionPaypal("074343243");
     });
-    assertEquals("buyer@paypal.test", result.getFinancialTransactions().getFirst().getAccountReceive());
-    assertEquals("buyer@paypal.test", result.getFinancialTransactions().getFirst().getTransactionNumber());
+    assertEquals("adresse-email@beneficiaire.test", result.getFinancialTransactions().getFirst().getAccountReceive());
+    assertEquals("074343243", result.getFinancialTransactions().getFirst().getTransactionNumber());
+    assertEquals("PAYPAL", result.getFinancialTransactions().getFirst().getPaymentType());
   }
 
   @Test
@@ -261,19 +264,25 @@ class SuisseEpoliceRelationsMapperTest {
       achat.setNumeroTwintBeneficiaire("+41790000000");
     });
     assertEquals("+41790000000", result.getFinancialTransactions().getFirst().getAccountReceive());
-    assertEquals("+41790000000", result.getFinancialTransactions().getFirst().getTransactionNumber());
+    assertNull(result.getFinancialTransactions().getFirst().getTransactionNumber());
   }
 
   @Test
   void shouldBuildFinancialTransactionForCrypto() {
     Relations result = buildFinancialTransactionRelations(MoyenPaiement.CRYPTO, achat -> {
-      achat.setAdresseWalletCrypto("0xabc");
-      achat.setMontantDelitAchatLigne("1.5");
+      achat.setTypeCryptoMonnaie("Bitcoin");
+      achat.setMontantUnitesCrypto("20.00000");
+      achat.setAdresseWalletExpediteur("wallet-expediteur");
+      achat.setAdresseWalletCrypto("wallet-destinataire");
       achat.setHashTransactionCrypto("0xhash");
     });
-    assertEquals("0xabc", result.getFinancialTransactions().getFirst().getAccountReceive());
-    assertEquals("1.5", result.getFinancialTransactions().getFirst().getCryptoCurrencyUnits());
-    assertEquals("0xhash", result.getFinancialTransactions().getFirst().getTransactionNumber());
+    FinancialTransaction tx = result.getFinancialTransactions().getFirst();
+    assertEquals(Ech051Constants.PAYMENT_TYPE_CRYPTO, tx.getPaymentType());
+    assertEquals("wallet-expediteur", tx.getAccountSend());
+    assertEquals("wallet-destinataire", tx.getAccountReceive());
+    assertEquals("Bitcoin", tx.getCryptoCurrency());
+    assertEquals("20.00000", tx.getCryptoCurrencyUnits());
+    assertNull(tx.getTransactionNumber());
   }
 
   @Test
@@ -311,7 +320,7 @@ class SuisseEpoliceRelationsMapperTest {
         .legalIdentity(LegalIdentity.builder().currentName("aucune").build())
         .build();
     List<Person> persons = List.of(victim, notAccused);
-    List<Event> events = List.of(event("E1"));
+    List<Event> events = achatNonRecuEvents();
     BusinessCase businessCase = businessCase("B1");
 
     AchatNonRecu achat = new AchatNonRecu();
@@ -331,6 +340,59 @@ class SuisseEpoliceRelationsMapperTest {
     assertNull(result.getFinancialTransactions().getFirst().getPersonReceiveRef());
   }
 
+  @Test
+  void shouldBuildAchatNonRecuObjectAndBeneficiaryLinks() {
+    Person victim = person(Ech051Constants.PERSON_KEY_TIERS);
+    Person seller = Person.builder()
+        .key("8")
+        .naturalIdentity(NaturalIdentity.builder().key("7").identityCategory(Ech051Constants.IDENTITY_CATEGORY_UNKNOWN).build())
+        .build();
+    Person beneficiary = Person.builder()
+        .key("10")
+        .naturalIdentity(NaturalIdentity.builder().key("9").identityCategory(Ech051Constants.IDENTITY_CATEGORY_UNKNOWN).build())
+        .build();
+    ObjectItem undelivered = ObjectItem.builder()
+        .key(Ech051Constants.OBJECT_KEY_CYBER_UNDELIVERED_ITEM)
+        .description("Article non livré")
+        .realValue("44343")
+        .build();
+    ObjectItem identity = ObjectItem.builder()
+        .key(Ech051Constants.OBJECT_KEY_CYBER_VICTIM_IDENTITY)
+        .build();
+
+    AchatNonRecu achat = new AchatNonRecu();
+    achat.setMoyenPaiement(MoyenPaiement.TWINT);
+    achat.setNumeroTwintBeneficiaire("0789054467");
+    achat.setDateOperation("2026-07-01");
+
+    Cybercrime cybercrime = new Cybercrime();
+    cybercrime.setTypeCybercrime(TypeCybercrime.ACHAT_NON_RECU);
+    cybercrime.setAchatNonRecu(achat);
+
+    Relations result = mapper.buildRelations(
+        List.of(victim, seller, beneficiary),
+        achatNonRecuEvents(),
+        List.of(undelivered, identity),
+        List.of(),
+        businessCase("B1"),
+        DeclarationType.INDIVIDUAL,
+        cybercrime
+    );
+
+    assertEquals(2, size(result.getEventBusinessCaseLinks()));
+    assertEquals(1, size(result.getEventObjectLinks()));
+    assertEquals(Ech051Constants.EVENT_KEY, result.getEventObjectLinks().getFirst().getEventRef());
+    assertEquals(2, size(result.getObjectPersonLinks()));
+    assertTrue(result.getObjectPersonLinks().stream()
+        .anyMatch(link -> Ech051Constants.OBJECT_KEY_CYBER_VICTIM_IDENTITY.equals(link.getObjectRef())
+            && link.getPersonRole() == null));
+    assertEquals("10", result.getFinancialTransactions().getFirst().getPersonReceiveRef());
+    assertEquals(Ech051Constants.EVENT_KEY_PAYMENT, result.getFinancialTransactions().getFirst().getEventRef());
+    assertEquals("0789054467", result.getFinancialTransactions().getFirst().getAccountReceive());
+    assertNull(result.getFinancialTransactions().getFirst().getTransactionNumber());
+    assertTrue(result.getPersonLinks().size() >= 4);
+  }
+
   private Relations buildFinancialTransactionRelations(
       MoyenPaiement moyen,
       java.util.function.Consumer<AchatNonRecu> customizeAchat
@@ -341,7 +403,7 @@ class SuisseEpoliceRelationsMapperTest {
         .naturalIdentity(NaturalIdentity.builder().key("8").identityCategory(Ech051Constants.IDENTITY_CATEGORY_UNKNOWN).build())
         .build();
     List<Person> persons = List.of(victim, accused);
-    List<Event> events = List.of(event("E1"));
+    List<Event> events = achatNonRecuEvents();
     BusinessCase businessCase = businessCase("B1");
 
     AchatNonRecu achat = new AchatNonRecu();
@@ -356,6 +418,10 @@ class SuisseEpoliceRelationsMapperTest {
     cybercrime.setAchatNonRecu(achat);
 
     return mapper.buildRelations(persons, events, List.of(), List.of(), businessCase, DeclarationType.INDIVIDUAL, cybercrime);
+  }
+
+  private static List<Event> achatNonRecuEvents() {
+    return List.of(event(Ech051Constants.EVENT_KEY), event(Ech051Constants.EVENT_KEY_PAYMENT));
   }
 
   private static Person person(String key) {

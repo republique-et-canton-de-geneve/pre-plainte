@@ -26,6 +26,16 @@ type IncidentCommonInfoData = {
   addrEventSecondaire: ReturnType<typeof AdresseMapper.fromBackendAdresse>;
 };
 
+const firstDefined = <T>(...values: T[]): T | undefined => values.find(value => value !== undefined && value !== null);
+
+type UnknownRecord = Record<string, unknown> | null | undefined;
+
+const sourceField = (source: UnknownRecord, fallback: UnknownRecord, field: string) =>
+  firstDefined(source?.[field], fallback?.[field]);
+
+const sourceStringField = (source: UnknownRecord, fallback: UnknownRecord, field: string) =>
+  toSafeString(sourceField(source, fallback, field));
+
 /**
  * Mapper inverse : Backend DTO vers Frontend Form.
  * Structure découpée (vol/dommage/cyber + adresse événement) comme sur dev,
@@ -64,13 +74,7 @@ export class ReverseMapper {
       ...this.mapIdentityInfo(infos, base, addrPers),
       ...this.mapTiersInfo(tiers, base, addrTiers),
       ...this.mapOrganisationInfo(org, base, addrOrg),
-      ...this.mapIncidentCommonInfo(
-        det,
-        base,
-        typeIncident,
-        context,
-        incidentData,
-      ),
+      ...this.mapIncidentCommonInfo(det, base, typeIncident, context, incidentData),
       ...this.mapIncidentSpecificFields(det, base, context),
       ...this.mapRendezVousInfo(base),
     };
@@ -137,11 +141,7 @@ export class ReverseMapper {
       typeIncident,
       ...this.mapIncidentDates(base, data.debutEvenement, data.finEvenement),
       ...this.mapIncidentMainAddress(det, base, data.addrEvent, incidentAddressSource),
-      ...this.mapIncidentSecondaryAddress(
-        base,
-        data.addrEventSecondaire,
-        incidentAddressSource,
-      ),
+      ...this.mapIncidentSecondaryAddress(base, data.addrEventSecondaire, incidentAddressSource),
     };
   }
 
@@ -482,10 +482,11 @@ export class ReverseMapper {
     const dernierContact = splitIsoDateTime(det?.dateDernierContact);
     const descriptionCybercrime = toSafeString(det?.descriptionCybercrime ?? det?.cybercrimeDescription);
     const addrLivraison = AdresseMapper.fromBackendAdresse(commandeFrauduleuse.adresseLivraison);
+    const addrContrevenant = AdresseMapper.fromBackendAdresse(commandeFrauduleuse.adresseContrevenant);
 
     return {
       ...this.mapCybercrimeCommonFields(det, base, descriptionCybercrime, premierContact, dernierContact),
-      ...this.mapCybercrimeCommandeFrauduleuseFields(det, base, commandeFrauduleuse, addrLivraison),
+      ...this.mapCybercrimeCommandeFrauduleuseFields(det, base, commandeFrauduleuse, addrLivraison, addrContrevenant),
       ...this.mapCybercrimeAchatNonRecuFields(det, base, achatNonRecu),
       ...this.mapCybercrimeFausseAnnonceFields(det, base, fausseAnnonce),
       ...this.mapCybercrimeFiles(det, base),
@@ -514,12 +515,19 @@ export class ReverseMapper {
     base: PrePlainteFormFields,
     commandeFrauduleuse: any,
     addrLivraison: ReturnType<typeof AdresseMapper.fromBackendAdresse>,
+    addrContrevenant: ReturnType<typeof AdresseMapper.fromBackendAdresse>,
   ) {
     return {
       ...this.mapCommandeFrauduleuseInfos(det, base, commandeFrauduleuse),
       ...this.mapCommandeFrauduleuseCoordonnees(det, base, commandeFrauduleuse),
       ...this.mapCommandeFrauduleuseAdresse(base, addrLivraison),
+      ...this.mapCommandeFrauduleuseContrevenant(base, commandeFrauduleuse, addrContrevenant),
+      ...this.mapCommandeFrauduleuseIdentiteFields(det, base, commandeFrauduleuse),
     };
+  }
+
+  private static mapCommandeFrauduleuseIdentiteFields(det: any, base: PrePlainteFormFields, commandeFrauduleuse: any) {
+    return this.mapCybercrimeIdentiteFields(commandeFrauduleuse, det, base);
   }
 
   private static mapCommandeFrauduleuseInfos(det: any, base: PrePlainteFormFields, commandeFrauduleuse: any) {
@@ -539,9 +547,7 @@ export class ReverseMapper {
         commandeFrauduleuse?.emailCommandeInconnu ?? det?.emailCommandeInconnu ?? base.emailCommandeInconnu,
       emailCommande: toSafeString(commandeFrauduleuse?.emailCommande ?? det?.emailCommande),
       telephoneCommandeInconnu:
-        commandeFrauduleuse?.telephoneCommandeInconnu ??
-        det?.telephoneCommandeInconnu ??
-        base.telephoneCommandeInconnu,
+        commandeFrauduleuse?.telephoneCommandeInconnu ?? det?.telephoneCommandeInconnu ?? base.telephoneCommandeInconnu,
       telephoneCommande: toSafeString(commandeFrauduleuse?.telephoneCommande ?? det?.telephoneCommande),
       livraisonAdresseLesee:
         commandeFrauduleuse?.livraisonAdresseLesee ?? det?.livraisonAdresseLesee ?? base.livraisonAdresseLesee,
@@ -562,11 +568,36 @@ export class ReverseMapper {
     };
   }
 
-  private static mapCybercrimeAchatNonRecuFields(
-    det: any,
+  private static mapCommandeFrauduleuseContrevenant(
     base: PrePlainteFormFields,
-    achatNonRecu: any,
+    commandeFrauduleuse: any,
+    addrContrevenant: ReturnType<typeof AdresseMapper.fromBackendAdresse>,
   ) {
+    return {
+      prenomContrevenant: toSafeString(commandeFrauduleuse?.prenomContrevenant ?? base.prenomContrevenant),
+      nomContrevenant: toSafeString(commandeFrauduleuse?.nomContrevenant ?? base.nomContrevenant),
+      siteWebContrevenant: toSafeString(commandeFrauduleuse?.siteWebContrevenant ?? base.siteWebContrevenant),
+      moyenPaiementNumeriqueDebite:
+        commandeFrauduleuse?.moyenPaiementNumeriqueDebite ?? base.moyenPaiementNumeriqueDebite,
+      ...this.mapCommandeFrauduleuseContrevenantAdresse(base, addrContrevenant),
+    };
+  }
+
+  private static mapCommandeFrauduleuseContrevenantAdresse(
+    base: PrePlainteFormFields,
+    addrContrevenant: ReturnType<typeof AdresseMapper.fromBackendAdresse>,
+  ) {
+    return {
+      contrevenantAdresse: addrContrevenant.adresse ?? base.contrevenantAdresse,
+      contrevenantAdressePostale: addrContrevenant.adressePostale ?? base.contrevenantAdressePostale,
+      contrevenantNpa: addrContrevenant.npa ?? base.contrevenantNpa,
+      contrevenantLocalite: addrContrevenant.localite ?? base.contrevenantLocalite,
+      contrevenantLocaliteCode: addrContrevenant.localiteCode ?? base.contrevenantLocaliteCode,
+      contrevenantPays: addrContrevenant.pays ?? base.contrevenantPays,
+    };
+  }
+
+  private static mapCybercrimeAchatNonRecuFields(det: any, base: PrePlainteFormFields, achatNonRecu: any) {
     return {
       ...this.mapCybercrimeAchatNonRecuContactFields(det, achatNonRecu),
       ...this.mapCybercrimeAchatNonRecuVendeurFields(det, base, achatNonRecu),
@@ -576,15 +607,10 @@ export class ReverseMapper {
     };
   }
 
-  private static mapCybercrimeAchatNonRecuContactFields(
-    det: any,
-    achatNonRecu: any,
-  ) {
+  private static mapCybercrimeAchatNonRecuContactFields(det: any, achatNonRecu: any) {
     return {
-      montantDelitAchatLigne: toSafeString(achatNonRecu?.montantDelitAchatLigne ?? det?.montantDelitAchatLigne),
-      articleNonLivreDescription: toSafeString(
-        achatNonRecu?.articleNonLivreDescription ?? det?.articleNonLivreDescription,
-      ),
+      montantDelitAchatLigne: sourceStringField(achatNonRecu, det, "montantDelitAchatLigne"),
+      articleNonLivreDescription: sourceStringField(achatNonRecu, det, "articleNonLivreDescription"),
     };
   }
 
@@ -599,25 +625,27 @@ export class ReverseMapper {
 
   private static mapCybercrimeAchatNonRecuVendeurIdentite(det: any, achatNonRecu: any) {
     return {
-      prenomVendeur: toSafeString(achatNonRecu?.prenomVendeur ?? det?.prenomVendeur),
-      nomVendeur: toSafeString(achatNonRecu?.nomVendeur ?? det?.nomVendeur),
+      prenomVendeur: sourceStringField(achatNonRecu, det, "prenomVendeur"),
+      nomVendeur: sourceStringField(achatNonRecu, det, "nomVendeur"),
     };
   }
 
-  private static mapCybercrimeAchatNonRecuVendeurContact(det: any, base: PrePlainteFormFields, achatNonRecu: any,) {
+  private static mapCybercrimeAchatNonRecuVendeurContact(det: any, base: PrePlainteFormFields, achatNonRecu: any) {
     return {
-      telephoneVendeurInconnu: achatNonRecu?.telephoneVendeurInconnu ?? det?.telephoneVendeurInconnu ?? base.telephoneVendeurInconnu,
-      telephoneVendeur: toSafeString(achatNonRecu?.telephoneVendeur ?? det?.telephoneVendeur,),
+      telephoneVendeurInconnu:
+        achatNonRecu?.telephoneVendeurInconnu ?? det?.telephoneVendeurInconnu ?? base.telephoneVendeurInconnu,
+      telephoneVendeur: toSafeString(achatNonRecu?.telephoneVendeur ?? det?.telephoneVendeur),
       emailVendeurInconnu: achatNonRecu?.emailVendeurInconnu ?? det?.emailVendeurInconnu ?? base.emailVendeurInconnu,
-      emailVendeur: toSafeString(achatNonRecu?.emailVendeur ?? det?.emailVendeur,),
-      adresseVendeurInconnue: achatNonRecu?.adresseVendeurInconnue ?? det?.adresseVendeurInconnue ?? base.adresseVendeurInconnue,
+      emailVendeur: toSafeString(achatNonRecu?.emailVendeur ?? det?.emailVendeur),
+      adresseVendeurInconnue:
+        achatNonRecu?.adresseVendeurInconnue ?? det?.adresseVendeurInconnue ?? base.adresseVendeurInconnue,
     };
   }
 
-  private static mapCybercrimeAchatNonRecuVendeurEntreprise(det: any, achatNonRecu: any,) {
+  private static mapCybercrimeAchatNonRecuVendeurEntreprise(det: any, achatNonRecu: any) {
     return {
-      nomEntrepriseVendeur: toSafeString(achatNonRecu?.nomEntrepriseVendeur ?? det?.nomEntrepriseVendeur,),
-      siteWebEntrepriseVendeur: toSafeString(achatNonRecu?.siteWebEntrepriseVendeur ?? det?.siteWebEntrepriseVendeur,),
+      nomEntrepriseVendeur: sourceStringField(achatNonRecu, det, "nomEntrepriseVendeur"),
+      siteWebEntrepriseVendeur: sourceStringField(achatNonRecu, det, "siteWebEntrepriseVendeur"),
     };
   }
 
@@ -635,7 +663,7 @@ export class ReverseMapper {
     };
   }
 
-  private static mapCybercrimeAchatNonRecuPaiementFields(det: any, base: PrePlainteFormFields, achatNonRecu: any,) {
+  private static mapCybercrimeAchatNonRecuPaiementFields(det: any, base: PrePlainteFormFields, achatNonRecu: any) {
     return {
       ...this.mapCybercrimePaiementMoyen(det, achatNonRecu),
       ...this.mapCybercrimePaiementBeneficiaire(det, achatNonRecu),
@@ -645,42 +673,70 @@ export class ReverseMapper {
 
   private static mapCybercrimePaiementMoyen(det: any, achatNonRecu: any) {
     return {
-      moyenPaiement: toSafeString(achatNonRecu?.moyenPaiement ?? det?.moyenPaiement,),
-      moyenPaiementAutre: toSafeString(achatNonRecu?.moyenPaiementAutre ?? det?.moyenPaiementAutre,),
-      dateOperation: fromIsoDate(achatNonRecu?.dateOperation ?? det?.dateOperation,),
+      moyenPaiement: sourceStringField(achatNonRecu, det, "moyenPaiement"),
+      moyenPaiementAutre: sourceStringField(achatNonRecu, det, "moyenPaiementAutre"),
+      dateOperation: fromIsoDate(sourceField(achatNonRecu, det, "dateOperation") as string | undefined),
     };
   }
 
-  private static mapCybercrimePaiementBeneficiaire(det: any, achatNonRecu: any,) {
+  private static mapCybercrimePaiementBeneficiaire(det: any, achatNonRecu: any) {
     return {
-      ibanBeneficiaire: toSafeString(achatNonRecu?.ibanBeneficiaire ?? det?.ibanBeneficiaire,),
-      comptePaypalBeneficiaire: toSafeString(achatNonRecu?.comptePaypalBeneficiaire ?? det?.comptePaypalBeneficiaire,),
-      numeroTwintBeneficiaire: toSafeString(achatNonRecu?.numeroTwintBeneficiaire ?? det?.numeroTwintBeneficiaire,),
-      adresseWalletCrypto: toSafeString(achatNonRecu?.adresseWalletCrypto ?? det?.adresseWalletCrypto,),
-      hashTransactionCrypto: toSafeString(achatNonRecu?.hashTransactionCrypto ?? det?.hashTransactionCrypto,),
-      societeBeneficiaire: toSafeString(achatNonRecu?.societeBeneficiaire ?? det?.societeBeneficiaire,),
-      nomBeneficiaire: toSafeString(achatNonRecu?.nomBeneficiaire ?? det?.nomBeneficiaire,),
-      prenomBeneficiaire: toSafeString(achatNonRecu?.prenomBeneficiaire ?? det?.prenomBeneficiaire,),
+      ibanBeneficiaire: sourceStringField(achatNonRecu, det, "ibanBeneficiaire"),
+      comptePaypalBeneficiaire: sourceStringField(achatNonRecu, det, "comptePaypalBeneficiaire"),
+      numeroTransactionPaypal: sourceStringField(achatNonRecu, det, "numeroTransactionPaypal"),
+      numeroTwintBeneficiaire: sourceStringField(achatNonRecu, det, "numeroTwintBeneficiaire"),
+      typeCryptoMonnaie: sourceStringField(achatNonRecu, det, "typeCryptoMonnaie"),
+      montantUnitesCrypto: sourceStringField(achatNonRecu, det, "montantUnitesCrypto"),
+      adresseWalletExpediteur: sourceStringField(achatNonRecu, det, "adresseWalletExpediteur"),
+      adresseWalletCrypto: sourceStringField(achatNonRecu, det, "adresseWalletCrypto"),
+      hashTransactionCrypto: sourceStringField(achatNonRecu, det, "hashTransactionCrypto"),
+      societeBeneficiaire: sourceStringField(achatNonRecu, det, "societeBeneficiaire"),
+      nomBeneficiaire: sourceStringField(achatNonRecu, det, "nomBeneficiaire"),
+      prenomBeneficiaire: sourceStringField(achatNonRecu, det, "prenomBeneficiaire"),
     };
   }
 
-  private static mapCybercrimePaiementPreuve(det: any, base: PrePlainteFormFields, achatNonRecu: any,) {
+  private static mapCybercrimePaiementPreuve(det: any, base: PrePlainteFormFields, achatNonRecu: any) {
     return {
-      preuvePaiementIndisponible: achatNonRecu?.preuvePaiementIndisponible ?? det?.preuvePaiementIndisponible ?? base.preuvePaiementIndisponible,
-      raisonAbsencePreuvePaiement: toSafeString(achatNonRecu?.raisonAbsencePreuvePaiement ?? det?.raisonAbsencePreuvePaiement,),
+      preuvePaiementIndisponible: firstDefined(
+        achatNonRecu?.preuvePaiementIndisponible,
+        det?.preuvePaiementIndisponible,
+        base.preuvePaiementIndisponible,
+      ),
+      raisonAbsencePreuvePaiement: sourceStringField(achatNonRecu, det, "raisonAbsencePreuvePaiement"),
     };
   }
 
   private static mapCybercrimeAchatNonRecuIdentiteFields(det: any, base: PrePlainteFormFields, achatNonRecu: any) {
+    return this.mapCybercrimeIdentiteFields(achatNonRecu, det, base);
+  }
+
+  private static mapCybercrimeIdentiteFields(source: any, det: any, base: PrePlainteFormFields) {
     return {
-      copieIdentiteTransmiseAuteur:
-        achatNonRecu?.copieIdentiteTransmiseAuteur ??
-        det?.copieIdentiteTransmiseAuteur ??
+      copieIdentiteTransmiseAuteur: firstDefined(
+        source?.copieIdentiteTransmiseAuteur,
+        det?.copieIdentiteTransmiseAuteur,
         base.copieIdentiteTransmiseAuteur,
-      copieIdentiteAuteurTransmise:
-        achatNonRecu?.copieIdentiteAuteurTransmise ??
-        det?.copieIdentiteAuteurTransmise ??
+      ),
+      copieIdentiteTransmiseAuteurDocumentIndisponible: firstDefined(
+        source?.copieIdentiteTransmiseAuteurDocumentIndisponible,
+        det?.copieIdentiteTransmiseAuteurDocumentIndisponible,
+        base.copieIdentiteTransmiseAuteurDocumentIndisponible,
+      ),
+      raisonAbsenceCopieIdentiteTransmiseAuteur: toSafeString(
+        sourceField(source, det, "raisonAbsenceCopieIdentiteTransmiseAuteur"),
+      ),
+      copieIdentiteAuteurTransmise: firstDefined(
+        source?.copieIdentiteAuteurTransmise,
+        det?.copieIdentiteAuteurTransmise,
         base.copieIdentiteAuteurTransmise,
+      ),
+      copieIdentiteAuteurDocumentIndisponible: firstDefined(
+        source?.copieIdentiteAuteurDocumentIndisponible,
+        det?.copieIdentiteAuteurDocumentIndisponible,
+        base.copieIdentiteAuteurDocumentIndisponible,
+      ),
+      raisonAbsenceCopieIdentiteAuteur: toSafeString(sourceField(source, det, "raisonAbsenceCopieIdentiteAuteur")),
     };
   }
 
@@ -779,7 +835,11 @@ export class ReverseMapper {
       moyenPaiementAutre: base.moyenPaiementAutre,
       ibanBeneficiaire: base.ibanBeneficiaire,
       comptePaypalBeneficiaire: base.comptePaypalBeneficiaire,
+      numeroTransactionPaypal: base.numeroTransactionPaypal,
       numeroTwintBeneficiaire: base.numeroTwintBeneficiaire,
+      typeCryptoMonnaie: base.typeCryptoMonnaie,
+      montantUnitesCrypto: base.montantUnitesCrypto,
+      adresseWalletExpediteur: base.adresseWalletExpediteur,
       adresseWalletCrypto: base.adresseWalletCrypto,
       hashTransactionCrypto: base.hashTransactionCrypto,
       societeBeneficiaire: base.societeBeneficiaire,
@@ -791,8 +851,12 @@ export class ReverseMapper {
       raisonAbsencePreuvePaiement: base.raisonAbsencePreuvePaiement,
       copieIdentiteTransmiseAuteur: base.copieIdentiteTransmiseAuteur,
       copieIdentiteTransmiseAuteurDocument: base.copieIdentiteTransmiseAuteurDocument,
+      copieIdentiteTransmiseAuteurDocumentIndisponible: base.copieIdentiteTransmiseAuteurDocumentIndisponible,
+      raisonAbsenceCopieIdentiteTransmiseAuteur: base.raisonAbsenceCopieIdentiteTransmiseAuteur,
       copieIdentiteAuteurTransmise: base.copieIdentiteAuteurTransmise,
       copieIdentiteAuteurDocument: base.copieIdentiteAuteurDocument,
+      copieIdentiteAuteurDocumentIndisponible: base.copieIdentiteAuteurDocumentIndisponible,
+      raisonAbsenceCopieIdentiteAuteur: base.raisonAbsenceCopieIdentiteAuteur,
       urlComplete: base.urlComplete,
       titreAnnonce: base.titreAnnonce,
       nomBailleur: base.nomBailleur,
@@ -809,13 +873,15 @@ export class ReverseMapper {
     };
   }
 
-  private static isAdresseVendeurInconnue(achatNonRecu: Record<string, unknown>, det: Record<string, unknown>,
+  private static isAdresseVendeurInconnue(
+    achatNonRecu: Record<string, unknown>,
+    det: Record<string, unknown>,
   ): boolean {
     return achatNonRecu?.adresseVendeurInconnue === true || det?.adresseVendeurInconnue === true;
   }
 
-  private static isBackendAdresse(value: unknown,): value is AdresseDTO {
-    return (value !== null && typeof value === "object" && !Array.isArray(value));
+  private static isBackendAdresse(value: unknown): value is AdresseDTO {
+    return value !== null && typeof value === "object" && !Array.isArray(value);
   }
 
   private static extractVendeurAdresseFields(
