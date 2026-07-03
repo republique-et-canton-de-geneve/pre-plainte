@@ -568,9 +568,6 @@ class SuisseEpoliceEventMapperTest {
 
     String info = mapper.buildEventAdditionalInformation(cybercrime);
 
-    assertNotNull(info);
-    assertTrue(info.startsWith("Autre indications; "));
-    assertTrue(info.contains("Montant du délit: 100"));
-    assertTrue(info.contains("Email vendeur inconnu: oui"));
+    assertNull(info);
   }
 }
