@@ -34,12 +34,7 @@
         @click="confirmeIdentite = !confirmeIdentite"
       >
         <v-card-text class="d-flex align-center pa-2 pa-md-4">
-          <v-checkbox
-            v-model="confirmeIdentite"
-            hide-details
-            class="flex-shrink-0 mr-3"
-            @click.stop
-          />
+          <v-checkbox v-model="confirmeIdentite" hide-details class="flex-shrink-0 mr-3" @click.stop />
           <span id="confirme-identite-label">
             {{ t("disclaimer.confirmeIdentite") }}
           </span>
@@ -54,12 +49,7 @@
         @click="confirmeSituation = !confirmeSituation"
       >
         <v-card-text class="d-flex align-center pa-2 pa-md-4">
-          <v-checkbox
-            v-model="confirmeSituation"
-            hide-details
-            class="flex-shrink-0 mr-3"
-            @click.stop
-          />
+          <v-checkbox v-model="confirmeSituation" hide-details class="flex-shrink-0 mr-3" @click.stop />
           <span id="confirme-situation-label">
             {{ t("disclaimer.confirmeSituation") }}
           </span>
@@ -171,13 +161,27 @@
       </div>
 
       <div class="d-none d-md-flex justify-end mt-6">
-        <v-btn color="primary" variant="flat" size="large" :disabled="!canContinue" data-cy="continuer-informations-generales" @click="onSubmit">
+        <v-btn
+          color="primary"
+          variant="flat"
+          size="large"
+          :disabled="!canContinue"
+          data-cy="continuer-informations-generales"
+          @click="onSubmit"
+        >
           {{ t("common.continuer") }}
         </v-btn>
       </div>
 
       <div class="d-md-none mt-4">
-        <v-btn color="primary" variant="flat" class="w-100" :disabled="!canContinue" data-cy="continuer-informations-generales" @click="onSubmit">
+        <v-btn
+          color="primary"
+          variant="flat"
+          class="w-100"
+          :disabled="!canContinue"
+          data-cy="continuer-informations-generales"
+          @click="onSubmit"
+        >
           {{ t("common.continuer") }}
         </v-btn>
       </div>
@@ -248,8 +252,8 @@ const typeCybercrimeOptions = computed(() => [
   { label: t("cybercrime.autre"), value: TYPE_CYBERCRIME_AUTRE },
 ]);
 
-const showConstatQuestion = computed(() =>
-  typeIncident.value === DEGAT_DELIT_INCIDENT && requiresConstatQuestion(typeDommage.value),
+const showConstatQuestion = computed(
+  () => typeIncident.value === DEGAT_DELIT_INCIDENT && requiresConstatQuestion(typeDommage.value),
 );
 
 const showRendezVousOnlyMessage = computed(() =>
@@ -260,8 +264,8 @@ const showRendezVousOnlyMessage = computed(() =>
   }),
 );
 
-const canContinue = computed(
-  () => canContinueDisclaimer({
+const canContinue = computed(() =>
+  canContinueDisclaimer({
     typeIncident: typeIncident.value,
     typeDommage: typeDommage.value,
     constatPresent: constatPresent.value,
@@ -273,30 +277,34 @@ const canContinue = computed(
   }),
 );
 
-const onSubmit = handleSubmit(formValues => {
+const validateIncidentFields = () => {
   setFieldError("typeIncident", typeIncident.value ? undefined : t("validation.typeIncidentRequis"));
-  setFieldError(
-    "typeDommage",
-    typeIncident.value === DEGAT_DELIT_INCIDENT && !typeDommage.value ? t("validation.typeDommageRequis") : undefined,
-  );
-  setFieldError(
-    "constatPresent",
-    showConstatQuestion.value && (constatPresent.value === null || constatPresent.value === undefined)
-      ? t("validation.constatRequis")
-      : undefined,
-  );
-  setFieldError(
-    "typeCybercrime",
-    typeIncident.value === CYBERCRIME_INCIDENT && !typeCybercrime.value ? t("validation.typeCybercrimeRequis") : undefined,
-  );
+  setFieldError("typeDommage", getTypeDommageError());
+  setFieldError("constatPresent", getConstatPresentError());
+  setFieldError("typeCybercrime", getTypeCybercrimeError());
+};
 
-  if (!canContinue.value) {
+const getTypeDommageError = () =>
+  typeIncident.value === DEGAT_DELIT_INCIDENT && !typeDommage.value ? t("validation.typeDommageRequis") : undefined;
+
+const getConstatPresentError = () =>
+  showConstatQuestion.value && (constatPresent.value === null || constatPresent.value === undefined)
+    ? t("validation.constatRequis")
+    : undefined;
+
+const getTypeCybercrimeError = () =>
+  typeIncident.value === CYBERCRIME_INCIDENT && !typeCybercrime.value
+    ? t("validation.typeCybercrimeRequis")
+    : undefined;
+
+const isSubmitAllowed = () => canContinue.value && (!captchaEnabled || Boolean(captchaToken.value));
+
+const onSubmit = handleSubmit(formValues => {
+  validateIncidentFields();
+  if (!isSubmitAllowed()) {
     return;
   }
 
-  if (captchaEnabled && !captchaToken.value) {
-    return;
-  }
   store.setUserFormData(formValues);
   emit("continue");
 });
