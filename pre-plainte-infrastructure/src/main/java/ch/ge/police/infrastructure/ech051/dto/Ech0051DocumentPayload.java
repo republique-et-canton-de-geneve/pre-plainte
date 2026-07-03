@@ -63,7 +63,6 @@ public class Ech0051DocumentPayload {
     PersonType type;
     NaturalIdentity naturalIdentity;
     LegalIdentity legalIdentity;
-  @Singular
     List<Address> addresses;
     Address address;
     Communication communication;

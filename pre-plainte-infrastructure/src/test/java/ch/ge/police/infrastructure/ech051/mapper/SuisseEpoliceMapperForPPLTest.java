@@ -88,7 +88,7 @@ class SuisseEpoliceMapperForPPLTest {
     assertThat(doc.getPersons()).isNotEmpty();
     assertThat(doc.getEvents()).hasSize(1);
     assertThat(doc.getBusinessCases()).hasSize(1);
-    assertThat(doc.getBusinessCases().getFirst().getCaseNumber()).isEqualTo("VOL-PPL");
+    assertThat(doc.getBusinessCases().getFirst().getCaseNumber()).isNull();
   }
 
   @Test
@@ -120,8 +120,10 @@ class SuisseEpoliceMapperForPPLTest {
 
     assertThat(seller.getCommunication().getUri()).isEqualTo("www.site.ch");
     assertThat(seller.getCommunication().getUriProvider()).isEqualTo(Ech051Constants.URI_PROVIDER_ENTREPRISE_VENDEUR);
-    assertThat(doc.getPersons().stream().noneMatch(
-        person -> person != null && person.getType() == PersonType.LEGAL)).isTrue();
+    assertThat(doc.getPersons().stream().filter(
+        person -> person != null && person.getType() == PersonType.LEGAL))
+        .extracting(person -> person.getLegalIdentity().getCurrentName())
+        .containsExactly(Ech051Constants.INSURER_NAME_NONE);
   }
 
   @Test
@@ -206,7 +208,8 @@ class SuisseEpoliceMapperForPPLTest {
     PrePlainte p = new PrePlainte("FAUSSE-PPL", basePersonne(), Incident.of(cyber));
     Ech0051DocumentPayload doc = mapper.toDocument(p);
 
-    assertThat(doc.getObjects()).isEmpty();
+    assertThat(doc.getObjects()).hasSize(1);
+    assertThat(doc.getObjects().getFirst().getKey()).isEqualTo(Ech051Constants.OBJECT_KEY_CYBER_VICTIM_IDENTITY);
     assertThat(doc.getRelations().getEventObjectLinks()).isEmpty();
     assertThat(doc.getRelations().getObjectPersonLinks()).isEmpty();
     assertThat(doc.getEvents().getFirst().getFacts()).isEqualTo("Arnaque au loyer");
@@ -424,7 +427,8 @@ class SuisseEpoliceMapperForPPLTest {
 
     Ech0051DocumentPayload doc = mapper.toDocument(new PrePlainte("CYB-AUTRE", basePersonne(), Incident.of(cyber)));
 
-    assertThat(doc.getObjects()).isEmpty();
+    assertThat(doc.getObjects()).hasSize(1);
+    assertThat(doc.getObjects().getFirst().getKey()).isEqualTo(Ech051Constants.OBJECT_KEY_CYBER_VICTIM_IDENTITY);
   }
 
   @Test
