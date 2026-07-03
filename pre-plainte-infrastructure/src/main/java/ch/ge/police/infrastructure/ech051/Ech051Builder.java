@@ -207,17 +207,28 @@ public class Ech051Builder {
     if (personDto.getCommunication() != null) {
       appendMeansOfCommunicationFromDto(personXml, personDto.getCommunication());
     }
-    personXml.setDeliveredAbroad(personDto.getDeliveredAbroad() != null ? personDto.getDeliveredAbroad().toString() : null);
-    personXml.setCreditCardUsed(personDto.getCreditCardUsed() != null ? personDto.getCreditCardUsed().toString() : null);
-    personXml.setOnlineShop(personDto.getOnlineShop() != null ? personDto.getOnlineShop().toString() : null);
+    setPersonAdditionalAttributes(personXml, personDto);
+    return personXml;
+  }
+
+  private void setPersonAdditionalAttributes(
+      Ech0051DocumentXml.PersonXml personXml,
+      Ech0051DocumentPayload.Person personDto
+  ) {
+    personXml.setDeliveredAbroad(booleanToString(personDto.getDeliveredAbroad()));
+    personXml.setCreditCardUsed(booleanToString(personDto.getCreditCardUsed()));
+    personXml.setOnlineShop(booleanToString(personDto.getOnlineShop()));
     personXml.setNoPaymentProofReason(trimToNull(personDto.getNoPaymentProofReason()));
     personXml.setNoAdImageReason(trimToNull(personDto.getNoAdImageReason()));
-    personXml.setReporterIdCopySent(personDto.getReporterIdCopySent() != null ? personDto.getReporterIdCopySent().toString() : null);
-    personXml.setPerpetratorIdCopyReceived(personDto.getPerpetratorIdCopyReceived() != null ? personDto.getPerpetratorIdCopyReceived().toString() : null);
+    personXml.setReporterIdCopySent(booleanToString(personDto.getReporterIdCopySent()));
+    personXml.setPerpetratorIdCopyReceived(booleanToString(personDto.getPerpetratorIdCopyReceived()));
     personXml.setNoIdCopyPresentReason(trimToNull(personDto.getNoIdCopyPresentReason()));
     personXml.setNoPerpetratorsIdCopyPresentReason(trimToNull(personDto.getNoPerpetratorsIdCopyPresentReason()));
     personXml.setAdditionalInformation(personDto.getAdditionalInformation());
-    return personXml;
+  }
+
+  private static String booleanToString(Boolean value) {
+    return value == null ? null : value.toString();
   }
 
   private Ech0051DocumentXml.NaturalXml mapNatural(Ech0051DocumentPayload.Person personDto) {
@@ -459,10 +470,6 @@ public class Ech051Builder {
     return countryXml;
   }
 
-  /**
-   * Email, mobile et téléphone dans un seul bloc {@code meansOfCommunication}
-   * (aligné sur les exports Suisse ePolice / myABI).
-   */
   private void appendMeansOfCommunicationFromDto(
       Ech0051DocumentXml.PersonXml personXml,
       Ech0051DocumentPayload.Communication dto
