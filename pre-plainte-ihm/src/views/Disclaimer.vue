@@ -142,10 +142,7 @@
         />
 
         <div v-if="showConstatPhotosUpload" class="mb-8">
-          <PieceJointe v-model="fichiers" :label="t('dommages.fichiers')" />
-          <div class="text-body-2 text-medium-emphasis mt-2">
-            {{ t("dommages.photosRecommandees") }}
-          </div>
+          <PieceJointe v-model="fichiers" :label="constatPhotosLabel" />
         </div>
 
         <v-alert
@@ -306,10 +303,11 @@ const showRendezVousOnlyMessage = computed(() =>
 );
 
 const showConstatPhotosUpload = computed(() => showConstatQuestion.value && constatPresent.value === false);
+const constatPhotosLabel = computed(() => `${t("dommages.fichiers")} (${t("dommages.photosRecommandees")})`);
 
 const isIncidentSelectionComplete = computed(() => {
   if (typeIncident.value === DEGAT_DELIT_INCIDENT) {
-    return Boolean(typeDommage.value) && (!showConstatQuestion.value || constatPresent.value !== null);
+    return Boolean(typeDommage.value);
   }
   if (typeIncident.value === CYBERCRIME_INCIDENT) {
     return Boolean(typeCybercrime.value) && typeCybercrime.value !== TYPE_CYBERCRIME_AUTRE;
