@@ -10,6 +10,7 @@ import { isValidBoundedDate, parseDate, parseTime } from "@/utils/helpers/dateHe
 import { validateAchatNonRecuCybercrime } from "@/schemas/incident-evenement-achat-non-recu-refine";
 import { validateCommandeFrauduleuseCybercrime } from "@/schemas/incident-evenement-commande-frauduleuse-refine";
 import { isUrlWebAvecDomaine } from "@/utils/validations/field-validation.utils";
+import { requiresConstatQuestion } from "@/utils/workflows/disclaimer-workflow";
 
 const MIN_ADRESSE_EVENEMENT_TAILLE = 5;
 const VALIDATION_FORMAT_DATE_INVALIDE = "validation.formatDateInvalide";
@@ -58,7 +59,6 @@ const createIncidentRequirements = (t: ComposerTranslation): Record<string, { fi
     { field: "naturesDommage", message: t("validation.natureDommageRequis") },
     { field: "description", message: t("validation.descriptionDommageRequise") },
     { field: "constatPresent", message: t("validation.constatRequis") },
-    { field: "dateConstat", message: t("validation.constatDommageRequis") },
   ],
 });
 
@@ -223,6 +223,10 @@ const validateIncidentRequirements = (data: Record<string, any>, ctx: z.Refineme
     return;
   }
 
+  if (data.typeIncident === "degat-delit" && !requiresConstatQuestion(data.typeDommage)) {
+    rules = rules.filter(r => r.field !== "constatPresent");
+  }
+
   if (
     data.typeIncident === "vol" &&
     (hasObjetsVolesEnregistres(data) || data.categorieObjet === "plaque")
@@ -240,7 +244,6 @@ const validateDommageSpecificRules = (data: Record<string, any>, ctx: z.Refineme
     return;
   }
 
-  validateDommageConstatPolice(data, ctx, t);
   if (Array.isArray(data.objetsDegradesValides) && data.objetsDegradesValides.length > 0) {
     data.objetsDegradesValides.forEach((objet: unknown, index: number) => {
       if (objet && typeof objet === "object") {
@@ -252,17 +255,6 @@ const validateDommageSpecificRules = (data: Record<string, any>, ctx: z.Refineme
 
   validateVehicleFields(data, ctx, t);
 }
-
-const validateDommageConstatPolice = (data: Record<string, any>, ctx: z.RefinementCtx, t: ComposerTranslation) => {
-  if (data.constatPresent === false) {
-    addCustomIssue(ctx, "constatPresent", t("dommages.constatPoliceWarning"));
-    return;
-  }
-
-  if (data.constatPresent === true && (!Array.isArray(data.fichiers) || data.fichiers.length === 0)) {
-    addCustomIssue(ctx, "fichiers", t("validation.constatPoliceFichierRequis"));
-  }
-};
 
 const validateVolSpecificRules = (data: Record<string, any>, ctx: z.RefinementCtx, t: ComposerTranslation) => {
   if (data.typeIncident !== "vol") {

@@ -313,6 +313,10 @@
     "heureDebutEvenement": "Ora di inizio dell'evento",
     "dateFinEvenement": "Data di fine dell'evento",
     "heureFinEvenement": "Ora di fine dell'evento",
+    "dateCommande": "Data dell'ordine",
+    "heureCommande": "Ora dell'ordine",
+    "dateLivraisonOuDecouverte": "Data di consegna o data di scoperta",
+    "heureLivraisonOuDecouverte": "Ora di consegna o di scoperta",
     "heureEstimee": "Ora stimata dell'evento",
     "adresseEvenement": "Luogo dell'evento",
     "adresseSuisseUniquement": "L'indirizzo dell'evento deve trovarsi esclusivamente in Svizzera",
@@ -329,6 +333,10 @@
     "hintHeureDebutEvenement": "Inserite l'ora di inizio dell'evento",
     "hintDateFinEvenement": "Inserite la data di fine dell'evento",
     "hintHeureFinEvenement": "Inserite l'ora di fine dell'evento",
+    "hintDateCommande": "Inserite la data dell'ordine",
+    "hintHeureCommande": "Inserite l'ora dell'ordine",
+    "hintDateLivraisonOuDecouverte": "Inserite la data di consegna o di scoperta",
+    "hintHeureLivraisonOuDecouverte": "Inserite l'ora di consegna o di scoperta",
     "hintLieu": "Selezionate il tipo di luogo in cui si è verificato l'incidente"
   },
   "incidentTypes": {
@@ -584,6 +592,8 @@
     "constatDate": "Data del verbale",
     "constatPoliceFichiers": "Verbale di polizia",
     "constatPoliceWarning": "Prima di proseguire, fate constatare il danno dalla polizia chiamando il 117. Potete salvare la bozza della pre-denuncia e completarla dopo la redazione del verbale. A tal fine, fate clic sul pulsante \"salva e riprendi più tardi\" in fondo alla pagina.",
+    "constatRendezVousOnlyInfo": "È già stato redatto un verbale di polizia. Deve solo prenotare un appuntamento, senza completare le fasi relative alle informazioni personali e all'evento.",
+    "photosRecommandees": "Fortemente raccomandato",
     "hintTypeDommage": "Selezionate il tipo di danno",
     "hintMontantEstime": "Indicate in cifre l'importo stimato dei danni",
     "hintNatureDommage": "Selezionate la natura del danno constatato",
@@ -815,6 +825,7 @@
   },
   "submission": {
     "soumettrePrePlainte": "Invia la pre-denuncia",
+    "confirmerRendezVous": "Confermare l'appuntamento",
     "formulaireComplet": "La richiesta di pre-denuncia è stata ricevuta",
     "envoiEnCours": "Invio in corso...",
     "envoi": "Invio...",

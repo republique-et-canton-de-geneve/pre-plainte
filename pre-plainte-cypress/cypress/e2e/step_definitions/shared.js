@@ -308,8 +308,9 @@ Given("je suis sur l'étape informations sur l'événement avec une plaque volé
   );
 });
 
-Given("je suis sur l'étape informations sur l'événement avec un dommage et un constat présent", () => {
+Given("je suis sur l'étape informations sur l'événement avec un dommage valide", () => {
   stubRipol();
+  stubEsiriusOk();
   cy.demarrerPrePlainteAEtape(
     STEP_EVENEMENT,
     evenementDommageAvecConstat,
