@@ -141,6 +141,13 @@
           :error-messages="constatPresentError"
         />
 
+        <div v-if="showConstatPhotosUpload" class="mb-8">
+          <PieceJointe v-model="fichiers" :label="t('dommages.fichiers')" />
+          <div class="text-body-2 text-medium-emphasis mt-2">
+            {{ t("dommages.photosRecommandees") }}
+          </div>
+        </div>
+
         <v-alert
           v-if="showRendezVousOnlyMessage"
           type="info"
@@ -183,7 +190,7 @@
           </ul>
         </v-alert>
 
-        <v-alert v-else type="info" class="mb-6" density="comfortable" :icon="mobile ? false : undefined">
+        <v-alert v-else-if="showCasNonTrouveWarning" type="info" class="mb-6" density="comfortable" :icon="mobile ? false : undefined">
           {{ t("disclaimer.casNonTrouve") }}
           <a :href="POSTES_POLICE_URL" target="_blank" rel="noopener noreferrer">
             {{ t("disclaimer.prendreRendezVousPoste") }}
@@ -235,6 +242,7 @@ import { storeToRefs } from "pinia";
 import ExitActionsForm from "@/components/actions/ExitActionsForm.vue";
 import AccessibleVSelect from "@/components/accessibility/AccessibleVSelect.vue";
 import BaseRadioGroup from "@/components/radio/BaseRadioGroup.vue";
+import PieceJointe from "@/components/piece-jointe/PieceJointe.vue";
 import { POSTES_POLICE_URL, TYPES_DOMMAGE } from "@/constants/constant.ts";
 import { toTranslatedOptions } from "@/utils/helpers/traductionHelper.ts";
 import {
@@ -275,6 +283,7 @@ const { value: typeIncident, errorMessage: typeIncidentError } = useField<string
 const { value: typeDommage, errorMessage: typeDommageError } = useField<string>("typeDommage");
 const { value: constatPresent, errorMessage: constatPresentError } = useField<boolean | null>("constatPresent");
 const { value: typeCybercrime, errorMessage: typeCybercrimeError } = useField<string>("typeCybercrime");
+const { value: fichiers } = useField<File[]>("fichiers");
 
 const typeDommageOptions = computed(() => toTranslatedOptions(TYPES_DOMMAGE, t));
 const typeCybercrimeOptions = computed(() => [
@@ -295,6 +304,20 @@ const showRendezVousOnlyMessage = computed(() =>
     constatPresent: constatPresent.value,
   }),
 );
+
+const showConstatPhotosUpload = computed(() => showConstatQuestion.value && constatPresent.value === false);
+
+const isIncidentSelectionComplete = computed(() => {
+  if (typeIncident.value === DEGAT_DELIT_INCIDENT) {
+    return Boolean(typeDommage.value) && (!showConstatQuestion.value || constatPresent.value !== null);
+  }
+  if (typeIncident.value === CYBERCRIME_INCIDENT) {
+    return Boolean(typeCybercrime.value) && typeCybercrime.value !== TYPE_CYBERCRIME_AUTRE;
+  }
+  return Boolean(typeIncident.value);
+});
+
+const showCasNonTrouveWarning = computed(() => !isIncidentSelectionComplete.value);
 
 const canContinue = computed(() =>
   canContinueDisclaimer({
@@ -372,6 +395,12 @@ watch([confirmeIdentite, confirmeSituation, confirmeEffraction], () => {
 watch(typeDommage, value => {
   if (!requiresConstatQuestion(value)) {
     setFieldValue("constatPresent", null);
+  }
+});
+
+watch(constatPresent, value => {
+  if (value !== false) {
+    setFieldValue("fichiers", []);
   }
 });
 </script>
