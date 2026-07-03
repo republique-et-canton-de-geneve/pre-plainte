@@ -15,11 +15,11 @@
         :variant="isDarkMode ? 'tonal' : 'flat'"
         :class="['confirmation-card', 'mb-4', { 'confirmation-card--selected': confirmeIdentite }]"
         data-cy="confirmation-identite"
-        @click="confirmeIdentite = !confirmeIdentite"
+        @click="toggleConfirmeIdentite"
       >
         <v-card-text class="d-flex align-center pa-2 pa-md-4">
           <v-checkbox v-model="confirmeIdentite" hide-details class="flex-shrink-0 mr-3" @click.stop />
-          <span id="confirme-identite-label">
+          <span>
             {{ t("disclaimer.confirmeIdentite") }}
           </span>
         </v-card-text>
@@ -30,11 +30,11 @@
         :variant="isDarkMode ? 'tonal' : 'flat'"
         :class="['confirmation-card', 'mb-4', { 'confirmation-card--selected': confirmeSituation }]"
         data-cy="confirmation-situation"
-        @click="confirmeSituation = !confirmeSituation"
+        @click="toggleConfirmeSituation"
       >
         <v-card-text class="d-flex align-center pa-2 pa-md-4">
           <v-checkbox v-model="confirmeSituation" hide-details class="flex-shrink-0 mr-3" @click.stop />
-          <span id="confirme-situation-label">
+          <span>
             {{ t("disclaimer.confirmeSituation") }}
           </span>
         </v-card-text>
@@ -45,7 +45,7 @@
         :variant="isDarkMode ? 'tonal' : 'flat'"
         :class="['confirmation-card', 'mb-6', { 'confirmation-card--selected': confirmeEffraction }]"
         data-cy="confirmation-effraction"
-        @click="confirmeEffraction = !confirmeEffraction"
+        @click="toggleConfirmeEffraction"
       >
         <v-card-text class="d-flex align-center pa-2 pa-md-4">
           <v-checkbox
@@ -54,7 +54,7 @@
             class="flex-shrink-0 mr-3"
             @click.stop
           />
-          <span id="confirme-effraction-label">
+          <span>
             {{ t("disclaimer.confirmeEffraction") }}
           </span>
         </v-card-text>
@@ -226,7 +226,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from "vue";
+import { computed, ref, watch, watchEffect } from "vue";
 import { useI18n } from "vue-i18n";
 import { useDisplay } from "vuetify/framework";
 import { useTheme } from "vuetify";
@@ -246,12 +246,12 @@ import {
   canContinueDisclaimer,
   CYBERCRIME_INCIDENT,
   DEGAT_DELIT_INCIDENT,
+  hasConfirmedDisclaimer,
   isRendezVousOnlyDommage,
   requiresConstatQuestion,
   shouldResetTypeCybercrime,
   shouldResetTypeDommage,
   TYPE_CYBERCRIME_AUTRE,
-  validateDisclaimerConfirmations,
 } from "@/utils/workflows/disclaimer-workflow";
 
 const { t } = useI18n();
@@ -273,7 +273,7 @@ const { handleSubmit, setFieldError, setFieldValue } = form;
 
 const { value: confirmeIdentite } = useField("confirmeIdentite");
 const { value: confirmeSituation } = useField("confirmeSituation");
-const confirmeEffraction = ref(false);
+const confirmeEffraction = ref<boolean>(false);
 const disclaimerConfirmed = ref(false);
 const showDisclaimerWarning = ref(false);
 const { value: typeIncident, errorMessage: typeIncidentError } = useField<string>("typeIncident");
@@ -325,7 +325,7 @@ const canContinue = computed(() =>
     typeCybercrime: typeCybercrime.value,
     confirmeIdentite: Boolean(confirmeIdentite.value),
     confirmeSituation: Boolean(confirmeSituation.value),
-    confirmeEffraction: confirmeEffraction.value,
+    confirmeEffraction: Boolean(confirmeEffraction.value),
     disclaimerConfirmed: disclaimerConfirmed.value,
     captchaEnabled,
     captchaToken: captchaToken.value,
@@ -333,14 +333,27 @@ const canContinue = computed(() =>
 );
 
 function confirmDisclaimer() {
-  const isValid = validateDisclaimerConfirmations({
+  const confirmations = {
     confirmeIdentite: Boolean(confirmeIdentite.value),
     confirmeSituation: Boolean(confirmeSituation.value),
-    confirmeEffraction: confirmeEffraction.value,
-  });
+    confirmeEffraction: Boolean(confirmeEffraction.value),
+  };
+  const isValid = hasConfirmedDisclaimer(confirmations);
 
   disclaimerConfirmed.value = isValid;
   showDisclaimerWarning.value = !isValid;
+}
+
+function toggleConfirmeIdentite() {
+  confirmeIdentite.value = !confirmeIdentite.value;
+}
+
+function toggleConfirmeSituation() {
+  confirmeSituation.value = !confirmeSituation.value;
+}
+
+function toggleConfirmeEffraction() {
+  confirmeEffraction.value = !confirmeEffraction.value;
 }
 
 const validateIncidentFields = () => {
@@ -379,13 +392,18 @@ watch(typeIncident, incident => {
   if (shouldResetTypeDommage(incident)) {
     setFieldValue("typeDommage", "");
     setFieldValue("constatPresent", null);
+    setFieldError("constatPresent", undefined);
   }
   if (shouldResetTypeCybercrime(incident)) {
     setFieldValue("typeCybercrime", "");
   }
 });
 
-watch([confirmeIdentite, confirmeSituation, confirmeEffraction], () => {
+watchEffect(() => {
+  const confirmations = [confirmeIdentite.value, confirmeSituation.value, confirmeEffraction.value];
+  if (confirmations.length === 0) {
+    return;
+  }
   disclaimerConfirmed.value = false;
   showDisclaimerWarning.value = false;
 });
@@ -393,6 +411,7 @@ watch([confirmeIdentite, confirmeSituation, confirmeEffraction], () => {
 watch(typeDommage, value => {
   if (!requiresConstatQuestion(value)) {
     setFieldValue("constatPresent", null);
+    setFieldError("constatPresent", undefined);
   }
 });
 
