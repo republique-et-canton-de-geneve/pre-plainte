@@ -503,6 +503,14 @@ When("je sélectionne le type d'incident {string}", (typeIncident) => {
   selectNative("Type d'incident", valeursTypeIncident[typeIncident] ?? typeIncident);
 });
 
+When("je sélectionne le type de dommage {string}", (typeDommage) => {
+  selectNative("Type de dommage", typeDommage);
+});
+
+When("je réponds {string} à la question {string}", (reponse, question) => {
+  selectRadio(question, reponse);
+});
+
 When("je renseigne et je vérifie mon adresse e-mail", () => {
   cy.get('[data-cy="verification-email"]').filter(":visible").first().type(donneesEmailVerifie.email);
   cliquerEnvoyerCodeEmail();
