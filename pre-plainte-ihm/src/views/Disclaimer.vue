@@ -6,23 +6,7 @@
 
       <v-alert type="info" class="mb-6" density="comfortable" :icon="mobile ? false : undefined">
         <div class="text-body-2 text-md-body-1">
-          {{ t("disclaimer.intro1") }}
-          <span class="font-weight-bold">
-            {{ t("disclaimer.intro2") }}
-          </span>
-          {{ t("disclaimer.intro3") }}
-        </div>
-
-        <ul class="ml-2 ml-md-4 mt-2 text-body-2 text-md-body-1">
-          <li>{{ t("disclaimer.condition1") }}</li>
-          <li>{{ t("disclaimer.condition2") }}</li>
-          <li>{{ t("disclaimer.condition3") }}</li>
-        </ul>
-
-        <div class="font-weight-black text-body-2 text-md-body-1 mt-3 mt-md-4">
-          <span class="font-weight-bold">
-            {{ t("disclaimer.avantConfirmation") }}
-          </span>
+          {{ t("disclaimer.intro") }}
         </div>
       </v-alert>
 
@@ -31,11 +15,11 @@
         :variant="isDarkMode ? 'tonal' : 'flat'"
         :class="['confirmation-card', 'mb-4', { 'confirmation-card--selected': confirmeIdentite }]"
         data-cy="confirmation-identite"
-        @click="confirmeIdentite = !confirmeIdentite"
+        @click="toggleConfirmeIdentite"
       >
         <v-card-text class="d-flex align-center pa-2 pa-md-4">
           <v-checkbox v-model="confirmeIdentite" hide-details class="flex-shrink-0 mr-3" @click.stop />
-          <span id="confirme-identite-label">
+          <span>
             {{ t("disclaimer.confirmeIdentite") }}
           </span>
         </v-card-text>
@@ -44,146 +28,190 @@
       <v-card
         :elevation="isDarkMode ? 2 : 1"
         :variant="isDarkMode ? 'tonal' : 'flat'"
-        :class="['confirmation-card', 'mb-6', { 'confirmation-card--selected': confirmeSituation }]"
+        :class="['confirmation-card', 'mb-4', { 'confirmation-card--selected': confirmeSituation }]"
         data-cy="confirmation-situation"
-        @click="confirmeSituation = !confirmeSituation"
+        @click="toggleConfirmeSituation"
       >
         <v-card-text class="d-flex align-center pa-2 pa-md-4">
           <v-checkbox v-model="confirmeSituation" hide-details class="flex-shrink-0 mr-3" @click.stop />
-          <span id="confirme-situation-label">
+          <span>
             {{ t("disclaimer.confirmeSituation") }}
           </span>
         </v-card-text>
       </v-card>
 
-      <h3>{{ t("informationsEvenement.typeIncident") }}</h3>
-      <AccessibleVSelect
-        v-model="typeIncident"
-        data-cy="type-incident"
-        :label="t('informationsEvenement.typeIncident')"
-        required
-        :items="[
-          { label: t('incidentTypes.vol'), value: 'vol' },
-          { label: t('dommages.titre'), value: 'degat-delit' },
-          { label: t('cybercrime.titre'), value: 'cybercrime' },
-        ]"
-        :error-messages="typeIncidentError"
-        :hint="t('informationsEvenement.hintTypeIncident')"
-        persistent-hint
-        clearable
-        class="mb-8 mt-5"
-      />
-
-      <AccessibleVSelect
-        v-if="typeIncident === 'degat-delit'"
-        v-model="typeDommage"
-        :label="t('dommages.typeDommage')"
-        required
-        :items="typeDommageOptions"
-        :error-messages="typeDommageError"
-        item-title="label"
-        item-value="value"
-        :hint="t('dommages.hintTypeDommage')"
-        persistent-hint
-        class="mb-8"
-      />
-
-      <BaseRadioGroup
-        v-if="showConstatQuestion"
-        v-model="constatPresent"
-        :label="t('dommages.constat')"
-        required
-        :options="[
-          { label: t('common.oui'), value: true },
-          { label: t('common.non'), value: false },
-        ]"
-        :error-messages="constatPresentError"
-      />
-
-      <v-alert
-        v-if="showRendezVousOnlyMessage"
-        type="info"
-        class="mb-6"
-        density="comfortable"
-        :icon="mobile ? false : undefined"
+      <v-card
+        :elevation="isDarkMode ? 2 : 1"
+        :variant="isDarkMode ? 'tonal' : 'flat'"
+        :class="['confirmation-card', 'mb-6', { 'confirmation-card--selected': confirmeEffraction }]"
+        data-cy="confirmation-effraction"
+        @click="toggleConfirmeEffraction"
       >
-        {{ t("dommages.constatRendezVousOnlyInfo") }}
-      </v-alert>
-
-      <AccessibleVSelect
-        v-if="typeIncident === 'cybercrime'"
-        v-model="typeCybercrime"
-        :items="typeCybercrimeOptions"
-        item-title="label"
-        item-value="value"
-        :label="t('cybercrime.type')"
-        required
-        :error-messages="typeCybercrimeError"
-        variant="outlined"
-        class="mb-8"
-        :hint="t('cybercrime.hintType')"
-        persistent-hint
-        clearable
-      />
-
-      <v-alert
-        v-if="typeCybercrime === TYPE_CYBERCRIME_AUTRE"
-        type="info"
-        class="mb-6"
-        density="comfortable"
-        :icon="mobile ? false : undefined"
-      >
-        <p>{{ t("disclaimer.cybercrimeAutreIntroduction") }}</p>
-        <ul class="ml-4 mt-2">
-          <li>{{ t("disclaimer.cybercrimeAutreDocumentChronologique") }}</li>
-          <li>{{ t("disclaimer.cybercrimeAutreEchanges") }}</li>
-          <li>{{ t("disclaimer.cybercrimeAutrePreuvesPaiement") }}</li>
-          <li>{{ t("disclaimer.cybercrimeAutreEtc") }}</li>
-        </ul>
-      </v-alert>
-
-      <v-alert v-else type="info" class="mb-6" density="comfortable" :icon="mobile ? false : undefined">
-        {{ t("disclaimer.casNonTrouve") }}
-        <a :href="POSTES_POLICE_URL" target="_blank" rel="noopener noreferrer">
-          {{ t("disclaimer.prendreRendezVousPoste") }}
-        </a>
-      </v-alert>
-
-      <v-divider v-if="captchaEnabled"></v-divider>
-      <div @click.stop v-if="captchaEnabled">
-        <Captcha
-          :model-value="captchaToken"
-          :sitekey="captchaSiteKey"
-          @solved="store.setCaptchaToken"
-          @reset="store.resetCaptchaToken"
-          class="mb-6 mt-6"
-        />
-      </div>
+        <v-card-text class="d-flex align-center pa-2 pa-md-4">
+          <v-checkbox
+            v-model="confirmeEffraction"
+            hide-details
+            class="flex-shrink-0 mr-3"
+            @click.stop
+          />
+          <span>
+            {{ t("disclaimer.confirmeEffraction") }}
+          </span>
+        </v-card-text>
+      </v-card>
 
       <div class="d-none d-md-flex justify-end mt-6">
-        <v-btn
-          color="primary"
-          variant="flat"
-          size="large"
-          :disabled="!canContinue"
-          data-cy="continuer-informations-generales"
-          @click="onSubmit"
-        >
-          {{ t("common.continuer") }}
+        <v-btn color="primary" variant="flat" size="large" data-cy="confirmer-disclaimer" @click="confirmDisclaimer">
+          {{ t("common.confirmer") }}
         </v-btn>
       </div>
 
       <div class="d-md-none mt-4">
-        <v-btn
-          color="primary"
-          variant="flat"
-          class="w-100"
-          :disabled="!canContinue"
-          data-cy="continuer-informations-generales"
-          @click="onSubmit"
-        >
-          {{ t("common.continuer") }}
+        <v-btn color="primary" variant="flat" class="w-100" data-cy="confirmer-disclaimer" @click="confirmDisclaimer">
+          {{ t("common.confirmer") }}
         </v-btn>
+      </div>
+
+      <v-alert
+        v-if="showDisclaimerWarning"
+        type="warning"
+        class="mt-4 mb-6"
+        density="comfortable"
+        :icon="mobile ? false : undefined"
+        data-cy="disclaimer-warning"
+      >
+        {{ t("disclaimer.situationNonEligible") }}
+        <a :href="POSTES_POLICE_URL" target="_blank" rel="noopener noreferrer">
+          {{ t("disclaimer.postesPolice") }}
+        </a>
+      </v-alert>
+
+      <div v-if="disclaimerConfirmed" data-cy="contenu-informations-generales">
+        <h3>{{ t("informationsEvenement.typeIncident") }}</h3>
+        <AccessibleVSelect
+          v-model="typeIncident"
+          data-cy="type-incident"
+          :label="t('informationsEvenement.typeIncident')"
+          required
+          :items="[
+            { label: t('incidentTypes.vol'), value: 'vol' },
+            { label: t('dommages.titre'), value: 'degat-delit' },
+            { label: t('cybercrime.titre'), value: 'cybercrime' },
+          ]"
+          :error-messages="typeIncidentError"
+          :hint="t('informationsEvenement.hintTypeIncident')"
+          persistent-hint
+          clearable
+          class="mb-8 mt-5"
+        />
+
+        <v-alert
+          v-if="typeIncident === 'vol'"
+          type="warning"
+          class="mb-6"
+          density="comfortable"
+          :icon="mobile ? false : undefined"
+        >
+          {{ t("disclaimer.warningVolCarte") }}
+        </v-alert>
+
+        <AccessibleVSelect
+          v-if="typeIncident === 'degat-delit'"
+          v-model="typeDommage"
+          :label="t('dommages.typeDommage')"
+          required
+          :items="typeDommageOptions"
+          :error-messages="typeDommageError"
+          item-title="label"
+          item-value="value"
+          :hint="t('dommages.hintTypeDommage')"
+          persistent-hint
+          class="mb-8"
+        />
+
+        <BaseRadioGroup
+          v-if="showConstatQuestion"
+          v-model="constatPresent"
+          :label="t('dommages.constat')"
+          required
+          :options="[
+            { label: t('common.oui'), value: true },
+            { label: t('common.non'), value: false },
+          ]"
+          :error-messages="constatPresentError"
+        />
+
+        <v-alert
+          v-if="showRendezVousOnlyMessage"
+          type="info"
+          class="mb-6"
+          density="comfortable"
+          :icon="mobile ? false : undefined"
+        >
+          {{ t("dommages.constatRendezVousOnlyInfo") }}
+        </v-alert>
+
+        <AccessibleVSelect
+          v-if="typeIncident === 'cybercrime'"
+          v-model="typeCybercrime"
+          :items="typeCybercrimeOptions"
+          item-title="label"
+          item-value="value"
+          :label="t('cybercrime.type')"
+          required
+          :error-messages="typeCybercrimeError"
+          variant="outlined"
+          class="mb-8"
+          :hint="t('cybercrime.hintType')"
+          persistent-hint
+          clearable
+        />
+
+        <v-alert
+          v-if="typeCybercrime === TYPE_CYBERCRIME_AUTRE"
+          type="info"
+          class="mb-6"
+          density="comfortable"
+          :icon="mobile ? false : undefined"
+        >
+          <p>{{ t("disclaimer.cybercrimeAutreIntroduction") }}</p>
+          <ul class="ml-4 mt-2">
+            <li>{{ t("disclaimer.cybercrimeAutreDocumentChronologique") }}</li>
+            <li>{{ t("disclaimer.cybercrimeAutreEchanges") }}</li>
+            <li>{{ t("disclaimer.cybercrimeAutrePreuvesPaiement") }}</li>
+            <li>{{ t("disclaimer.cybercrimeAutreEtc") }}</li>
+          </ul>
+        </v-alert>
+
+        <v-alert v-else type="info" class="mb-6" density="comfortable" :icon="mobile ? false : undefined">
+          {{ t("disclaimer.casNonTrouve") }}
+          <a :href="POSTES_POLICE_URL" target="_blank" rel="noopener noreferrer">
+            {{ t("disclaimer.prendreRendezVousPoste") }}
+          </a>
+        </v-alert>
+
+        <v-divider v-if="captchaEnabled"></v-divider>
+        <div @click.stop v-if="captchaEnabled">
+          <Captcha
+            :model-value="captchaToken"
+            :sitekey="captchaSiteKey"
+            @solved="store.setCaptchaToken"
+            @reset="store.resetCaptchaToken"
+            class="mb-6 mt-6"
+          />
+        </div>
+
+        <div class="d-none d-md-flex justify-end mt-6">
+          <v-btn color="primary" variant="flat" size="large" :disabled="!canContinue" data-cy="continuer-informations-generales" @click="onSubmit">
+            {{ t("common.continuer") }}
+          </v-btn>
+        </div>
+
+        <div class="d-md-none mt-4">
+          <v-btn color="primary" variant="flat" class="w-100" :disabled="!canContinue" data-cy="continuer-informations-generales" @click="onSubmit">
+            {{ t("common.continuer") }}
+          </v-btn>
+        </div>
       </div>
     </v-card>
 
@@ -194,7 +222,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, watch } from "vue";
+import { computed, ref, watch, watchEffect } from "vue";
 import { useI18n } from "vue-i18n";
 import { useDisplay } from "vuetify/framework";
 import { useTheme } from "vuetify";
@@ -213,6 +241,7 @@ import {
   canContinueDisclaimer,
   CYBERCRIME_INCIDENT,
   DEGAT_DELIT_INCIDENT,
+  hasConfirmedDisclaimer,
   isRendezVousOnlyDommage,
   requiresConstatQuestion,
   shouldResetTypeCybercrime,
@@ -239,6 +268,9 @@ const { handleSubmit, setFieldError, setFieldValue } = form;
 
 const { value: confirmeIdentite } = useField("confirmeIdentite");
 const { value: confirmeSituation } = useField("confirmeSituation");
+const confirmeEffraction = ref<boolean>(false);
+const disclaimerConfirmed = ref(false);
+const showDisclaimerWarning = ref(false);
 const { value: typeIncident, errorMessage: typeIncidentError } = useField<string>("typeIncident");
 const { value: typeDommage, errorMessage: typeDommageError } = useField<string>("typeDommage");
 const { value: constatPresent, errorMessage: constatPresentError } = useField<boolean | null>("constatPresent");
@@ -272,10 +304,36 @@ const canContinue = computed(() =>
     typeCybercrime: typeCybercrime.value,
     confirmeIdentite: Boolean(confirmeIdentite.value),
     confirmeSituation: Boolean(confirmeSituation.value),
+    confirmeEffraction: Boolean(confirmeEffraction.value),
+    disclaimerConfirmed: disclaimerConfirmed.value,
     captchaEnabled,
     captchaToken: captchaToken.value,
   }),
 );
+
+function confirmDisclaimer() {
+  const confirmations = {
+    confirmeIdentite: Boolean(confirmeIdentite.value),
+    confirmeSituation: Boolean(confirmeSituation.value),
+    confirmeEffraction: Boolean(confirmeEffraction.value),
+  };
+  const isValid = hasConfirmedDisclaimer(confirmations);
+
+  disclaimerConfirmed.value = isValid;
+  showDisclaimerWarning.value = !isValid;
+}
+
+function toggleConfirmeIdentite() {
+  confirmeIdentite.value = !confirmeIdentite.value;
+}
+
+function toggleConfirmeSituation() {
+  confirmeSituation.value = !confirmeSituation.value;
+}
+
+function toggleConfirmeEffraction() {
+  confirmeEffraction.value = !confirmeEffraction.value;
+}
 
 const validateIncidentFields = () => {
   setFieldError("typeIncident", typeIncident.value ? undefined : t("validation.typeIncidentRequis"));
@@ -313,15 +371,26 @@ watch(typeIncident, incident => {
   if (shouldResetTypeDommage(incident)) {
     setFieldValue("typeDommage", "");
     setFieldValue("constatPresent", null);
+    setFieldError("constatPresent", undefined);
   }
   if (shouldResetTypeCybercrime(incident)) {
     setFieldValue("typeCybercrime", "");
   }
 });
 
+watchEffect(() => {
+  const confirmations = [confirmeIdentite.value, confirmeSituation.value, confirmeEffraction.value];
+  if (confirmations.length === 0) {
+    return;
+  }
+  disclaimerConfirmed.value = false;
+  showDisclaimerWarning.value = false;
+});
+
 watch(typeDommage, value => {
   if (!requiresConstatQuestion(value)) {
     setFieldValue("constatPresent", null);
+    setFieldError("constatPresent", undefined);
   }
 });
 </script>

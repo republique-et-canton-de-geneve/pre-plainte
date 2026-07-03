@@ -14,6 +14,8 @@ Fonctionnalité: Parcours nominal complet
     # Etape 1 -> disclaimers
     Quand je coche la confirmation d'identité
     Et je coche la confirmation de situation
+    Et je coche la confirmation d'effraction
+    Et je confirme les conditions de pré-plainte
     Et je sélectionne le type d'incident "Vol"
     Et je clique sur le bouton continuer des informations générales
     # Etape 2 -> Vérification du mail
