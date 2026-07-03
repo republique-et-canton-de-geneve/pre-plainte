@@ -459,7 +459,7 @@ export class IncidentMapper {
       ...this.mapCommandeFrauduleuseCoordonnees(form),
       ...this.mapCommandeFrauduleuseAdresses(form),
       ...this.mapCommandeFrauduleuseContrevenant(form),
-      ...this.mapCommandeFrauduleuseIdentite(form),
+      ...this.mapCybercrimeIdentite(form),
     };
   }
 
@@ -534,7 +534,7 @@ export class IncidentMapper {
     };
   }
 
-  private static mapCommandeFrauduleuseIdentite(form: PrePlainteFormFields) {
+  private static mapCybercrimeIdentite(form: PrePlainteFormFields) {
     return {
       copieIdentiteTransmiseAuteur: form.copieIdentiteTransmiseAuteur ?? undefined,
       copieIdentiteTransmiseAuteurDocumentIndisponible:
@@ -555,7 +555,7 @@ export class IncidentMapper {
       ...this.mapAchatNonRecuPlateforme(form),
       ...this.mapAchatNonRecuPaiement(form),
       ...this.mapAchatNonRecuDocuments(form),
-      ...this.mapAchatNonRecuIdentite(form),
+      ...this.mapCybercrimeIdentite(form),
     };
   }
 
@@ -633,18 +633,6 @@ export class IncidentMapper {
       raisonAbsenceAnnonce: this.toOptionalString(form.raisonAbsenceAnnonce),
       preuvePaiementIndisponible: form.preuvePaiementIndisponible ?? undefined,
       raisonAbsencePreuvePaiement: this.toOptionalString(form.raisonAbsencePreuvePaiement),
-    };
-  }
-
-  private static mapAchatNonRecuIdentite(form: PrePlainteFormFields) {
-    return {
-      copieIdentiteTransmiseAuteur: form.copieIdentiteTransmiseAuteur ?? undefined,
-      copieIdentiteTransmiseAuteurDocumentIndisponible:
-        form.copieIdentiteTransmiseAuteurDocumentIndisponible ?? undefined,
-      raisonAbsenceCopieIdentiteTransmiseAuteur: this.toOptionalString(form.raisonAbsenceCopieIdentiteTransmiseAuteur),
-      copieIdentiteAuteurTransmise: form.copieIdentiteAuteurTransmise ?? undefined,
-      copieIdentiteAuteurDocumentIndisponible: form.copieIdentiteAuteurDocumentIndisponible ?? undefined,
-      raisonAbsenceCopieIdentiteAuteur: this.toOptionalString(form.raisonAbsenceCopieIdentiteAuteur),
     };
   }
 
