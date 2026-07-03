@@ -5,11 +5,16 @@ export interface EmailVerificationContinueState {
   hasSendError: boolean;
   devBypassEmail: boolean;
   emailValide: boolean;
+  telephoneValide?: boolean;
   codeSent: boolean;
   confirmationEmail?: string | null;
 }
 
 export function canContinueEmailVerification(state: EmailVerificationContinueState): boolean {
+  if (state.telephoneValide === false) {
+    return false;
+  }
+
   if (!state.hasSendError && state.devBypassEmail && state.emailValide) {
     return true;
   }

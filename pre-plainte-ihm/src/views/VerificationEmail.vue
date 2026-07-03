@@ -52,6 +52,17 @@
         :autofocus="true"
       />
 
+      <PhoneInput
+        v-if="rendezVousOnly"
+        v-model="telephone"
+        :label="t('informationsPersonnelles.numeroTelephone')"
+        :error-messages="telephoneError"
+        :hint="t('informationsPersonnelles.hintTelephone')"
+        input-class="mt-4 mb-4"
+        default-country-code="CH"
+        required
+      />
+
       <v-alert
         v-if="verifyError"
         type="error"
@@ -116,6 +127,7 @@ import { useCreatePrePlainteStore } from "@/stores/createPrePlainteStore.ts";
 import { storeToRefs } from "pinia";
 import EmailChallengeOtpSection from "@/components/email/EmailChallengeOtpSection.vue";
 import ExitActionsForm from "@/components/actions/ExitActionsForm.vue";
+import PhoneInput from "@/components/phone/PhoneInput.vue";
 import {
   EmailChallengeTooManyRequestsError,
   requestEmailChallengeCode,
@@ -130,6 +142,7 @@ import { createVerificationEmailPageSchema } from "@/schemas/verification-email-
 import { isDevEmailChallengeBypassed } from "@/config/dev-flags";
 import { requiredLabel } from "@/utils/helpers/labelHelpers";
 import { generateUuid } from "@/utils/helpers/randomHelpers";
+import { validateInternationalPhone } from "@/utils/validations/phoneValidation";
 import {
   canContinueEmailVerification,
   resolveDevBypassConfirmation,
@@ -144,9 +157,12 @@ const store = useCreatePrePlainteStore();
 const { keyChallenge } = storeToRefs(store);
 const emit = defineEmits<{ cancel: []; continue: [] }>();
 
-type VerificationStepFields = Pick<PrePlainteFormFields, "email" | "confirmationEmail">;
+type VerificationStepFields = Pick<PrePlainteFormFields, "email" | "confirmationEmail" | "telephone">;
 
-const verificationEmailPageSchema = computed(() => createVerificationEmailPageSchema(t));
+const rendezVousOnly = computed(() => store.isRendezVousOnly());
+
+const verificationEmailPageSchema = computed(() => createVerificationEmailPageSchema(t, rendezVousOnly.value));
+const verificationEmailOnlySchema = computed(() => createVerificationEmailPageSchema(t, false));
 
 const validationSchema = computed(() => toTypedSchema(verificationEmailPageSchema.value));
 
@@ -154,6 +170,7 @@ const { handleSubmit, validate } = useForm<VerificationStepFields>({
   initialValues: {
     email: store.userFormData.email ?? "",
     confirmationEmail: store.userFormData.confirmationEmail ?? "",
+    telephone: store.userFormData.telephone ?? "",
   },
   validationSchema,
 });
@@ -167,10 +184,12 @@ const verifySubmitLoading = ref(false);
 const challengeEmailSnapshot = ref("");
 
 const { value: email, errorMessage: emailError } = useField<string>("email");
+const { value: telephone, errorMessage: telephoneError } = useField<string>("telephone");
 
 const emailDisplay = computed(() => (email.value ?? "").trim());
 
-const emailValide = computed(() => verificationEmailPageSchema.value.safeParse({ email: email.value ?? "" }).success);
+const emailValide = computed(() => verificationEmailOnlySchema.value.safeParse({ email: email.value ?? "" }).success);
+const telephoneValide = computed(() => !rendezVousOnly.value || validateInternationalPhone(telephone.value ?? ""));
 
 const { value: confirmationEmail, errorMessage: confirmationEmailError } = useField<string>(
   "confirmationEmail",
@@ -205,6 +224,7 @@ const canContinue = computed(() => {
     hasSendError: hasSendError.value,
     devBypassEmail,
     emailValide: emailValide.value,
+    telephoneValide: telephoneValide.value,
     codeSent: codeSent.value,
     confirmationEmail: confirmationEmail.value,
   });
@@ -276,11 +296,12 @@ onMounted(() => {
   }
 });
 
-function persistVerifiedEmail(emailTrim: string, confirmation: string) {
+function persistVerifiedEmail(emailTrim: string, confirmation: string, phone: string) {
   store.setUserFormData({
     ...store.userFormData,
     email: emailTrim,
     confirmationEmail: confirmation,
+    telephone: phone,
   });
   emit("continue");
 }
@@ -307,10 +328,11 @@ async function submitEmailVerification(values: VerificationStepFields) {
 
   const emailTrim = (values.email ?? "").trim();
   const confirmation = sanitizeEmailChallengeCodeInput(values.confirmationEmail ?? "");
+  const phone = (values.telephone ?? "").trim();
 
   if (devBypassEmail) {
     ensureDevBypassKeyChallenge();
-    persistVerifiedEmail(emailTrim, resolveDevBypassConfirmation(confirmation));
+    persistVerifiedEmail(emailTrim, resolveDevBypassConfirmation(confirmation), phone);
     return;
   }
 
@@ -327,7 +349,7 @@ async function submitEmailVerification(values: VerificationStepFields) {
       verifyError.value = messageForVerifyStatus(result.status);
       return;
     }
-    persistVerifiedEmail(emailTrim, confirmation);
+    persistVerifiedEmail(emailTrim, confirmation, phone);
   } catch (e) {
     verifyError.value = e instanceof Error ? e.message : t(EMAIL_CHALLENGE_GENERIC_ERROR_KEY);
   } finally {

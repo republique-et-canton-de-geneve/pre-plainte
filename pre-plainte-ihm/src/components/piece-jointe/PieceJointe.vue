@@ -1,6 +1,11 @@
 <template>
   <div>
-    <h3 v-if="showTitle" class="text-h6 mb-3">{{ displayLabel }}</h3>
+    <div v-if="showTitle" class="mb-3">
+      <h3 class="text-h6 mb-1">{{ displayLabel }}</h3>
+      <div v-if="subtitle" class="text-body-2 text-medium-emphasis">
+        {{ subtitle }}
+      </div>
+    </div>
     <v-alert type="info" density="comfortable" variant="tonal" class="mb-4">
       {{ t("pieceJointe.contraintesUpload", { maxDocs: maxFilesAllowed, maxMo: maxFileSizeMo }) }}
     </v-alert>
@@ -146,6 +151,7 @@ const props = withDefaults(
     accept?: string;
     showTitle?: boolean;
     required?: boolean;
+    subtitle?: string;
   }>(),
   {
     modelValue: () => [],
@@ -156,6 +162,7 @@ const props = withDefaults(
     accept: DEFAULT_ACCEPT_FILES,
     showTitle: true,
     required: false,
+    subtitle: "",
   },
 );
 
