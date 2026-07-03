@@ -146,6 +146,16 @@ public class SuisseEpoliceMapperForPPL {
     List<Person> updatedPersons = new ArrayList<>(persons);
     String personKey = String.valueOf(nextNumericKey(updatedPersons));
 
+    Person counterparty = buildCyberCounterparty(counterpartyData, updatedPersons, personKey);
+    updatedPersons.add(counterparty);
+    return updatedPersons;
+  }
+
+  private Person buildCyberCounterparty(
+      CyberCounterpartyData counterpartyData,
+      List<Person> updatedPersons,
+      String personKey
+  ) {
     Communication communication = Communication.builder()
         .email(counterpartyData.email())
         .phone(counterpartyData.phone())
@@ -155,46 +165,65 @@ public class SuisseEpoliceMapperForPPL {
 
     List<Address> addresses = buildCounterpartyAddresses(counterpartyData);
 
-    Person counterparty;
     if (counterpartyData.legalEntity()) {
-      String companyName = counterpartyData.legalCurrentName();
-      if (companyName == null || companyName.isBlank()) {
-        companyName = "Entreprise (identité partielle)";
-      }
-      counterparty = Person.builder()
-          .key(personKey)
-          .type(Ech0051DocumentPayload.PersonType.LEGAL)
-          .legalIdentity(LegalIdentity.builder()
-              .currentName(companyName.strip())
-              .build())
-          .communication(isBlankCommunication(communication) ? null : communication)
-          .addresses(addresses)
-          .address(addresses.isEmpty() ? null : addresses.getFirst())
-          .additionalInformation(counterpartyData.personAdditionalInformation())
-          .build();
-    } else {
-      String identityKey = String.valueOf(nextIdentityNumericKey(updatedPersons));
-      NaturalIdentity identity = NaturalIdentity.builder()
-          .key(identityKey)
-          .identityCategory(Ech051Constants.IDENTITY_CATEGORY_UNKNOWN)
-          .additionalInformation(counterpartyData.identityAdditionalInformation())
-          .officialName(nullToUnknown(counterpartyData.officialName()))
-          .firstName(nullToUnknown(counterpartyData.firstName()))
-          .build();
-
-      counterparty = Person.builder()
-          .key(personKey)
-          .type(Ech0051DocumentPayload.PersonType.NATURAL)
-          .naturalIdentity(identity)
-          .communication(isBlankCommunication(communication) ? null : communication)
-          .addresses(addresses)
-          .address(addresses.isEmpty() ? null : addresses.getFirst())
-          .additionalInformation(counterpartyData.personAdditionalInformation())
-          .build();
+      return buildLegalCounterparty(counterpartyData, personKey, communication, addresses);
     }
 
-    updatedPersons.add(counterparty);
-    return updatedPersons;
+    String identityKey = String.valueOf(nextIdentityNumericKey(updatedPersons));
+    return buildNaturalCounterparty(counterpartyData, personKey, identityKey, communication, addresses);
+  }
+
+  private Person buildLegalCounterparty(
+      CyberCounterpartyData counterpartyData,
+      String personKey,
+      Communication communication,
+      List<Address> addresses
+  ) {
+    String companyName = resolveLegalCounterpartyName(counterpartyData.legalCurrentName());
+    return Person.builder()
+        .key(personKey)
+        .type(Ech0051DocumentPayload.PersonType.LEGAL)
+        .legalIdentity(LegalIdentity.builder()
+            .currentName(companyName)
+            .build())
+        .communication(isBlankCommunication(communication) ? null : communication)
+        .addresses(addresses)
+        .address(addresses.isEmpty() ? null : addresses.getFirst())
+        .additionalInformation(counterpartyData.personAdditionalInformation())
+        .build();
+  }
+
+  private Person buildNaturalCounterparty(
+      CyberCounterpartyData counterpartyData,
+      String personKey,
+      String identityKey,
+      Communication communication,
+      List<Address> addresses
+  ) {
+    NaturalIdentity identity = NaturalIdentity.builder()
+        .key(identityKey)
+        .identityCategory(Ech051Constants.IDENTITY_CATEGORY_UNKNOWN)
+        .additionalInformation(counterpartyData.identityAdditionalInformation())
+        .officialName(nullToUnknown(counterpartyData.officialName()))
+        .firstName(nullToUnknown(counterpartyData.firstName()))
+        .build();
+
+    return Person.builder()
+        .key(personKey)
+        .type(Ech0051DocumentPayload.PersonType.NATURAL)
+        .naturalIdentity(identity)
+        .communication(isBlankCommunication(communication) ? null : communication)
+        .addresses(addresses)
+        .address(addresses.isEmpty() ? null : addresses.getFirst())
+        .additionalInformation(counterpartyData.personAdditionalInformation())
+        .build();
+  }
+
+  private String resolveLegalCounterpartyName(String companyName) {
+    if (companyName == null || companyName.isBlank()) {
+      return "Entreprise (identité partielle)";
+    }
+    return companyName.strip();
   }
 
   private static boolean shouldAddCyberCounterparty(Cybercrime cybercrime) {
