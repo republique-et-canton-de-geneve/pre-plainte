@@ -200,35 +200,10 @@ public class Ech051Builder {
     Ech0051DocumentXml.PersonXml personXml = new Ech0051DocumentXml.PersonXml();
     personXml.setKey(personDto.getKey());
     personXml.setSourceId(buildPplSourceId());
+    personXml.setNatural(mapNatural(personDto));
+    personXml.setLegal(mapLegal(personDto));
+    setPersonAddresses(personXml, personDto);
 
-    if (personDto.getNaturalIdentity() != null) {
-      Ech0051DocumentXml.NaturalXml naturalXml = new Ech0051DocumentXml.NaturalXml();
-      naturalXml.setIdentity(mapNaturalIdentity(personDto.getNaturalIdentity()));
-      if (personDto.getRemark() != null && !personDto.getRemark().isBlank()) {
-        Ech0051DocumentXml.RemarkXml remarkXml = new Ech0051DocumentXml.RemarkXml();
-        remarkXml.setAdditionalInformation(personDto.getRemark().strip());
-        naturalXml.setRemark(remarkXml);
-      }
-      personXml.setNatural(naturalXml);
-    }
-    if (personDto.getLegalIdentity() != null) {
-      Ech0051DocumentXml.LegalXml legalXml = new Ech0051DocumentXml.LegalXml();
-      legalXml.setCurrentName(personDto.getLegalIdentity().getCurrentName());
-      personXml.setLegal(legalXml);
-    }
-    if (personDto.getAddresses() != null && !personDto.getAddresses().isEmpty()) {
-      List<Ech0051DocumentXml.AddressXml> addressXmls = new ArrayList<>();
-      for (Ech0051DocumentPayload.Address addressDto : personDto.getAddresses()) {
-        if (addressDto != null) {
-          addressXmls.add(mapAddress(addressDto));
-        }
-      }
-      if (!addressXmls.isEmpty()) {
-        personXml.setAddresses(addressXmls);
-      }
-    } else if (personDto.getAddress() != null) {
-      personXml.setAddresses(List.of(mapAddress(personDto.getAddress())));
-    }
     if (personDto.getCommunication() != null) {
       appendMeansOfCommunicationFromDto(personXml, personDto.getCommunication());
     }
@@ -243,6 +218,57 @@ public class Ech051Builder {
     personXml.setNoPerpetratorsIdCopyPresentReason(trimToNull(personDto.getNoPerpetratorsIdCopyPresentReason()));
     personXml.setAdditionalInformation(personDto.getAdditionalInformation());
     return personXml;
+  }
+
+  private Ech0051DocumentXml.NaturalXml mapNatural(Ech0051DocumentPayload.Person personDto) {
+    if (personDto.getNaturalIdentity() == null) {
+      return null;
+    }
+    Ech0051DocumentXml.NaturalXml naturalXml = new Ech0051DocumentXml.NaturalXml();
+    naturalXml.setIdentity(mapNaturalIdentity(personDto.getNaturalIdentity()));
+    naturalXml.setRemark(mapRemark(personDto.getRemark()));
+    return naturalXml;
+  }
+
+  private Ech0051DocumentXml.RemarkXml mapRemark(String remark) {
+    if (remark == null || remark.isBlank()) {
+      return null;
+    }
+    Ech0051DocumentXml.RemarkXml remarkXml = new Ech0051DocumentXml.RemarkXml();
+    remarkXml.setAdditionalInformation(remark.strip());
+    return remarkXml;
+  }
+
+  private Ech0051DocumentXml.LegalXml mapLegal(Ech0051DocumentPayload.Person personDto) {
+    if (personDto.getLegalIdentity() == null) {
+      return null;
+    }
+    Ech0051DocumentXml.LegalXml legalXml = new Ech0051DocumentXml.LegalXml();
+    legalXml.setCurrentName(personDto.getLegalIdentity().getCurrentName());
+    return legalXml;
+  }
+
+  private void setPersonAddresses(
+      Ech0051DocumentXml.PersonXml personXml,
+      Ech0051DocumentPayload.Person personDto
+  ) {
+    List<Ech0051DocumentXml.AddressXml> addresses = mapPersonAddresses(personDto);
+    if (!addresses.isEmpty()) {
+      personXml.setAddresses(addresses);
+    }
+  }
+
+  private List<Ech0051DocumentXml.AddressXml> mapPersonAddresses(Ech0051DocumentPayload.Person personDto) {
+    if (personDto.getAddresses() != null && !personDto.getAddresses().isEmpty()) {
+      return personDto.getAddresses().stream()
+          .filter(Objects::nonNull)
+          .map(this::mapAddress)
+          .toList();
+    }
+    if (personDto.getAddress() != null) {
+      return List.of(mapAddress(personDto.getAddress()));
+    }
+    return List.of();
   }
 
   private static String trimToNull(String value) {
@@ -555,9 +581,6 @@ public class Ech051Builder {
       eventXml.setLocality(localityXml);
     }
 
-    // Exclu du XML sedex : modeOperandi et typeOfCrime ne sont plus transférés dans <eCH-0051:event>.
-    // eventXml.setModeOperandi(mapRipolValue(dto.getModeOperandi()));
-    // eventXml.setTypeOfCrime(mapRipolValue(dto.getTypeOfCrime()));
     eventXml.setFacts(dto.getFacts());
     eventXml.setAdditionalInformation(dto.getAdditionalInformation());
     return eventXml;

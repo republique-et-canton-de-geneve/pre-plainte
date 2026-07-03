@@ -7,6 +7,8 @@ export interface DisclaimerWorkflowRuleData extends Record<string, unknown> {
   typeCybercrime?: string;
   confirmeIdentite?: boolean;
   confirmeSituation?: boolean;
+  confirmeEffraction?: boolean;
+  disclaimerConfirmed?: boolean;
   captchaEnabled?: boolean;
   captchaToken?: string;
 }
@@ -15,6 +17,8 @@ export const donneesDisclaimerValides: DisclaimerWorkflowRuleData = {
   typeIncident: "vol",
   confirmeIdentite: true,
   confirmeSituation: true,
+  confirmeEffraction: true,
+  disclaimerConfirmed: true,
   captchaEnabled: false,
   captchaToken: "",
 };
@@ -25,17 +29,17 @@ export const reglesDisclaimerWorkflow: BusinessRule<DisclaimerWorkflowRuleData>[
     section: "Informations generales",
     champDemande: "Bouton continuer",
     obligatoire: "Oui",
-    precision: "La continuation est autorisee uniquement si les confirmations et le type d'incident requis sont renseignes.",
+    precision: "La continuation est autorisee uniquement si les confirmations ont ete validees et le type d'incident requis est renseigne.",
     examples: [
       {
-        label: "incident vol avec confirmations est autorise",
+        label: "incident vol avec confirmations validees est autorise",
         data: {},
         valid: true,
       },
       {
-        label: "confirmation d'identite absente bloque la continuation",
+        label: "confirmations non validees bloquent la continuation",
         data: {
-          confirmeIdentite: false,
+          disclaimerConfirmed: false,
         },
         valid: false,
       },
@@ -97,6 +101,41 @@ export const reglesDisclaimerWorkflow: BusinessRule<DisclaimerWorkflowRuleData>[
           captchaToken: "token",
         },
         valid: true,
+      },
+    ],
+  },
+  {
+    kind: "workflow",
+    section: "Informations generales",
+    champDemande: "Bouton confirmer",
+    obligatoire: "Oui",
+    precision: "Le reste de la page est affiche uniquement si les trois confirmations sont cochees.",
+    examples: [
+      {
+        label: "trois confirmations cochees autorisent l'affichage du formulaire",
+        data: {},
+        valid: true,
+      },
+      {
+        label: "confirmation d'identite absente bloque l'affichage du formulaire",
+        data: {
+          confirmeIdentite: false,
+        },
+        valid: false,
+      },
+      {
+        label: "confirmation de situation absente bloque l'affichage du formulaire",
+        data: {
+          confirmeSituation: false,
+        },
+        valid: false,
+      },
+      {
+        label: "confirmation d'effraction absente bloque l'affichage du formulaire",
+        data: {
+          confirmeEffraction: false,
+        },
+        valid: false,
       },
     ],
   },
