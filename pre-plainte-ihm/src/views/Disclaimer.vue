@@ -142,7 +142,11 @@
         />
 
         <div v-if="showConstatPhotosUpload" class="mb-8">
-          <PieceJointe v-model="fichiers" :label="constatPhotosLabel" />
+          <PieceJointe
+            v-model="fichiers"
+            :label="t('dommages.fichiers')"
+            :subtitle="t('dommages.photosRecommandees')"
+          />
         </div>
 
         <v-alert
@@ -303,7 +307,6 @@ const showRendezVousOnlyMessage = computed(() =>
 );
 
 const showConstatPhotosUpload = computed(() => showConstatQuestion.value && constatPresent.value === false);
-const constatPhotosLabel = computed(() => `${t("dommages.fichiers")} (${t("dommages.photosRecommandees")})`);
 
 const isIncidentSelectionComplete = computed(() => {
   if (typeIncident.value === DEGAT_DELIT_INCIDENT) {
