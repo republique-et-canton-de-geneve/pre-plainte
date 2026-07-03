@@ -245,25 +245,14 @@ public class SuisseEpoliceMapperForPPL {
     AchatNonRecu achat = cybercrime.getAchatNonRecu();
     if (achat != null) {
       String personCtx = buildAchatCounterpartyPersonAdditionalInformation(cybercrime, achat);
-      String uri;
-      String uriProvider;
-      if (Boolean.TRUE.equals(achat.getAchatViaPlaceMarche())) {
-        uri = resolveMarketplaceUri(achat);
-        uriProvider = resolveMarketplaceUriProvider(achat);
-      } else if (isNotBlank(achat.getSiteWebEntrepriseVendeur())) {
-        uri = trimToNull(achat.getSiteWebEntrepriseVendeur());
-        uriProvider = Ech051Constants.URI_PROVIDER_ENTREPRISE_VENDEUR;
-      } else {
-        uri = null;
-        uriProvider = null;
-      }
+      CyberCounterpartyUriData uriData = resolveAchatCounterpartyUriData(achat);
       return new CyberCounterpartyData(
           achat.getNomVendeur(),
           achat.getPrenomVendeur(),
           achat.getEmailVendeur(),
           achat.getTelephoneVendeur(),
-          uri,
-          uriProvider,
+          uriData.uri(),
+          uriData.uriProvider(),
           achat.getAdresseVendeur(),
           null,
           personCtx,
@@ -326,6 +315,19 @@ public class SuisseEpoliceMapperForPPL {
         false,
         null
     );
+  }
+
+  private CyberCounterpartyUriData resolveAchatCounterpartyUriData(AchatNonRecu achat) {
+    if (Boolean.TRUE.equals(achat.getAchatViaPlaceMarche())) {
+      return new CyberCounterpartyUriData(resolveMarketplaceUri(achat), resolveMarketplaceUriProvider(achat));
+    }
+    if (isNotBlank(achat.getSiteWebEntrepriseVendeur())) {
+      return new CyberCounterpartyUriData(
+          trimToNull(achat.getSiteWebEntrepriseVendeur()),
+          Ech051Constants.URI_PROVIDER_ENTREPRISE_VENDEUR
+      );
+    }
+    return new CyberCounterpartyUriData(null, null);
   }
 
   private List<Person> applyCyberVictimAttributes(List<Person> persons, IncidentBase incident) {
@@ -695,5 +697,8 @@ public class SuisseEpoliceMapperForPPL {
       return DeclarationType.TIERS;
     }
     return DeclarationType.INDIVIDUAL;
+  }
+
+  private record CyberCounterpartyUriData(String uri, String uriProvider) {
   }
 }
