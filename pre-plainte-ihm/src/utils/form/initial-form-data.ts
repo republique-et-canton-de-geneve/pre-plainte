@@ -1,22 +1,15 @@
 import type { PrePlainteFormFields } from "@/types/pre-plainte.interface";
 import { RIPOL } from "@/constants/constant";
 
-/**
- * Structure de données initiale pour le formulaire de pré-plainte
- * Contient tous les champs avec leurs valeurs par défaut
- */
-export const getInitialFormData = (): PrePlainteFormFields => ({
-  /* Informations générales */
+type InitialFormDataPart = Partial<PrePlainteFormFields>;
+
+const getIdentityInitialData = (): InitialFormDataPart => ({
   confirmeIdentite: false,
   confirmeSituation: false,
-
-  /* Informations personnelles */
   lienAvecPersonne: "",
   typeRepresentation: "",
   postePersonneMorale: "",
   justificatifPersonneMorale: [],
-
-  /* Déclarant */
   nom: "",
   nomNaissance: "",
   prenom: "",
@@ -34,8 +27,6 @@ export const getInitialFormData = (): PrePlainteFormFields => ({
   confirmationEmail: "",
   typeDocumentIdentite: "",
   numeroDocumentIdentite: "",
-
-  /* Tiers */
   tiersNom: "",
   tiersPrenom: "",
   tiersGenre: null,
@@ -51,8 +42,6 @@ export const getInitialFormData = (): PrePlainteFormFields => ({
   tiersConfirmationEmail: "",
   tiersTypeDocumentIdentite: "",
   tiersNumeroDocumentIdentite: "",
-
-  /* Organisation */
   organisationNom: "",
   organisationAdresse: "",
   organisationAdressePostale: "",
@@ -62,15 +51,14 @@ export const getInitialFormData = (): PrePlainteFormFields => ({
   organisationTelephone: "",
   organisationEmail: "",
   organisationConfirmationEmail: "",
+});
 
-  /* Incident */
+const getIncidentInitialData = (): InitialFormDataPart => ({
   typeIncident: "",
   dateDebutEvenement: "",
   heureDebutEvenement: "",
   dateFinEvenement: "",
   heureFinEvenement: "",
-
-  /* Commun vol & dommage */
   adresseLesee: null,
   typeLieu: null,
   adresseConnue: null,
@@ -86,7 +74,6 @@ export const getInitialFormData = (): PrePlainteFormFields => ({
   npaEvenementSecondaire: "",
   localiteEvenementSecondaire: "",
   paysEvenementSecondaire: RIPOL.PAYS_SUISSE,
-
   sousCategorie: "",
   typeObjet: null,
   fabricant: null,
@@ -111,10 +98,10 @@ export const getInitialFormData = (): PrePlainteFormFields => ({
   numeroAssurance: "",
   numeroVignette: "",
   numeroMaster: "",
-
   fichiers: [],
+});
 
-  /* Vol */
+const getVolDommageInitialData = (): InitialFormDataPart => ({
   volDansVehicule: null,
   categorieObjet: "",
   gravure: "",
@@ -127,8 +114,6 @@ export const getInitialFormData = (): PrePlainteFormFields => ({
   isVehicle: false,
   avezVousDegradation: null,
   objetsVolesValides: [],
-
-  /* Dommage */
   typeDommage: "",
   montantEstime: "",
   devise: "",
@@ -137,23 +122,18 @@ export const getInitialFormData = (): PrePlainteFormFields => ({
   constatPresent: null,
   dateConstat: "",
   objetsDegradesValides: [],
+});
 
-  /* Cybercrime commun */
+const getCybercrimeInitialData = (): InitialFormDataPart => ({
   typeCybercrime: "",
   autresDocuments: [],
-
-  /* Commun commande frauduleuse & fausse annonce */
   descriptionCybercrime: "",
   justificatifsPaiement: [],
   copiesEcran: [],
-
-  /* Commun achat non reçu & fausse annonce */
   datePremierContact: "",
   heurePremierContact: "",
   dateDernierContact: "",
   heureDernierContact: "",
-
-  /* Commande frauduleuse */
   prestataire: "",
   dateDecouverte: "",
   montant: "",
@@ -169,7 +149,6 @@ export const getInitialFormData = (): PrePlainteFormFields => ({
   livraisonLocalite: "",
   livraisonLocaliteCode: "",
   livraisonPays: "",
-
   prenomContrevenant: "",
   nomContrevenant: "",
   siteWebContrevenant: "",
@@ -180,8 +159,6 @@ export const getInitialFormData = (): PrePlainteFormFields => ({
   contrevenantLocaliteCode: "",
   contrevenantPays: "",
   moyenPaiementNumeriqueDebite: null,
-
-  /* Achat non reçu */
   montantDelitAchatLigne: "",
   articleNonLivreDescription: "",
   prenomVendeur: "",
@@ -232,8 +209,6 @@ export const getInitialFormData = (): PrePlainteFormFields => ({
   copieIdentiteAuteurDocument: [],
   copieIdentiteAuteurDocumentIndisponible: false,
   raisonAbsenceCopieIdentiteAuteur: "",
-
-  /* Fausse annonce */
   urlComplete: "",
   titreAnnonce: "",
   nomBailleur: "",
@@ -244,8 +219,9 @@ export const getInitialFormData = (): PrePlainteFormFields => ({
   adresseBienImmobilier: "",
   montantDemande: "",
   modePaiementDemande: "",
+});
 
-  /* Rendez-vous */
+const getRendezVousInitialData = (): InitialFormDataPart => ({
   preferenceRendezVous: "",
   dateSouhaitee: "",
   creneauPrefere: "",
@@ -254,5 +230,13 @@ export const getInitialFormData = (): PrePlainteFormFields => ({
   modeContactPrefere: "",
   codeRdv: "",
   selectedCreneau: null,
-
 });
+
+export const getInitialFormData = (): PrePlainteFormFields =>
+  ({
+    ...getIdentityInitialData(),
+    ...getIncidentInitialData(),
+    ...getVolDommageInitialData(),
+    ...getCybercrimeInitialData(),
+    ...getRendezVousInitialData(),
+  }) as PrePlainteFormFields;
