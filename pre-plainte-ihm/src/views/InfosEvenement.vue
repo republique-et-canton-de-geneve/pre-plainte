@@ -156,10 +156,11 @@
       </template>
 
       <div v-if="showEventFilesUpload" class="mb-8">
-        <PieceJointe v-model="fichiers" :label="t('dommages.fichiers')" />
-        <div v-if="typeIncident === 'degat-delit'" class="text-body-2 text-medium-emphasis mt-2">
-          {{ t("dommages.photosRecommandees") }}
-        </div>
+        <PieceJointe
+          v-model="fichiers"
+          :label="t('dommages.fichiers')"
+          :subtitle="typeIncident === 'degat-delit' ? t('dommages.photosRecommandees') : ''"
+        />
       </div>
       <AdresseEvent v-if="typeIncident !== 'cybercrime'" />
 
