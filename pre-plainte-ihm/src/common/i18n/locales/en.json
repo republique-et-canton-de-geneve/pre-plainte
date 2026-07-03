@@ -313,6 +313,10 @@
     "heureDebutEvenement": "Event start time",
     "dateFinEvenement": "Event end date",
     "heureFinEvenement": "Event end time",
+    "dateCommande": "Order date",
+    "heureCommande": "Order time",
+    "dateLivraisonOuDecouverte": "Delivery date or discovery date",
+    "heureLivraisonOuDecouverte": "Delivery or discovery time",
     "heureEstimee": "Estimated time of occurrence",
     "adresseEvenement": "Location of the event",
     "adresseSuisseUniquement": "The event address must be located in Switzerland only",
@@ -329,6 +333,10 @@
     "hintHeureDebutEvenement": "Enter the event start time",
     "hintDateFinEvenement": "Enter the event end date",
     "hintHeureFinEvenement": "Enter the event end time",
+    "hintDateCommande": "Enter the order date",
+    "hintHeureCommande": "Enter the order time",
+    "hintDateLivraisonOuDecouverte": "Enter the delivery or discovery date",
+    "hintHeureLivraisonOuDecouverte": "Enter the delivery or discovery time",
     "hintLieu": "Select the type of place where the incident occurred"
   },
   "incidentTypes": {
@@ -584,6 +592,8 @@
     "constatDate": "Report date",
     "constatPoliceFichiers": "Police report",
     "constatPoliceWarning": "Before continuing your request, please have the damage recorded by the police by calling 117. You can save the pre-complaint draft and complete it after the report has been drawn up. To do this, click the \"Save and come back later\" button at the bottom of the page.",
+    "constatRendezVousOnlyInfo": "A police report has already been drawn up. You only need to book an appointment, without completing the personal information and event steps.",
+    "photosRecommandees": "Strongly recommended",
     "hintTypeDommage": "Select the type of damage",
     "hintMontantEstime": "Enter the estimated amount of damage in figures",
     "hintNatureDommage": "Select the nature of the observed damage",
@@ -815,6 +825,7 @@
   },
   "submission": {
     "soumettrePrePlainte": "Submit the pre-complaint",
+    "confirmerRendezVous": "Confirm the appointment",
     "formulaireComplet": "Your pre-complaint request has been received",
     "envoiEnCours": "Sending in progress...",
     "envoi": "Sending...",
