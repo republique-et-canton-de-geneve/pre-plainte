@@ -5,6 +5,8 @@ export interface DisclaimerContinueState {
   typeCybercrime?: string | null;
   confirmeIdentite?: boolean;
   confirmeSituation?: boolean;
+  confirmeEffraction?: boolean;
+  disclaimerConfirmed?: boolean;
   captchaEnabled?: boolean;
   captchaToken?: string | null;
 }
@@ -18,7 +20,7 @@ export const DOMMAGE_PROPRIETE = "dommage-propriete";
 export function canContinueDisclaimer(state: DisclaimerContinueState): boolean {
   const typeIncident = state.typeIncident ?? "";
   return hasValidIncident(state, typeIncident) &&
-    hasConfirmedDisclaimer(state) &&
+    Boolean(state.disclaimerConfirmed) &&
     hasValidCaptcha(state);
 }
 
@@ -52,8 +54,10 @@ export function isRendezVousOnlyDommage(state: DisclaimerContinueState): boolean
     state.constatPresent === true;
 }
 
-function hasConfirmedDisclaimer(state: DisclaimerContinueState): boolean {
-  return state.confirmeIdentite === true && state.confirmeSituation === true;
+export function hasConfirmedDisclaimer(
+  state: Pick<DisclaimerContinueState, "confirmeIdentite" | "confirmeSituation" | "confirmeEffraction">,
+): boolean {
+  return Boolean(state.confirmeIdentite && state.confirmeSituation && state.confirmeEffraction);
 }
 
 function hasValidCaptcha(state: DisclaimerContinueState): boolean {

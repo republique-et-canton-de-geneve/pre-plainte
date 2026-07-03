@@ -32,6 +32,7 @@ const EMAIL_CHALLENGE_KEY_CYPRESS = "challenge-cypress";
 const CONTINUER_RENDEZ_VOUS_SELECTOR = '[data-cy="continuer-rendez-vous"]';
 const CONTINUER_VERIFICATION_EMAIL_SELECTOR = '[data-cy="continuer-verification-email"]';
 const CONTINUER_INFORMATIONS_GENERALES_SELECTOR = '[data-cy="continuer-informations-generales"]';
+const CONFIRMER_DISCLAIMER_SELECTOR = '[data-cy="confirmer-disclaimer"]';
 const TYPE_PERSONNE_NATIVE_SELECTOR = '[data-cy="type-personne-native"]';
 const ARIA_DISABLED_ATTRIBUTE = "aria-disabled";
 const DISABLED_ATTRIBUTE_VALUE = "true";
@@ -436,6 +437,18 @@ Given("je coche la confirmation de situation", () => {
   cy.get('[data-cy="confirmation-situation"]').click("topRight", { force: true });
 });
 
+Given("que je coche la confirmation d'effraction", () => {
+  cy.get('[data-cy="confirmation-effraction"]').click("topRight", { force: true });
+});
+
+Given("je coche la confirmation d'effraction", () => {
+  cy.get('[data-cy="confirmation-effraction"]').click("topRight", { force: true });
+});
+
+When("je confirme les conditions de pré-plainte", () => {
+  cy.get(CONFIRMER_DISCLAIMER_SELECTOR).filter(":visible").first().click();
+});
+
 Then("les champs {string} sont affichés", (liste) => {
   for (const champ of liste.split(",")) {
     const libelle = champ.trim();
@@ -708,4 +721,8 @@ Then("le bouton continuer des informations générales est désactivé", () => {
 
 Then("le bouton continuer des informations générales est actif", () => {
   cy.get(CONTINUER_INFORMATIONS_GENERALES_SELECTOR).filter(":visible").first().should(beenabled);
+});
+
+Then("le contenu des informations générales est masqué", () => {
+  cy.get('[data-cy="contenu-informations-generales"]').should("not.exist");
 });

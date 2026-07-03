@@ -98,6 +98,7 @@
     "precedent": "Voltar",
     "continuer": "Continuar",
     "poursuivre": "Continuar",
+    "confirmer": "Confirmar",
     "sauvegarder": "Guardar e voltar mais tarde",
     "annuler": "Cancelar",
     "quitter": "Sair",
@@ -145,6 +146,7 @@
     "validation": "Pré-queixa validada"
   },
   "disclaimer": {
+    "intro": "Para poder beneficiar da pré-queixa, as condições abaixo devem estar reunidas:",
     "intro1": "A pré-queixa online",
     "intro2": "não deve ser utilizada",
     "intro3": "nas seguintes situações:",
@@ -154,6 +156,10 @@
     "avantConfirmation": "Antes de continuar, confirme que a sua situação não corresponde a nenhum dos casos acima mencionados:",
     "confirmeIdentite": "Confirmo que não conheço a identidade da autora ou do autor dos factos e que não tenho qualquer informação sobre essa pessoa (nem descrição, nem imagem, nem vídeo).",
     "confirmeSituation": "Confirmo que a minha situação não diz respeito ao roubo de um veículo matriculado ou de uma matrícula.",
+    "confirmeEffraction": "Confirmo que a minha situação não diz respeito a uma invasão com arrombamento (roubo com danos num edifício ou veículo).",
+    "situationNonEligible": "Tendo em conta a sua situação, dirija-se imediatamente a um posto de polícia para apresentar queixa:",
+    "postesPolice": "Postos de polícia",
+    "warningVolCarte": "Se se tratar do roubo de um cartão de crédito ou débito, contacte o seu banco ou emissor do cartão para bloquear imediatamente o cartão.",
     "casNonTrouve": "Se não encontrar o seu caso,",
     "prendreRendezVousPoste": "dirija-se a um posto de polícia.",
     "cybercrimeAutreIntroduction": "Neste caso, dirija-se a um posto de polícia com os seguintes documentos:",

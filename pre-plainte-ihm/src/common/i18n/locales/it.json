@@ -98,6 +98,7 @@
     "precedent": "Indietro",
     "continuer": "Continua",
     "poursuivre": "Continua",
+    "confirmer": "Conferma",
     "sauvegarder": "Salva e riprendi più tardi",
     "annuler": "Annulla",
     "quitter": "Esci",
@@ -145,6 +146,7 @@
     "validation": "Pre-denuncia convalidata"
   },
   "disclaimer": {
+    "intro": "Per poter beneficiare della pre-denuncia, devono essere soddisfatte le seguenti condizioni:",
     "intro1": "La pre-denuncia online",
     "intro2": "non deve essere utilizzata",
     "intro3": "nelle seguenti situazioni:",
@@ -154,6 +156,10 @@
     "avantConfirmation": "Prima di continuare, confermate che la vostra situazione non corrisponde a nessuno dei casi sopra indicati:",
     "confirmeIdentite": "Confermo di non conoscere l'identità dell'autrice o dell'autore dei fatti e di non avere alcuna informazione al riguardo (nessun identikit, immagine o video).",
     "confirmeSituation": "Confermo che la mia situazione non riguarda il furto di un veicolo immatricolato o di una targa.",
+    "confirmeEffraction": "Confermo che la mia situazione non riguarda un'effrazione (furto con danni in un edificio o veicolo).",
+    "situationNonEligible": "Vista la vostra situazione, vi invitiamo a recarvi immediatamente presso un posto di polizia per presentare denuncia:",
+    "postesPolice": "Posti di polizia",
+    "warningVolCarte": "Se si tratta del furto di una carta di credito o di debito, contattate la vostra banca o l'emittente della carta per bloccarla immediatamente.",
     "casNonTrouve": "Se non trovate il vostro caso,",
     "prendreRendezVousPoste": "recatevi presso un posto di polizia.",
     "cybercrimeAutreIntroduction": "In questo caso, recatevi presso un posto di polizia con i seguenti documenti:",
