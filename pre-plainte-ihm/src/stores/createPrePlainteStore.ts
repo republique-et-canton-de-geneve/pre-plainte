@@ -1,7 +1,7 @@
 import type { PrePlainteFormFields } from "@/types/pre-plainte.interface";
 import { defineStore } from "pinia";
 import { reactive, ref, watch } from "vue";
-import { STEPS } from "@/constants/constant";
+import { STEP_RENDEZ_VOUS, STEPS } from "@/constants/constant";
 import {
   normalizeFormNames,
   saveFormData,
@@ -81,7 +81,7 @@ export const useCreatePrePlainteStore = defineStore("createPrePlainte", () => {
   const isRendezVousOnly = () => isRendezVousOnlyDommage(userFormData);
 
   const nextStep = () => {
-    const next = isRendezVousOnly() && step.value === 2 ? 5 : getNextStep(step.value);
+    const next = isRendezVousOnly() && step.value === 2 ? STEP_RENDEZ_VOUS : getNextStep(step.value);
     if (next) {
       isLoading.value = true;
       setTimeout(() => {
@@ -94,7 +94,7 @@ export const useCreatePrePlainteStore = defineStore("createPrePlainte", () => {
   };
 
   const prevStep = () => {
-    const prev = isRendezVousOnly() && step.value === 5 ? 2 : getPreviousStep(step.value);
+    const prev = isRendezVousOnly() && step.value === STEP_RENDEZ_VOUS ? 2 : getPreviousStep(step.value);
     if (prev) {
       step.value = prev;
       return true;

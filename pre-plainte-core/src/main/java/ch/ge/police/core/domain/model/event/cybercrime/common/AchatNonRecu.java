@@ -35,7 +35,11 @@ public class AchatNonRecu {
   private String moyenPaiementAutre;
   private String ibanBeneficiaire;
   private String comptePaypalBeneficiaire;
+  private String numeroTransactionPaypal;
   private String numeroTwintBeneficiaire;
+  private String typeCryptoMonnaie;
+  private String montantUnitesCrypto;
+  private String adresseWalletExpediteur;
   private String adresseWalletCrypto;
   private String hashTransactionCrypto;
   private String societeBeneficiaire;
@@ -45,7 +49,11 @@ public class AchatNonRecu {
   private Boolean preuvePaiementIndisponible;
   private String raisonAbsencePreuvePaiement;
   private Boolean copieIdentiteTransmiseAuteur;
+  private Boolean copieIdentiteTransmiseAuteurDocumentIndisponible;
+  private String raisonAbsenceCopieIdentiteTransmiseAuteur;
   private Boolean copieIdentiteAuteurTransmise;
+  private Boolean copieIdentiteAuteurDocumentIndisponible;
+  private String raisonAbsenceCopieIdentiteAuteur;
 
   public void champsObligatoireCybercrime() {
     verifierChampsObligatoires();
@@ -83,8 +91,12 @@ public class AchatNonRecu {
 
     verifierLongueurMax(ibanBeneficiaire, TEXT_FIELD_MAX_LENGTH, "ibanBeneficiaire");
     verifierLongueurMax(comptePaypalBeneficiaire, TEXT_FIELD_MAX_LENGTH, "comptePaypalBeneficiaire");
+    verifierLongueurMax(numeroTransactionPaypal, TEXT_FIELD_MAX_LENGTH, "numeroTransactionPaypal");
     verifierLongueurMax(numeroTwintBeneficiaire, TEXT_FIELD_MAX_LENGTH, "numeroTwintBeneficiaire");
 
+    verifierLongueurMax(typeCryptoMonnaie, TEXT_FIELD_MAX_LENGTH, "typeCryptoMonnaie");
+    verifierLongueurMax(montantUnitesCrypto, TEXT_FIELD_MAX_LENGTH, "montantUnitesCrypto");
+    verifierLongueurMax(adresseWalletExpediteur, TEXT_FIELD_MAX_LENGTH, "adresseWalletExpediteur");
     verifierLongueurMax(adresseWalletCrypto, TEXT_FIELD_MAX_LENGTH, "adresseWalletCrypto");
     verifierLongueurMax(hashTransactionCrypto, TEXT_FIELD_MAX_LENGTH, "hashTransactionCrypto");
 
@@ -94,5 +106,7 @@ public class AchatNonRecu {
 
     verifierLongueurMax(dateOperation, TEXT_FIELD_MAX_LENGTH, "dateOperation");
     verifierLongueurMax(raisonAbsencePreuvePaiement, TEXTAREA_MAX_LENGTH, "raisonAbsencePreuvePaiement");
+    verifierLongueurMax(raisonAbsenceCopieIdentiteTransmiseAuteur, TEXTAREA_MAX_LENGTH, "raisonAbsenceCopieIdentiteTransmiseAuteur");
+    verifierLongueurMax(raisonAbsenceCopieIdentiteAuteur, TEXTAREA_MAX_LENGTH, "raisonAbsenceCopieIdentiteAuteur");
   }
 }
