@@ -155,7 +155,7 @@
         </v-row>
       </template>
 
-      <div v-if="typeIncident !== 'cybercrime'" class="mb-8">
+      <div v-if="showEventFilesUpload" class="mb-8">
         <PieceJointe v-model="fichiers" :label="t('dommages.fichiers')" />
         <div v-if="typeIncident === 'degat-delit'" class="text-body-2 text-medium-emphasis mt-2">
           {{ t("dommages.photosRecommandees") }}
@@ -226,6 +226,7 @@ import ExitActionsForm from "@/components/actions/ExitActionsForm.vue";
 import { isCybercrimeTypeWithoutDetailFields } from "@/constants/constant";
 import { TYPE_INCIDENT } from "@/utils/incident-fields";
 import { requiredLabel } from "@/utils/helpers/labelHelpers";
+import { requiresConstatQuestion } from "@/utils/workflows/disclaimer-workflow";
 
 const { t, locale } = useI18n();
 const { mobile } = useDisplay();
@@ -255,6 +256,7 @@ const form = useForm<PrePlainteFormFields>({
 const { handleSubmit, setFieldValue, values } = form;
 
 const { value: typeIncident } = useField<string>("typeIncident");
+const { value: typeDommage } = useField<string>("typeDommage");
 
 const openFromRecap = localStorage.getItem("pp-open-section");
 
@@ -365,6 +367,13 @@ const showAutresDocumentsCybercrime = computed(() => {
     return copieIdentiteAuteurTransmise.value === true;
   }
   return true;
+});
+
+const showEventFilesUpload = computed(() => {
+  if (typeIncident.value === TYPE_INCIDENT.CYBERCRIME) {
+    return false;
+  }
+  return typeIncident.value !== DEGAT_DELIT || !requiresConstatQuestion(typeDommage.value);
 });
 
 const createInputHandler = (maskFn: (e: InputEvent, value: any) => void, target: any) => (e: InputEvent) => {
