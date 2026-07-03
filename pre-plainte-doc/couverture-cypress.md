@@ -20,7 +20,7 @@ Scénarios Cypress documentés : 24.
 
 | Parcours testé | Couverture fonctionnelle testée | Exemples testés | Source |
 | --- | --- | --- | --- |
-| Dommage avec constat présent - le fichier du constat est obligatoire | Champs et validations spécifiques à un dommage avec constat présent. | Les informations du constat de police sont affichées lorsqu'un dommage avec constat présent est déclaré.<br><br>Le fichier du constat de police est obligatoire lorsqu'un constat est présent. | `EvenementDommage.feature` |
+| Dommage - les photos sont optionnelles | Champs et validations spécifiques à un dommage avec photos optionnelles. | La question du constat de police n'est pas affichée dans l'étape informations sur l'événement.<br><br>Les photos du dommage sont recommandées mais restent optionnelles. | `EvenementDommage.feature` |
 
 ## Informations sur l'événement - vol
 

@@ -313,6 +313,10 @@
     "heureDebutEvenement": "Uhrzeit des Beginns",
     "dateFinEvenement": "Ende des Ereignisses",
     "heureFinEvenement": "Uhrzeit des Endes",
+    "dateCommande": "Bestelldatum",
+    "heureCommande": "Uhrzeit der Bestellung",
+    "dateLivraisonOuDecouverte": "Lieferdatum oder Datum der Entdeckung",
+    "heureLivraisonOuDecouverte": "Uhrzeit der Lieferung oder Entdeckung",
     "heureEstimee": "Geschätzte Uhrzeit des Vorfalls",
     "adresseEvenement": "Ort des Ereignisses",
     "adresseSuisseUniquement": "Die Adresse des Ereignisses muss sich ausschliesslich in der Schweiz befinden",
@@ -329,6 +333,10 @@
     "hintHeureDebutEvenement": "Geben Sie die Anfangsuhrzeit des Ereignisses ein",
     "hintDateFinEvenement": "Geben Sie das Enddatum des Ereignisses ein",
     "hintHeureFinEvenement": "Geben Sie die Enduhrzeit des Ereignisses ein",
+    "hintDateCommande": "Geben Sie das Bestelldatum ein",
+    "hintHeureCommande": "Geben Sie die Uhrzeit der Bestellung ein",
+    "hintDateLivraisonOuDecouverte": "Geben Sie das Lieferdatum oder Datum der Entdeckung ein",
+    "hintHeureLivraisonOuDecouverte": "Geben Sie die Uhrzeit der Lieferung oder Entdeckung ein",
     "hintLieu": "Wählen Sie die Art des Ortes aus, an dem sich der Vorfall ereignet hat"
   },
   "incidentTypes": {
@@ -584,6 +592,8 @@
     "constatDate": "Datum des Rapports",
     "constatPoliceFichiers": "Polizeirapport",
     "constatPoliceWarning": "Bevor Sie Ihren Vorgang fortsetzen, lassen Sie den Schaden bitte durch die Polizei feststellen, indem Sie 117 anrufen. Sie können den Entwurf der Voranzeige speichern und nach Erstellung des Rapports abschliessen. Klicken Sie dazu unten auf der Seite auf die Schaltfläche \"Speichern und später fortfahren\".",
+    "constatRendezVousOnlyInfo": "Es wurde bereits ein Polizeirapport erstellt. Sie müssen nur einen Termin vereinbaren, ohne die Schritte zu den persönlichen Angaben und zum Ereignis auszufüllen.",
+    "photosRecommandees": "Dringend empfohlen",
     "hintTypeDommage": "Wählen Sie die Art des Schadens aus",
     "hintMontantEstime": "Geben Sie den geschätzten Schadensbetrag in Zahlen an",
     "hintNatureDommage": "Wählen Sie die Art des festgestellten Schadens aus",
@@ -823,6 +833,7 @@
   },
   "submission": {
     "soumettrePrePlainte": "Voranzeige senden",
+    "confirmerRendezVous": "Termin bestätigen",
     "formulaireComplet": "Ihr Antrag auf Voranzeige wurde erfolgreich empfangen",
     "envoiEnCours": "Wird gesendet...",
     "envoi": "Versand...",

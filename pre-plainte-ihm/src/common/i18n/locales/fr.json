@@ -313,6 +313,10 @@
     "heureDebutEvenement": "Heure de début de l'événement",
     "dateFinEvenement": "Date de fin de l'événement",
     "heureFinEvenement": "Heure de fin de l'événement",
+    "dateCommande": "Date de commande",
+    "heureCommande": "Heure de commande",
+    "dateLivraisonOuDecouverte": "Date de livraison ou date de découverte",
+    "heureLivraisonOuDecouverte": "Heure de livraison ou de découverte",
     "heureEstimee": "Heure estimée de survenance",
     "adresseEvenement": "Lieu de l'événement",
     "adresseSuisseUniquement": "L'adresse de l'événement doit être située en Suisse uniquement",
@@ -329,6 +333,10 @@
     "hintHeureDebutEvenement": "Saisissez l'heure de début de l'événement",
     "hintDateFinEvenement": "Saisissez la date de fin de l'événement",
     "hintHeureFinEvenement": "Saisissez l'heure de fin de l'événement",
+    "hintDateCommande": "Saisissez la date de commande",
+    "hintHeureCommande": "Saisissez l'heure de commande",
+    "hintDateLivraisonOuDecouverte": "Saisissez la date de livraison ou de découverte",
+    "hintHeureLivraisonOuDecouverte": "Saisissez l'heure de livraison ou de découverte",
     "hintLieu": "Sélectionnez le type de lieu où l'incident s'est produit"
   },
   "incidentTypes": {
@@ -584,6 +592,8 @@
     "constatDate": "Date du constat",
     "constatPoliceFichiers": "Constat de police",
     "constatPoliceWarning": "Avant de continuer votre démarche, veuillez faire constater le dommage par la police en appelant le 117. Vous pouvez enregistrer le brouillon de la pré-plainte pour la finaliser après rédaction du constat. Pour cela, cliquez sur le bouton \"enregistrer et revenir plus tard\" situé en bas de la page.",
+    "constatRendezVousOnlyInfo": "Un constat de police a déjà été établi. Vous devez simplement prendre rendez-vous, sans compléter les étapes d'informations personnelles et d'événement.",
+    "photosRecommandees": "Fortement recommandé",
     "hintTypeDommage": "Sélectionnez le type de dommage",
     "hintMontantEstime": "Indiquez le montant estimé des dommages en chiffres",
     "hintNatureDommage": "Sélectionnez la nature du dommage observé",
@@ -823,6 +833,7 @@
   },
   "submission": {
     "soumettrePrePlainte": "Soumettre la pré-plainte",
+    "confirmerRendezVous": "Confirmer le rendez-vous",
     "formulaireComplet": "Votre demande de pré-plainte a bien été reçue",
     "envoiEnCours": "Envoi en cours...",
     "envoi": "Envoi...",
