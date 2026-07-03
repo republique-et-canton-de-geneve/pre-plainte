@@ -23,17 +23,6 @@
         data-cy="verification-email"
       />
 
-      <PhoneInput
-        v-if="rendezVousOnly"
-        v-model="telephone"
-        :label="t('informationsPersonnelles.numeroTelephone')"
-        :error-messages="telephoneError"
-        :hint="t('informationsPersonnelles.hintTelephone')"
-        input-class="mb-4"
-        default-country-code="CH"
-        required
-      />
-
       <v-btn
         type="button"
         variant="flat"
@@ -61,6 +50,17 @@
         :error-message="confirmationEmailError ?? ''"
         :email="emailDisplay"
         :autofocus="true"
+      />
+
+      <PhoneInput
+        v-if="rendezVousOnly"
+        v-model="telephone"
+        :label="t('informationsPersonnelles.numeroTelephone')"
+        :error-messages="telephoneError"
+        :hint="t('informationsPersonnelles.hintTelephone')"
+        input-class="mt-4 mb-4"
+        default-country-code="CH"
+        required
       />
 
       <v-alert
