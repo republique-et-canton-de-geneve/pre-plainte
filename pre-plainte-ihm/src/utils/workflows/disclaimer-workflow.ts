@@ -20,7 +20,7 @@ export const DOMMAGE_PROPRIETE = "dommage-propriete";
 export function canContinueDisclaimer(state: DisclaimerContinueState): boolean {
   const typeIncident = state.typeIncident ?? "";
   return hasValidIncident(state, typeIncident) &&
-    state.disclaimerConfirmed === true &&
+    Boolean(state.disclaimerConfirmed) &&
     hasValidCaptcha(state);
 }
 
@@ -54,18 +54,14 @@ export function isRendezVousOnlyDommage(state: DisclaimerContinueState): boolean
     state.constatPresent === true;
 }
 
-function hasConfirmedDisclaimer(state: DisclaimerContinueState): boolean {
-  return state.confirmeIdentite === true && state.confirmeSituation === true && state.confirmeEffraction === true;
+export function hasConfirmedDisclaimer(
+  state: Pick<DisclaimerContinueState, "confirmeIdentite" | "confirmeSituation" | "confirmeEffraction">,
+): boolean {
+  return Boolean(state.confirmeIdentite && state.confirmeSituation && state.confirmeEffraction);
 }
 
 function hasValidCaptcha(state: DisclaimerContinueState): boolean {
   return state.captchaEnabled !== true || Boolean(state.captchaToken);
-}
-
-export function validateDisclaimerConfirmations(
-  state: Pick<DisclaimerContinueState, "confirmeIdentite" | "confirmeSituation" | "confirmeEffraction">,
-): boolean {
-  return hasConfirmedDisclaimer(state);
 }
 
 export function shouldResetTypeDommage(typeIncident?: string | null): boolean {
