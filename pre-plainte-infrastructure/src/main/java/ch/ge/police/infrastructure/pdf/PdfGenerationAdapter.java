@@ -594,7 +594,16 @@ public class PdfGenerationAdapter implements PdfGenerationUseCase {
       addBooleanOuiNonPdf(rows, "Téléphone commande inconnu", cf.getTelephoneCommandeInconnu());
       addIfNotNull(rows, "Téléphone de commande", cf.getTelephoneCommande());
       addBooleanOuiNonPdf(rows, "Livré à l'adresse du lesé", cf.getLivraisonAdresseLesee());
+      addBooleanOuiNonPdf(rows, "Moyen de paiement numérique débité", cf.getMoyenPaiementNumeriqueDebite());
+      addIfNotNull(rows, "Prénom du contrevenant", cf.getPrenomContrevenant());
+      addIfNotNull(rows, "Nom du contrevenant", cf.getNomContrevenant());
+      addIfNotNull(rows, "Site web du contrevenant", cf.getSiteWebContrevenant());
+      addAdresseEvenement("(contrevenant)", cf.getAdresseContrevenant(), rows);
       addAdresseEvenement("(livraison)", cf.getAdresseLivraison(), rows);
+      addBooleanOuiNonPdf(rows, "Copie identité transmise à l'auteur", cf.getCopieIdentiteTransmiseAuteur());
+      addIfNotNull(rows, "Raison absence copie identité transmise", cf.getRaisonAbsenceCopieIdentiteTransmiseAuteur());
+      addBooleanOuiNonPdf(rows, "Copie identité auteur transmise", cf.getCopieIdentiteAuteurTransmise());
+      addIfNotNull(rows, "Raison absence copie identité auteur", cf.getRaisonAbsenceCopieIdentiteAuteur());
     }
 
     if (c.getAchatNonRecu() != null) {
@@ -623,8 +632,12 @@ public class PdfGenerationAdapter implements PdfGenerationUseCase {
       addIfNotNull(rows, "Moyen de paiement (autre)", a.getMoyenPaiementAutre());
       addIfNotNull(rows, "IBAN bénéficiaire", a.getIbanBeneficiaire());
       addIfNotNull(rows, "Compte PayPal bénéficiaire", a.getComptePaypalBeneficiaire());
+      addIfNotNull(rows, "Numéro de transaction PayPal", a.getNumeroTransactionPaypal());
       addIfNotNull(rows, "Twint bénéficiaire", a.getNumeroTwintBeneficiaire());
-      addIfNotNull(rows, "Adresse wallet crypto", a.getAdresseWalletCrypto());
+      addIfNotNull(rows, "Type crypto-monnaie", a.getTypeCryptoMonnaie());
+      addIfNotNull(rows, "Montant unités crypto", a.getMontantUnitesCrypto());
+      addIfNotNull(rows, "Wallet expéditeur crypto", a.getAdresseWalletExpediteur());
+      addIfNotNull(rows, "Wallet destinataire crypto", a.getAdresseWalletCrypto());
       addIfNotNull(rows, "Hash transaction crypto", a.getHashTransactionCrypto());
       addIfNotNull(rows, "Société bénéficiaire", a.getSocieteBeneficiaire());
       addIfNotNull(rows, "Nom du bénéficiaire", a.getNomBeneficiaire());
@@ -633,7 +646,9 @@ public class PdfGenerationAdapter implements PdfGenerationUseCase {
       addBooleanOuiNonPdf(rows, "Preuve de paiement indisponible", a.getPreuvePaiementIndisponible());
       addIfNotNull(rows, "Raison absence preuve paiement", a.getRaisonAbsencePreuvePaiement());
       addBooleanOuiNonPdf(rows, "Copie identité transmise à l'auteur", a.getCopieIdentiteTransmiseAuteur());
+      addIfNotNull(rows, "Raison absence copie identité transmise", a.getRaisonAbsenceCopieIdentiteTransmiseAuteur());
       addBooleanOuiNonPdf(rows, "Copie identité auteur transmise", a.getCopieIdentiteAuteurTransmise());
+      addIfNotNull(rows, "Raison absence copie identité auteur", a.getRaisonAbsenceCopieIdentiteAuteur());
     }
 
     if (c.getFausseAnnonce() != null) {

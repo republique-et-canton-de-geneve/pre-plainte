@@ -1,10 +1,17 @@
 package ch.ge.police.infrastructure.ech051.mapper;
 
+import ch.ge.police.core.domain.model.informationspersonnelles.InformationsPersonnelles;
+import ch.ge.police.core.domain.model.informationspersonnelles.common.InfosPersonne;
+import ch.ge.police.core.domain.model.informationspersonnelles.common.TypeDocumentIdentite;
 import ch.ge.police.core.domain.model.event.IncidentBase;
+import ch.ge.police.core.domain.model.event.cybercrime.Cybercrime;
+import ch.ge.police.core.domain.model.event.cybercrime.common.AchatNonRecu;
+import ch.ge.police.core.domain.model.event.cybercrime.common.CommandeFrauduleuse;
 import ch.ge.police.core.domain.model.event.dommagematerial.DommageMateriel;
 import ch.ge.police.core.domain.model.event.vol.Vol;
 import ch.ge.police.core.domain.model.event.vol.common.ObjetIncident;
 import ch.ge.police.infrastructure.ech051.dto.Ech0051DocumentPayload.Identification;
+import ch.ge.police.infrastructure.ech051.dto.Ech0051DocumentPayload.OfficialDocument;
 import ch.ge.police.infrastructure.ech051.dto.Ech0051DocumentPayload.NumberPlate;
 import ch.ge.police.infrastructure.ech051.dto.Ech0051DocumentPayload.ObjectItem;
 import ch.ge.police.infrastructure.ech051.dto.Ech0051DocumentPayload.RipolLocation;
@@ -14,6 +21,8 @@ import ch.ge.police.infrastructure.ech051.Ech051Constants;
 import ch.ge.police.infrastructure.ech051.MyAbiAdditionalInformationFormatter;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.IntStream;
 
@@ -44,6 +53,144 @@ public class SuisseEpoliceObjectMapper {
     }
 
     return List.of();
+  }
+
+  /**
+   * Objets cybercrime : pièce d'identité du lésé (key=6), montant commande frauduleuse (key=9)
+   * ou article non livré achat non reçu (key=11).
+   */
+  public List<ObjectItem> buildCyberObjects(Cybercrime cybercrime, InformationsPersonnelles infos) {
+    if (cybercrime == null) {
+      return List.of();
+    }
+    List<ObjectItem> objects = new ArrayList<>();
+
+    ObjectItem identityObject = buildVictimIdentityObject(resolveVictimInfos(infos));
+    if (identityObject != null) {
+      objects.add(identityObject);
+    }
+
+    AchatNonRecu achat = cybercrime.getAchatNonRecu();
+    if (achat != null
+        && (!isBlank(achat.getMontantDelitAchatLigne()) || !isBlank(achat.getArticleNonLivreDescription()))) {
+      objects.add(buildUndeliveredItemObject(achat));
+    }
+
+    CommandeFrauduleuse commande = cybercrime.getCommandeFrauduleuse();
+    if (commande != null && commande.getMontant() != null) {
+      objects.add(buildFraudulentOrderAmountObject(commande));
+    }
+
+    return objects;
+  }
+
+  private static InfosPersonne resolveVictimInfos(InformationsPersonnelles infos) {
+    if (infos == null) {
+      return null;
+    }
+    if (infos.hasTiers() && infos.getTiers() != null) {
+      return infos.getTiers();
+    }
+    if (infos.hasOrganisation()) {
+      return null;
+    }
+    return infos;
+  }
+
+  private ObjectItem buildVictimIdentityObject(InfosPersonne victimInfos) {
+    if (victimInfos == null || victimInfos.getTypeDocumentIdentite() == null) {
+      return null;
+    }
+    if (victimInfos.getTypeDocumentIdentite() == TypeDocumentIdentite.DOCUMENTS_VOLES_PERDUS) {
+      return null;
+    }
+    String documentNumber = trimToNull(victimInfos.getNumeroDocumentIdentite());
+    if (documentNumber == null) {
+      return null;
+    }
+    String identificationType = CyberVictimIdentityRipolMapper.mapIdentificationType(
+        victimInfos.getTypeDocumentIdentite()
+    );
+    if (identificationType == null) {
+      return null;
+    }
+
+    RipolReference permitCategory = CyberVictimIdentityRipolMapper.mapPermitCategory(victimInfos.getTitreSejour());
+    OfficialDocument officialDocument = permitCategory != null
+        ? OfficialDocument.builder().permitCategory(permitCategory).build()
+        : null;
+
+    return ObjectItem.builder()
+        .key(Ech051Constants.OBJECT_KEY_CYBER_VICTIM_IDENTITY)
+        .typeOfObject(RipolReferenceBuilder.of(
+            Ech051Constants.OBJECT_TYPE_CYBER_IDENTITY_CODE,
+            Ech051Constants.OBJECT_TYPE_CYBER_IDENTITY_LABEL,
+            TYPE_OBJET
+        ))
+        .officialDocument(officialDocument)
+        .identification(Identification.builder()
+            .type(identificationType)
+            .number(documentNumber)
+            .build())
+        .build();
+  }
+
+  private ObjectItem buildUndeliveredItemObject(AchatNonRecu achat) {
+    return ObjectItem.builder()
+        .key(Ech051Constants.OBJECT_KEY_CYBER_UNDELIVERED_ITEM)
+        .description(trimToNull(achat.getArticleNonLivreDescription()))
+        .realValue(normalizeAmountForSep(achat.getMontantDelitAchatLigne()))
+        .purchaseDate(trimToNull(achat.getDateOperation()))
+        .build();
+  }
+
+  private ObjectItem buildFraudulentOrderAmountObject(CommandeFrauduleuse commande) {
+    return ObjectItem.builder()
+        .key(Ech051Constants.OBJECT_KEY_CYBER_FRAUDULENT_ORDER_AMOUNT)
+        .realValue(normalizeAmountFromDouble(commande.getMontant()))
+        .purchaseDate(trimToNull(commande.getDateDecouverte()))
+        .build();
+  }
+
+  private static String normalizeAmountFromDouble(Double amount) {
+    if (amount == null) {
+      return null;
+    }
+    BigDecimal value = BigDecimal.valueOf(amount);
+    if (value.scale() <= 0 || value.stripTrailingZeros().scale() <= 0) {
+      return value.toBigInteger().toString();
+    }
+    return value.stripTrailingZeros().toPlainString();
+  }
+
+  private static String normalizeAmountForSep(String amount) {
+    if (amount == null || amount.isBlank()) {
+      return null;
+    }
+    String normalized = amount.strip().replace("'", "").replace("\u00a0", "").replace(" ", "");
+    if (normalized.contains(",")) {
+      normalized = normalized.replace(",", ".");
+    }
+    try {
+      BigDecimal value = new BigDecimal(normalized);
+      if (value.scale() <= 0 || value.stripTrailingZeros().scale() <= 0) {
+        return value.toBigInteger().toString();
+      }
+      return value.stripTrailingZeros().toPlainString();
+    } catch (NumberFormatException ignored) {
+      return amount.strip();
+    }
+  }
+
+  private static boolean isBlank(String value) {
+    return value == null || value.isBlank();
+  }
+
+  private static String trimToNull(String value) {
+    if (value == null || value.isBlank()) {
+      return null;
+    }
+    return value.strip();
   }
 
   private List<ObjectItem> buildObjectsFromVol(Vol vol) {
