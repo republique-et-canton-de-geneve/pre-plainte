@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { buildEsiriusPayload } from "@/utils/helpers/esiriusFormatBuilder";
 
+const CONSTAT_EMAIL = "constat@example.org";
+
 const creneau = {
   serviceId: "DOMMAGE-1",
   siteCode: "PPEL",
@@ -36,16 +38,16 @@ describe("format du payload eSirius", () => {
     const payload = buildEsiriusPayload(
       "RDV-123",
       {
-        email: "constat@example.org",
+        email: CONSTAT_EMAIL,
       },
       creneau,
     );
 
     expect(payload.user).toMatchObject({
-      lastName: "constat@example.org",
+      lastName: CONSTAT_EMAIL,
       firstName: "",
       personalIdentity: "RDV-123",
-      email: "constat@example.org",
+      email: CONSTAT_EMAIL,
       fixPhone: "",
     });
   });

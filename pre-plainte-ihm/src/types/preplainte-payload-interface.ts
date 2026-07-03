@@ -151,6 +151,17 @@ export interface CommandeFrauduleuse {
   telephoneCommande?: string;
   livraisonAdresseLesee?: boolean;
   adresseLivraison?: AdresseDTO;
+  prenomContrevenant?: string;
+  nomContrevenant?: string;
+  adresseContrevenant?: AdresseDTO;
+  siteWebContrevenant?: string;
+  moyenPaiementNumeriqueDebite?: boolean;
+  copieIdentiteTransmiseAuteur?: boolean;
+  copieIdentiteTransmiseAuteurDocumentIndisponible?: boolean;
+  raisonAbsenceCopieIdentiteTransmiseAuteur?: string;
+  copieIdentiteAuteurTransmise?: boolean;
+  copieIdentiteAuteurDocumentIndisponible?: boolean;
+  raisonAbsenceCopieIdentiteAuteur?: string;
 }
 
 export interface AchatNonRecu {
@@ -176,7 +187,11 @@ export interface AchatNonRecu {
   moyenPaiementAutre?: string;
   ibanBeneficiaire?: string;
   comptePaypalBeneficiaire?: string;
+  numeroTransactionPaypal?: string;
   numeroTwintBeneficiaire?: string;
+  typeCryptoMonnaie?: string;
+  montantUnitesCrypto?: string;
+  adresseWalletExpediteur?: string;
   adresseWalletCrypto?: string;
   hashTransactionCrypto?: string;
   societeBeneficiaire?: string;
@@ -186,7 +201,11 @@ export interface AchatNonRecu {
   preuvePaiementIndisponible?: boolean;
   raisonAbsencePreuvePaiement?: string;
   copieIdentiteTransmiseAuteur?: boolean;
+  copieIdentiteTransmiseAuteurDocumentIndisponible?: boolean;
+  raisonAbsenceCopieIdentiteTransmiseAuteur?: string;
   copieIdentiteAuteurTransmise?: boolean;
+  copieIdentiteAuteurDocumentIndisponible?: boolean;
+  raisonAbsenceCopieIdentiteAuteur?: string;
 }
 
 export interface FausseAnnonce {

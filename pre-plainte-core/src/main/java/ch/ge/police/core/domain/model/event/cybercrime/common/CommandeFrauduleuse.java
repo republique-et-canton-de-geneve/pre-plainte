@@ -22,6 +22,17 @@ public class CommandeFrauduleuse {
   private String telephoneCommande;
   private Boolean livraisonAdresseLesee;
   private Adresse adresseLivraison;
+  private String prenomContrevenant;
+  private String nomContrevenant;
+  private Adresse adresseContrevenant;
+  private String siteWebContrevenant;
+  private Boolean moyenPaiementNumeriqueDebite;
+  private Boolean copieIdentiteTransmiseAuteur;
+  private Boolean copieIdentiteTransmiseAuteurDocumentIndisponible;
+  private String raisonAbsenceCopieIdentiteTransmiseAuteur;
+  private Boolean copieIdentiteAuteurTransmise;
+  private Boolean copieIdentiteAuteurDocumentIndisponible;
+  private String raisonAbsenceCopieIdentiteAuteur;
 
   public void champsObligatoireCybercrime() {
     verifierChampsObligatoires();
@@ -29,6 +40,9 @@ public class CommandeFrauduleuse {
 
     if (adresseLivraison != null) {
       adresseLivraison.validate();
+    }
+    if (adresseContrevenant != null) {
+      adresseContrevenant.validate();
     }
   }
 
@@ -43,5 +57,10 @@ public class CommandeFrauduleuse {
     verifierLongueurMax(dateDecouverte, TEXT_FIELD_MAX_LENGTH, "dateDecouverte");
     verifierLongueurMax(emailCommande, TEXT_FIELD_MAX_LENGTH, "emailCommande");
     verifierLongueurMax(telephoneCommande, TEXT_FIELD_MAX_LENGTH, "telephoneCommande");
+    verifierLongueurMax(prenomContrevenant, TEXT_FIELD_MAX_LENGTH, "prenomContrevenant");
+    verifierLongueurMax(nomContrevenant, TEXT_FIELD_MAX_LENGTH, "nomContrevenant");
+    verifierLongueurMax(siteWebContrevenant, TEXT_FIELD_MAX_LENGTH, "siteWebContrevenant");
+    verifierLongueurMax(raisonAbsenceCopieIdentiteTransmiseAuteur, TEXT_FIELD_MAX_LENGTH, "raisonAbsenceCopieIdentiteTransmiseAuteur");
+    verifierLongueurMax(raisonAbsenceCopieIdentiteAuteur, TEXT_FIELD_MAX_LENGTH, "raisonAbsenceCopieIdentiteAuteur");
   }
 }
