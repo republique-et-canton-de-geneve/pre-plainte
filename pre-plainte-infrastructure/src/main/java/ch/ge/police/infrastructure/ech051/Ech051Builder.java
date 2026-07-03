@@ -78,13 +78,13 @@ public class Ech051Builder {
   @Value("${ech051.action:1}")
   private String action;
 
-  @Value("${ech051.sending-application.manufacturer:Bedag Informatik AG}")
+  @Value("${ech051.sending-application.manufacturer:" + Ech051Constants.SENDING_APPLICATION_MANUFACTURER + "}")
   private String manufacturer;
 
-  @Value("${ech051.sending-application.product:Suisse ePolice Deux}")
+  @Value("${ech051.sending-application.product:" + Ech051Constants.PRE_PLAINTE_EN_LIGNE + "}")
   private String product;
 
-  @Value("${ech051.sending-application.version:1.0}")
+  @Value("${ech051.sending-application.version:" + Ech051Constants.SENDING_APPLICATION_PRODUCT_VERSION + "}")
   private String productVersion;
 
   private static JAXBContext initJaxbContext() {
@@ -180,7 +180,7 @@ public class Ech051Builder {
 
     Ech0051DocumentXml.SourceIdXml sourceIdXml = new Ech0051DocumentXml.SourceIdXml();
     sourceIdXml.setSource(SEP_SOURCE);
-    sourceIdXml.setSourceTable(processData.getSourceId());
+    sourceIdXml.setSourceTable(Ech051Constants.PRE_PLAINTE_EN_LIGNE);
     sourceIdXml.setValue(processData.getSourceValue() != null ? processData.getSourceValue() : PPL_SOURCE);
     xml.setSourceId(sourceIdXml);
 
@@ -204,6 +204,11 @@ public class Ech051Builder {
     if (personDto.getNaturalIdentity() != null) {
       Ech0051DocumentXml.NaturalXml naturalXml = new Ech0051DocumentXml.NaturalXml();
       naturalXml.setIdentity(mapNaturalIdentity(personDto.getNaturalIdentity()));
+      if (personDto.getRemark() != null && !personDto.getRemark().isBlank()) {
+        Ech0051DocumentXml.RemarkXml remarkXml = new Ech0051DocumentXml.RemarkXml();
+        remarkXml.setAdditionalInformation(personDto.getRemark().strip());
+        naturalXml.setRemark(remarkXml);
+      }
       personXml.setNatural(naturalXml);
     }
     if (personDto.getLegalIdentity() != null) {
@@ -211,15 +216,40 @@ public class Ech051Builder {
       legalXml.setCurrentName(personDto.getLegalIdentity().getCurrentName());
       personXml.setLegal(legalXml);
     }
-    if (personDto.getAddress() != null) {
-      personXml.setAddress(mapAddress(personDto.getAddress()));
+    if (personDto.getAddresses() != null && !personDto.getAddresses().isEmpty()) {
+      List<Ech0051DocumentXml.AddressXml> addressXmls = new ArrayList<>();
+      for (Ech0051DocumentPayload.Address addressDto : personDto.getAddresses()) {
+        if (addressDto != null) {
+          addressXmls.add(mapAddress(addressDto));
+        }
+      }
+      if (!addressXmls.isEmpty()) {
+        personXml.setAddresses(addressXmls);
+      }
+    } else if (personDto.getAddress() != null) {
+      personXml.setAddresses(List.of(mapAddress(personDto.getAddress())));
     }
     if (personDto.getCommunication() != null) {
       appendMeansOfCommunicationFromDto(personXml, personDto.getCommunication());
     }
     personXml.setDeliveredAbroad(personDto.getDeliveredAbroad() != null ? personDto.getDeliveredAbroad().toString() : null);
+    personXml.setCreditCardUsed(personDto.getCreditCardUsed() != null ? personDto.getCreditCardUsed().toString() : null);
+    personXml.setOnlineShop(personDto.getOnlineShop() != null ? personDto.getOnlineShop().toString() : null);
+    personXml.setNoPaymentProofReason(trimToNull(personDto.getNoPaymentProofReason()));
+    personXml.setNoAdImageReason(trimToNull(personDto.getNoAdImageReason()));
+    personXml.setReporterIdCopySent(personDto.getReporterIdCopySent() != null ? personDto.getReporterIdCopySent().toString() : null);
+    personXml.setPerpetratorIdCopyReceived(personDto.getPerpetratorIdCopyReceived() != null ? personDto.getPerpetratorIdCopyReceived().toString() : null);
+    personXml.setNoIdCopyPresentReason(trimToNull(personDto.getNoIdCopyPresentReason()));
+    personXml.setNoPerpetratorsIdCopyPresentReason(trimToNull(personDto.getNoPerpetratorsIdCopyPresentReason()));
     personXml.setAdditionalInformation(personDto.getAdditionalInformation());
     return personXml;
+  }
+
+  private static String trimToNull(String value) {
+    if (value == null || value.isBlank()) {
+      return null;
+    }
+    return value.strip();
   }
 
   private Ech0051DocumentXml.NaturalIdentityXml mapNaturalIdentity(Ech0051DocumentPayload.NaturalIdentity dto) {
@@ -350,6 +380,10 @@ public class Ech051Builder {
 
   private Ech0051DocumentXml.AddressXml mapAddress(Ech0051DocumentPayload.Address dto) {
     Ech0051DocumentXml.AddressXml addressXml = new Ech0051DocumentXml.AddressXml();
+    if (dto.getAddressLine() != null && !dto.getAddressLine().isBlank()) {
+      addressXml.setAddressLine(dto.getAddressLine().strip());
+      return addressXml;
+    }
     String streetLine = dto.getStreet();
     if (streetLine == null || streetLine.isBlank()) {
       streetLine = dto.getAdditional();
@@ -415,7 +449,9 @@ public class Ech051Builder {
   }
 
   private static boolean isOrganisationLikeLegalPerson(Ech0051DocumentXml.PersonXml personXml) {
-    return personXml.getLegal() != null && personXml.getAddress() != null;
+    return personXml.getLegal() != null
+        && personXml.getAddresses() != null
+        && !personXml.getAddresses().isEmpty();
   }
 
   private void appendContactChannelsCommunication(
@@ -464,13 +500,23 @@ public class Ech051Builder {
       Ech0051DocumentXml.PersonXml personXml,
       Ech0051DocumentPayload.Communication dto
   ) {
-    if (!isNotBlank(dto.getUri())) {
+    boolean hasUri = isNotBlank(dto.getUri());
+    boolean hasProvider = isNotBlank(dto.getUriProvider());
+    if (!hasUri && !hasProvider) {
       return;
     }
     Ech0051DocumentXml.CommunicationXml commXml = new Ech0051DocumentXml.CommunicationXml();
     Ech0051DocumentXml.UriXml uriXml = new Ech0051DocumentXml.UriXml();
-    uriXml.setUsage(buildUsageWithoutSource(URI));
-    uriXml.setUri(dto.getUri().strip());
+    if (hasProvider) {
+      Ech0051DocumentXml.UriProviderXml providerXml = new Ech0051DocumentXml.UriProviderXml();
+      providerXml.setMarking(buildMarkingWithLang(dto.getUriProvider().strip()));
+      uriXml.setProvider(providerXml);
+    } else {
+      uriXml.setUsage(buildUsageWithoutSource(URI));
+    }
+    if (hasUri) {
+      uriXml.setUri(dto.getUri().strip());
+    }
     commXml.setUri(uriXml);
     personXml.getCommunications().add(commXml);
   }
@@ -509,8 +555,9 @@ public class Ech051Builder {
       eventXml.setLocality(localityXml);
     }
 
-    eventXml.setModeOperandi(mapRipolValue(dto.getModeOperandi()));
-    eventXml.setTypeOfCrime(mapRipolValue(dto.getTypeOfCrime()));
+    // Exclu du XML sedex : modeOperandi et typeOfCrime ne sont plus transférés dans <eCH-0051:event>.
+    // eventXml.setModeOperandi(mapRipolValue(dto.getModeOperandi()));
+    // eventXml.setTypeOfCrime(mapRipolValue(dto.getTypeOfCrime()));
     eventXml.setFacts(dto.getFacts());
     eventXml.setAdditionalInformation(dto.getAdditionalInformation());
     return eventXml;
@@ -579,6 +626,7 @@ public class Ech051Builder {
   private Ech0051DocumentXml.ObjectXml mapObject(Ech0051DocumentPayload.ObjectItem dto) {
     Ech0051DocumentXml.ObjectXml objectXml = new Ech0051DocumentXml.ObjectXml();
     objectXml.setKey(dto.getKey());
+    objectXml.setDescription(dto.getDescription());
     objectXml.setAdditionalInformation(dto.getAdditionalInformation());
 
     Ech0051DocumentXml.ObjectDefinitionXml definitionXml = new Ech0051DocumentXml.ObjectDefinitionXml();
@@ -598,6 +646,13 @@ public class Ech051Builder {
       definitionXml.setRealValue(realValueXml);
     }
     definitionXml.setPurchaseDate(dto.getPurchaseDate());
+    if (dto.getOfficialDocument() != null && dto.getOfficialDocument().getPermitCategory() != null) {
+      Ech0051DocumentXml.OfficialDocumentXml officialDocumentXml = new Ech0051DocumentXml.OfficialDocumentXml();
+      Ech0051DocumentXml.PermitCategoryXml permitCategoryXml = new Ech0051DocumentXml.PermitCategoryXml();
+      permitCategoryXml.setCategory(mapRipolValue(dto.getOfficialDocument().getPermitCategory()));
+      officialDocumentXml.setPermitCategory(permitCategoryXml);
+      definitionXml.setOfficialDocument(officialDocumentXml);
+    }
     objectXml.setDefinition(definitionXml);
 
     if (dto.getIdentification() != null) {
@@ -678,7 +733,9 @@ public class Ech051Builder {
   private Ech0051DocumentXml.BusinessCaseXml mapBusinessCase(Ech0051DocumentPayload.BusinessCase dto) {
     Ech0051DocumentXml.BusinessCaseXml businessCaseXml = new Ech0051DocumentXml.BusinessCaseXml();
     businessCaseXml.setKey(dto.getKey());
-    businessCaseXml.setCaseNumber(dto.getCaseNumber());
+    if (dto.getCaseNumber() != null && !dto.getCaseNumber().isBlank()) {
+      businessCaseXml.setCaseNumber(dto.getCaseNumber());
+    }
 
     if (dto.getFile() != null) {
       List<Ech0051DocumentXml.FileXml> files = dto.getFile().stream().map(this::mapFile).toList();

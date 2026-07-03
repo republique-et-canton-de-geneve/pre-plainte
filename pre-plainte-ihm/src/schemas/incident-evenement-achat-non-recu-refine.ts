@@ -174,11 +174,15 @@ function validateAchatNonRecuPaiement(
   }
   if (data.moyenPaiement === "paypal") {
     requireTrimmedString(data, ctx, "comptePaypalBeneficiaire", t("validation.comptePaypalBeneficiaireRequis"));
+    requireTrimmedString(data, ctx, "numeroTransactionPaypal", t("validation.numeroTransactionPaypalRequis"));
   }
   if (data.moyenPaiement === "twint") {
     requireTrimmedString(data, ctx, "numeroTwintBeneficiaire", t("validation.numeroTwintBeneficiaireRequis"));
   }
   if (data.moyenPaiement === "crypto") {
+    requireTrimmedString(data, ctx, "typeCryptoMonnaie", t("validation.typeCryptoMonnaieRequise"));
+    requireTrimmedString(data, ctx, "montantUnitesCrypto", t("validation.montantUnitesCryptoRequis"));
+    requireTrimmedString(data, ctx, "adresseWalletExpediteur", t("validation.adresseWalletExpediteurRequise"));
     requireTrimmedString(data, ctx, "adresseWalletCrypto", t("validation.adresseWalletCryptoRequise"));
     requireTrimmedString(data, ctx, "hashTransactionCrypto", t("validation.hashTransactionCryptoRequis"));
   }
@@ -192,12 +196,21 @@ function validateAchatNonRecuIdentite(data: Record<string, any>, ctx: z.Refineme
     t("validation.copieIdentiteTransmiseAuteurRequise"),
   );
   if (data.copieIdentiteTransmiseAuteur) {
-    requireNonEmptyFileArray(
-      data.copieIdentiteTransmiseAuteurDocument,
-      ctx,
-      "copieIdentiteTransmiseAuteurDocument",
-      t("validation.copieIdentiteTransmiseAuteurDocumentRequise"),
-    );
+    if (data.copieIdentiteTransmiseAuteurDocumentIndisponible) {
+      requireTrimmedString(
+        data,
+        ctx,
+        "raisonAbsenceCopieIdentiteTransmiseAuteur",
+        t("validation.raisonAbsenceCopieIdentiteTransmiseAuteurRequise"),
+      );
+    } else {
+      requireNonEmptyFileArray(
+        data.copieIdentiteTransmiseAuteurDocument,
+        ctx,
+        "copieIdentiteTransmiseAuteurDocument",
+        t("validation.copieIdentiteTransmiseAuteurDocumentRequise"),
+      );
+    }
   }
 
   requireSelectedBoolean(
@@ -207,12 +220,21 @@ function validateAchatNonRecuIdentite(data: Record<string, any>, ctx: z.Refineme
     t("validation.copieIdentiteAuteurTransmiseRequise"),
   );
   if (data.copieIdentiteAuteurTransmise) {
-    requireNonEmptyFileArray(
-      data.copieIdentiteAuteurDocument,
-      ctx,
-      "copieIdentiteAuteurDocument",
-      t("validation.copieIdentiteAuteurDocumentRequise"),
-    );
+    if (data.copieIdentiteAuteurDocumentIndisponible) {
+      requireTrimmedString(
+        data,
+        ctx,
+        "raisonAbsenceCopieIdentiteAuteur",
+        t("validation.raisonAbsenceCopieIdentiteAuteurRequise"),
+      );
+    } else {
+      requireNonEmptyFileArray(
+        data.copieIdentiteAuteurDocument,
+        ctx,
+        "copieIdentiteAuteurDocument",
+        t("validation.copieIdentiteAuteurDocumentRequise"),
+      );
+    }
   }
 }
 

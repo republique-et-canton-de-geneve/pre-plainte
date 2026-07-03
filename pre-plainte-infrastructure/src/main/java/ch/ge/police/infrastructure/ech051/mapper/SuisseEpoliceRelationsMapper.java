@@ -54,8 +54,22 @@ public class SuisseEpoliceRelationsMapper {
 
     if (incident instanceof Cybercrime cybercrime
         && isCyberTransactionType(cybercrime)) {
-      buildCyberCommandeFrauduleuseRelations(persons, eventRef, businessCaseRef, incident, relationsBuilder);
-      buildEventBusinessCaseLink(eventRef, businessCaseRef, relationsBuilder);
+      if (isCyberAchatNonRecu(cybercrime)) {
+        String eventRef1 = findEventRef(events, Ech051Constants.EVENT_KEY);
+        String eventRef2 = findEventRef(events, Ech051Constants.EVENT_KEY_PAYMENT);
+        buildCyberAchatNonRecuRelations(persons, eventRef1, eventRef2, businessCaseRef, incident, objects, relationsBuilder);
+        buildEventBusinessCaseLink(eventRef1, businessCaseRef, relationsBuilder);
+        buildEventBusinessCaseLink(eventRef2, businessCaseRef, relationsBuilder);
+      } else if (isCyberCommandeFrauduleuse(cybercrime)) {
+        String eventRef1 = findEventRef(events, Ech051Constants.EVENT_KEY);
+        String eventRef2 = findEventRef(events, Ech051Constants.EVENT_KEY_PAYMENT);
+        buildCyberCommandeFrauduleuseRelations(persons, eventRef1, businessCaseRef, objects, relationsBuilder);
+        buildEventBusinessCaseLink(eventRef1, businessCaseRef, relationsBuilder);
+        buildEventBusinessCaseLink(eventRef2, businessCaseRef, relationsBuilder);
+      } else {
+        buildCyberFausseAnnonceRelations(persons, eventRef, businessCaseRef, incident, relationsBuilder);
+        buildEventBusinessCaseLink(eventRef, businessCaseRef, relationsBuilder);
+      }
       return relationsBuilder.build();
     }
 
@@ -70,7 +84,298 @@ public class SuisseEpoliceRelationsMapper {
     return relationsBuilder.build();
   }
 
+  private void buildCyberAchatNonRecuRelations(
+      List<Person> persons,
+      String eventRef1,
+      String eventRef2,
+      String businessCaseRef,
+      IncidentBase incident,
+      List<ObjectItem> objects,
+      Relations.RelationsBuilder builder
+  ) {
+    String victimRef = findPersonRefByKey(persons, Ech051Constants.PERSON_KEY_TIERS);
+    String sellerRef = findCyberAccusedPersonRef(persons, victimRef);
+    String beneficiaryRef = findCyberPaymentBeneficiaryRef(persons, victimRef, sellerRef);
+
+    buildInvolvedPartyVictim(victimRef, eventRef1, businessCaseRef, builder);
+
+    if (sellerRef != null) {
+      buildInvolvedPartySupplier(sellerRef, eventRef1, businessCaseRef, builder);
+      buildInvolvedPartyAccused(sellerRef, eventRef1, businessCaseRef, builder);
+      buildVictimSupplierPersonLink(victimRef, sellerRef, builder);
+      buildCyberVictimAccusedPersonLink(victimRef, sellerRef, builder);
+    }
+
+    if (beneficiaryRef != null) {
+      buildInvolvedPartyRecipient(beneficiaryRef, eventRef2, businessCaseRef, builder);
+      buildInvolvedPartyAccused(beneficiaryRef, eventRef2, businessCaseRef, builder);
+      buildCyberRecipientPersonLink(victimRef, beneficiaryRef, builder);
+      buildCyberVictimAccusedPersonLink(victimRef, beneficiaryRef, builder);
+      if (sellerRef != null) {
+        buildSupplierRecipientPersonLink(sellerRef, beneficiaryRef, builder);
+        buildCyberVictimAccusedPersonLink(sellerRef, beneficiaryRef, builder);
+      }
+    }
+
+    String paymentReceiverRef = beneficiaryRef != null ? beneficiaryRef : sellerRef;
+    String paymentEventRef = eventRef2 != null ? eventRef2 : eventRef1;
+    buildFinancialTransaction(incident, paymentEventRef, victimRef, paymentReceiverRef, builder);
+
+    ObjectItem undeliveredItem = findUndeliveredItem(objects);
+    if (undeliveredItem != null) {
+      buildEventObjectLink(undeliveredItem, eventRef1, builder);
+      if (victimRef != null) {
+        builder.objectPersonLink(
+            ObjectPersonLink.builder()
+                .objectRef(undeliveredItem.getKey())
+                .personRole(RipolReferenceBuilder.of(
+                    Ech051Constants.INVOLVEMENT_TYPE_VICTIM_CODE,
+                    Ech051Constants.INVOLVEMENT_TYPE_VICTIM_LABEL,
+                    Ech051Constants.INVOLVEMENT_SOURCE_TABLE
+                ))
+                .personRef(victimRef)
+                .build()
+        );
+      }
+    }
+
+    ObjectItem identityItem = findVictimIdentityItem(objects);
+    if (identityItem != null && victimRef != null) {
+      builder.objectPersonLink(
+          ObjectPersonLink.builder()
+              .objectRef(identityItem.getKey())
+              .personRef(victimRef)
+              .build()
+      );
+    }
+  }
+
+  private String findEventRef(List<Event> events, String key) {
+    if (events == null || key == null) {
+      return null;
+    }
+    return events.stream()
+        .filter(event -> event != null && key.equals(event.getKey()))
+        .map(Event::getKey)
+        .findFirst()
+        .orElse(null);
+  }
+
+  private void buildInvolvedPartySupplier(String personRef, String eventRef, String businessCaseRef,
+                                          Relations.RelationsBuilder builder) {
+    buildInvolvedPartyWithArmadaRole(
+        personRef,
+        eventRef,
+        businessCaseRef,
+        Ech051Constants.INVOLVEMENT_TYPE_SUPPLIER_CODE,
+        Ech051Constants.INVOLVEMENT_TYPE_SUPPLIER_LABEL,
+        builder
+    );
+  }
+
+  private void buildInvolvedPartyRecipient(String personRef, String eventRef, String businessCaseRef,
+                                           Relations.RelationsBuilder builder) {
+    buildInvolvedPartyWithArmadaRole(
+        personRef,
+        eventRef,
+        businessCaseRef,
+        Ech051Constants.INVOLVEMENT_TYPE_RECIPIENT_CODE,
+        Ech051Constants.INVOLVEMENT_TYPE_RECIPIENT_LABEL,
+        builder
+    );
+  }
+
+  private void buildInvolvedPartyWithArmadaRole(
+      String personRef,
+      String eventRef,
+      String businessCaseRef,
+      String roleCode,
+      String roleLabel,
+      Relations.RelationsBuilder builder
+  ) {
+    if (personRef == null || eventRef == null || businessCaseRef == null) {
+      return;
+    }
+    builder.involvedParty(
+        InvolvedParty.builder()
+            .businessCaseRef(businessCaseRef)
+            .typeOfInvolvement(RipolReferenceBuilder.ofArmada(
+                roleCode,
+                roleLabel,
+                Ech051Constants.INVOLVEMENT_ARMADA_SOURCE_TABLE
+            ))
+            .personRef(personRef)
+            .eventRef(eventRef)
+            .build()
+    );
+  }
+
+  private ObjectItem findUndeliveredItem(List<ObjectItem> objects) {
+    if (objects == null || objects.isEmpty()) {
+      return null;
+    }
+    return objects.stream()
+        .filter(o -> o != null && Ech051Constants.OBJECT_KEY_CYBER_UNDELIVERED_ITEM.equals(o.getKey()))
+        .findFirst()
+        .orElse(null);
+  }
+
+  private ObjectItem findVictimIdentityItem(List<ObjectItem> objects) {
+    if (objects == null || objects.isEmpty()) {
+      return null;
+    }
+    return objects.stream()
+        .filter(o -> o != null && Ech051Constants.OBJECT_KEY_CYBER_VICTIM_IDENTITY.equals(o.getKey()))
+        .findFirst()
+        .orElse(null);
+  }
+
+  private String findCyberPaymentBeneficiaryRef(List<Person> persons, String victimRef, String sellerRef) {
+    return persons.stream()
+        .filter(p -> p != null && p.getKey() != null)
+        .filter(p -> !p.getKey().equals(victimRef))
+        .filter(p -> !Ech051Constants.INSURER_REF_CYBER.equals(p.getKey()))
+        .filter(p -> sellerRef == null || !p.getKey().equals(sellerRef))
+        .filter(p -> p.getNaturalIdentity() != null
+            && Ech051Constants.IDENTITY_CATEGORY_UNKNOWN.equals(p.getNaturalIdentity().getIdentityCategory()))
+        .map(Person::getKey)
+        .findFirst()
+        .orElse(null);
+  }
+
+  private void buildVictimSupplierPersonLink(String victimRef, String supplierRef, Relations.RelationsBuilder builder) {
+    if (victimRef == null || supplierRef == null) {
+      return;
+    }
+    builder.personLink(
+        PersonLink.builder()
+            .person1Role(RipolReferenceBuilder.of(
+                Ech051Constants.INVOLVEMENT_TYPE_VICTIM_CODE,
+                Ech051Constants.INVOLVEMENT_TYPE_VICTIM_LABEL,
+                Ech051Constants.INVOLVEMENT_SOURCE_TABLE
+            ))
+            .person1Ref(victimRef)
+            .person2Role(RipolReferenceBuilder.ofArmada(
+                Ech051Constants.INVOLVEMENT_TYPE_SUPPLIER_CODE,
+                Ech051Constants.INVOLVEMENT_TYPE_SUPPLIER_LABEL,
+                Ech051Constants.INVOLVEMENT_ARMADA_SOURCE_TABLE
+            ))
+            .person2Ref(supplierRef)
+            .build()
+    );
+  }
+
+  private void buildSupplierRecipientPersonLink(String supplierRef, String recipientRef, Relations.RelationsBuilder builder) {
+    if (supplierRef == null || recipientRef == null) {
+      return;
+    }
+    builder.personLink(
+        PersonLink.builder()
+            .person1Role(RipolReferenceBuilder.ofArmada(
+                Ech051Constants.INVOLVEMENT_TYPE_SUPPLIER_CODE,
+                Ech051Constants.INVOLVEMENT_TYPE_SUPPLIER_LABEL,
+                Ech051Constants.INVOLVEMENT_ARMADA_SOURCE_TABLE
+            ))
+            .person1Ref(supplierRef)
+            .person2Role(RipolReferenceBuilder.ofArmada(
+                Ech051Constants.INVOLVEMENT_TYPE_RECIPIENT_CODE,
+                Ech051Constants.INVOLVEMENT_TYPE_RECIPIENT_LABEL,
+                Ech051Constants.INVOLVEMENT_ARMADA_SOURCE_TABLE
+            ))
+            .person2Ref(recipientRef)
+            .build()
+    );
+  }
+
+  private void buildCyberRecipientPersonLink(String victimRef, String beneficiaryRef, Relations.RelationsBuilder builder) {
+    if (victimRef == null || beneficiaryRef == null) {
+      return;
+    }
+    builder.personLink(
+        PersonLink.builder()
+            .person1Role(RipolReferenceBuilder.of(
+                Ech051Constants.INVOLVEMENT_TYPE_VICTIM_CODE,
+                Ech051Constants.INVOLVEMENT_TYPE_VICTIM_LABEL,
+                Ech051Constants.INVOLVEMENT_SOURCE_TABLE
+            ))
+            .person1Ref(victimRef)
+            .person2Role(RipolReferenceBuilder.ofArmada(
+                Ech051Constants.INVOLVEMENT_TYPE_RECIPIENT_CODE,
+                Ech051Constants.INVOLVEMENT_TYPE_RECIPIENT_LABEL,
+                Ech051Constants.INVOLVEMENT_ARMADA_SOURCE_TABLE
+            ))
+            .person2Ref(beneficiaryRef)
+            .build()
+    );
+  }
+
+  private boolean isCyberAchatNonRecu(Cybercrime cybercrime) {
+    if (cybercrime == null) {
+      return false;
+    }
+    return cybercrime.getTypeCybercrime() == TypeCybercrime.ACHAT_NON_RECU
+        || cybercrime.getAchatNonRecu() != null;
+  }
+
   private void buildCyberCommandeFrauduleuseRelations(
+      List<Person> persons,
+      String eventRef,
+      String businessCaseRef,
+      List<ObjectItem> objects,
+      Relations.RelationsBuilder builder
+  ) {
+    String victimRef = findPersonRefByKey(persons, Ech051Constants.PERSON_KEY_TIERS);
+    String accusedRef = findCyberAccusedPersonRef(persons, victimRef);
+
+    buildInvolvedPartyVictim(victimRef, eventRef, businessCaseRef, builder);
+
+    if (accusedRef != null) {
+      buildInvolvedPartySupplier(accusedRef, eventRef, businessCaseRef, builder);
+      buildInvolvedPartyAccused(accusedRef, eventRef, businessCaseRef, builder);
+      buildVictimSupplierPersonLink(victimRef, accusedRef, builder);
+      buildCyberVictimAccusedPersonLink(victimRef, accusedRef, builder);
+    }
+
+    ObjectItem amountItem = findFraudulentOrderAmountItem(objects);
+    if (amountItem != null) {
+      buildEventObjectLink(amountItem, eventRef, builder);
+      if (victimRef != null) {
+        builder.objectPersonLink(
+            ObjectPersonLink.builder()
+                .objectRef(amountItem.getKey())
+                .personRole(RipolReferenceBuilder.of(
+                    Ech051Constants.INVOLVEMENT_TYPE_VICTIM_CODE,
+                    Ech051Constants.INVOLVEMENT_TYPE_VICTIM_LABEL,
+                    Ech051Constants.INVOLVEMENT_SOURCE_TABLE
+                ))
+                .personRef(victimRef)
+                .build()
+        );
+      }
+    }
+
+    ObjectItem identityItem = findVictimIdentityItem(objects);
+    if (identityItem != null && victimRef != null) {
+      builder.objectPersonLink(
+          ObjectPersonLink.builder()
+              .objectRef(identityItem.getKey())
+              .personRef(victimRef)
+              .build()
+      );
+    }
+  }
+
+  private ObjectItem findFraudulentOrderAmountItem(List<ObjectItem> objects) {
+    if (objects == null || objects.isEmpty()) {
+      return null;
+    }
+    return objects.stream()
+        .filter(o -> o != null && Ech051Constants.OBJECT_KEY_CYBER_FRAUDULENT_ORDER_AMOUNT.equals(o.getKey()))
+        .findFirst()
+        .orElse(null);
+  }
+
+  private void buildCyberFausseAnnonceRelations(
       List<Person> persons,
       String eventRef,
       String businessCaseRef,
@@ -103,11 +408,9 @@ public class SuisseEpoliceRelationsMapper {
     FinancialTransaction.FinancialTransactionBuilder tx = FinancialTransaction.builder()
         .paymentType(resolvePaymentType(achat.getMoyenPaiement(), achat.getMoyenPaiementAutre()))
         .transactionNumber(resolveTransactionNumber(achat))
-        .platformType(resolvePlatformType(achat))
-        .platformId(achat.getPlateformeId())
         .paymentDateTime(toSepDateTime(achat.getDateOperation()))
         .paymentDateTimeCirca("false")
-        .accountSend("inconnu")
+        .accountSend(resolveAccountSend(achat))
         .eventRef(eventRef)
         .personSendRef(victimRef)
         .personReceiveRef(accusedRef);
@@ -118,7 +421,8 @@ public class SuisseEpoliceRelationsMapper {
       case TWINT -> tx.accountReceive(trimToNull(achat.getNumeroTwintBeneficiaire()));
       case CRYPTO -> {
         tx.accountReceive(trimToNull(achat.getAdresseWalletCrypto()));
-        tx.cryptoCurrencyUnits(trimToNull(achat.getMontantDelitAchatLigne()));
+        tx.cryptoCurrency(trimToNull(achat.getTypeCryptoMonnaie()));
+        tx.cryptoCurrencyUnits(trimToNull(achat.getMontantUnitesCrypto()));
       }
       case AUTRE -> tx.accountReceive(trimToNull(achat.getMoyenPaiementAutre()));
     }
@@ -134,19 +438,9 @@ public class SuisseEpoliceRelationsMapper {
       case IBAN -> "IBAN";
       case PAYPAL -> "PAYPAL";
       case TWINT -> "TWINT";
-      case CRYPTO -> "CRYPTO";
+      case CRYPTO -> Ech051Constants.PAYMENT_TYPE_CRYPTO;
       case AUTRE -> (moyenPaiementAutre == null || moyenPaiementAutre.isBlank()) ? "AUTRE" : moyenPaiementAutre;
     };
-  }
-
-  private String resolvePlatformType(AchatNonRecu achat) {
-    if (achat == null || achat.getPlateformeUtilisee() == null) {
-      return null;
-    }
-    if (achat.getPlateformeUtilisee().getLabel() != null && !achat.getPlateformeUtilisee().getLabel().isBlank()) {
-      return achat.getPlateformeUtilisee().getLabel();
-    }
-    return achat.getPlateformeUtilisee().getCode();
   }
 
   private String resolveTransactionNumber(AchatNonRecu achat) {
@@ -154,11 +448,17 @@ public class SuisseEpoliceRelationsMapper {
       return null;
     }
     return switch (achat.getMoyenPaiement()) {
-      case TWINT -> achat.getNumeroTwintBeneficiaire();
-      case PAYPAL -> achat.getComptePaypalBeneficiaire();
-      case CRYPTO -> achat.getHashTransactionCrypto();
-      case IBAN, AUTRE -> null;
+      case PAYPAL -> trimToNull(achat.getNumeroTransactionPaypal());
+      case CRYPTO, TWINT, IBAN, AUTRE -> null;
     };
+  }
+
+  private String resolveAccountSend(AchatNonRecu achat) {
+    if (achat != null && achat.getMoyenPaiement() == MoyenPaiement.CRYPTO) {
+      String expediteur = trimToNull(achat.getAdresseWalletExpediteur());
+      return expediteur != null ? expediteur : "Inconnu";
+    }
+    return "Inconnu";
   }
 
   private String toSepDateTime(String dateValue) {

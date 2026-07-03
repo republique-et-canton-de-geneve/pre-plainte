@@ -236,6 +236,15 @@
           </dd>
         </v-col>
 
+        <v-col v-if="data.numeroTransactionPaypal" cols="12" md="4">
+          <dt id="lbl-anr-numeroTransactionPaypal">
+            <v-label class="ge-field-label">{{ t("cybercrime.numeroTransactionPaypal") }}</v-label>
+          </dt>
+          <dd class="ge-field-value text-body-1" aria-labelledby="lbl-anr-numeroTransactionPaypal">
+            {{ data.numeroTransactionPaypal }}
+          </dd>
+        </v-col>
+
         <v-col v-if="data.numeroTwintBeneficiaire" cols="12" md="4">
           <dt id="lbl-anr-numeroTwintBeneficiaire">
             <v-label class="ge-field-label">{{ t("cybercrime.numeroTwintBeneficiaire") }}</v-label>
@@ -245,8 +254,32 @@
           </dd>
         </v-col>
 
-        <template v-if="data.adresseWalletCrypto">
-          <v-col cols="12" md="4">
+        <template v-if="data.moyenPaiement === 'crypto' || data.typeCryptoMonnaie || data.adresseWalletCrypto">
+          <v-col v-if="data.typeCryptoMonnaie" cols="12" md="4">
+            <dt id="lbl-anr-typeCryptoMonnaie">
+              <v-label class="ge-field-label">{{ t("cybercrime.typeCryptoMonnaie") }}</v-label>
+            </dt>
+            <dd class="ge-field-value text-body-1" aria-labelledby="lbl-anr-typeCryptoMonnaie">
+              {{ data.typeCryptoMonnaie }}
+            </dd>
+          </v-col>
+          <v-col v-if="data.montantUnitesCrypto" cols="12" md="4">
+            <dt id="lbl-anr-montantUnitesCrypto">
+              <v-label class="ge-field-label">{{ t("cybercrime.montantUnitesCrypto") }}</v-label>
+            </dt>
+            <dd class="ge-field-value text-body-1" aria-labelledby="lbl-anr-montantUnitesCrypto">
+              {{ data.montantUnitesCrypto }}
+            </dd>
+          </v-col>
+          <v-col v-if="data.adresseWalletExpediteur" cols="12" md="4">
+            <dt id="lbl-anr-adresseWalletExpediteur">
+              <v-label class="ge-field-label">{{ t("cybercrime.adresseWalletExpediteur") }}</v-label>
+            </dt>
+            <dd class="ge-field-value text-body-1" aria-labelledby="lbl-anr-adresseWalletExpediteur">
+              {{ data.adresseWalletExpediteur }}
+            </dd>
+          </v-col>
+          <v-col v-if="data.adresseWalletCrypto" cols="12" md="4">
             <dt id="lbl-anr-adresseWalletCrypto">
               <v-label class="ge-field-label">{{ t("cybercrime.adresseWalletCrypto") }}</v-label>
             </dt>
@@ -254,7 +287,7 @@
               {{ data.adresseWalletCrypto }}
             </dd>
           </v-col>
-          <v-col cols="12" md="4">
+          <v-col v-if="data.hashTransactionCrypto" cols="12" md="4">
             <dt id="lbl-anr-hashTransactionCrypto">
               <v-label class="ge-field-label">{{ t("cybercrime.hashTransactionCrypto") }}</v-label>
             </dt>
@@ -328,6 +361,14 @@
             {{ formatOuiNon(data.copieIdentiteTransmiseAuteur, t) }}
           </dd>
         </v-col>
+        <v-col v-if="data.copieIdentiteTransmiseAuteurDocumentIndisponible" cols="12" md="4">
+          <dt id="lbl-anr-raisonAbsenceCopieIdentiteTransmiseAuteur">
+            <v-label class="ge-field-label">{{ t("cybercrime.raisonAbsenceCopieIdentiteTransmiseAuteur") }}</v-label>
+          </dt>
+          <dd class="ge-field-value text-body-1" aria-labelledby="lbl-anr-raisonAbsenceCopieIdentiteTransmiseAuteur">
+            {{ data.raisonAbsenceCopieIdentiteTransmiseAuteur }}
+          </dd>
+        </v-col>
 
         <v-col cols="12" md="4">
           <dt id="lbl-anr-copieIdentiteAuteurTransmise">
@@ -335,6 +376,14 @@
           </dt>
           <dd class="ge-field-value text-body-1" aria-labelledby="lbl-anr-copieIdentiteAuteurTransmise">
             {{ formatOuiNon(data.copieIdentiteAuteurTransmise, t) }}
+          </dd>
+        </v-col>
+        <v-col v-if="data.copieIdentiteAuteurDocumentIndisponible" cols="12" md="4">
+          <dt id="lbl-anr-raisonAbsenceCopieIdentiteAuteur">
+            <v-label class="ge-field-label">{{ t("cybercrime.raisonAbsenceCopieIdentiteAuteur") }}</v-label>
+          </dt>
+          <dd class="ge-field-value text-body-1" aria-labelledby="lbl-anr-raisonAbsenceCopieIdentiteAuteur">
+            {{ data.raisonAbsenceCopieIdentiteAuteur }}
           </dd>
         </v-col>
       </v-row>
