@@ -7,6 +7,7 @@ import ch.ge.police.core.domain.model.event.cybercrime.Cybercrime;
 import ch.ge.police.core.domain.model.event.cybercrime.common.AchatNonRecu;
 import ch.ge.police.core.domain.model.event.cybercrime.common.CommandeFrauduleuse;
 import ch.ge.police.core.domain.model.event.cybercrime.common.FausseAnnonce;
+import ch.ge.police.core.domain.model.event.cybercrime.common.PlateformeUtilisee;
 import ch.ge.police.core.domain.model.event.cybercrime.common.TypeCybercrime;
 import ch.ge.police.core.domain.model.event.dommagematerial.DommageMateriel;
 import ch.ge.police.core.domain.model.event.vol.Vol;
@@ -78,16 +79,21 @@ public class SuisseEpoliceMapperForPPL {
     DeclarationType declarationType = resolveDeclarationType(infos);
 
     List<ObjectItem> objects = objectMapper.buildObjectsFromIncident(incident);
+    if (incident instanceof Cybercrime cybercrimeForObjects) {
+      objects = mergeCyberObjects(objects, objectMapper.buildCyberObjects(cybercrimeForObjects, infos));
+    }
     List<VehicleItem> vehicles = objectMapper.buildVehiclesFromIncident(incident);
     boolean hasVehicles = !vehicles.isEmpty();
     String vehicleInsurerName = resolveVehicleInsurerName(incident);
 
     List<Person> persons = personMapper.buildPersons(infos, hasVehicles, vehicleInsurerName);
     ensureCyberCommandeFrauduleusePersonRefs(persons, incident);
+    persons = applyCyberVictimAttributes(persons, incident);
     persons = addCyberCounterpartyIfPresent(persons, incident);
+    persons = addCyberPaymentBeneficiaryIfPresent(persons, incident);
     List<Event> events = incident == null
         ? List.of()
-        : List.of(eventMapper.buildEvent(incident, infos));
+        : eventMapper.buildEvents(incident, infos);
     BusinessCase businessCase = businessCaseMapper.buildBusinessCase(prePlainte, declarationType, hasVehicles);
 
     Relations relations = relationsMapper.buildRelations(
@@ -144,7 +150,10 @@ public class SuisseEpoliceMapperForPPL {
         .email(counterpartyData.email())
         .phone(counterpartyData.phone())
         .uri(counterpartyData.uri())
+        .uriProvider(counterpartyData.uriProvider())
         .build();
+
+    List<Address> addresses = buildCounterpartyAddresses(counterpartyData);
 
     Person counterparty;
     if (counterpartyData.legalEntity()) {
@@ -159,7 +168,8 @@ public class SuisseEpoliceMapperForPPL {
               .currentName(companyName.strip())
               .build())
           .communication(isBlankCommunication(communication) ? null : communication)
-          .address(buildCounterpartyPayloadAddress(counterpartyData.address()))
+          .addresses(addresses)
+          .address(addresses.isEmpty() ? null : addresses.getFirst())
           .additionalInformation(counterpartyData.personAdditionalInformation())
           .build();
     } else {
@@ -177,7 +187,8 @@ public class SuisseEpoliceMapperForPPL {
           .type(Ech0051DocumentPayload.PersonType.NATURAL)
           .naturalIdentity(identity)
           .communication(isBlankCommunication(communication) ? null : communication)
-          .address(buildCounterpartyPayloadAddress(counterpartyData.address()))
+          .addresses(addresses)
+          .address(addresses.isEmpty() ? null : addresses.getFirst())
           .additionalInformation(counterpartyData.personAdditionalInformation())
           .build();
     }
@@ -205,29 +216,27 @@ public class SuisseEpoliceMapperForPPL {
     AchatNonRecu achat = cybercrime.getAchatNonRecu();
     if (achat != null) {
       String personCtx = buildAchatCounterpartyPersonAdditionalInformation(cybercrime, achat);
-      boolean entrepriseDirecte = Boolean.FALSE.equals(achat.getAchatViaPlaceMarche());
-      String nomEntreprise = achat.getNomEntrepriseVendeur();
-      if (entrepriseDirecte && nomEntreprise != null && !nomEntreprise.isBlank()) {
-        return new CyberCounterpartyData(
-            null,
-            null,
-            achat.getEmailVendeur(),
-            achat.getTelephoneVendeur(),
-            achat.getSiteWebEntrepriseVendeur(),
-            achat.getAdresseVendeur(),
-            personCtx,
-            null,
-            true,
-            nomEntreprise.strip()
-        );
+      String uri;
+      String uriProvider;
+      if (Boolean.TRUE.equals(achat.getAchatViaPlaceMarche())) {
+        uri = resolveMarketplaceUri(achat);
+        uriProvider = resolveMarketplaceUriProvider(achat);
+      } else if (isNotBlank(achat.getSiteWebEntrepriseVendeur())) {
+        uri = trimToNull(achat.getSiteWebEntrepriseVendeur());
+        uriProvider = Ech051Constants.URI_PROVIDER_ENTREPRISE_VENDEUR;
+      } else {
+        uri = null;
+        uriProvider = null;
       }
       return new CyberCounterpartyData(
           achat.getNomVendeur(),
           achat.getPrenomVendeur(),
           achat.getEmailVendeur(),
           achat.getTelephoneVendeur(),
-          null,
+          uri,
+          uriProvider,
           achat.getAdresseVendeur(),
+          null,
           personCtx,
           null,
           false,
@@ -244,6 +253,8 @@ public class SuisseEpoliceMapperForPPL {
           fausseAnnonce.getTelephoneBailleur(),
           null,
           null,
+          null,
+          null,
           buildFausseAnnonceCounterpartyPersonAdditionalInformation(cybercrime, fausseAnnonce),
           null,
           false,
@@ -253,14 +264,19 @@ public class SuisseEpoliceMapperForPPL {
 
     CommandeFrauduleuse commandeFrauduleuse = cybercrime.getCommandeFrauduleuse();
     if (commandeFrauduleuse != null) {
+      String foreignAddressLine = Boolean.FALSE.equals(commandeFrauduleuse.getLivraisonAdresseLesee())
+          ? formatForeignAddressLine(commandeFrauduleuse.getAdresseLivraison())
+          : null;
       return new CyberCounterpartyData(
+          commandeFrauduleuse.getNomContrevenant(),
+          commandeFrauduleuse.getPrenomContrevenant(),
+          commandeFrauduleuse.getEmailCommande(),
+          commandeFrauduleuse.getTelephoneCommande(),
+          trimToNull(commandeFrauduleuse.getSiteWebContrevenant()),
           null,
-          null,
-          null,
-          null,
-          null,
-          null,
-          buildCommandeFrauduleuseCounterpartyPersonAdditionalInformation(cybercrime, commandeFrauduleuse),
+          commandeFrauduleuse.getAdresseContrevenant(),
+          foreignAddressLine,
+          trimToNull(commandeFrauduleuse.getPrestataire()),
           null,
           false,
           null
@@ -276,9 +292,168 @@ public class SuisseEpoliceMapperForPPL {
         null,
         null,
         null,
+        null,
+        null,
         false,
         null
     );
+  }
+
+  private List<Person> applyCyberVictimAttributes(List<Person> persons, IncidentBase incident) {
+    if (!(incident instanceof Cybercrime cybercrime)) {
+      return persons;
+    }
+    List<Person> updated = new ArrayList<>(persons.size());
+    for (Person person : persons) {
+      if (person == null || !Ech051Constants.PERSON_KEY_TIERS.equals(person.getKey())) {
+        updated.add(person);
+        continue;
+      }
+      Person enriched = person;
+      if (cybercrime.getAchatNonRecu() != null) {
+        enriched = applyAchatVictimAttributes(enriched, cybercrime.getAchatNonRecu());
+      }
+      if (cybercrime.getCommandeFrauduleuse() != null) {
+        enriched = applyCommandeFrauduleuseVictimAttributes(enriched, cybercrime.getCommandeFrauduleuse());
+      }
+      updated.add(enriched);
+    }
+    return updated;
+  }
+
+  private Person applyAchatVictimAttributes(Person victim, AchatNonRecu achat) {
+    Person.PersonBuilder builder = victim.toBuilder();
+    if (achat.getAchatViaPlaceMarche() != null) {
+      builder.onlineShop(achat.getAchatViaPlaceMarche());
+    }
+    if (Boolean.TRUE.equals(achat.getPreuvePaiementIndisponible())) {
+      builder.noPaymentProofReason(trimToNull(achat.getRaisonAbsencePreuvePaiement()));
+    }
+    if (Boolean.TRUE.equals(achat.getAnnonceDocumentIndisponible())) {
+      builder.noAdImageReason(trimToNull(achat.getRaisonAbsenceAnnonce()));
+    }
+    if (achat.getCopieIdentiteTransmiseAuteur() != null) {
+      builder.reporterIdCopySent(achat.getCopieIdentiteTransmiseAuteur());
+    }
+    if (Boolean.TRUE.equals(achat.getCopieIdentiteTransmiseAuteurDocumentIndisponible())) {
+      builder.noIdCopyPresentReason(trimToNull(achat.getRaisonAbsenceCopieIdentiteTransmiseAuteur()));
+    }
+    if (achat.getCopieIdentiteAuteurTransmise() != null) {
+      builder.perpetratorIdCopyReceived(achat.getCopieIdentiteAuteurTransmise());
+    }
+    if (Boolean.TRUE.equals(achat.getCopieIdentiteAuteurDocumentIndisponible())) {
+      builder.noPerpetratorsIdCopyPresentReason(trimToNull(achat.getRaisonAbsenceCopieIdentiteAuteur()));
+    }
+    return builder.build();
+  }
+
+  private Person applyCommandeFrauduleuseVictimAttributes(Person victim, CommandeFrauduleuse commande) {
+    Person.PersonBuilder builder = victim.toBuilder();
+    if (commande.getLivraisonAdresseLesee() != null) {
+      builder.deliveredAbroad(!commande.getLivraisonAdresseLesee());
+    }
+    if (commande.getMoyenPaiementNumeriqueDebite() != null) {
+      builder.creditCardUsed(commande.getMoyenPaiementNumeriqueDebite());
+    }
+    if (commande.getCopieIdentiteTransmiseAuteur() != null) {
+      builder.reporterIdCopySent(commande.getCopieIdentiteTransmiseAuteur());
+    }
+    if (Boolean.TRUE.equals(commande.getCopieIdentiteTransmiseAuteurDocumentIndisponible())) {
+      builder.noIdCopyPresentReason(trimToNull(commande.getRaisonAbsenceCopieIdentiteTransmiseAuteur()));
+    }
+    if (commande.getCopieIdentiteAuteurTransmise() != null) {
+      builder.perpetratorIdCopyReceived(commande.getCopieIdentiteAuteurTransmise());
+    }
+    if (Boolean.TRUE.equals(commande.getCopieIdentiteAuteurDocumentIndisponible())) {
+      builder.noPerpetratorsIdCopyPresentReason(trimToNull(commande.getRaisonAbsenceCopieIdentiteAuteur()));
+    }
+    return builder.build();
+  }
+
+  private List<Person> addCyberPaymentBeneficiaryIfPresent(List<Person> persons, IncidentBase incident) {
+    if (!(incident instanceof Cybercrime cybercrime) || cybercrime.getAchatNonRecu() == null) {
+      return persons;
+    }
+    AchatNonRecu achat = cybercrime.getAchatNonRecu();
+    if (!hasPaymentBeneficiaryData(achat)) {
+      return persons;
+    }
+
+    List<Person> updatedPersons = new ArrayList<>(persons);
+    String personKey = String.valueOf(nextNumericKey(updatedPersons));
+    String identityKey = String.valueOf(nextIdentityNumericKey(updatedPersons));
+
+    String remark = null;
+    if (achat.getSocieteBeneficiaire() != null && !achat.getSocieteBeneficiaire().isBlank()) {
+      remark = "Société du bénéficiaire du paiement: " + achat.getSocieteBeneficiaire().strip();
+    }
+
+    NaturalIdentity identity = NaturalIdentity.builder()
+        .key(identityKey)
+        .identityCategory(Ech051Constants.IDENTITY_CATEGORY_UNKNOWN)
+        .officialName(nullToUnknown(achat.getNomBeneficiaire()))
+        .firstName(nullToUnknown(achat.getPrenomBeneficiaire()))
+        .build();
+
+    Person beneficiary = Person.builder()
+        .key(personKey)
+        .type(Ech0051DocumentPayload.PersonType.NATURAL)
+        .naturalIdentity(identity)
+        .remark(remark)
+        .build();
+
+    updatedPersons.add(beneficiary);
+    return updatedPersons;
+  }
+
+  private static boolean hasPaymentBeneficiaryData(AchatNonRecu achat) {
+    return isNotBlank(achat.getNomBeneficiaire())
+        || isNotBlank(achat.getPrenomBeneficiaire())
+        || isNotBlank(achat.getSocieteBeneficiaire());
+  }
+
+  private static List<ObjectItem> mergeCyberObjects(List<ObjectItem> baseObjects, List<ObjectItem> cyberObjects) {
+    if (cyberObjects == null || cyberObjects.isEmpty()) {
+      return baseObjects;
+    }
+    if (baseObjects == null || baseObjects.isEmpty()) {
+      return cyberObjects;
+    }
+    List<ObjectItem> merged = new ArrayList<>(baseObjects);
+    merged.addAll(cyberObjects);
+    return merged;
+  }
+
+  private static String resolveMarketplaceUri(AchatNonRecu achat) {
+    if (achat == null || !Boolean.TRUE.equals(achat.getAchatViaPlaceMarche())) {
+      return null;
+    }
+    return trimToNull(achat.getPlateformeId());
+  }
+
+  private static String resolveMarketplaceUriProvider(AchatNonRecu achat) {
+    if (achat == null || !Boolean.TRUE.equals(achat.getAchatViaPlaceMarche())) {
+      return null;
+    }
+    PlateformeUtilisee plateforme = achat.getPlateformeUtilisee();
+    if (plateforme == null) {
+      return null;
+    }
+    if (plateforme == PlateformeUtilisee.AUTRE) {
+      return trimToNull(achat.getPlateformeAutre());
+    }
+    return plateforme.getLabel();
+  }
+
+  private static String trimToNull(String value) {
+    if (value == null || value.isBlank()) {
+      return null;
+    }
+    return value.strip();
+  }
+
+  private static boolean isNotBlank(String value) {
+    return value != null && !value.isBlank();
   }
 
   private String buildAchatCounterpartyPersonAdditionalInformation(Cybercrime cybercrime, AchatNonRecu achat) {
@@ -286,36 +461,10 @@ public class SuisseEpoliceMapperForPPL {
       return null;
     }
     StringJoiner j = new StringJoiner(" | ");
-    appendIfNotBlank(j, "ID plateforme", achat.getPlateformeId());
-    if (achat.getPlateformeUtilisee() != null) {
-      appendIfNotBlank(j, "Plateforme", achat.getPlateformeUtilisee().getLabel());
+    if (Boolean.FALSE.equals(achat.getAchatViaPlaceMarche())) {
+      appendIfNotBlank(j, "Nom entreprise vendeur", achat.getNomEntrepriseVendeur());
     }
-    appendIfNotBlank(j, "Plateforme autre", achat.getPlateformeAutre());
-    appendBooleanAsOuiNon(j, "Achat via place de marché", achat.getAchatViaPlaceMarche());
-    appendIfNotBlank(j, "Nom entreprise vendeur", achat.getNomEntrepriseVendeur());
-    appendIfNotBlank(j, "Site web entreprise vendeur", achat.getSiteWebEntrepriseVendeur());
-    appendIfNotBlank(j, "Date opération", achat.getDateOperation());
-    appendIfNotBlank(j, "Montant du délit", achat.getMontantDelitAchatLigne());
-    appendIfNotBlank(j, "Article non livré", achat.getArticleNonLivreDescription());
     appendBooleanAsOuiNon(j, "E-mail vendeur inconnu", achat.getEmailVendeurInconnu());
-    appendBooleanAsOuiNon(j, "Document annonce indisponible", achat.getAnnonceDocumentIndisponible());
-    appendIfNotBlank(j, "Raison absence annonce", achat.getRaisonAbsenceAnnonce());
-    if (achat.getMoyenPaiement() != null) {
-      appendIfNotBlank(j, "Moyen de paiement", achat.getMoyenPaiement().getLabel());
-    }
-    appendIfNotBlank(j, "Moyen de paiement autre", achat.getMoyenPaiementAutre());
-    appendIfNotBlank(j, "IBAN bénéficiaire", achat.getIbanBeneficiaire());
-    appendIfNotBlank(j, "Compte PayPal bénéficiaire", achat.getComptePaypalBeneficiaire());
-    appendIfNotBlank(j, "Twint bénéficiaire", achat.getNumeroTwintBeneficiaire());
-    appendIfNotBlank(j, "Adresse wallet crypto", achat.getAdresseWalletCrypto());
-    appendIfNotBlank(j, "Hash transaction crypto", achat.getHashTransactionCrypto());
-    appendIfNotBlank(j, "Bénéficiaire société", achat.getSocieteBeneficiaire());
-    appendIfNotBlank(j, "Bénéficiaire prénom", achat.getPrenomBeneficiaire());
-    appendIfNotBlank(j, "Bénéficiaire nom", achat.getNomBeneficiaire());
-    appendBooleanAsOuiNon(j, "Preuve de paiement indisponible", achat.getPreuvePaiementIndisponible());
-    appendIfNotBlank(j, "Raison absence preuve paiement", achat.getRaisonAbsencePreuvePaiement());
-    appendBooleanAsOuiNon(j, "Copie identité transmise à l'auteur", achat.getCopieIdentiteTransmiseAuteur());
-    appendBooleanAsOuiNon(j, "Copie identité auteur transmise", achat.getCopieIdentiteAuteurTransmise());
     String s = j.toString();
     return s.isBlank() ? null : s;
   }
@@ -333,25 +482,6 @@ public class SuisseEpoliceMapperForPPL {
       appendIfNotBlank(j, "Montant demandé", fausseAnnonce.getMontantDemande().toString());
     }
     appendIfNotBlank(j, "Mode de paiement demandé", fausseAnnonce.getModePaiementDemande());
-    String s = j.toString();
-    return s.isBlank() ? null : s;
-  }
-
-  private String buildCommandeFrauduleuseCounterpartyPersonAdditionalInformation(
-      Cybercrime cybercrime,
-      CommandeFrauduleuse commande
-  ) {
-    if (cybercrime == null || commande == null) {
-      return null;
-    }
-    StringJoiner j = new StringJoiner(" | ");
-    if (commande.getMontant() != null) {
-      appendIfNotBlank(j, "Montant", commande.getMontant().toString());
-    }
-    appendIfNotBlank(j, "Date découverte", commande.getDateDecouverte());
-    if (commande.getAssurance() != null) {
-      j.add("Assurance: " + (Boolean.TRUE.equals(commande.getAssurance()) ? "oui" : "non"));
-    }
     String s = j.toString();
     return s.isBlank() ? null : s;
   }
@@ -374,6 +504,39 @@ public class SuisseEpoliceMapperForPPL {
       return null;
     }
     return suisseEpoliceAddressMapper.fromAdresse(domainAdresse);
+  }
+
+  private List<Address> buildCounterpartyAddresses(CyberCounterpartyData counterpartyData) {
+    List<Address> addresses = new ArrayList<>();
+    if (counterpartyData.foreignAddressLine() != null && !counterpartyData.foreignAddressLine().isBlank()) {
+      addresses.add(Address.builder().addressLine(counterpartyData.foreignAddressLine().strip()).build());
+    }
+    Address structured = buildCounterpartyPayloadAddress(counterpartyData.structuredAddress());
+    if (structured != null) {
+      addresses.add(structured);
+    }
+    return addresses;
+  }
+
+  private static String formatForeignAddressLine(Adresse adresse) {
+    if (adresse == null || isCounterpartyAdresseEmpty(adresse)) {
+      return null;
+    }
+    StringJoiner joiner = new StringJoiner(", ");
+    appendAddressPart(joiner, adresse.adresse());
+    String npaLocalite = ((adresse.npa() != null ? adresse.npa().strip() : "")
+        + " "
+        + (adresse.localite() != null ? adresse.localite().strip() : "")).strip();
+    appendAddressPart(joiner, npaLocalite.isBlank() ? null : npaLocalite);
+    appendAddressPart(joiner, adresse.pays());
+    String formatted = joiner.toString();
+    return formatted.isBlank() ? null : formatted;
+  }
+
+  private static void appendAddressPart(StringJoiner joiner, String value) {
+    if (value != null && !value.isBlank()) {
+      joiner.add(value.strip());
+    }
   }
 
   private static boolean isCounterpartyAdresseEmpty(Adresse a) {
@@ -423,7 +586,8 @@ public class SuisseEpoliceMapperForPPL {
         || ((communication.getEmail() == null || communication.getEmail().isBlank())
         && (communication.getPhone() == null || communication.getPhone().isBlank())
         && (communication.getMobile() == null || communication.getMobile().isBlank())
-        && (communication.getUri() == null || communication.getUri().isBlank()));
+        && (communication.getUri() == null || communication.getUri().isBlank())
+        && (communication.getUriProvider() == null || communication.getUriProvider().isBlank()));
   }
 
   private record CyberCounterpartyData(
@@ -432,7 +596,9 @@ public class SuisseEpoliceMapperForPPL {
       String email,
       String phone,
       String uri,
-      Adresse address,
+      String uriProvider,
+      Adresse structuredAddress,
+      String foreignAddressLine,
       String personAdditionalInformation,
       String identityAdditionalInformation,
       boolean legalEntity,
@@ -444,7 +610,9 @@ public class SuisseEpoliceMapperForPPL {
             && isBlank(email)
             && isBlank(phone)
             && isBlank(uri)
-            && isCounterpartyAdresseEmpty(address)
+            && isBlank(uriProvider)
+            && isCounterpartyAdresseEmpty(structuredAddress)
+            && isBlank(foreignAddressLine)
             && isBlank(personAdditionalInformation);
       }
       return isBlank(officialName)
@@ -452,7 +620,9 @@ public class SuisseEpoliceMapperForPPL {
           && isBlank(email)
           && isBlank(phone)
           && isBlank(uri)
-          && isCounterpartyAdresseEmpty(address)
+          && isBlank(uriProvider)
+          && isCounterpartyAdresseEmpty(structuredAddress)
+          && isBlank(foreignAddressLine)
           && isBlank(personAdditionalInformation)
           && isBlank(identityAdditionalInformation);
     }

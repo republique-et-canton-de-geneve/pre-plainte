@@ -68,7 +68,7 @@ export class IncidentMapper {
       adressePostale: string | undefined,
       npa: string | undefined,
       localite: string | undefined,
-      pays: string | undefined
+      pays: string | undefined,
     ) => AdresseMapper.buildAdresse(adresse ?? "", adressePostale ?? "", npa ?? "", localite ?? "", pays);
 
     const buildDateSafe = (date: string, heure: string) => buildIsoDateTime(date, heure) ?? "";
@@ -78,7 +78,7 @@ export class IncidentMapper {
       form.adressePostaleEvenement,
       form.npaEvenement,
       form.localiteEvenement,
-      form.paysEvenement
+      form.paysEvenement,
     );
 
     const adresseIncidentSecondaire = buildAdresseSafe(
@@ -86,7 +86,7 @@ export class IncidentMapper {
       form.adressePostaleEvenementSecondaire,
       form.npaEvenementSecondaire,
       form.localiteEvenementSecondaire,
-      form.paysEvenementSecondaire
+      form.paysEvenementSecondaire,
     );
 
     return {
@@ -107,8 +107,7 @@ export class IncidentMapper {
     const imeiAllowed = this.hasImei(form.typeObjet);
     const vehiculeAvecVin = !!form.sousCategorie && this.isVehiculeAvecVin(form.sousCategorie);
     const objetAvecPlaque =
-      form.categorieObjet === "plaque" ||
-      (!!form.sousCategorie && this.isVehiculeAvecPlaque(form.sousCategorie));
+      form.categorieObjet === "plaque" || (!!form.sousCategorie && this.isVehiculeAvecPlaque(form.sousCategorie));
 
     return {
       categorieObjet: this.toOptionalString(form.categorieObjet),
@@ -142,10 +141,7 @@ export class IncidentMapper {
     };
   }
 
-  private static buildVehicleFields(
-    form: PrePlainteFormFields,
-    isVehicle: boolean,
-  ) {
+  private static buildVehicleFields(form: PrePlainteFormFields, isVehicle: boolean) {
     return {
       assuranceAucune: isVehicle ? !!form.assuranceAucune : undefined,
       assureur: isVehicle ? this.toOptionalRipolSelection(form.assureur) : undefined,
@@ -156,9 +152,7 @@ export class IncidentMapper {
     };
   }
 
-  private static toOptionalRipolSelection<T extends { code?: string }>(
-    value: T | null | undefined,
-  ): T | undefined {
+  private static toOptionalRipolSelection<T extends { code?: string }>(value: T | null | undefined): T | undefined {
     return value?.code ? value : undefined;
   }
 
@@ -320,7 +314,7 @@ export class IncidentMapper {
   ): Promise<IncidentVolDTO> {
     // Compat multi-objets: si un tableau de snapshots est présent, on l'utilise.
     const snapshots: VolObjetFormSnapshot[] =
-      ((form as unknown as { objetsVolesValides?: VolObjetFormSnapshot[] }).objetsVolesValides) ?? [];
+      (form as unknown as { objetsVolesValides?: VolObjetFormSnapshot[] }).objetsVolesValides ?? [];
     const useMultiObjets = snapshots.length > 0;
 
     let objetsVoles: ObjetIncidentDTO[];
@@ -383,7 +377,7 @@ export class IncidentMapper {
     }
     // Compat multi-objets: si un tableau de snapshots est présent, on l'utilise.
     const snapshots: VolObjetFormSnapshot[] =
-      ((form as unknown as { objetsDegradesValides?: VolObjetFormSnapshot[] }).objetsDegradesValides) ?? [];
+      (form as unknown as { objetsDegradesValides?: VolObjetFormSnapshot[] }).objetsDegradesValides ?? [];
     if (snapshots.length > 0) {
       return snapshots.map(s => {
         const merged = {
@@ -417,10 +411,16 @@ export class IncidentMapper {
   }
 
   private static async addCybercrimeFilesIfAny(form: PrePlainteFormFields, result: IncidentCyberDTO): Promise<void> {
+    const includeAutresDocuments =
+      (form.typeCybercrime !== "commande-frauduleuse" && form.typeCybercrime !== "achat-non-recu") ||
+      form.copieIdentiteAuteurTransmise === true;
+
     const rawFiles = [
       ...this.extractRawFiles(form.justificatifsPaiement),
       ...this.extractRawFiles(form.copiesEcran),
-      ...this.extractRawFiles(form.autresDocuments),
+      ...(includeAutresDocuments ? this.extractRawFiles(form.autresDocuments) : []),
+      ...this.extractRawFiles(form.copieIdentiteTransmiseAuteurDocument),
+      ...this.extractRawFiles(form.copieIdentiteAuteurDocument),
     ];
 
     if (!rawFiles.length) {
@@ -455,33 +455,98 @@ export class IncidentMapper {
 
   private static addCommandeFrauduleuse(result: IncidentCyberDTO, form: PrePlainteFormFields) {
     result.commandeFrauduleuse = {
+      ...this.mapCommandeFrauduleuseInfos(form),
+      ...this.mapCommandeFrauduleuseCoordonnees(form),
+      ...this.mapCommandeFrauduleuseAdresses(form),
+      ...this.mapCommandeFrauduleuseContrevenant(form),
+      ...this.mapCybercrimeIdentite(form),
+    };
+  }
+
+  private static mapCommandeFrauduleuseInfos(form: PrePlainteFormFields) {
+    return {
       prestataire: this.toOptionalString(form.prestataire),
       dateDecouverte: toIsoDate(form.dateDecouverte),
       montant: parseNumber(form.montant),
       assurance: form.assurance ?? undefined,
+    };
+  }
+
+  private static mapCommandeFrauduleuseCoordonnees(form: PrePlainteFormFields) {
+    return {
       emailCommandeInconnu: form.emailCommandeInconnu ?? undefined,
       emailCommande: this.toOptionalString(form.emailCommande),
       telephoneCommandeInconnu: form.telephoneCommandeInconnu ?? undefined,
       telephoneCommande: this.toOptionalString(form.telephoneCommande),
-      livraisonAdresseLesee: form.livraisonAdresseLesee ?? undefined,
-      adresseLivraison:
-        form.livraisonAdresseLesee
-          ? undefined
-          : AdresseMapper.buildAdresse(
-            form.livraisonAdresse ?? "",
-            form.livraisonAdressePostale ?? "",
-            form.livraisonNpa ?? "",
-            form.livraisonLocalite ?? "",
-            form.livraisonPays,
-            form.livraisonLocaliteCode,
-          )
     };
   }
 
-  private static addAchatNonRecu(
-    result: IncidentCyberDTO,
-    form: PrePlainteFormFields
-  ) {
+  private static mapCommandeFrauduleuseAdresses(form: PrePlainteFormFields) {
+    return {
+      livraisonAdresseLesee: form.livraisonAdresseLesee ?? undefined,
+      adresseLivraison: this.buildAdresseLivraison(form),
+      adresseContrevenant: this.buildAdresseContrevenant(form),
+    };
+  }
+
+  private static buildAdresseLivraison(form: PrePlainteFormFields) {
+    if (form.livraisonAdresseLesee) {
+      return undefined;
+    }
+
+    return AdresseMapper.buildAdresse(
+      form.livraisonAdresse ?? "",
+      form.livraisonAdressePostale ?? "",
+      form.livraisonNpa ?? "",
+      form.livraisonLocalite ?? "",
+      form.livraisonPays,
+      form.livraisonLocaliteCode,
+    );
+  }
+
+  private static buildAdresseContrevenant(form: PrePlainteFormFields) {
+    if (!this.hasContrevenantAdresse(form)) {
+      return undefined;
+    }
+
+    return AdresseMapper.buildAdresse(
+      form.contrevenantAdresse ?? "",
+      form.contrevenantAdressePostale ?? "",
+      form.contrevenantNpa ?? "",
+      form.contrevenantLocalite ?? "",
+      form.contrevenantPays,
+      form.contrevenantLocaliteCode,
+    );
+  }
+
+  private static hasContrevenantAdresse(form: PrePlainteFormFields) {
+    return Boolean(
+      form.contrevenantAdresse?.trim() || form.contrevenantNpa?.trim() || form.contrevenantLocalite?.trim(),
+    );
+  }
+
+  private static mapCommandeFrauduleuseContrevenant(form: PrePlainteFormFields) {
+    return {
+      prenomContrevenant: this.toOptionalString(form.prenomContrevenant),
+      nomContrevenant: this.toOptionalString(form.nomContrevenant),
+      siteWebContrevenant: this.toOptionalString(form.siteWebContrevenant),
+      moyenPaiementNumeriqueDebite: form.moyenPaiementNumeriqueDebite ?? undefined,
+    };
+  }
+
+  private static mapCybercrimeIdentite(form: PrePlainteFormFields) {
+    return {
+      copieIdentiteTransmiseAuteur: form.copieIdentiteTransmiseAuteur ?? undefined,
+      copieIdentiteTransmiseAuteurDocumentIndisponible:
+        form.copieIdentiteTransmiseAuteurDocumentIndisponible ?? undefined,
+      raisonAbsenceCopieIdentiteTransmiseAuteur: this.toOptionalString(form.raisonAbsenceCopieIdentiteTransmiseAuteur),
+      copieIdentiteAuteurTransmise: form.copieIdentiteAuteurTransmise ?? undefined,
+      copieIdentiteAuteurDocumentIndisponible: form.copieIdentiteAuteurDocumentIndisponible ?? undefined,
+      raisonAbsenceCopieIdentiteAuteur: this.toOptionalString(form.raisonAbsenceCopieIdentiteAuteur),
+    };
+  }
+
+  private static addAchatNonRecu(result: IncidentCyberDTO, form: PrePlainteFormFields) {
     const adresseVendeurDto = this.buildAdresseVendeur(form);
 
     result.achatNonRecu = {
@@ -490,7 +555,7 @@ export class IncidentMapper {
       ...this.mapAchatNonRecuPlateforme(form),
       ...this.mapAchatNonRecuPaiement(form),
       ...this.mapAchatNonRecuDocuments(form),
-      ...this.mapAchatNonRecuIdentite(form),
+      ...this.mapCybercrimeIdentite(form),
     };
   }
 
@@ -516,10 +581,7 @@ export class IncidentMapper {
     };
   }
 
-  private static mapAchatNonRecuVendeur(
-    form: PrePlainteFormFields,
-    adresseVendeurDto: any
-  ) {
+  private static mapAchatNonRecuVendeur(form: PrePlainteFormFields, adresseVendeurDto: any) {
     const skipAdresse = form.adresseVendeurInconnue === true;
     return {
       prenomVendeur: this.toOptionalString(form.prenomVendeur),
@@ -530,9 +592,7 @@ export class IncidentMapper {
       emailVendeur: this.toOptionalString(form.emailVendeur),
       adresseVendeurInconnue: form.adresseVendeurInconnue ?? undefined,
       adresseVendeur:
-        skipAdresse || !adresseVendeurDto || !this.hasAdresse(adresseVendeurDto)
-          ? undefined
-          : adresseVendeurDto,
+        skipAdresse || !adresseVendeurDto || !this.hasAdresse(adresseVendeurDto) ? undefined : adresseVendeurDto,
       nomEntrepriseVendeur: this.toOptionalString(form.nomEntrepriseVendeur),
       siteWebEntrepriseVendeur: this.toOptionalString(form.siteWebEntrepriseVendeur),
     };
@@ -553,7 +613,11 @@ export class IncidentMapper {
       moyenPaiementAutre: this.toOptionalString(form.moyenPaiementAutre),
       ibanBeneficiaire: this.toOptionalString(form.ibanBeneficiaire),
       comptePaypalBeneficiaire: this.toOptionalString(form.comptePaypalBeneficiaire),
+      numeroTransactionPaypal: this.toOptionalString(form.numeroTransactionPaypal),
       numeroTwintBeneficiaire: this.toOptionalString(form.numeroTwintBeneficiaire),
+      typeCryptoMonnaie: this.toOptionalString(form.typeCryptoMonnaie),
+      montantUnitesCrypto: this.toOptionalString(form.montantUnitesCrypto),
+      adresseWalletExpediteur: this.toOptionalString(form.adresseWalletExpediteur),
       adresseWalletCrypto: this.toOptionalString(form.adresseWalletCrypto),
       hashTransactionCrypto: this.toOptionalString(form.hashTransactionCrypto),
       societeBeneficiaire: this.toOptionalString(form.societeBeneficiaire),
@@ -569,13 +633,6 @@ export class IncidentMapper {
       raisonAbsenceAnnonce: this.toOptionalString(form.raisonAbsenceAnnonce),
       preuvePaiementIndisponible: form.preuvePaiementIndisponible ?? undefined,
       raisonAbsencePreuvePaiement: this.toOptionalString(form.raisonAbsencePreuvePaiement),
-    };
-  }
-
-  private static mapAchatNonRecuIdentite(form: PrePlainteFormFields) {
-    return {
-      copieIdentiteTransmiseAuteur: form.copieIdentiteTransmiseAuteur ?? undefined,
-      copieIdentiteAuteurTransmise: form.copieIdentiteAuteurTransmise ?? undefined,
     };
   }
 

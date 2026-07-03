@@ -208,6 +208,16 @@ export interface PrePlainteFormFields {
   livraisonLocalite?: string;
   livraisonLocaliteCode?: string;
   livraisonPays?: string;
+  prenomContrevenant?: string;
+  nomContrevenant?: string;
+  siteWebContrevenant?: string;
+  contrevenantAdresse?: string;
+  contrevenantAdressePostale?: string;
+  contrevenantNpa?: string;
+  contrevenantLocalite?: string;
+  contrevenantLocaliteCode?: string;
+  contrevenantPays?: string;
+  moyenPaiementNumeriqueDebite?: boolean | null;
 
   /* Achat non reçu */
   montantDelitAchatLigne?: string;
@@ -238,7 +248,11 @@ export interface PrePlainteFormFields {
   moyenPaiementAutre?: string;
   ibanBeneficiaire?: string;
   comptePaypalBeneficiaire?: string;
+  numeroTransactionPaypal?: string;
   numeroTwintBeneficiaire?: string;
+  typeCryptoMonnaie?: string;
+  montantUnitesCrypto?: string;
+  adresseWalletExpediteur?: string;
   adresseWalletCrypto?: string;
   hashTransactionCrypto?: string;
   societeBeneficiaire?: string;
@@ -250,8 +264,12 @@ export interface PrePlainteFormFields {
   raisonAbsencePreuvePaiement?: string;
   copieIdentiteTransmiseAuteur?: boolean | null;
   copieIdentiteTransmiseAuteurDocument?: File[];
+  copieIdentiteTransmiseAuteurDocumentIndisponible?: boolean;
+  raisonAbsenceCopieIdentiteTransmiseAuteur?: string;
   copieIdentiteAuteurTransmise?: boolean | null;
   copieIdentiteAuteurDocument?: File[];
+  copieIdentiteAuteurDocumentIndisponible?: boolean;
+  raisonAbsenceCopieIdentiteAuteur?: string;
 
   /* Fausse annonce */
   urlComplete?: string;

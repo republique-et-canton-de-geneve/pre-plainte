@@ -252,6 +252,16 @@
       persistent-hint
     />
     <v-text-field
+      v-if="moyenPaiement === 'paypal'"
+      :label="requiredLabel(t('cybercrime.numeroTransactionPaypal'))"
+      v-model="numeroTransactionPaypal"
+      :error-messages="numeroTransactionPaypalError"
+      class="mb-8"
+      variant="outlined"
+      :hint="t('cybercrime.hintNumeroTransactionPaypal')"
+      persistent-hint
+    />
+    <v-text-field
       v-if="moyenPaiement === 'twint'"
       :label="requiredLabel(t('cybercrime.numeroTwintBeneficiaire'))"
       v-model="numeroTwintBeneficiaire"
@@ -259,6 +269,36 @@
       class="mb-8"
       variant="outlined"
       :hint="t('cybercrime.hintNumeroTwintBeneficiaire')"
+      persistent-hint
+    />
+    <v-text-field
+      v-if="moyenPaiement === 'crypto'"
+      :label="requiredLabel(t('cybercrime.typeCryptoMonnaie'))"
+      v-model="typeCryptoMonnaie"
+      :error-messages="typeCryptoMonnaieError"
+      class="mb-8"
+      variant="outlined"
+      :hint="t('cybercrime.hintTypeCryptoMonnaie')"
+      persistent-hint
+    />
+    <v-text-field
+      v-if="moyenPaiement === 'crypto'"
+      :label="requiredLabel(t('cybercrime.montantUnitesCrypto'))"
+      v-model="montantUnitesCrypto"
+      :error-messages="montantUnitesCryptoError"
+      class="mb-8"
+      variant="outlined"
+      :hint="t('cybercrime.hintMontantUnitesCrypto')"
+      persistent-hint
+    />
+    <v-text-field
+      v-if="moyenPaiement === 'crypto'"
+      :label="requiredLabel(t('cybercrime.adresseWalletExpediteur'))"
+      v-model="adresseWalletExpediteur"
+      :error-messages="adresseWalletExpediteurError"
+      class="mb-8"
+      variant="outlined"
+      :hint="t('cybercrime.hintAdresseWalletExpediteur')"
       persistent-hint
     />
     <v-text-field
@@ -364,7 +404,22 @@
         v-model="copieIdentiteTransmiseAuteurDocument"
         :label="t('cybercrime.telechargerCopieIdentiteTransmiseAuteur')"
         :multiple="false"
-        required
+        :required="!copieIdentiteTransmiseAuteurDocumentIndisponible"
+      />
+      <v-checkbox
+        v-model="copieIdentiteTransmiseAuteurDocumentIndisponible"
+        class="mt-0 mb-4"
+        :label="t('cybercrime.documentNonDisponible')"
+        hide-details
+      />
+      <v-textarea
+        v-if="copieIdentiteTransmiseAuteurDocumentIndisponible"
+        :label="requiredLabel(t('cybercrime.raisonAbsenceCopieIdentiteTransmiseAuteur'))"
+        v-model="raisonAbsenceCopieIdentiteTransmiseAuteur"
+        :error-messages="raisonAbsenceCopieIdentiteTransmiseAuteurError"
+        class="mt-2 mb-4"
+        variant="outlined"
+        rows="4"
       />
     </div>
     <BaseRadioGroup
@@ -383,7 +438,22 @@
         v-model="copieIdentiteAuteurDocument"
         :label="t('cybercrime.telechargerCopieIdentiteAuteurTransmise')"
         :multiple="false"
-        required
+        :required="!copieIdentiteAuteurDocumentIndisponible"
+      />
+      <v-checkbox
+        v-model="copieIdentiteAuteurDocumentIndisponible"
+        class="mt-0 mb-4"
+        :label="t('cybercrime.documentNonDisponible')"
+        hide-details
+      />
+      <v-textarea
+        v-if="copieIdentiteAuteurDocumentIndisponible"
+        :label="requiredLabel(t('cybercrime.raisonAbsenceCopieIdentiteAuteur'))"
+        v-model="raisonAbsenceCopieIdentiteAuteur"
+        :error-messages="raisonAbsenceCopieIdentiteAuteurError"
+        class="mt-2 mb-4"
+        variant="outlined"
+        rows="4"
       />
     </div>
   </div>
@@ -438,7 +508,11 @@ const { value: moyenPaiement, errorMessage: moyenPaiementError } = useField("moy
 const { value: moyenPaiementAutre, errorMessage: moyenPaiementAutreError } = useField("moyenPaiementAutre");
 const { value: ibanBeneficiaire, errorMessage: ibanBeneficiaireError } = useField("ibanBeneficiaire");
 const { value: comptePaypalBeneficiaire, errorMessage: comptePaypalBeneficiaireError } = useField("comptePaypalBeneficiaire");
+const { value: numeroTransactionPaypal, errorMessage: numeroTransactionPaypalError } = useField("numeroTransactionPaypal");
 const { value: numeroTwintBeneficiaire, errorMessage: numeroTwintBeneficiaireError } = useField("numeroTwintBeneficiaire");
+const { value: typeCryptoMonnaie, errorMessage: typeCryptoMonnaieError } = useField("typeCryptoMonnaie");
+const { value: montantUnitesCrypto, errorMessage: montantUnitesCryptoError } = useField("montantUnitesCrypto");
+const { value: adresseWalletExpediteur, errorMessage: adresseWalletExpediteurError } = useField("adresseWalletExpediteur");
 const { value: adresseWalletCrypto, errorMessage: adresseWalletCryptoError } = useField("adresseWalletCrypto");
 const { value: hashTransactionCrypto, errorMessage: hashTransactionCryptoError } = useField("hashTransactionCrypto");
 const { value: societeBeneficiaire, errorMessage: societeBeneficiaireError } = useField("societeBeneficiaire");
@@ -450,8 +524,12 @@ const { value: preuvePaiementIndisponible } = useField<boolean>("preuvePaiementI
 const { value: raisonAbsencePreuvePaiement, errorMessage: raisonAbsencePreuvePaiementError } = useField("raisonAbsencePreuvePaiement");
 const { value: copieIdentiteTransmiseAuteur, errorMessage: copieIdentiteTransmiseAuteurError } = useField<boolean>("copieIdentiteTransmiseAuteur");
 const { value: copieIdentiteTransmiseAuteurDocument } = useField<File[]>("copieIdentiteTransmiseAuteurDocument");
+const { value: copieIdentiteTransmiseAuteurDocumentIndisponible } = useField<boolean>("copieIdentiteTransmiseAuteurDocumentIndisponible");
+const { value: raisonAbsenceCopieIdentiteTransmiseAuteur, errorMessage: raisonAbsenceCopieIdentiteTransmiseAuteurError } = useField<string>("raisonAbsenceCopieIdentiteTransmiseAuteur");
 const { value: copieIdentiteAuteurTransmise, errorMessage: copieIdentiteAuteurTransmiseError } = useField<boolean>("copieIdentiteAuteurTransmise");
 const { value: copieIdentiteAuteurDocument } = useField<File[]>("copieIdentiteAuteurDocument");
+const { value: copieIdentiteAuteurDocumentIndisponible } = useField<boolean>("copieIdentiteAuteurDocumentIndisponible");
+const { value: raisonAbsenceCopieIdentiteAuteur, errorMessage: raisonAbsenceCopieIdentiteAuteurError } = useField<string>("raisonAbsenceCopieIdentiteAuteur");
 
 const createInputHandler = (maskFn: (e: InputEvent, value: any) => void, target: any) => (e: InputEvent) => {
   maskFn(e, target);
@@ -543,10 +621,38 @@ resetFilesOnCondition(
   isYes => !isYes
 );
 
+resetFieldsOnToggle(copieIdentiteTransmiseAuteurDocumentIndisponible,
+  () => {
+    copieIdentiteTransmiseAuteurDocument.value = [];
+  },
+  () => {
+    raisonAbsenceCopieIdentiteTransmiseAuteur.value = "";
+  }
+);
+
 resetFilesOnCondition(
   copieIdentiteAuteurTransmise,
   [copieIdentiteAuteurDocument],
   isYes => !isYes
+);
+
+resetFieldsOnToggle(copieIdentiteTransmiseAuteur, () => {}, () => {
+  copieIdentiteTransmiseAuteurDocumentIndisponible.value = false;
+  raisonAbsenceCopieIdentiteTransmiseAuteur.value = "";
+});
+
+resetFieldsOnToggle(copieIdentiteAuteurTransmise, () => {}, () => {
+  copieIdentiteAuteurDocumentIndisponible.value = false;
+  raisonAbsenceCopieIdentiteAuteur.value = "";
+});
+
+resetFieldsOnToggle(copieIdentiteAuteurDocumentIndisponible,
+  () => {
+    copieIdentiteAuteurDocument.value = [];
+  },
+  () => {
+    raisonAbsenceCopieIdentiteAuteur.value = "";
+  }
 );
 
 watch(moyenPaiement, mode => {
@@ -555,11 +661,15 @@ watch(moyenPaiement, mode => {
   }
   if (mode !== MOYEN_PAIEMENT.PAYPAL) {
     comptePaypalBeneficiaire.value = "";
+    numeroTransactionPaypal.value = "";
   }
   if (mode !== MOYEN_PAIEMENT.TWINT) {
     numeroTwintBeneficiaire.value = "";
   }
   if (mode !== MOYEN_PAIEMENT.CRYPTO) {
+    typeCryptoMonnaie.value = "";
+    montantUnitesCrypto.value = "";
+    adresseWalletExpediteur.value = "";
     adresseWalletCrypto.value = "";
     hashTransactionCrypto.value = "";
   }

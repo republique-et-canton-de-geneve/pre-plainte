@@ -8,6 +8,7 @@ import {
 } from "@/constants/constant";
 import { isValidBoundedDate, parseDate, parseTime } from "@/utils/helpers/dateHelpers.ts";
 import { validateAchatNonRecuCybercrime } from "@/schemas/incident-evenement-achat-non-recu-refine";
+import { validateCommandeFrauduleuseCybercrime } from "@/schemas/incident-evenement-commande-frauduleuse-refine";
 import { isUrlWebAvecDomaine } from "@/utils/validations/field-validation.utils";
 import { requiresConstatQuestion } from "@/utils/workflows/disclaimer-workflow";
 
@@ -757,6 +758,16 @@ const commandeFrauduleuseFields = (t: ComposerTranslation) => ({
   livraisonLocalite: z.string().max(TEXT_FIELD_MAX_LENGTH, t(VALIDATION_LONGUEUR_MAX, { max: TEXT_FIELD_MAX_LENGTH })).nullable().optional(),
   livraisonLocaliteCode: z.string().nullable().optional(),
   livraisonPays: z.string().optional(),
+  prenomContrevenant: z.string().max(TEXT_FIELD_MAX_LENGTH, t(VALIDATION_LONGUEUR_MAX, { max: TEXT_FIELD_MAX_LENGTH })).nullable().optional(),
+  nomContrevenant: z.string().max(TEXT_FIELD_MAX_LENGTH, t(VALIDATION_LONGUEUR_MAX, { max: TEXT_FIELD_MAX_LENGTH })).nullable().optional(),
+  siteWebContrevenant: z.string().max(TEXT_FIELD_MAX_LENGTH, t(VALIDATION_LONGUEUR_MAX, { max: TEXT_FIELD_MAX_LENGTH })).nullable().optional(),
+  contrevenantAdresse: z.string().max(TEXT_FIELD_MAX_LENGTH, t(VALIDATION_LONGUEUR_MAX, { max: TEXT_FIELD_MAX_LENGTH })).nullable().optional(),
+  contrevenantAdressePostale: z.string().max(TEXT_FIELD_MAX_LENGTH, t(VALIDATION_LONGUEUR_MAX, { max: TEXT_FIELD_MAX_LENGTH })).nullable().optional(),
+  contrevenantNpa: z.string().max(TEXT_FIELD_MAX_LENGTH, t(VALIDATION_LONGUEUR_MAX, { max: TEXT_FIELD_MAX_LENGTH })).nullable().optional(),
+  contrevenantLocalite: z.string().max(TEXT_FIELD_MAX_LENGTH, t(VALIDATION_LONGUEUR_MAX, { max: TEXT_FIELD_MAX_LENGTH })).nullable().optional(),
+  contrevenantLocaliteCode: z.string().nullable().optional(),
+  contrevenantPays: z.string().optional(),
+  moyenPaiementNumeriqueDebite: z.boolean().nullish(),
 });
 
 const achatNonRecuFields = (t: ComposerTranslation) => ({
@@ -788,7 +799,11 @@ const achatNonRecuFields = (t: ComposerTranslation) => ({
   moyenPaiementAutre: z.string().max(TEXT_FIELD_MAX_LENGTH, t(VALIDATION_LONGUEUR_MAX, { max: TEXT_FIELD_MAX_LENGTH })).nullable().optional(),
   ibanBeneficiaire: z.string().max(TEXT_FIELD_MAX_LENGTH, t(VALIDATION_LONGUEUR_MAX, { max: TEXT_FIELD_MAX_LENGTH })).optional(),
   comptePaypalBeneficiaire: z.string().max(TEXT_FIELD_MAX_LENGTH, t(VALIDATION_LONGUEUR_MAX, { max: TEXT_FIELD_MAX_LENGTH })).optional(),
+  numeroTransactionPaypal: z.string().max(TEXT_FIELD_MAX_LENGTH, t(VALIDATION_LONGUEUR_MAX, { max: TEXT_FIELD_MAX_LENGTH })).optional(),
   numeroTwintBeneficiaire: z.string().max(TEXT_FIELD_MAX_LENGTH, t(VALIDATION_LONGUEUR_MAX, { max: TEXT_FIELD_MAX_LENGTH })).optional(),
+  typeCryptoMonnaie: z.string().max(TEXT_FIELD_MAX_LENGTH, t(VALIDATION_LONGUEUR_MAX, { max: TEXT_FIELD_MAX_LENGTH })).optional(),
+  montantUnitesCrypto: z.string().max(TEXT_FIELD_MAX_LENGTH, t(VALIDATION_LONGUEUR_MAX, { max: TEXT_FIELD_MAX_LENGTH })).optional(),
+  adresseWalletExpediteur: z.string().max(TEXT_FIELD_MAX_LENGTH, t(VALIDATION_LONGUEUR_MAX, { max: TEXT_FIELD_MAX_LENGTH })).optional(),
   adresseWalletCrypto: z.string().max(TEXT_FIELD_MAX_LENGTH, t(VALIDATION_LONGUEUR_MAX, { max: TEXT_FIELD_MAX_LENGTH })).optional(),
   hashTransactionCrypto: z.string().max(TEXT_FIELD_MAX_LENGTH, t(VALIDATION_LONGUEUR_MAX, { max: TEXT_FIELD_MAX_LENGTH })).optional(),
   societeBeneficiaire: z.string().max(TEXT_FIELD_MAX_LENGTH, t(VALIDATION_LONGUEUR_MAX, { max: TEXT_FIELD_MAX_LENGTH })).nullable().optional(),
@@ -804,8 +819,12 @@ const achatNonRecuFields = (t: ComposerTranslation) => ({
   raisonAbsencePreuvePaiement: z.string().max(TEXTAREA_MAX_LENGTH, t(VALIDATION_LONGUEUR_MAX, { max: TEXTAREA_MAX_LENGTH })).optional(),
   copieIdentiteTransmiseAuteur: z.boolean().nullish(),
   copieIdentiteTransmiseAuteurDocument: z.array(z.instanceof(File)).optional(),
+  copieIdentiteTransmiseAuteurDocumentIndisponible: z.boolean().optional(),
+  raisonAbsenceCopieIdentiteTransmiseAuteur: z.string().max(TEXTAREA_MAX_LENGTH, t(VALIDATION_LONGUEUR_MAX, { max: TEXTAREA_MAX_LENGTH })).optional(),
   copieIdentiteAuteurTransmise: z.boolean().nullish(),
   copieIdentiteAuteurDocument: z.array(z.instanceof(File)).optional(),
+  copieIdentiteAuteurDocumentIndisponible: z.boolean().optional(),
+  raisonAbsenceCopieIdentiteAuteur: z.string().max(TEXTAREA_MAX_LENGTH, t(VALIDATION_LONGUEUR_MAX, { max: TEXTAREA_MAX_LENGTH })).optional(),
 });
 
 const fausseAnnonceFields = (t: ComposerTranslation) => ({
@@ -909,6 +928,7 @@ export const createEvenementInfoSchema = (t: ComposerTranslation) =>
       }
 
       validateCommandeFrauduleuse(data, ctx, t);
+      validateCommandeFrauduleuseCybercrime(data, ctx, t);
     })
     .superRefine((data, ctx) => validateAchatNonRecuCybercrime(data, ctx, addCustomIssue, t))
     .superRefine((data, ctx) => {

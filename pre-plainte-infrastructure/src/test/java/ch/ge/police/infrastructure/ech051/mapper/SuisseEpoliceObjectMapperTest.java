@@ -2,9 +2,17 @@ package ch.ge.police.infrastructure.ech051.mapper;
 
 import ch.ge.police.core.domain.model.common.RipolCode;
 import ch.ge.police.core.domain.model.event.IncidentBase;
+import ch.ge.police.core.domain.model.event.cybercrime.Cybercrime;
+import ch.ge.police.core.domain.model.event.cybercrime.common.AchatNonRecu;
+import ch.ge.police.core.domain.model.event.cybercrime.common.TypeCybercrime;
 import ch.ge.police.core.domain.model.event.dommagematerial.DommageMateriel;
 import ch.ge.police.core.domain.model.event.vol.Vol;
 import ch.ge.police.core.domain.model.event.vol.common.ObjetIncident;
+import ch.ge.police.core.domain.model.informationspersonnelles.InformationsPersonnelles;
+import ch.ge.police.core.domain.model.informationspersonnelles.common.LienAvecPersonne;
+import ch.ge.police.core.domain.model.informationspersonnelles.common.Tiers;
+import ch.ge.police.core.domain.model.informationspersonnelles.common.TitreSejour;
+import ch.ge.police.core.domain.model.informationspersonnelles.common.TypeDocumentIdentite;
 import ch.ge.police.infrastructure.ech051.Ech051Constants;
 import ch.ge.police.infrastructure.ech051.dto.Ech0051DocumentPayload.Identification;
 import ch.ge.police.infrastructure.ech051.dto.Ech0051DocumentPayload.ObjectItem;
@@ -20,6 +28,7 @@ import static ch.ge.police.infrastructure.ech051.Ech051Constants.RipolSourceTabl
 import static ch.ge.police.infrastructure.ech051.Ech051Constants.RipolSourceTables.OBJET_COULEUR;
 import static ch.ge.police.infrastructure.ech051.Ech051Constants.RipolSourceTables.OBJET_MARQUE;
 import static ch.ge.police.infrastructure.ech051.Ech051Constants.RipolSourceTables.OBJET_MODELE;
+import static ch.ge.police.infrastructure.ech051.Ech051Constants.RipolSourceTables.PKS_AUFENTHALT;
 import static ch.ge.police.infrastructure.ech051.Ech051Constants.RipolSourceTables.PLAQUE_CANTON;
 import static ch.ge.police.infrastructure.ech051.Ech051Constants.RipolSourceTables.PLAQUE_PAYS;
 import static ch.ge.police.infrastructure.ech051.Ech051Constants.RipolSourceTables.TYPE_OBJET;
@@ -439,6 +448,82 @@ class SuisseEpoliceObjectMapperTest {
     assertEquals("VD", canton.getCode());
     assertEquals("Vaud", canton.getLabel());
     assertEquals(PLAQUE_CANTON, canton.getSourceTable());
+  }
+
+  @Test
+  void shouldBuildCyberObjectsWithVictimIdentityAndUndeliveredItem() {
+    AchatNonRecu achat = new AchatNonRecu();
+    achat.setMontantDelitAchatLigne("100");
+    achat.setArticleNonLivreDescription("Article non livré");
+
+    Cybercrime cybercrime = new Cybercrime();
+    cybercrime.setTypeCybercrime(TypeCybercrime.ACHAT_NON_RECU);
+    cybercrime.setAchatNonRecu(achat);
+
+    InformationsPersonnelles infos = new InformationsPersonnelles();
+    infos.setLienAvecPersonne(LienAvecPersonne.MOI_MEME);
+    infos.setTypeDocumentIdentite(TypeDocumentIdentite.CARTE_IDENTITE);
+    infos.setNumeroDocumentIdentite("ID-12345");
+    infos.setTitreSejour(TitreSejour.PERMIS_B);
+
+    List<ObjectItem> result = mapper.buildCyberObjects(cybercrime, infos);
+
+    assertEquals(2, result.size());
+    ObjectItem identity = result.getFirst();
+    assertEquals(Ech051Constants.OBJECT_KEY_CYBER_VICTIM_IDENTITY, identity.getKey());
+    assertEquals(Ech051Constants.OBJECT_TYPE_CYBER_IDENTITY_CODE, identity.getTypeOfObject().getCode());
+    assertNotNull(identity.getOfficialDocument());
+    assertEquals("02", identity.getOfficialDocument().getPermitCategory().getCode());
+    assertEquals(PKS_AUFENTHALT, identity.getOfficialDocument().getPermitCategory().getSourceTable());
+    assertEquals("IDPass", identity.getIdentification().getType());
+    assertEquals("ID-12345", identity.getIdentification().getNumber());
+
+    ObjectItem undelivered = result.get(1);
+    assertEquals(Ech051Constants.OBJECT_KEY_CYBER_UNDELIVERED_ITEM, undelivered.getKey());
+  }
+
+  @Test
+  void shouldBuildCyberObjectsWithTiersVictimIdentity() {
+    AchatNonRecu achat = new AchatNonRecu();
+    achat.setMontantDelitAchatLigne("50");
+
+    Cybercrime cybercrime = new Cybercrime();
+    cybercrime.setTypeCybercrime(TypeCybercrime.ACHAT_NON_RECU);
+    cybercrime.setAchatNonRecu(achat);
+
+    Tiers tiers = new Tiers();
+    tiers.setTypeDocumentIdentite(TypeDocumentIdentite.PASSEPORT);
+    tiers.setNumeroDocumentIdentite("P-99");
+
+    InformationsPersonnelles infos = new InformationsPersonnelles();
+    infos.setLienAvecPersonne(LienAvecPersonne.TIERS);
+    infos.setTiers(tiers);
+
+    List<ObjectItem> result = mapper.buildCyberObjects(cybercrime, infos);
+
+    assertEquals(2, result.size());
+    assertEquals("Passport", result.getFirst().getIdentification().getType());
+    assertEquals("P-99", result.getFirst().getIdentification().getNumber());
+    assertNull(result.getFirst().getOfficialDocument());
+  }
+
+  @Test
+  void shouldSkipCyberIdentityObjectWhenDocumentNumberMissing() {
+    AchatNonRecu achat = new AchatNonRecu();
+    achat.setMontantDelitAchatLigne("50");
+
+    Cybercrime cybercrime = new Cybercrime();
+    cybercrime.setTypeCybercrime(TypeCybercrime.ACHAT_NON_RECU);
+    cybercrime.setAchatNonRecu(achat);
+
+    InformationsPersonnelles infos = new InformationsPersonnelles();
+    infos.setTypeDocumentIdentite(TypeDocumentIdentite.CARTE_IDENTITE);
+    infos.setNumeroDocumentIdentite("");
+
+    List<ObjectItem> result = mapper.buildCyberObjects(cybercrime, infos);
+
+    assertEquals(1, result.size());
+    assertEquals(Ech051Constants.OBJECT_KEY_CYBER_UNDELIVERED_ITEM, result.getFirst().getKey());
   }
 
   @Test

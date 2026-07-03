@@ -86,7 +86,7 @@ public class Ech0051DocumentXml {
   @Getter
   @Setter
   @XmlAccessorType(XmlAccessType.FIELD)
-  @XmlType(propOrder = {"key", "sourceId", "natural", "legal", "address", "communications", "additionalInformation"})
+  @XmlType(propOrder = {"key", "sourceId", "natural", "legal", "addresses", "communications", "additionalInformation"})
   public static class PersonXml {
     public PersonXml() {
       // JAXB requires an explicit no-arg constructor.
@@ -105,13 +105,37 @@ public class Ech0051DocumentXml {
     private LegalXml legal;
 
     @XmlElement(name = "address", namespace = SepNamespaces.ECH_0051_NS)
-    private AddressXml address;
+    private List<AddressXml> addresses = new ArrayList<>();
 
     @XmlElement(name = "meansOfCommunication", namespace = SepNamespaces.ECH_0051_NS)
     private List<CommunicationXml> communications = new ArrayList<>();
 
     @XmlAttribute(name = "deliveredAbroad", namespace = SepNamespaces.SEP_NS)
     private String deliveredAbroad;
+
+    @XmlAttribute(name = "creditCardUsed", namespace = SepNamespaces.SEP_NS)
+    private String creditCardUsed;
+
+    @XmlAttribute(name = "onlineShop", namespace = SepNamespaces.SEP_NS)
+    private String onlineShop;
+
+    @XmlAttribute(name = "noPaymentProofReason", namespace = SepNamespaces.SEP_NS)
+    private String noPaymentProofReason;
+
+    @XmlAttribute(name = "noAdImageReason", namespace = SepNamespaces.SEP_NS)
+    private String noAdImageReason;
+
+    @XmlAttribute(name = "reporterIdCopySent", namespace = SepNamespaces.SEP_NS)
+    private String reporterIdCopySent;
+
+    @XmlAttribute(name = "perpetratorIdCopyReceived", namespace = SepNamespaces.SEP_NS)
+    private String perpetratorIdCopyReceived;
+
+    @XmlAttribute(name = "noIdCopyPresentReason", namespace = SepNamespaces.SEP_NS)
+    private String noIdCopyPresentReason;
+
+    @XmlAttribute(name = "noPerpetratorsIdCopyPresentReason", namespace = SepNamespaces.SEP_NS)
+    private String noPerpetratorsIdCopyPresentReason;
 
     @XmlElement(name = "additionalInformation", namespace = SepNamespaces.ECH_0051_NS)
     private String additionalInformation;
@@ -128,6 +152,9 @@ public class Ech0051DocumentXml {
 
     @XmlElement(name = "identity", namespace = SepNamespaces.ECH_0051_NS)
     private NaturalIdentityXml identity;
+
+    @XmlElement(name = "remark", namespace = SepNamespaces.ECH_0051_NS)
+    private RemarkXml remark;
   }
 
   @Getter
@@ -333,6 +360,9 @@ public class Ech0051DocumentXml {
       // JAXB requires an explicit no-arg constructor.
           }
 
+    @XmlElement(name = "addressLine", namespace = SepNamespaces.ECH_0051_NS)
+    private String addressLine;
+
     @XmlElement(name = "street", namespace = SepNamespaces.ECH_0051_NS)
     private MarkedValueXml street;
 
@@ -453,8 +483,35 @@ public class Ech0051DocumentXml {
     @XmlElement(name = "usage", namespace = SepNamespaces.ECH_0051_NS)
     private UsageXml usage;
 
+    @XmlElement(name = "provider", namespace = SepNamespaces.ECH_0051_NS)
+    private UriProviderXml provider;
+
     @XmlElement(name = "uri", namespace = SepNamespaces.ECH_0051_NS)
     private String uri;
+  }
+
+  @Getter
+  @Setter
+  @XmlAccessorType(XmlAccessType.FIELD)
+  public static class UriProviderXml {
+    public UriProviderXml() {
+      // JAXB requires an explicit no-arg constructor.
+    }
+
+    @XmlElement(name = "marking", namespace = SepNamespaces.ECH_0051_NS)
+    private MarkingWithLangXml marking;
+  }
+
+  @Getter
+  @Setter
+  @XmlAccessorType(XmlAccessType.FIELD)
+  public static class RemarkXml {
+    public RemarkXml() {
+      // JAXB requires an explicit no-arg constructor.
+    }
+
+    @XmlElement(name = "additionalInformation", namespace = SepNamespaces.ECH_0051_NS)
+    private String additionalInformation;
   }
 
   @Getter
@@ -708,6 +765,9 @@ public class Ech0051DocumentXml {
     @XmlElement(name = "key", namespace = SepNamespaces.ECH_0051_NS)
     private String key;
 
+    @XmlElement(name = "description", namespace = SepNamespaces.ECH_0051_NS)
+    private String description;
+
     @XmlElement(name = "additionalInformation", namespace = SepNamespaces.ECH_0051_NS)
     private String additionalInformation;
 
@@ -755,6 +815,33 @@ public class Ech0051DocumentXml {
 
     @XmlElement(name = "purchaseDate", namespace = SepNamespaces.ECH_0051_NS)
     private String purchaseDate;
+
+    @XmlElement(name = "officialDocument", namespace = SepNamespaces.ECH_0051_NS)
+    private OfficialDocumentXml officialDocument;
+  }
+
+  @Getter
+  @Setter
+  @XmlAccessorType(XmlAccessType.FIELD)
+  public static class OfficialDocumentXml {
+    public OfficialDocumentXml() {
+      // JAXB requires an explicit no-arg constructor.
+    }
+
+    @XmlElement(name = "permitCategory", namespace = SepNamespaces.ECH_0051_NS)
+    private PermitCategoryXml permitCategory;
+  }
+
+  @Getter
+  @Setter
+  @XmlAccessorType(XmlAccessType.FIELD)
+  public static class PermitCategoryXml {
+    public PermitCategoryXml() {
+      // JAXB requires an explicit no-arg constructor.
+    }
+
+    @XmlElement(name = "category", namespace = SepNamespaces.ECH_0051_NS)
+    private RipolValueXml category;
   }
 
   @Getter
