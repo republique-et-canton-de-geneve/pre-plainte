@@ -22,7 +22,7 @@ import software.amazon.awssdk.services.s3.model.S3Exception;
 @RequiredArgsConstructor
 public class Ech051Adapter implements PrePlainteSubmissionPort {
 
-  private static final String ECH051_PREFIX = "preplainte/";
+  private static final String ECH051_PREFIX = "preplainte/xml/";
   private static final String CONTENT_TYPE_XML = "application/xml";
   private static final String EVENT_ECH051_EXPORT_SUCCESS = "ech051_export_success";
   private static final String EVENT_ECH051_EXPORT_FAILURE = "ech051_export_failure";

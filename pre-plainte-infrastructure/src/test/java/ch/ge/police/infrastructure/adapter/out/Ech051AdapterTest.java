@@ -67,7 +67,7 @@ class Ech051AdapterTest {
 
     String today = LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE);
     assertTrue(
-      key.matches("^preplainte/preplainte-" + today + "-[0-9a-fA-F]{32}\\.xml$"),
+      key.matches("^preplainte/xml/preplainte-" + today + "-[0-9a-fA-F]{32}\\.xml$"),
       "Unexpected key: " + key
     );
 
