@@ -25,6 +25,7 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Locale;
 
 import static ch.ge.police.infrastructure.ech051.Ech051Constants.RipolSourceTables.MODUS_OPERANDI;
 import static ch.ge.police.infrastructure.ech051.Ech051Constants.RipolSourceTables.TYPE_CRIME;
@@ -123,9 +124,15 @@ public class SuisseEpoliceEventMapper {
       return buildCyberTransactionEvent(cybercrime, infos);
     }
 
-    Adresse primaryActionAddress = incident.getAdresseIncident();
-    if (primaryActionAddress == null || !addressMapper.isAddressComplete(primaryActionAddress)) {
-      primaryActionAddress = infos != null ? infos.getAdresse() : null;
+    ActionPlace primaryActionPlace;
+    if (isPublicPlaceLocation(incident)) {
+      primaryActionPlace = buildActionPlaceForPublicLocation(incident);
+    } else {
+      Adresse primaryActionAddress = incident.getAdresseIncident();
+      if (primaryActionAddress == null || !addressMapper.isAddressComplete(primaryActionAddress)) {
+        primaryActionAddress = infos != null ? infos.getAdresse() : null;
+      }
+      primaryActionPlace = buildActionPlace(primaryActionAddress);
     }
 
     Adresse secondaryActionAddress = incident.getAdresseIncidentSecondaire();
@@ -141,10 +148,10 @@ public class SuisseEpoliceEventMapper {
         .from(incident.getDateDebutEvent())
         .to(incident.getDateFinEvent())
         .build())
-      .actionPlace(buildActionPlace(primaryActionAddress))
+      .actionPlace(primaryActionPlace)
       .secondaryActionPlace(buildActionPlace(secondaryActionAddress))
       .bootyAmount(buildBootyAmount(incident))
-      .locality(buildLocalityReference(incident))
+      .locality(isPublicPlaceLocation(incident) ? null : buildLocalityReference(incident))
       .additionalInformation(buildEventAdditionalInformation(incident))
       .build();
   }
@@ -328,6 +335,56 @@ public class SuisseEpoliceEventMapper {
       .place(place)
       .cityArea(cityArea)
       .build();
+  }
+
+  /**
+   * Lieu public (plage, parc, etc.) : rue = nom du lieu, place = commune, sans numéro ni locality séparée.
+   */
+  public ActionPlace buildActionPlaceForPublicLocation(IncidentBase incident) {
+    if (incident.getTypeLieu() == null) {
+      return null;
+    }
+    String commune = resolvePublicPlaceCommune(incident);
+    RipolLocation place = null;
+    if (commune != null && !commune.isBlank()) {
+      place = RipolLocation.builder()
+          .label(commune.strip())
+          .build();
+    }
+    return ActionPlace.builder()
+        .street(capitalizeFirst(incident.getTypeLieu().label()))
+        .houseNumber(null)
+        .place(place)
+        .cityArea(null)
+        .build();
+  }
+
+  private boolean isPublicPlaceLocation(IncidentBase incident) {
+    return incident.getTypeLieu() != null
+        && Boolean.FALSE.equals(incident.getAdresseConnue())
+        && !Boolean.TRUE.equals(incident.getIsTrajet());
+  }
+
+  private String resolvePublicPlaceCommune(IncidentBase incident) {
+    if (incident.getLieuOrigine() != null && !incident.getLieuOrigine().isBlank()) {
+      return incident.getLieuOrigine();
+    }
+    Adresse adresseIncident = incident.getAdresseIncident();
+    if (adresseIncident != null && adresseIncident.localite() != null && !adresseIncident.localite().isBlank()) {
+      return adresseIncident.localite();
+    }
+    return null;
+  }
+
+  private static String capitalizeFirst(String value) {
+    if (value == null || value.isBlank()) {
+      return value;
+    }
+    String stripped = value.strip();
+    if (stripped.length() == 1) {
+      return stripped.toUpperCase(Locale.ROOT);
+    }
+    return stripped.substring(0, 1).toUpperCase(Locale.ROOT) + stripped.substring(1);
   }
 
   /**

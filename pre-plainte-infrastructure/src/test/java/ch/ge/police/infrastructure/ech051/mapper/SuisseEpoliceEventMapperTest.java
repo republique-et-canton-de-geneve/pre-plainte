@@ -200,6 +200,58 @@ class SuisseEpoliceEventMapperTest {
   }
 
   @Test
+  void shouldBuildEventForPublicLocationWithoutVictimAddressFallback() {
+    Vol incident = mock(Vol.class);
+    InformationsPersonnelles infos = mock(InformationsPersonnelles.class);
+    Adresse victimAddress = mock(Adresse.class);
+    var typeLieu = mock(RipolCode.class);
+
+    when(incident.getAdresseIncident()).thenReturn(null);
+    when(incident.getAdresseIncidentSecondaire()).thenReturn(null);
+    when(incident.getDateDebutEvent()).thenReturn("2026-06-01");
+    when(incident.getDateFinEvent()).thenReturn("2026-06-01");
+    when(incident.getTypeIncident()).thenReturn(TypeIncident.VOL);
+    when(incident.getTypeLieu()).thenReturn(typeLieu);
+    when(typeLieu.label()).thenReturn("plage");
+    when(incident.getAdresseConnue()).thenReturn(false);
+    when(incident.getIsTrajet()).thenReturn(false);
+    when(incident.getLieuOrigine()).thenReturn("Versoix");
+    when(infos.getAdresse()).thenReturn(victimAddress);
+    when(victimAddress.adresse()).thenReturn("Chemin du Centurion");
+    when(addressMapper.isAddressComplete(victimAddress)).thenReturn(true);
+
+    Event result = mapper.buildEvent(incident, infos);
+
+    assertNotNull(result.getActionPlace());
+    assertEquals("Plage", result.getActionPlace().getStreet());
+    assertNull(result.getActionPlace().getHouseNumber());
+    assertNull(result.getActionPlace().getCityArea());
+    assertNotNull(result.getActionPlace().getPlace());
+    assertEquals("Versoix", result.getActionPlace().getPlace().getLabel());
+    assertNull(result.getActionPlace().getPlace().getCode());
+    assertNull(result.getActionPlace().getPlace().getZipCode());
+    assertNull(result.getLocality());
+  }
+
+  @Test
+  void shouldBuildActionPlaceForPublicLocation() {
+    IncidentBase incident = mock(IncidentBase.class);
+    var typeLieu = mock(RipolCode.class);
+
+    when(incident.getTypeLieu()).thenReturn(typeLieu);
+    when(typeLieu.label()).thenReturn("plage");
+    when(incident.getLieuOrigine()).thenReturn("Versoix");
+
+    ActionPlace result = mapper.buildActionPlaceForPublicLocation(incident);
+
+    assertNotNull(result);
+    assertEquals("Plage", result.getStreet());
+    assertNull(result.getHouseNumber());
+    assertNull(result.getCityArea());
+    assertEquals("Versoix", result.getPlace().getLabel());
+  }
+
+  @Test
   void shouldBuildCyberTransactionEventWithUnknownCountryAndContactPeriod() {
     Cybercrime cybercrime = mock(Cybercrime.class);
     AchatNonRecu achat = new AchatNonRecu();
