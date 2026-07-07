@@ -111,7 +111,7 @@ Les services applicatifs manipulent des modèles métier (`PrePlainte`, `EmailCh
 | --- | --- | --- | --- |
 | Brouillon | `preplainte/draft/{demandeId}.json` | `application/json` | `S3JsonDraftAdapter` |
 | Challenge e-mail | `preplainte/email-challenge/{key}.json` | `application/json` | `S3ChallengeEmailAdapter` |
-| Soumission finale eCH-0051 | `preplainte/preplainte-{yyyyMMdd}-{uuid}.xml` | `application/xml` | `Ech051Adapter` |
+| Soumission finale eCH-0051 | `preplainte/xml/preplainte-{yyyyMMdd}-{uuid}.xml` | `application/xml` | `Ech051Adapter` |
 
 ## Brouillons de pré-plainte
 
@@ -231,7 +231,7 @@ Le controller valide les fichiers joints, puis le service applicatif :
 La clé est générée avec la date du jour et un UUID :
 
 ```text
-preplainte/preplainte-{yyyyMMdd}-{uuid}.xml
+preplainte/xml/preplainte-{yyyyMMdd}-{uuid}.xml
 ```
 
 Le type de contenu est :
