@@ -605,7 +605,7 @@
     "hintNatureDommage": "Selecione a natureza do dano observado",
     "hintDescriptionDommage": "Descreva os factos observados e o modo operatório, se for conhecido",
     "hintDateConstat": "Introduza a data em que o auto policial foi elaborado",
-    "fichiers": "Documentos relacionados com o evento (faturas, fotografias, etc.)",
+    "fichiers": "Documentos relacionados com o evento (.jpg, .jpeg, .gif, .bmp, .tif, .png, .pdf)",
     "vehiculeEndommageNumero": "Veículo danificado n.º {n}",
     "ajouterAutreVehiculeEndommage": "Adicionar outro veículo danificado",
     "validerVehiculeEndommage": "Validar este veículo",
