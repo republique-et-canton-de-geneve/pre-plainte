@@ -605,7 +605,7 @@
     "hintNatureDommage": "Select the nature of the observed damage",
     "hintDescriptionDommage": "Describe the observed facts and the modus operandi if known",
     "hintDateConstat": "Enter the date on which the police report was drawn up",
-    "fichiers": "Documents related to the event (invoices, photos, etc.)",
+    "fichiers": "Documents related to the event (.jpg, .jpeg, .gif, .bmp, .tif, .png, .pdf)",
     "vehiculeEndommageNumero": "Damaged vehicle no. {n}",
     "ajouterAutreVehiculeEndommage": "Add another damaged vehicle",
     "validerVehiculeEndommage": "Validate this vehicle",
