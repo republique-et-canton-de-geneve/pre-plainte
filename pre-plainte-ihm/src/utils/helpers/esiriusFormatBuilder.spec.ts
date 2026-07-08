@@ -16,9 +16,9 @@ const creneau = {
 };
 
 describe("format du payload eSirius", () => {
-  it("envoie le numero AEL dans fixPhone et laisse personalIdentity vide", () => {
+  it("envoie le numero AEL en minuscules dans fixPhone et laisse personalIdentity vide", () => {
     const payload = buildEsiriusPayload(
-      "PPL-123",
+      "AEL-PPL-C-7YT77HJZBU",
       {
         nom: "Martin",
         prenom: "Anne",
@@ -30,7 +30,7 @@ describe("format du payload eSirius", () => {
     );
 
     expect(payload.user.personalIdentity).toBeNull();
-    expect(payload.user.fixPhone).toBe("PPL-123");
+    expect(payload.user.fixPhone).toBe("ael-ppl-c-7yt77hjzbu");
     expect(payload.user.phone).toBe("41791234567");
   });
 
@@ -48,7 +48,7 @@ describe("format du payload eSirius", () => {
       firstName: "",
       personalIdentity: null,
       email: CONSTAT_EMAIL,
-      fixPhone: "RDV-123",
+      fixPhone: "rdv-123",
     });
   });
 
@@ -56,8 +56,8 @@ describe("format du payload eSirius", () => {
     expect(
       resolveEsiriusDemandeReference({
         personalIdentity: null,
-        fixPhone: "AEL-PPL-V-EZFR5A7XVM",
+        fixPhone: "ael-ppl-v-ezfr5a7xvm",
       }),
-    ).toBe("AEL-PPL-V-EZFR5A7XVM");
+    ).toBe("ael-ppl-v-ezfr5a7xvm");
   });
 });
