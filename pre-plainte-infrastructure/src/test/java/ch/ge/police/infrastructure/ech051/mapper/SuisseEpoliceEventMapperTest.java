@@ -369,8 +369,10 @@ class SuisseEpoliceEventMapperTest {
     assertEquals(2, events.size());
     assertEquals(Ech051Constants.EVENT_KEY, events.get(0).getKey());
     assertEquals(Ech051Constants.EVENT_KEY_PAYMENT, events.get(1).getKey());
-    assertEquals("Déroulement des faits", events.get(0).getFacts());
-    assertEquals("Déroulement des faits", events.get(1).getFacts());
+    assertNull(events.get(0).getFacts());
+    assertNull(events.get(1).getFacts());
+    assertEquals("Déroulement des faits", events.get(0).getAdditionalInformation());
+    assertEquals("Déroulement des faits", events.get(1).getAdditionalInformation());
     assertNull(events.get(0).getModeOperandi());
     assertNull(events.get(0).getTypeOfCrime());
     assertNull(events.get(1).getModeOperandi());

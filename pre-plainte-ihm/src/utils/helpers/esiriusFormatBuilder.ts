@@ -63,12 +63,16 @@ function mapEsiriusUser(userData: any, demandeId: string | null) {
     lastName: userData.nom || email || demandeId || "",
     firstName: userData.prenom || "",
     personalIdentity: null,
-    fixPhone: demandeId ?? "",
+    fixPhone: toLowerCaseOrEmpty(demandeId),
     birthday: toIsoDate(userData.dateNaissance),
     email,
     phone: normalizePhone(userData.telephone),
     address: mapAddress(userData),
   };
+}
+
+function toLowerCaseOrEmpty(value: string | null | undefined): string {
+  return value?.trim().toLowerCase() ?? "";
 }
 
 function normalizePhone(phone?: string) {

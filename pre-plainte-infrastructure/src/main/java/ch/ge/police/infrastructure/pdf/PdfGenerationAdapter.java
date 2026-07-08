@@ -253,12 +253,13 @@ public class PdfGenerationAdapter implements PdfGenerationUseCase {
   }
 
   private void addAdresse(Adresse adresse, List<String[]> rows) {
-    if (adresse != null && !adresse.localite().isBlank()) {
-      addIfNotNull(rows, "Adresse", adresse.adresse());
-      addIfNotNull(rows, "Localité", adresse.localite());
-      addIfNotNull(rows, "Code postal", adresse.npa());
-      addIfNotNull(rows, "Pays", adresse.pays());
+    if (adresse == null || !adresseHasAnyField(adresse)) {
+      return;
     }
+    addIfNotNull(rows, "Adresse", adresse.adresse());
+    addIfNotNull(rows, "Localité", adresse.localite());
+    addIfNotNull(rows, "Code postal", adresse.npa());
+    addIfNotNull(rows, "Pays", adresse.pays());
   }
 
   private void addAdresseEvenement(String suffixe, Adresse adresse, List<String[]> rows) {

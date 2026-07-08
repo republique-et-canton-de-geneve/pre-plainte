@@ -154,8 +154,8 @@ class SuisseEpoliceMapperForPPLTest {
     Ech0051DocumentPayload doc = mapper.toDocument(p);
 
     assertThat(doc.getEvents()).hasSize(2);
-    assertThat(doc.getEvents().getFirst().getFacts()).isEqualTo("Commande frauduleuse");
-    assertThat(doc.getEvents().getFirst().getAdditionalInformation()).isNull();
+    assertThat(doc.getEvents().getFirst().getFacts()).isNull();
+    assertThat(doc.getEvents().getFirst().getAdditionalInformation()).isEqualTo("Commande frauduleuse");
     assertThat(doc.getEvents().get(1).getActionPlace().getCountry().getCode())
         .isEqualTo(Ech051Constants.COUNTRY_UNKNOWN_RIPOL_CODE);
 
@@ -212,9 +212,11 @@ class SuisseEpoliceMapperForPPLTest {
     assertThat(doc.getObjects().getFirst().getKey()).isEqualTo(Ech051Constants.OBJECT_KEY_CYBER_VICTIM_IDENTITY);
     assertThat(doc.getRelations().getEventObjectLinks()).isEmpty();
     assertThat(doc.getRelations().getObjectPersonLinks()).isEmpty();
-    assertThat(doc.getEvents().getFirst().getFacts()).isEqualTo("Arnaque au loyer");
+    assertThat(doc.getEvents().getFirst().getFacts()).isNull();
     assertThat(doc.getEvents().getFirst().getAdditionalInformation())
-        .startsWith("Autre indications; URL complète:");
+        .startsWith("Autre indications;")
+        .contains("Arnaque au loyer")
+        .contains("URL complète:");
     assertThat(doc.getPersons().stream().filter(x -> x != null && x.getType() == PersonType.NATURAL).count()).isGreaterThanOrEqualTo(2);
   }
 
@@ -256,11 +258,12 @@ class SuisseEpoliceMapperForPPLTest {
     PrePlainte p = new PrePlainte("ACHAT-NAT", ip, Incident.of(cyber));
     Ech0051DocumentPayload doc = mapper.toDocument(p);
 
-    assertThat(doc.getEvents().getFirst().getFacts()).isEqualTo("Colis vide");
-    assertThat(doc.getEvents().getFirst().getAdditionalInformation()).isNull();
+    assertThat(doc.getEvents().getFirst().getFacts()).isNull();
+    assertThat(doc.getEvents().getFirst().getAdditionalInformation()).isEqualTo("Colis vide");
     assertThat(doc.getEvents()).hasSize(2);
     assertThat(doc.getEvents().get(1).getKey()).isEqualTo(Ech051Constants.EVENT_KEY_PAYMENT);
-    assertThat(doc.getEvents().get(1).getFacts()).isEqualTo("Colis vide");
+    assertThat(doc.getEvents().get(1).getFacts()).isNull();
+    assertThat(doc.getEvents().get(1).getAdditionalInformation()).isEqualTo("Colis vide");
     assertThat(doc.getEvents().get(1).getActionPlace().getCountry().getCode())
         .isEqualTo(Ech051Constants.COUNTRY_UNKNOWN_RIPOL_CODE);
 
