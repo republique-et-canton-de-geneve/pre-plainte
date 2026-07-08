@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildEsiriusPayload } from "@/utils/helpers/esiriusFormatBuilder";
+import { buildEsiriusPayload, resolveEsiriusDemandeReference } from "@/utils/helpers/esiriusFormatBuilder";
 
 const CONSTAT_EMAIL = "constat@example.org";
 
@@ -16,7 +16,7 @@ const creneau = {
 };
 
 describe("format du payload eSirius", () => {
-  it("rattache le rendez-vous a la demande via l'identite personnelle", () => {
+  it("envoie le numero AEL dans fixPhone et laisse personalIdentity vide", () => {
     const payload = buildEsiriusPayload(
       "PPL-123",
       {
@@ -29,8 +29,8 @@ describe("format du payload eSirius", () => {
       creneau,
     );
 
-    expect(payload.user.personalIdentity).toBe("PPL-123");
-    expect(payload.user.fixPhone).toBe("");
+    expect(payload.user.personalIdentity).toBeNull();
+    expect(payload.user.fixPhone).toBe("PPL-123");
     expect(payload.user.phone).toBe("41791234567");
   });
 
@@ -46,9 +46,18 @@ describe("format du payload eSirius", () => {
     expect(payload.user).toMatchObject({
       lastName: CONSTAT_EMAIL,
       firstName: "",
-      personalIdentity: "RDV-123",
+      personalIdentity: null,
       email: CONSTAT_EMAIL,
-      fixPhone: "",
+      fixPhone: "RDV-123",
     });
+  });
+
+  it("resout la reference AEL depuis fixPhone si personalIdentity est vide", () => {
+    expect(
+      resolveEsiriusDemandeReference({
+        personalIdentity: null,
+        fixPhone: "AEL-PPL-V-EZFR5A7XVM",
+      }),
+    ).toBe("AEL-PPL-V-EZFR5A7XVM");
   });
 });
