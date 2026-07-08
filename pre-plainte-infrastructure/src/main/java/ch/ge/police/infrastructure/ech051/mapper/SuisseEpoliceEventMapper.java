@@ -166,7 +166,6 @@ public class SuisseEpoliceEventMapper {
         .secondaryActionPlace(null)
         .bootyAmount(buildBootyAmount(incident))
         .locality(buildLocalityReference(incident))
-        .facts(resolveCyberFacts(incident))
         .additionalInformation(buildEventAdditionalInformation(incident))
         .build();
   }
@@ -174,7 +173,7 @@ public class SuisseEpoliceEventMapper {
   private List<Event> buildCyberAchatNonRecuEvents(Cybercrime incident, InformationsPersonnelles infos) {
     ActionPeriod actionPeriod = resolveCyberActionPeriod(incident);
     String complaintDate = LocalDate.now().toString();
-    String facts = resolveCyberFacts(incident);
+    String additionalInformation = resolveCyberDescription(incident);
 
     Event deliveryEvent = Event.builder()
         .key(Ech051Constants.EVENT_KEY)
@@ -182,8 +181,7 @@ public class SuisseEpoliceEventMapper {
         .complaintDate(complaintDate)
         .actionPeriod(actionPeriod)
         .actionPlace(resolveCyberActionPlace(infos))
-        .facts(facts)
-        .additionalInformation(null)
+        .additionalInformation(additionalInformation)
         .build();
 
     Event paymentEvent = Event.builder()
@@ -192,8 +190,7 @@ public class SuisseEpoliceEventMapper {
         .complaintDate(complaintDate)
         .actionPeriod(actionPeriod)
         .actionPlace(buildUnknownCountryActionPlace())
-        .facts(facts)
-        .additionalInformation(null)
+        .additionalInformation(additionalInformation)
         .build();
 
     return List.of(deliveryEvent, paymentEvent);
@@ -202,7 +199,7 @@ public class SuisseEpoliceEventMapper {
   private List<Event> buildCyberCommandeFrauduleuseEvents(Cybercrime incident, InformationsPersonnelles infos) {
     ActionPeriod actionPeriod = resolveCyberActionPeriod(incident);
     String complaintDate = LocalDate.now().toString();
-    String facts = resolveCyberFacts(incident);
+    String additionalInformation = resolveCyberDescription(incident);
 
     Event deliveryEvent = Event.builder()
         .key(Ech051Constants.EVENT_KEY)
@@ -210,8 +207,7 @@ public class SuisseEpoliceEventMapper {
         .complaintDate(complaintDate)
         .actionPeriod(actionPeriod)
         .actionPlace(resolveCyberActionPlace(infos))
-        .facts(facts)
-        .additionalInformation(null)
+        .additionalInformation(additionalInformation)
         .build();
 
     Event secondEvent = Event.builder()
@@ -220,8 +216,7 @@ public class SuisseEpoliceEventMapper {
         .complaintDate(complaintDate)
         .actionPeriod(actionPeriod)
         .actionPlace(buildUnknownCountryActionPlace())
-        .facts(facts)
-        .additionalInformation(null)
+        .additionalInformation(additionalInformation)
         .build();
 
     return List.of(deliveryEvent, secondEvent);
@@ -239,7 +234,7 @@ public class SuisseEpoliceEventMapper {
         .build();
   }
 
-  private String resolveCyberFacts(Cybercrime cybercrime) {
+  private String resolveCyberDescription(Cybercrime cybercrime) {
     if (cybercrime == null) {
       return null;
     }
@@ -515,11 +510,11 @@ public class SuisseEpoliceEventMapper {
   }
 
   private String buildCyberTransactionEventAdditionalInformation(Cybercrime cybercrime) {
-    if (isCyberAchatNonRecu(cybercrime) || isCyberCommandeFrauduleuse(cybercrime)) {
-      return null;
-    }
-
     List<String> details = MyAbiAdditionalInformationFormatter.builder();
+    String description = resolveCyberDescription(cybercrime);
+    if (description != null) {
+      details.add(description);
+    }
     if (isCyberFausseAnnonce(cybercrime)) {
       appendFausseAnnonceDetails(details, cybercrime.getFausseAnnonce());
     }
