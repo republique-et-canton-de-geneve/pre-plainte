@@ -45,13 +45,25 @@ function formatTime(datetime: string, fallback: string) {
   return datetime?.slice(TIME_START)?.trim()?.replace("h", ":") || fallback;
 }
 
+export function resolveEsiriusDemandeReference(user?: {
+  personalIdentity?: string | null;
+  fixPhone?: string | null;
+}): string | null {
+  const personalIdentity = user?.personalIdentity?.trim();
+  if (personalIdentity) {
+    return personalIdentity;
+  }
+  const fixPhone = user?.fixPhone?.trim();
+  return fixPhone || null;
+}
+
 function mapEsiriusUser(userData: any, demandeId: string | null) {
   const email = userData.email ?? "";
   return {
     lastName: userData.nom || email || demandeId || "",
     firstName: userData.prenom || "",
-    personalIdentity: demandeId,
-    fixPhone: "",
+    personalIdentity: null,
+    fixPhone: demandeId ?? "",
     birthday: toIsoDate(userData.dateNaissance),
     email,
     phone: normalizePhone(userData.telephone),

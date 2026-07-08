@@ -138,7 +138,7 @@ import AppointmentFilters from "@/components/appointment/AppointmentFilters.vue"
 import AppointmentTable from "@/components/appointment/AppointmentTable.vue";
 import type {Service} from "@/composables/useLeafletMap";
 import type {AlertType, Availability, IncidentType, SelectedCreneau} from "@/types/rendez-vous-interface";
-import { buildUpdateAppointmentPayload } from "@/utils/helpers/esiriusFormatBuilder";
+import { buildUpdateAppointmentPayload, resolveEsiriusDemandeReference } from "@/utils/helpers/esiriusFormatBuilder";
 import { getCaptchaSitekey } from "@/config/config.ts";
 import { DAY_END, DAY_START, MONTH_END, MONTH_START, TIME_START, YEAR_END, YEAR_START, STEP_UPDATE_APPOINTMENT_VALIDATION } from "@/constants/constant.ts";
 
@@ -291,12 +291,12 @@ const servicesDisponibles = computed(() => {
 
   const servicesFiltrables = esiriusStore.services.filter(s => servicesAvecDispos.has(s.key));
 
-  const personalIdentity = currentAppointment.value?.user?.personalIdentity;
-  if (!personalIdentity) {
+  const demandeReference = resolveEsiriusDemandeReference(currentAppointment.value?.user);
+  if (!demandeReference) {
     return servicesFiltrables;
   }
 
-  const incidentType = extractIncidentType(personalIdentity);
+  const incidentType = extractIncidentType(demandeReference);
   if (!incidentType) {
     return servicesFiltrables;
   }
@@ -337,8 +337,8 @@ const creneauxFiltres = computed(() => {
           return date;
         })();
 
-  const personalIdentity = currentAppointment.value?.user?.personalIdentity;
-  const incidentType = personalIdentity ? extractIncidentType(personalIdentity) : null;
+  const demandeReference = resolveEsiriusDemandeReference(currentAppointment.value?.user);
+  const incidentType = demandeReference ? extractIncidentType(demandeReference) : null;
 
   return allAvail.filter((c: Availability) => {
     if (!c?.beginDateTime) {
@@ -386,7 +386,7 @@ watch(dateSouhaitee, () => {
 });
 
 watch(
-  () => currentAppointment.value?.user?.personalIdentity,
+  () => resolveEsiriusDemandeReference(currentAppointment.value?.user),
   () => {
     const services = servicesDisponibles.value;
     if (poste.value && !services.some(s => s.key === poste.value?.key)) {
