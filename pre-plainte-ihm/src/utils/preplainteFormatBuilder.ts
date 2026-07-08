@@ -75,6 +75,20 @@ export const buildPrePlainteForGenerationPdf = async (
       typeIncident: details.typeIncident,
       details: details as any,
     },
-    creneauRendezVous,
+    creneauRendezVous: mapCreneauForPdf(creneauRendezVous),
   };
 };
+
+function mapCreneauForPdf(creneau?: CreneauRendezVous | null): CreneauRendezVous | null {
+  if (!creneau) {
+    return null;
+  }
+  return {
+    id: creneau.id,
+    date: creneau.date,
+    heureDebut: creneau.heureDebut,
+    heureFin: creneau.heureFin,
+    lieu: creneau.lieu,
+    codeRdv: creneau.codeRdv,
+  };
+}

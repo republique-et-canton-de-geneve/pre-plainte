@@ -516,6 +516,47 @@ class PdfGenerationAdapterTest {
   }
 
   @Test
+  void shouldGeneratePdfForPublicLocationWithoutExactAddress() throws Exception {
+    Vol vol = new Vol();
+    vol.setDateDebutEvent("2026-07-05T13:00");
+    vol.setDateFinEvent("2026-07-05T14:00");
+    vol.setVolDansVehicule(false);
+    vol.setAvezVousDegradation(false);
+    vol.setObjetsVoles(List.of(objetComplet()));
+    vol.setAdresseLesee(false);
+    vol.setAdresseConnue(false);
+    vol.setIsTrajet(false);
+    vol.setTypeLieu(new RipolCode("181109", "plage"));
+    vol.setLieuOrigine("Versoix");
+    vol.setAdresseIncident(new Adresse(null, null, null, null, null, null, null));
+
+    PrePlainte prePlainte = new PrePlainte("AEL-PPL-V-PDF", basePersonne(), Incident.of(vol));
+
+    byte[] pdf = adapter.generatePdf(prePlainte);
+
+    assertPdf(pdf);
+    String text = extractPdfText(pdf);
+    assertTrue(text.contains("plage") || text.contains("Plage") || text.contains("Versoix"));
+  }
+
+  @Test
+  void shouldGeneratePdfWhenAdresseHasNullLocalite() {
+    InformationsPersonnelles ip = basePersonne();
+    ip.setAdresse(new Adresse("Rue Test", null, "1200", null, null, "Suisse", "8100"));
+
+    Vol vol = new Vol();
+    vol.setDateDebutEvent("2025-01-01");
+    vol.setDateFinEvent("2025-01-01");
+    vol.setVolDansVehicule(false);
+    vol.setAvezVousDegradation(false);
+    vol.setObjetsVoles(List.of(objetComplet()));
+
+    PrePlainte prePlainte = new PrePlainte("ADR-NULL", ip, Incident.of(vol));
+
+    assertPdf(adapter.generatePdf(prePlainte));
+  }
+
+  @Test
   void shouldHandleInvalidDateFormat() {
 
     Vol vol = new Vol();
