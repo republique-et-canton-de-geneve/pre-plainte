@@ -114,32 +114,12 @@ public class SuisseEpoliceEventMapper {
    * Construit l'événement principal à partir de l'incident.
    */
   public Event buildEvent(IncidentBase incident, InformationsPersonnelles infos) {
-    if (incident instanceof Cybercrime cybercrime && isCyberAchatNonRecu(cybercrime)) {
-      return buildCyberAchatNonRecuEvents(cybercrime, infos).getFirst();
-    }
-    if (incident instanceof Cybercrime cybercrime && isCyberCommandeFrauduleuse(cybercrime)) {
-      return buildCyberCommandeFrauduleuseEvents(cybercrime, infos).getFirst();
-    }
-    if (incident instanceof Cybercrime cybercrime && isCyberTransactionType(cybercrime)) {
-      return buildCyberTransactionEvent(cybercrime, infos);
+    Event cyberEvent = resolveCyberEvent(incident, infos);
+    if (cyberEvent != null) {
+      return cyberEvent;
     }
 
-    ActionPlace primaryActionPlace;
-    if (isPublicPlaceLocation(incident)) {
-      primaryActionPlace = buildActionPlaceForPublicLocation(incident);
-    } else {
-      Adresse primaryActionAddress = incident.getAdresseIncident();
-      if (primaryActionAddress == null || !addressMapper.isAddressComplete(primaryActionAddress)) {
-        primaryActionAddress = infos != null ? infos.getAdresse() : null;
-      }
-      primaryActionPlace = buildActionPlace(primaryActionAddress);
-    }
-
-    Adresse secondaryActionAddress = incident.getAdresseIncidentSecondaire();
-    if (secondaryActionAddress != null && !addressMapper.isAddressComplete(secondaryActionAddress)) {
-      secondaryActionAddress = null;
-    }
-
+    boolean publicPlace = isPublicPlaceLocation(incident);
     return Event.builder()
       .key(Ech051Constants.EVENT_KEY)
       .descriptionShort(Ech051Constants.PRE_PLAINTE_EN_LIGNE)
@@ -148,12 +128,51 @@ public class SuisseEpoliceEventMapper {
         .from(incident.getDateDebutEvent())
         .to(incident.getDateFinEvent())
         .build())
-      .actionPlace(primaryActionPlace)
-      .secondaryActionPlace(buildActionPlace(secondaryActionAddress))
+      .actionPlace(resolvePrimaryActionPlace(incident, infos, publicPlace))
+      .secondaryActionPlace(buildActionPlace(resolveSecondaryActionAddress(incident)))
       .bootyAmount(buildBootyAmount(incident))
-      .locality(isPublicPlaceLocation(incident) ? null : buildLocalityReference(incident))
+      .locality(publicPlace ? null : buildLocalityReference(incident))
       .additionalInformation(buildEventAdditionalInformation(incident))
       .build();
+  }
+
+  private Event resolveCyberEvent(IncidentBase incident, InformationsPersonnelles infos) {
+    if (!(incident instanceof Cybercrime cybercrime)) {
+      return null;
+    }
+    if (isCyberAchatNonRecu(cybercrime)) {
+      return buildCyberAchatNonRecuEvents(cybercrime, infos).getFirst();
+    }
+    if (isCyberCommandeFrauduleuse(cybercrime)) {
+      return buildCyberCommandeFrauduleuseEvents(cybercrime, infos).getFirst();
+    }
+    if (isCyberTransactionType(cybercrime)) {
+      return buildCyberTransactionEvent(cybercrime, infos);
+    }
+    return null;
+  }
+
+  private ActionPlace resolvePrimaryActionPlace(
+      IncidentBase incident,
+      InformationsPersonnelles infos,
+      boolean publicPlace
+  ) {
+    if (publicPlace) {
+      return buildActionPlaceForPublicLocation(incident);
+    }
+    Adresse primaryActionAddress = incident.getAdresseIncident();
+    if (primaryActionAddress == null || !addressMapper.isAddressComplete(primaryActionAddress)) {
+      primaryActionAddress = infos != null ? infos.getAdresse() : null;
+    }
+    return buildActionPlace(primaryActionAddress);
+  }
+
+  private Adresse resolveSecondaryActionAddress(IncidentBase incident) {
+    Adresse secondaryActionAddress = incident.getAdresseIncidentSecondaire();
+    if (secondaryActionAddress != null && !addressMapper.isAddressComplete(secondaryActionAddress)) {
+      return null;
+    }
+    return secondaryActionAddress;
   }
 
   private Event buildCyberTransactionEvent(Cybercrime incident, InformationsPersonnelles infos) {
