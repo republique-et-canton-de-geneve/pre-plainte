@@ -55,6 +55,7 @@ public class InformationsPersonnelles extends InfosPersonne {
    */
   public void validate() {
     verifierChampObligatoire(lienAvecPersonne, "Le lien avec la personne concernée est obligatoire.");
+    validateLieuOrigineDeclarant();
     super.validateBasicInfo();
 
     if (Boolean.FALSE.equals(parlesFrancais)) {
@@ -77,6 +78,15 @@ public class InformationsPersonnelles extends InfosPersonne {
       verifierChampObligatoire(postePersonneMorale, "Le poste ou fonction est obligatoire.");
       verifierLongueurMax(postePersonneMorale, TEXT_FIELD_MAX_LENGTH, "postePersonneMorale");
       organisation.validateOrganisationInfo();
+    }
+  }
+
+  private void validateLieuOrigineDeclarant() {
+    if (getNationalite() != null && "8100".equals(getNationaliteCode())) {
+      verifierChampObligatoire(
+        getLieuOrigine(),
+        "Le lieu d'origine est obligatoire pour les ressortissants suisses."
+      );
     }
   }
 }

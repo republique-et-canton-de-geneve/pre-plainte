@@ -209,6 +209,101 @@ class SuisseEpoliceRelationsMapperTest {
   }
 
   @Test
+  void shouldBuildEntrepriseRepresentativeRelationsForCyberAchatNonRecu() {
+    List<Person> persons = List.of(
+        person(Ech051Constants.PERSON_KEY_ORGANISATION),
+        person(Ech051Constants.PERSON_KEY_DECLARANT_ENTREPRISE),
+        person(Ech051Constants.PERSON_KEY_INFORMANT),
+        Person.builder()
+            .key("9")
+            .naturalIdentity(NaturalIdentity.builder()
+                .key("9")
+                .identityCategory(Ech051Constants.IDENTITY_CATEGORY_UNKNOWN)
+                .build())
+            .build()
+    );
+    List<Event> events = achatNonRecuEvents();
+    BusinessCase businessCase = businessCase("B1");
+
+    AchatNonRecu achat = new AchatNonRecu();
+    achat.setMoyenPaiement(MoyenPaiement.IBAN);
+    achat.setIbanBeneficiaire("CH9300762011623852957");
+    achat.setDateOperation("2026-03-16");
+
+    Cybercrime cybercrime = new Cybercrime();
+    cybercrime.setTypeCybercrime(TypeCybercrime.ACHAT_NON_RECU);
+    cybercrime.setAchatNonRecu(achat);
+
+    Relations result = mapper.buildRelations(
+        persons, events, List.of(), List.of(), businessCase, DeclarationType.ENTREPRISE, cybercrime);
+
+    assertTrue(result.getPersonLinks().stream()
+        .anyMatch(link -> Ech051Constants.PERSON_KEY_DECLARANT_ENTREPRISE.equals(link.getPerson1Ref())
+            && Ech051Constants.PERSON_KEY_ORGANISATION.equals(link.getPerson2Ref())));
+    assertTrue(result.getPersonLinks().stream()
+        .anyMatch(link -> Ech051Constants.PERSON_KEY_INFORMANT.equals(link.getPerson1Ref())
+            && Ech051Constants.PERSON_KEY_ORGANISATION.equals(link.getPerson2Ref())));
+    assertTrue(result.getInvolvedParties().stream()
+        .anyMatch(party -> Ech051Constants.PERSON_KEY_DECLARANT_ENTREPRISE.equals(party.getPersonRef())
+            && Ech051Constants.EVENT_KEY.equals(party.getEventRef())));
+    assertTrue(result.getInvolvedParties().stream()
+        .anyMatch(party -> Ech051Constants.PERSON_KEY_INFORMANT.equals(party.getPersonRef())
+            && Ech051Constants.EVENT_KEY.equals(party.getEventRef())));
+  }
+
+  @Test
+  void shouldLinkCyberIdentityObjectToEntrepriseDeclarant() {
+    List<Person> persons = List.of(
+        person(Ech051Constants.PERSON_KEY_ORGANISATION),
+        person(Ech051Constants.PERSON_KEY_DECLARANT_ENTREPRISE),
+        person(Ech051Constants.PERSON_KEY_INFORMANT),
+        Person.builder()
+            .key("9")
+            .naturalIdentity(NaturalIdentity.builder()
+                .key("9")
+                .identityCategory(Ech051Constants.IDENTITY_CATEGORY_UNKNOWN)
+                .build())
+            .build()
+    );
+    ObjectItem identity = ObjectItem.builder()
+        .key(Ech051Constants.OBJECT_KEY_CYBER_VICTIM_IDENTITY)
+        .build();
+    ObjectItem undelivered = ObjectItem.builder()
+        .key(Ech051Constants.OBJECT_KEY_CYBER_UNDELIVERED_ITEM)
+        .description("Article non livré")
+        .realValue("2342")
+        .build();
+
+    AchatNonRecu achat = new AchatNonRecu();
+    achat.setMoyenPaiement(MoyenPaiement.IBAN);
+    achat.setIbanBeneficiaire("CH9300762011623852957");
+    achat.setDateOperation("2026-07-08");
+    achat.setMontantDelitAchatLigne("2342");
+
+    Cybercrime cybercrime = new Cybercrime();
+    cybercrime.setTypeCybercrime(TypeCybercrime.ACHAT_NON_RECU);
+    cybercrime.setAchatNonRecu(achat);
+
+    Relations result = mapper.buildRelations(
+        persons,
+        achatNonRecuEvents(),
+        List.of(identity, undelivered),
+        List.of(),
+        businessCase("B1"),
+        DeclarationType.ENTREPRISE,
+        cybercrime
+    );
+
+    assertTrue(result.getObjectPersonLinks().stream()
+        .anyMatch(link -> Ech051Constants.OBJECT_KEY_CYBER_VICTIM_IDENTITY.equals(link.getObjectRef())
+            && Ech051Constants.PERSON_KEY_DECLARANT_ENTREPRISE.equals(link.getPersonRef())
+            && link.getPersonRole() == null));
+    assertTrue(result.getObjectPersonLinks().stream()
+        .noneMatch(link -> Ech051Constants.OBJECT_KEY_CYBER_VICTIM_IDENTITY.equals(link.getObjectRef())
+            && Ech051Constants.PERSON_KEY_ORGANISATION.equals(link.getPersonRef())));
+  }
+
+  @Test
   void shouldBuildFinancialTransactionForAchatNonRecu() {
     Person victim = person(Ech051Constants.PERSON_KEY_TIERS);
     Person accused = Person.builder()
@@ -362,7 +457,7 @@ class SuisseEpoliceRelationsMapperTest {
 
     AchatNonRecu achat = new AchatNonRecu();
     achat.setMoyenPaiement(MoyenPaiement.TWINT);
-    achat.setNumeroTwintBeneficiaire("0789054467");
+    achat.setNumeroTwintBeneficiaire("0791234567");
     achat.setDateOperation("2026-07-01");
 
     Cybercrime cybercrime = new Cybercrime();
@@ -388,7 +483,7 @@ class SuisseEpoliceRelationsMapperTest {
             && link.getPersonRole() == null));
     assertEquals("10", result.getFinancialTransactions().getFirst().getPersonReceiveRef());
     assertEquals(Ech051Constants.EVENT_KEY_PAYMENT, result.getFinancialTransactions().getFirst().getEventRef());
-    assertEquals("0789054467", result.getFinancialTransactions().getFirst().getAccountReceive());
+    assertEquals("0791234567", result.getFinancialTransactions().getFirst().getAccountReceive());
     assertNull(result.getFinancialTransactions().getFirst().getTransactionNumber());
     assertTrue(result.getPersonLinks().size() >= 4);
   }

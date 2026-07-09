@@ -68,6 +68,7 @@ const getIncidentInitialData = (): InitialFormDataPart => ({
   localiteEvenement: "",
   paysEvenement: RIPOL.PAYS_SUISSE,
   lieuOrigine: null,
+  lieuOrigineEvenement: null,
   isTrajet: null,
   adresseEvenementSecondaire: "",
   adressePostaleEvenementSecondaire: "",

@@ -54,21 +54,28 @@ public class SuisseEpoliceRelationsMapper {
 
     if (incident instanceof Cybercrime cybercrime
         && isCyberTransactionType(cybercrime)) {
+      String primaryEventRef;
       if (isCyberAchatNonRecu(cybercrime)) {
         String eventRef1 = findEventRef(events, Ech051Constants.EVENT_KEY);
         String eventRef2 = findEventRef(events, Ech051Constants.EVENT_KEY_PAYMENT);
         buildCyberAchatNonRecuRelations(persons, eventRef1, eventRef2, businessCaseRef, incident, objects, relationsBuilder);
         buildEventBusinessCaseLink(eventRef1, businessCaseRef, relationsBuilder);
         buildEventBusinessCaseLink(eventRef2, businessCaseRef, relationsBuilder);
+        primaryEventRef = eventRef1;
       } else if (isCyberCommandeFrauduleuse(cybercrime)) {
         String eventRef1 = findEventRef(events, Ech051Constants.EVENT_KEY);
         String eventRef2 = findEventRef(events, Ech051Constants.EVENT_KEY_PAYMENT);
         buildCyberCommandeFrauduleuseRelations(persons, eventRef1, businessCaseRef, objects, relationsBuilder);
         buildEventBusinessCaseLink(eventRef1, businessCaseRef, relationsBuilder);
         buildEventBusinessCaseLink(eventRef2, businessCaseRef, relationsBuilder);
+        primaryEventRef = eventRef1;
       } else {
         buildCyberFausseAnnonceRelations(persons, eventRef, businessCaseRef, incident, relationsBuilder);
         buildEventBusinessCaseLink(eventRef, businessCaseRef, relationsBuilder);
+        primaryEventRef = eventRef;
+      }
+      if (declarationType == DeclarationType.ENTREPRISE) {
+        buildEntrepriseRepresentativeRelations(persons, primaryEventRef, businessCaseRef, relationsBuilder);
       }
       return relationsBuilder.build();
     }
@@ -140,11 +147,12 @@ public class SuisseEpoliceRelationsMapper {
     }
 
     ObjectItem identityItem = findVictimIdentityItem(objects);
-    if (identityItem != null && victimRef != null) {
+    String identityPersonRef = resolveCyberIdentityPersonRef(persons, victimRef);
+    if (identityItem != null && identityPersonRef != null) {
       builder.objectPersonLink(
           ObjectPersonLink.builder()
               .objectRef(identityItem.getKey())
-              .personRef(victimRef)
+              .personRef(identityPersonRef)
               .build()
       );
     }
@@ -228,6 +236,14 @@ public class SuisseEpoliceRelationsMapper {
         .filter(o -> o != null && Ech051Constants.OBJECT_KEY_CYBER_VICTIM_IDENTITY.equals(o.getKey()))
         .findFirst()
         .orElse(null);
+  }
+
+  private String resolveCyberIdentityPersonRef(List<Person> persons, String victimRef) {
+    String declarantRef = findPersonRefByKey(persons, Ech051Constants.PERSON_KEY_DECLARANT_ENTREPRISE);
+    if (declarantRef != null) {
+      return declarantRef;
+    }
+    return victimRef;
   }
 
   private String findCyberPaymentBeneficiaryRef(List<Person> persons, String victimRef, String sellerRef) {
@@ -355,11 +371,12 @@ public class SuisseEpoliceRelationsMapper {
     }
 
     ObjectItem identityItem = findVictimIdentityItem(objects);
-    if (identityItem != null && victimRef != null) {
+    String identityPersonRef = resolveCyberIdentityPersonRef(persons, victimRef);
+    if (identityItem != null && identityPersonRef != null) {
       builder.objectPersonLink(
           ObjectPersonLink.builder()
               .objectRef(identityItem.getKey())
-              .personRef(victimRef)
+              .personRef(identityPersonRef)
               .build()
       );
     }
@@ -592,19 +609,44 @@ public class SuisseEpoliceRelationsMapper {
   private void buildEntrepriseRelations(List<Person> persons, String eventRef, String businessCaseRef,
                                         List<ObjectItem> objects, List<VehicleItem> vehicles,
                                         Relations.RelationsBuilder builder) {
-    String organisationRef = !persons.isEmpty() ? persons.get(0).getKey() : null;
-    String declarantRef = persons.size() > 1 ? persons.get(1).getKey() : null;
-    String informantRef = persons.size() > THIRD_PERSON_INDEX ? persons.get(THIRD_PERSON_INDEX).getKey() : null;
+    String organisationRef = findPersonRefByKey(persons, Ech051Constants.PERSON_KEY_ORGANISATION);
+    if (organisationRef == null && !persons.isEmpty()) {
+      organisationRef = persons.get(0).getKey();
+    }
+    String declarantRef = findPersonRefByKey(persons, Ech051Constants.PERSON_KEY_DECLARANT_ENTREPRISE);
+    if (declarantRef == null && persons.size() > 1) {
+      declarantRef = persons.get(1).getKey();
+    }
+
+    buildEntrepriseRepresentativeRelations(persons, eventRef, businessCaseRef, builder);
+    buildInvolvedPartyVictim(organisationRef, eventRef, businessCaseRef, builder);
+    buildObjectRelationsEntreprise(objects, eventRef, declarantRef, builder);
+    buildVehicleRelationsEntreprise(vehicles, eventRef, organisationRef, builder);
+  }
+
+  private void buildEntrepriseRepresentativeRelations(
+      List<Person> persons,
+      String eventRef,
+      String businessCaseRef,
+      Relations.RelationsBuilder builder
+  ) {
+    String organisationRef = findPersonRefByKey(persons, Ech051Constants.PERSON_KEY_ORGANISATION);
+    if (organisationRef == null && !persons.isEmpty()) {
+      organisationRef = persons.get(0).getKey();
+    }
+    String declarantRef = findPersonRefByKey(persons, Ech051Constants.PERSON_KEY_DECLARANT_ENTREPRISE);
+    if (declarantRef == null && persons.size() > 1) {
+      declarantRef = persons.get(1).getKey();
+    }
+    String informantRef = findPersonRefByKey(persons, Ech051Constants.PERSON_KEY_INFORMANT);
+    if (informantRef == null && persons.size() > THIRD_PERSON_INDEX) {
+      informantRef = persons.get(THIRD_PERSON_INDEX).getKey();
+    }
 
     buildPersonLink(declarantRef, organisationRef, builder);
     buildPersonLinkInformant(informantRef, organisationRef, builder);
-
-    buildInvolvedPartyVictim(organisationRef, eventRef, businessCaseRef, builder);
     buildInvolvedPartyRepresentative(declarantRef, eventRef, businessCaseRef, builder);
     buildInvolvedPartyInformant(informantRef, eventRef, businessCaseRef, builder);
-
-    buildObjectRelationsEntreprise(objects, eventRef, declarantRef, builder);
-    buildVehicleRelationsEntreprise(vehicles, eventRef, organisationRef, builder);
   }
 
   /**

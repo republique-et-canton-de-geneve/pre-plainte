@@ -113,6 +113,7 @@ export class ReverseMapper {
       prenom: toSafeString(infos?.prenom, base.prenom),
       genre: infos?.genre ?? base.genre,
       nationalite: infos?.nationalite ?? base.nationalite,
+      lieuOrigine: infos?.lieuOrigine ?? base.lieuOrigine,
       dateNaissance: infos?.dateNaissance ? fromIsoDate(infos?.dateNaissance) : toSafeString(base.dateNaissance),
       titreSejour: toSafeString(infos?.titreSejour, base.titreSejour),
       ...addrPers,
@@ -178,7 +179,7 @@ export class ReverseMapper {
       localiteEvenement: value(addrEvent.localite, base.localiteEvenement),
       paysEvenement: value(addrEvent.pays, base.paysEvenement),
 
-      lieuOrigine: value(det?.lieuOrigine, base.lieuOrigine),
+      lieuOrigineEvenement: value(det?.lieuOrigine, base.lieuOrigineEvenement),
     };
   }
 

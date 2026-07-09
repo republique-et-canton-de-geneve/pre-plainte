@@ -82,6 +82,7 @@
       :hint="t('informationsPersonnelles.hintLieuOrigine')"
       :preload="false"
       :min-search-length="2"
+      required
       class="mb-4"
     />
 

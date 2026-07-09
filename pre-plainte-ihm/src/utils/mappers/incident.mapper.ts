@@ -95,7 +95,7 @@ export class IncidentMapper {
       adresseIncident,
       adresseIncidentSecondaire: this.hasAdresse(adresseIncidentSecondaire) ? adresseIncidentSecondaire : undefined,
       typeLieu: form.typeLieu ?? undefined,
-      lieuOrigine: form.lieuOrigine?.label ?? undefined,
+      lieuOrigine: form.lieuOrigineEvenement?.label ?? undefined,
       adresseConnue: form.adresseConnue ?? undefined,
       adresseLesee: form.adresseLesee ?? undefined,
       isTrajet: form.isTrajet ?? undefined,

@@ -12,6 +12,7 @@ export interface InformationsPersonnellesRuleData extends Record<string, unknown
   pays: string;
   genre: { code: string; label: string } | null;
   nationalite: { code: string; label: string } | null;
+  lieuOrigine?: { code: string; label: string } | null;
   titreSejour?: string;
   adressePostale: string;
   npa: string;
@@ -60,6 +61,8 @@ function datePourAge(age: number): string {
   return `${day}.${month}.${date.getFullYear()}`;
 }
 
+const geneve = { code: "6621", label: "Genève" };
+
 export const donneesInformationsPersonnellesValides: InformationsPersonnellesRuleData = {
   lienAvecPersonne: "MOI_MEME",
   nom: "Dupont",
@@ -68,11 +71,12 @@ export const donneesInformationsPersonnellesValides: InformationsPersonnellesRul
   pays: "CH",
   genre: masculin,
   nationalite: suisse,
+  lieuOrigine: geneve,
   adressePostale: "10",
   npa: "1204",
   localite: "Geneve",
   dateNaissance: "01.01.1990",
-  telephone: "+41789054434",
+  telephone: "+41791234567",
   typeDocumentIdentite: "carte_identite",
   numeroDocumentIdentite: "ID123456",
 };
@@ -135,6 +139,7 @@ export const reglesInformationsPersonnelles: BusinessRule<InformationsPersonnell
         label: "nationalite suisse sans titre de sejour est acceptee",
         data: {
           nationalite: suisse,
+          lieuOrigine: geneve,
           titreSejour: "",
         },
         valid: true,
@@ -153,6 +158,41 @@ export const reglesInformationsPersonnelles: BusinessRule<InformationsPersonnell
         label: "nationalite non suisse avec titre de sejour est acceptee",
         data: {
           nationalite: france,
+          titreSejour: "permis_b",
+        },
+        valid: true,
+      },
+    ],
+  },
+  {
+    section: "Coordonnees et identite du declarant",
+    champDemande: "Lieu d'origine",
+    obligatoire: "Selon le cas",
+    precision: "Obligatoire si la nationalite indiquee est suisse.",
+    examples: [
+      {
+        label: "nationalite suisse sans lieu d'origine est refusee",
+        data: {
+          nationalite: suisse,
+          lieuOrigine: null,
+        },
+        valid: false,
+        errorPath: ["lieuOrigine"],
+        errorMessage: "validation.lieuOrigineRequis",
+      },
+      {
+        label: "nationalite suisse avec lieu d'origine est acceptee",
+        data: {
+          nationalite: suisse,
+          lieuOrigine: geneve,
+        },
+        valid: true,
+      },
+      {
+        label: "nationalite non suisse sans lieu d'origine est acceptee",
+        data: {
+          nationalite: france,
+          lieuOrigine: null,
           titreSejour: "permis_b",
         },
         valid: true,
@@ -230,7 +270,7 @@ export const reglesInformationsPersonnelles: BusinessRule<InformationsPersonnell
       {
         label: "numero suisse au format international est accepte",
         data: {
-          telephone: "+41789054434",
+          telephone: "+41791234567",
         },
         valid: true,
       },
@@ -274,7 +314,7 @@ export const reglesInformationsPersonnelles: BusinessRule<InformationsPersonnell
           tiersNpa: "1201",
           tiersLocalite: "Geneve",
           tiersPays: "CH",
-          tiersTelephone: "+41789054435",
+          tiersTelephone: "+41791234568",
           tiersEmail: "tiers@example.com",
           tiersConfirmationEmail: "tiers@example.com",
         },
@@ -299,7 +339,7 @@ export const reglesInformationsPersonnelles: BusinessRule<InformationsPersonnell
           tiersNpa: "1201",
           tiersLocalite: "Geneve",
           tiersPays: "CH",
-          tiersTelephone: "+41789054435",
+          tiersTelephone: "+41791234568",
           tiersEmail: "tiers@example.com",
           tiersConfirmationEmail: "tiers@example.com",
         },
@@ -332,7 +372,7 @@ export const reglesInformationsPersonnelles: BusinessRule<InformationsPersonnell
           organisationNpa: "1202",
           organisationLocalite: "Geneve",
           organisationPays: "CH",
-          organisationTelephone: "+41789054436",
+          organisationTelephone: "+4122334455",
           organisationEmail: "entreprise@example.com",
           organisationConfirmationEmail: "entreprise@example.com",
         },
@@ -351,7 +391,7 @@ export const reglesInformationsPersonnelles: BusinessRule<InformationsPersonnell
           organisationNpa: "1202",
           organisationLocalite: "Geneve",
           organisationPays: "CH",
-          organisationTelephone: "+41789054436",
+          organisationTelephone: "+4122334455",
           organisationEmail: "entreprise@example.com",
           organisationConfirmationEmail: "entreprise@example.com",
         },

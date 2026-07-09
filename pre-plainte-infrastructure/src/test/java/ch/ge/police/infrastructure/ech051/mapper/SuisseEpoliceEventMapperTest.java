@@ -14,7 +14,6 @@ import ch.ge.police.core.domain.model.event.vol.Vol;
 import ch.ge.police.core.domain.model.informationspersonnelles.InformationsPersonnelles;
 import ch.ge.police.core.domain.model.informationspersonnelles.common.Tiers;
 import ch.ge.police.infrastructure.ech051.Ech051Constants;
-import ch.ge.police.infrastructure.ech051.dto.Ech0051DocumentPayload.ActionPlace;
 import ch.ge.police.infrastructure.ech051.dto.Ech0051DocumentPayload.Event;
 import ch.ge.police.infrastructure.ech051.dto.Ech0051DocumentPayload.ProcessData;
 import ch.ge.police.infrastructure.ech051.dto.Ech0051DocumentPayload.RipolLocation;
@@ -160,15 +159,9 @@ class SuisseEpoliceEventMapperTest {
 
     Event result = mapper.buildEvent(incident, infos);
 
-    assertNotNull(result.getActionPlace());
-    assertEquals("SBB Bahnhof", result.getActionPlace().getStreet());
-    assertEquals("Basel", result.getActionPlace().getCityArea());
-    assertEquals("405100", result.getActionPlace().getPlace().getCode());
-
-    assertNotNull(result.getSecondaryActionPlace());
-    assertEquals("Gare Cornavin", result.getSecondaryActionPlace().getStreet());
-    assertEquals("Genève", result.getSecondaryActionPlace().getCityArea());
-    assertEquals("120000", result.getSecondaryActionPlace().getPlace().getCode());
+    assertNull(result.getActionPlace());
+    assertNull(result.getSecondaryActionPlace());
+    assertNull(result.getLocality());
   }
 
   @Test
@@ -193,10 +186,9 @@ class SuisseEpoliceEventMapperTest {
 
     Event result = mapper.buildEvent(incident, infos);
 
-    assertNotNull(result.getActionPlace());
-    assertEquals("Rue du Test 1", result.getActionPlace().getStreet());
-    assertEquals("Genève", result.getActionPlace().getCityArea());
-    assertEquals("1200", result.getActionPlace().getPlace().getCode());
+    assertNull(result.getActionPlace());
+    assertNull(result.getSecondaryActionPlace());
+    assertNull(result.getLocality());
   }
 
   @Test
@@ -222,14 +214,8 @@ class SuisseEpoliceEventMapperTest {
 
     Event result = mapper.buildEvent(incident, infos);
 
-    assertNotNull(result.getActionPlace());
-    assertEquals("Plage", result.getActionPlace().getStreet());
-    assertNull(result.getActionPlace().getHouseNumber());
-    assertNull(result.getActionPlace().getCityArea());
-    assertNotNull(result.getActionPlace().getPlace());
-    assertEquals("Versoix", result.getActionPlace().getPlace().getLabel());
-    assertNull(result.getActionPlace().getPlace().getCode());
-    assertNull(result.getActionPlace().getPlace().getZipCode());
+    assertNull(result.getActionPlace());
+    assertNull(result.getSecondaryActionPlace());
     assertNull(result.getLocality());
   }
 
@@ -242,7 +228,7 @@ class SuisseEpoliceEventMapperTest {
     when(typeLieu.label()).thenReturn("plage");
     when(incident.getLieuOrigine()).thenReturn("Versoix");
 
-    ActionPlace result = mapper.buildActionPlaceForPublicLocation(incident);
+    var result = mapper.buildActionPlaceForPublicLocation(incident);
 
     assertNotNull(result);
     assertEquals("Plage", result.getStreet());
@@ -267,13 +253,7 @@ class SuisseEpoliceEventMapperTest {
 
     Event result = mapper.buildEvent(cybercrime, null);
 
-    assertNotNull(result.getActionPlace());
-    assertNull(result.getActionPlace().getStreet());
-    assertNull(result.getActionPlace().getPlace());
-    assertNotNull(result.getActionPlace().getCountry());
-    assertEquals(Ech051Constants.COUNTRY_UNKNOWN_RIPOL_CODE, result.getActionPlace().getCountry().getCode());
-    assertEquals(Ech051Constants.COUNTRY_UNKNOWN_LABEL, result.getActionPlace().getCountry().getLabel());
-    assertEquals("EXT_GPNATI", result.getActionPlace().getCountry().getSourceTable());
+    assertNull(result.getActionPlace());
 
     assertEquals("2025-11-11T11:11:00.000+01:00", result.getActionPeriod().getFrom());
     assertEquals("2025-11-11T12:00:00.000+01:00", result.getActionPeriod().getTo());
@@ -308,11 +288,7 @@ class SuisseEpoliceEventMapperTest {
 
     Event result = mapper.buildEvent(cybercrime, infos);
 
-    assertNotNull(result.getActionPlace());
-    assertEquals("Rue du Stand 1", result.getActionPlace().getStreet());
-    assertEquals("Genève", result.getActionPlace().getCityArea());
-    assertEquals("6621", result.getActionPlace().getPlace().getCode());
-    assertNull(result.getActionPlace().getCountry());
+    assertNull(result.getActionPlace());
     assertNull(result.getSecondaryActionPlace());
   }
 
@@ -349,10 +325,7 @@ class SuisseEpoliceEventMapperTest {
 
     Event result = mapper.buildEvent(cybercrime, infos);
 
-    assertNotNull(result.getActionPlace());
-    assertEquals("Route des Acacias 10", result.getActionPlace().getStreet());
-    assertEquals("Carouge", result.getActionPlace().getCityArea());
-    assertEquals("6608", result.getActionPlace().getPlace().getCode());
+    assertNull(result.getActionPlace());
   }
 
   @Test
@@ -377,13 +350,13 @@ class SuisseEpoliceEventMapperTest {
     assertNull(events.get(0).getTypeOfCrime());
     assertNull(events.get(1).getModeOperandi());
     assertNull(events.get(1).getTypeOfCrime());
-    assertNotNull(events.get(1).getActionPlace().getCountry());
-    assertEquals(Ech051Constants.COUNTRY_UNKNOWN_RIPOL_CODE, events.get(1).getActionPlace().getCountry().getCode());
+    assertNull(events.get(0).getActionPlace());
+    assertNull(events.get(1).getActionPlace());
   }
 
   @Test
   void shouldBuildActionPlaceWithNullAdresse() {
-    ActionPlace result = mapper.buildActionPlace(null);
+    var result = mapper.buildActionPlace(null);
 
     assertNull(result);
   }
