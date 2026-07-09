@@ -15,11 +15,12 @@ class InformationsPersonnellesTest {
 
   private InformationsPersonnelles createValidBase() {
     InformationsPersonnelles info = new InformationsPersonnelles();
-    info.setNom("Toure");
-    info.setPrenom("Maka");
+    info.setNom("Dupont");
+    info.setPrenom("Jean");
     info.setGenre(new RipolCode("1", "Masculin"));
     info.setNationalite(new RipolCode("8100", "Suisse"));
-    info.setDateNaissance("1993-11-27");
+    info.setLieuOrigine(new RipolCode("6621", "Genève"));
+    info.setDateNaissance("1990-01-01");
     info.setAdresse(new Adresse("Route des Fayards", "Versoix", "1290", "CH", "1234", "Suisse", "8212"));
     info.setTelephone("41789000000");
     info.setEmail("test@example.com");
@@ -105,5 +106,14 @@ class InformationsPersonnellesTest {
 
     Exception ex = assertThrows(ValidationMetierException.class, info::validate);
     assertTrue(ex.getMessage().contains("organisation"));
+  }
+
+  @Test
+  void shouldThrowWhenLieuOrigineMissingForSwissDeclarant() {
+    InformationsPersonnelles info = createValidBase();
+    info.setLieuOrigine(null);
+
+    Exception ex = assertThrows(ValidationMetierException.class, info::validate);
+    assertTrue(ex.getMessage().contains("lieu d'origine"));
   }
 }

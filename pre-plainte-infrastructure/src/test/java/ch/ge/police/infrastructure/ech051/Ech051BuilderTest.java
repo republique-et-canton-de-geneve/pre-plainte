@@ -76,11 +76,11 @@ class Ech051BuilderTest {
         .persons(List.of(
             Ech0051DocumentPayload.Person.builder()
                 .key("PER-LEGAL-1")
-                .legalIdentity(Ech0051DocumentPayload.LegalIdentity.builder().currentName("UBS banque").build())
-                .address(Ech0051DocumentPayload.Address.builder().street("Route").build())
+                .legalIdentity(Ech0051DocumentPayload.LegalIdentity.builder().currentName("Demo SA").build())
+                .address(Ech0051DocumentPayload.Address.builder().street("Rue du Test 12").build())
                 .communication(Ech0051DocumentPayload.Communication.builder()
-                    .email("contact@ubs.ch")
-                    .phone("+41789055439")
+                    .email("contact@demo-sa.example.org")
+                    .phone("+4122334455")
                     .build())
                 .build()
         ))
@@ -94,8 +94,8 @@ class Ech051BuilderTest {
     String personXml = extractPersonXml(xml, "PER-LEGAL-1");
 
     assertThat(personXml)
-        .contains("<eCH-0051:currentName>UBS banque</eCH-0051:currentName>")
-        .contains("<eCH-0051:eMailAddress>contact@ubs.ch</eCH-0051:eMailAddress>")
+        .contains("<eCH-0051:currentName>Demo SA</eCH-0051:currentName>")
+        .contains("<eCH-0051:eMailAddress>contact@demo-sa.example.org</eCH-0051:eMailAddress>")
         .contains("<eCH-0051:telephone>")
         .contains("<eCH-0051:marking xml:lang=\"fr\">téléphone bureau</eCH-0051:marking>")
         .contains("<eCH-0051:sourceID source=\"RIPOL\" sourceTable=\"ART_TEL_FAX\">5</eCH-0051:sourceID>")
@@ -383,7 +383,16 @@ class Ech051BuilderTest {
   }
 
   private Ech0051DocumentPayload.Event buildEventWithDateTime() {
-    return Ech0051DocumentPayload.Event.builder().key("EVT-1").descriptionShort("Vol simple").complaintDate("2026-01-12T12:00:00+01:00").bootyAmount("2500").additionalInformation("Complément événement").locality(ripolRef("CENTRE", "Quartier centre", "RIPOL", "LOCALITY_TABLE")).modeOperandi(ripolRef("MO-1", "Effraction", "RIPOL", "MODE_TABLE")).typeOfCrime(ripolRef("CR-1", "Vol", "RIPOL", "CRIME_TABLE")).actionPlace(Ech0051DocumentPayload.ActionPlace.builder().street("Rue de Lausanne 15").place(Ech0051DocumentPayload.RipolLocation.builder().code("1201").label("Genève").sourceTable("EXT_GDE").zipCode("1201").build()).cityArea("Pâquis").build()).actionPeriod(Ech0051DocumentPayload.ActionPeriod.builder().from("2026-01-12T10:15").to("2026-01-12T11:45").build()).build();
+    return Ech0051DocumentPayload.Event.builder()
+        .key("EVT-1")
+        .descriptionShort("Vol simple")
+        .complaintDate("2026-01-12T12:00:00+01:00")
+        .bootyAmount("2500")
+        .additionalInformation("Complément événement")
+        .modeOperandi(ripolRef("MO-1", "Effraction", "RIPOL", "MODE_TABLE"))
+        .typeOfCrime(ripolRef("CR-1", "Vol", "RIPOL", "CRIME_TABLE"))
+        .actionPeriod(Ech0051DocumentPayload.ActionPeriod.builder().from("2026-01-12T10:15").to("2026-01-12T11:45").build())
+        .build();
   }
 
   private Ech0051DocumentPayload.Event buildVolEventWithDateTime() {
@@ -393,14 +402,8 @@ class Ech051BuilderTest {
         .complaintDate("2026-01-12T12:00:00+01:00")
         .bootyAmount("2500")
         .additionalInformation("Complément événement")
-        .locality(ripolRef("CENTRE", "Quartier centre", "RIPOL", "LOCALITY_TABLE"))
         .modeOperandi(ripolRef("MO-1", "Effraction", "RIPOL", "MODE_TABLE"))
         .typeOfCrime(ripolRef(Ech051Constants.TYPE_OF_CRIME_VOL_CODE, "vol", "RIPOL", Ech051Constants.RipolSourceTables.TYPE_CRIME))
-        .actionPlace(Ech0051DocumentPayload.ActionPlace.builder()
-            .street("Rue de Lausanne 15")
-            .place(Ech0051DocumentPayload.RipolLocation.builder().code("1201").label("Genève").sourceTable("EXT_GDE").zipCode("1201").build())
-            .cityArea("Pâquis")
-            .build())
         .actionPeriod(Ech0051DocumentPayload.ActionPeriod.builder().from("2026-01-12T10:15").to("2026-01-12T11:45").build())
         .build();
   }

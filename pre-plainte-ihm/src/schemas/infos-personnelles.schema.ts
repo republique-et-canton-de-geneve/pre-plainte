@@ -1,6 +1,6 @@
 import { z } from "zod";
 import type { ComposerTranslation } from "vue-i18n";
-import { TEXT_FIELD_MAX_LENGTH, VALIDATION_LIMITS } from "@/constants/constant";
+import { RIPOL, TEXT_FIELD_MAX_LENGTH, VALIDATION_LIMITS } from "@/constants/constant";
 import { validateInternationalPhone } from "@/utils/validations/phoneValidation";
 import { calculateAge, parseDate } from "@/utils/helpers/dateHelpers.ts";
 
@@ -55,6 +55,10 @@ const addCustomIssue = (ctx: z.RefinementCtx, path: string, message: string) => 
   });
 };
 
+const isNationaliteSuisse = (nationalite: { code?: string; label?: string } | null | undefined) =>
+  nationalite?.code === RIPOL.PAYS_SUISSE
+  || nationalite?.label?.toLowerCase().includes("suisse") === true;
+
 export const createInfosPersonnellesSchema = (t: ComposerTranslation) => {
   return z
     .object({
@@ -88,6 +92,8 @@ export const createInfosPersonnellesSchema = (t: ComposerTranslation) => {
       genre: ripolSelectionSchema(t("validation.genreRequis")),
 
       nationalite: ripolSelectionSchema(t("validation.nationaliteRequise")),
+
+      lieuOrigine: optionalRipolSelectionSchema,
 
       titreSejour: z.string().optional(),
 
@@ -194,7 +200,7 @@ const addBaseValidation = (t: ComposerTranslation, data: any, ctx: z.RefinementC
     addCustomIssue(ctx, "numeroDocumentIdentite", t("validation.numeroDocumentRequis"));
   }
 
-  const isSuisse = data.nationalite?.label?.toLowerCase().includes("suisse");
+  const isSuisse = isNationaliteSuisse(data.nationalite);
 
   if (
     data.nationalite
@@ -202,6 +208,10 @@ const addBaseValidation = (t: ComposerTranslation, data: any, ctx: z.RefinementC
     && !data.titreSejour
   ) {
     addCustomIssue(ctx, "titreSejour", t("validation.titreSejourRequis"));
+  }
+
+  if (isSuisse && !data.lieuOrigine?.code) {
+    addCustomIssue(ctx, "lieuOrigine", t("validation.lieuOrigineRequis"));
   }
 
   if (

@@ -59,9 +59,11 @@ export function resolveEsiriusDemandeReference(user?: {
 
 function mapEsiriusUser(userData: any, demandeId: string | null) {
   const email = userData.email ?? "";
+  const nom = userData.nom?.trim() ?? "";
+  const prenom = userData.prenom?.trim() ?? "";
   return {
-    lastName: userData.nom || email || demandeId || "",
-    firstName: userData.prenom || "",
+    lastName: nom || email || demandeId || "",
+    firstName: prenom,
     personalIdentity: null,
     fixPhone: toLowerCaseOrEmpty(demandeId),
     birthday: toIsoDate(userData.dateNaissance),
@@ -76,21 +78,42 @@ function toLowerCaseOrEmpty(value: string | null | undefined): string {
 }
 
 function normalizePhone(phone?: string) {
-  return phone?.replaceAll(/\s+|\+(?=\d)/g, "");
+  if (!phone) {
+    return "";
+  }
+  return phone.replaceAll(/\s+/g, "");
 }
 
 function mapAddress(userData: any) {
+  const line1 = userData.adresse?.trim() ?? "";
+  const zipCode = userData.npa?.trim() ?? "";
+  const city = userData.localite?.trim() ?? "";
+  const country = normalizeCountry(userData.pays);
+
+  if (!line1 && !zipCode && !city && !country) {
+    return {
+      line1: "",
+      line2: "",
+      zipCode: "",
+      city: "",
+      country: "",
+    };
+  }
+
   return {
-    line1: userData.adresse ?? "",
+    line1,
     line2: "",
-    zipCode: userData.npa ?? "",
-    city: userData.localite ?? "",
-    country: normalizeCountry(userData.pays),
+    zipCode,
+    city,
+    country: country || "suisse",
   };
 }
 
-function normalizeCountry(country: string) {
-  return country?.toLowerCase() === "ch" ? "suisse" : country ?? "suisse";
+function normalizeCountry(country?: string) {
+  if (!country?.trim()) {
+    return "";
+  }
+  return country.toLowerCase() === "ch" ? "suisse" : country;
 }
 
 function mapEsiriusResources(selectedCreneau: any) {

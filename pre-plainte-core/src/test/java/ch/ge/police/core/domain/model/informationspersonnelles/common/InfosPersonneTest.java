@@ -11,14 +11,15 @@ class InfosPersonneTest {
 
   private InfosPersonne createValidPerson() {
     InfosPersonne p = new InfosPersonne();
-    p.setNom("Toure");
-    p.setPrenom("Maka");
+    p.setNom("Dupont");
+    p.setPrenom("Jean");
     p.setGenre(new RipolCode("1", "Masculin"));
     p.setNationalite(new RipolCode("8100", "Suisse"));
-    p.setDateNaissance("1993-11-27");
+    p.setLieuOrigine(new RipolCode("6621", "Genève"));
+    p.setDateNaissance("1990-01-01");
     p.setAdresse(new Adresse("Route des Fayards", "Versoix", "1290", "CH", null, "Suisse", null));
-    p.setTelephone("41789000000");
-    p.setEmail("maka@example.com");
+    p.setTelephone("41791234567");
+    p.setEmail("jean.dupont@example.org");
     p.setTypeDocumentIdentite(TypeDocumentIdentite.PASSEPORT);
     p.setNumeroDocumentIdentite("AB123456");
     return p;

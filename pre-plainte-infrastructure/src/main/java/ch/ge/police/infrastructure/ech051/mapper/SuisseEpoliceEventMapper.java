@@ -119,7 +119,6 @@ public class SuisseEpoliceEventMapper {
       return cyberEvent;
     }
 
-    boolean publicPlace = isPublicPlaceLocation(incident);
     return Event.builder()
       .key(Ech051Constants.EVENT_KEY)
       .descriptionShort(Ech051Constants.PRE_PLAINTE_EN_LIGNE)
@@ -128,10 +127,7 @@ public class SuisseEpoliceEventMapper {
         .from(incident.getDateDebutEvent())
         .to(incident.getDateFinEvent())
         .build())
-      .actionPlace(resolvePrimaryActionPlace(incident, infos, publicPlace))
-      .secondaryActionPlace(buildActionPlace(resolveSecondaryActionAddress(incident)))
       .bootyAmount(buildBootyAmount(incident))
-      .locality(publicPlace ? null : buildLocalityReference(incident))
       .additionalInformation(buildEventAdditionalInformation(incident))
       .build();
   }
@@ -181,10 +177,7 @@ public class SuisseEpoliceEventMapper {
         .descriptionShort(Ech051Constants.PRE_PLAINTE_EN_LIGNE)
         .complaintDate(LocalDate.now().toString())
         .actionPeriod(resolveCyberActionPeriod(incident))
-        .actionPlace(resolveCyberActionPlace(infos))
-        .secondaryActionPlace(null)
         .bootyAmount(buildBootyAmount(incident))
-        .locality(buildLocalityReference(incident))
         .additionalInformation(buildEventAdditionalInformation(incident))
         .build();
   }
@@ -199,7 +192,6 @@ public class SuisseEpoliceEventMapper {
         .descriptionShort(Ech051Constants.PRE_PLAINTE_EN_LIGNE)
         .complaintDate(complaintDate)
         .actionPeriod(actionPeriod)
-        .actionPlace(resolveCyberActionPlace(infos))
         .additionalInformation(additionalInformation)
         .build();
 
@@ -208,7 +200,6 @@ public class SuisseEpoliceEventMapper {
         .descriptionShort(Ech051Constants.PRE_PLAINTE_EN_LIGNE)
         .complaintDate(complaintDate)
         .actionPeriod(actionPeriod)
-        .actionPlace(buildUnknownCountryActionPlace())
         .additionalInformation(additionalInformation)
         .build();
 
@@ -225,7 +216,6 @@ public class SuisseEpoliceEventMapper {
         .descriptionShort(Ech051Constants.PRE_PLAINTE_EN_LIGNE)
         .complaintDate(complaintDate)
         .actionPeriod(actionPeriod)
-        .actionPlace(resolveCyberActionPlace(infos))
         .additionalInformation(additionalInformation)
         .build();
 
@@ -234,7 +224,6 @@ public class SuisseEpoliceEventMapper {
         .descriptionShort(Ech051Constants.PRE_PLAINTE_EN_LIGNE)
         .complaintDate(complaintDate)
         .actionPeriod(actionPeriod)
-        .actionPlace(buildUnknownCountryActionPlace())
         .additionalInformation(additionalInformation)
         .build();
 
