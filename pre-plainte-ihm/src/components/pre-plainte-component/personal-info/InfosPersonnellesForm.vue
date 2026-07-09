@@ -1,21 +1,6 @@
 <template>
   <div>
     <h3 class="pre-plainte-main-card-title mb-4 mb-md-6 text-h4 text-md-h3">
-      {{ t("informationsPersonnelles.coordonneesPersonneSignalant") }}
-    </h3>
-
-    <PhoneInput
-      v-model="telephone"
-      :label="t('informationsPersonnelles.numeroTelephone')"
-      :error-messages="telephoneError"
-      :hint="t('informationsPersonnelles.hintTelephone')"
-      input-class="mb-4"
-      aria-label="Saisir le nom du pays "
-      default-country-code="CH"
-      required
-    />
-
-    <h3 class="pre-plainte-main-card-title mb-4 mb-md-6 text-h4 text-md-h3">
       {{ t("informationsPersonnelles.identitePersonneSignalant") }}
     </h3>
 
@@ -46,6 +31,21 @@
       variant="outlined"
       :hint="t('informationsPersonnelles.hintPrenom')"
       persistent-hint
+    />
+
+    <h3 class="pre-plainte-main-card-title mb-4 mb-md-6 text-h4 text-md-h3">
+      {{ t("informationsPersonnelles.coordonneesPersonneSignalant") }}
+    </h3>
+
+    <PhoneInput
+      v-model="telephone"
+      :label="t('informationsPersonnelles.numeroTelephone')"
+      :error-messages="telephoneError"
+      :hint="t('informationsPersonnelles.hintTelephone')"
+      input-class="mb-4"
+      aria-label="Saisir le nom du pays "
+      default-country-code="CH"
+      required
     />
 
     <RipolAutocomplete
