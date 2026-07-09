@@ -119,6 +119,7 @@ export interface PrePlainteFormFields {
   localiteEvenement?: string;
   paysEvenement?: string;
   lieuOrigine?: RipolSelection | null;
+  lieuOrigineEvenement?: RipolSelection | null;
   isTrajet?: boolean | null;
   adresseEvenementSecondaire?: string;
   adressePostaleEvenementSecondaire?: string;

@@ -25,30 +25,54 @@ describe("format du payload eSirius", () => {
         email: "anne.martin@example.org",
         telephone: "+41 79 123 45 67",
         dateNaissance: "15.04.1985",
+        adresse: "Rue du Test 1",
+        npa: "1200",
+        localite: "Genève",
+        pays: "CH",
       },
       creneau,
     );
 
     expect(payload.user.personalIdentity).toBeNull();
     expect(payload.user.fixPhone).toBe("ael-ppl-c-7yt77hjzbu");
-    expect(payload.user.phone).toBe("41791234567");
+    expect(payload.user.phone).toBe("+41791234567");
+    expect(payload.user.lastName).toBe("Martin");
+    expect(payload.user.firstName).toBe("Anne");
+    expect(payload.user.address).toEqual({
+      line1: "Rue du Test 1",
+      line2: "",
+      zipCode: "1200",
+      city: "Genève",
+      country: "suisse",
+    });
   });
 
   it("construit un visiteur exploitable pour un parcours rendez-vous seul", () => {
     const payload = buildEsiriusPayload(
       "RDV-123",
       {
+        nom: "Dupont",
+        prenom: "Jean",
         email: CONSTAT_EMAIL,
+        telephone: "+41 79 123 45 67",
       },
       creneau,
     );
 
     expect(payload.user).toMatchObject({
-      lastName: CONSTAT_EMAIL,
-      firstName: "",
+      lastName: "Dupont",
+      firstName: "Jean",
       personalIdentity: null,
       email: CONSTAT_EMAIL,
       fixPhone: "rdv-123",
+      phone: "+41791234567",
+      address: {
+        line1: "",
+        line2: "",
+        zipCode: "",
+        city: "",
+        country: "",
+      },
     });
   });
 
