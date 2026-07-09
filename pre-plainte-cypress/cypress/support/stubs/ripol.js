@@ -49,6 +49,9 @@ const defaultRipolData = {
   cantons: [
     ripol("GE", "Geneve"),
   ],
+  lieuxOrigine: [
+    ripol("6621", "Geneve"),
+  ],
 };
 
 export const stubRipol = (overrides = {}) => {
@@ -73,4 +76,5 @@ export const stubRipol = (overrides = {}) => {
   cy.intercept("GET", "**/api/ripol/object-types*", data.objectTypes).as("getRipolObjectTypes");
   cy.intercept("GET", "**/api/ripol/object-colours*", data.objectColours).as("getRipolObjectColours");
   cy.intercept("GET", "**/api/ripol/cantons*", data.cantons).as("getRipolCantons");
+  cy.intercept("GET", "**/api/ripol/lieux-origine*", data.lieuxOrigine).as("getRipolLieuxOrigine");
 };
