@@ -88,9 +88,8 @@ function mapAddress(userData: any) {
   const line1 = userData.adresse?.trim() ?? "";
   const zipCode = userData.npa?.trim() ?? "";
   const city = userData.localite?.trim() ?? "";
-  const country = normalizeCountry(userData.pays);
 
-  if (!line1 && !zipCode && !city && !country) {
+  if (!line1 && !zipCode && !city) {
     return {
       line1: "",
       line2: "",
@@ -99,6 +98,8 @@ function mapAddress(userData: any) {
       country: "",
     };
   }
+
+  const country = normalizeCountry(userData.pays);
 
   return {
     line1,
@@ -113,7 +114,11 @@ function normalizeCountry(country?: string) {
   if (!country?.trim()) {
     return "";
   }
-  return country.toLowerCase() === "ch" ? "suisse" : country;
+  const normalized = country.trim().toLowerCase();
+  if (normalized === "ch" || normalized === "8100") {
+    return "suisse";
+  }
+  return country;
 }
 
 function mapEsiriusResources(selectedCreneau: any) {
