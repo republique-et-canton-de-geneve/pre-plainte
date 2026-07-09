@@ -555,9 +555,9 @@ When("je renseigne et je vérifie mon adresse e-mail", () => {
 
 When("je renseigne les informations personnelles nominales pour moi-même", () => {
   cy.get(TYPE_PERSONNE_NATIVE_SELECTOR).select("MOI_MEME", { force: true });
-  fillField("Numéro de téléphone", "0791234567");
   fillField("Nom", "Martin");
   fillField("Prénom", "Anne");
+  fillField("Numéro de téléphone", "0791234567");
   selectAutocomplete("Genre", "Féminin");
   selectAutocomplete("Nationalité", "Suisse");
   cy.get("body").then($body => {

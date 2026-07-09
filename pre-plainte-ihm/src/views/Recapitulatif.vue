@@ -1666,7 +1666,7 @@ import {
 import { formatDateTimeFrench, toIsoDate } from "@/utils/helpers/dateHelpers.ts";
 import ExitActionsForm from "@/components/actions/ExitActionsForm.vue";
 import EmailChallengeOtpSection from "@/components/email/EmailChallengeOtpSection.vue";
-import { generateUuid } from "@/utils/helpers/randomHelpers";
+import { generateAelDemandeId, generateUuid } from "@/utils/helpers/randomHelpers";
 
 const { t } = useI18n();
 const { getCountryByCode } = useCountries();
@@ -1833,7 +1833,7 @@ const submit = async () => {
 };
 
 const buildRendezVousOnlyDemandeId = () => {
-  const demandeId = `RDV-${generateUuid()}`;
+  const demandeId = generateAelDemandeId(data.value.typeIncident);
   store.setDemandeId(demandeId);
   return demandeId;
 };
