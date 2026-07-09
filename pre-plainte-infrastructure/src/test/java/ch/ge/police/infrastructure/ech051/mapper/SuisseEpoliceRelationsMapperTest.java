@@ -255,7 +255,12 @@ class SuisseEpoliceRelationsMapperTest {
   void shouldLinkCyberIdentityObjectToEntrepriseDeclarant() {
     List<Person> persons = List.of(
         person(Ech051Constants.PERSON_KEY_ORGANISATION),
-        person(Ech051Constants.PERSON_KEY_DECLARANT_ENTREPRISE),
+        Person.builder()
+            .key(Ech051Constants.PERSON_KEY_DECLARANT_ENTREPRISE)
+            .naturalIdentity(NaturalIdentity.builder()
+                .key(Ech051Constants.IDENTITY_KEY_DECLARANT_ENTREPRISE)
+                .build())
+            .build(),
         person(Ech051Constants.PERSON_KEY_INFORMANT),
         Person.builder()
             .key("9")
