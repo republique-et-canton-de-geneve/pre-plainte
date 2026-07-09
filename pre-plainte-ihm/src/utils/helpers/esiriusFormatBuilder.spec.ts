@@ -49,12 +49,13 @@ describe("format du payload eSirius", () => {
 
   it("construit un visiteur exploitable pour un parcours rendez-vous seul", () => {
     const payload = buildEsiriusPayload(
-      "RDV-123",
+      "AEL-PPL-D-1WO30IY44H",
       {
         nom: "Dupont",
         prenom: "Jean",
         email: CONSTAT_EMAIL,
         telephone: "+41 79 123 45 67",
+        pays: "8100",
       },
       creneau,
     );
@@ -64,7 +65,7 @@ describe("format du payload eSirius", () => {
       firstName: "Jean",
       personalIdentity: null,
       email: CONSTAT_EMAIL,
-      fixPhone: "rdv-123",
+      fixPhone: "ael-ppl-d-1wo30iy44h",
       phone: "+41791234567",
       address: {
         line1: "",

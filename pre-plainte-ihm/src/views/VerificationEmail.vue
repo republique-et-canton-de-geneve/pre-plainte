@@ -52,23 +52,12 @@
         :autofocus="true"
       />
 
-      <PhoneInput
-        v-if="rendezVousOnly"
-        v-model="telephone"
-        :label="t('informationsPersonnelles.numeroTelephone')"
-        :error-messages="telephoneError"
-        :hint="t('informationsPersonnelles.hintTelephone')"
-        input-class="mt-4 mb-4"
-        default-country-code="CH"
-        required
-      />
-
       <template v-if="rendezVousOnly">
         <v-text-field
           :label="requiredLabel(t('informationsPersonnelles.nom'))"
           v-model="nom"
           :error-messages="nomError"
-          class="mb-4"
+          class="mt-4 mb-4"
           variant="outlined"
           :hint="t('informationsPersonnelles.hintNom')"
           persistent-hint
@@ -85,6 +74,17 @@
           autocomplete="given-name"
         />
       </template>
+
+      <PhoneInput
+        v-if="rendezVousOnly"
+        v-model="telephone"
+        :label="t('informationsPersonnelles.numeroTelephone')"
+        :error-messages="telephoneError"
+        :hint="t('informationsPersonnelles.hintTelephone')"
+        input-class="mb-4"
+        default-country-code="CH"
+        required
+      />
 
       <v-alert
         v-if="verifyError"
