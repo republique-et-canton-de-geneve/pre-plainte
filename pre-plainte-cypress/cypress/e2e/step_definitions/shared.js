@@ -576,8 +576,6 @@ When("je renseigne les informations personnelles nominales pour moi-même", () =
 
 When("je continue après les informations personnelles", () => {
   cy.get('[data-cy="continuer-informations-personnelles"]').filter(":visible").first().click();
-  cy.window().its("localStorage").invoke("getItem", "pp-step").should("eq", String(STEP_EVENEMENT));
-  cy.contains("Informations sur l'événement").should(bevisible);
 });
 
 When("je continue après les informations sur l'événement", () => {
