@@ -605,7 +605,7 @@
     "hintNatureDommage": "Wählen Sie die Art des festgestellten Schadens aus",
     "hintDescriptionDommage": "Beschreiben Sie die festgestellten Tatsachen und die Vorgehensweise, falls bekannt",
     "hintDateConstat": "Geben Sie das Datum ein, an dem der Polizeirapport erstellt wurde",
-    "fichiers": "Dokumente im Zusammenhang mit dem Ereignis (Rechnungen, Fotos usw.)",
+    "fichiers": "Dokumente im Zusammenhang mit dem Ereignis (.jpg, .jpeg, .gif, .bmp, .tif, .png, .pdf)",
     "vehiculeEndommageNumero": "Beschädigtes Fahrzeug Nr. {n}",
     "ajouterAutreVehiculeEndommage": "Weiteres beschädigtes Fahrzeug hinzufügen",
     "validerVehiculeEndommage": "Dieses Fahrzeug bestätigen",
