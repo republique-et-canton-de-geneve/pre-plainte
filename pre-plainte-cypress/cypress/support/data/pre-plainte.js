@@ -36,6 +36,7 @@ export const declarantSuisseValide = {
   prenom: "Anne",
   genre: ripolSelection("2", "Féminin"),
   nationalite: ripolSelection(PAYS_SUISSE, "Suisse"),
+  lieuOrigine: ripolSelection("6621", "Geneve"),
   dateNaissance: "15.04.1985",
   pays: PAYS_SUISSE,
   adresse: ADRESSE_RUE,
