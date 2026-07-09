@@ -81,7 +81,7 @@ function normalizePhone(phone?: string) {
   if (!phone) {
     return "";
   }
-  return phone.replaceAll(/\s+/g, "");
+  return phone.replaceAll(/\s+/g, "").replace(/^\+/, "");
 }
 
 function mapAddress(userData: any) {
@@ -181,7 +181,7 @@ function mapAppointmentUser(appointment: any) {
     firstName: appointment.user?.firstName,
     birthday: appointment.user?.birthday,
     email: appointment.user?.email,
-    phone: appointment.user?.phone,
+    phone: normalizePhone(appointment.user?.phone),
     address: mapAppointmentAddress(appointment.user),
   };
 }
