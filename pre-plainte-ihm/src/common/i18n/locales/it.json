@@ -605,7 +605,7 @@
     "hintNatureDommage": "Selezionate la natura del danno constatato",
     "hintDescriptionDommage": "Descrivete i fatti osservati e la modalità operativa, se nota",
     "hintDateConstat": "Inserite la data in cui è stato redatto il verbale di polizia",
-    "fichiers": "Documenti relativi all'evento (fatture, foto ecc.)",
+    "fichiers": "Documenti relativi all'evento (.jpg, .jpeg, .gif, .bmp, .tif, .png, .pdf)",
     "vehiculeEndommageNumero": "Veicolo danneggiato n. {n}",
     "ajouterAutreVehiculeEndommage": "Aggiungi un altro veicolo danneggiato",
     "validerVehiculeEndommage": "Convalida questo veicolo",
