@@ -5,7 +5,9 @@ import ch.ge.police.core.domain.model.common.Adresse;
 import ch.ge.police.core.domain.model.common.RipolCode;
 import ch.ge.police.core.domain.model.event.IncidentBase;
 import ch.ge.police.core.domain.model.event.common.Incident;
+import ch.ge.police.core.domain.model.event.common.TypeIncident;
 import ch.ge.police.core.domain.model.event.cybercrime.Cybercrime;
+import ch.ge.police.core.domain.model.event.cybercrime.common.TypeCybercrime;
 import ch.ge.police.core.domain.model.event.cybercrime.common.AchatNonRecu;
 import ch.ge.police.core.domain.model.event.cybercrime.common.CommandeFrauduleuse;
 import ch.ge.police.core.domain.model.event.cybercrime.common.FausseAnnonce;
@@ -292,6 +294,7 @@ public class PdfGenerationAdapter implements PdfGenerationUseCase {
 
     List<String[]> rows = new ArrayList<>();
     addIfNotNull(rows, "Type d'incident", incident.getTypeIncident().label());
+    addEventPeriodRows(rows, incident);
 
     switch (incident.getTypeIncident()) {
       case VOL -> handleVol(rows, (Vol) details);
@@ -299,10 +302,25 @@ public class PdfGenerationAdapter implements PdfGenerationUseCase {
       case CYBER -> handleCybercrime(rows, (Cybercrime) details);
     }
 
+    addSection(document, "EVÈNEMENTS", rows);
+  }
+
+  private void addEventPeriodRows(List<String[]> rows, Incident incident) {
+    IncidentBase details = incident.getDetails();
+
+    if (incident.getTypeIncident() == TypeIncident.CYBER) {
+      Cybercrime cybercrime = (Cybercrime) details;
+      TypeCybercrime typeCybercrime = cybercrime.getTypeCybercrime();
+      if (typeCybercrime == TypeCybercrime.ACHAT_NON_RECU
+        || typeCybercrime == TypeCybercrime.FAUSSE_ANNONCE) {
+        addIfNotNull(rows, "Date premier contact", formatEventDate(cybercrime.getDatePremierContact()));
+        addIfNotNull(rows, "Date dernier contact", formatEventDate(cybercrime.getDateDernierContact()));
+        return;
+      }
+    }
+
     addIfNotNull(rows, "Date de début de l'événement", formatEventDate(details.getDateDebutEvent()));
     addIfNotNull(rows, "Date de fin de l'événement", formatEventDate(details.getDateFinEvent()));
-
-    addSection(document, "EVÈNEMENTS", rows);
   }
 
   private void addRendezVous(final Document document, final PrePlainte prePlainte)
@@ -580,8 +598,6 @@ public class PdfGenerationAdapter implements PdfGenerationUseCase {
     addIfNotNull(rows, "Type de cybercrime",
       c.getTypeCybercrime() != null ? c.getTypeCybercrime().getLabel() : null);
     addIfNotNull(rows, "Description du cybercrime", c.getDescriptionCybercrime());
-    addIfNotNull(rows, "Date premier contact", formatDate(c.getDatePremierContact()));
-    addIfNotNull(rows, "Date dernier contact", formatDate(c.getDateDernierContact()));
 
     if (c.getCommandeFrauduleuse() != null) {
       CommandeFrauduleuse cf = c.getCommandeFrauduleuse();
@@ -643,7 +659,7 @@ public class PdfGenerationAdapter implements PdfGenerationUseCase {
       addIfNotNull(rows, "Société bénéficiaire", a.getSocieteBeneficiaire());
       addIfNotNull(rows, "Nom du bénéficiaire", a.getNomBeneficiaire());
       addIfNotNull(rows, "Prénom du bénéficiaire", a.getPrenomBeneficiaire());
-      addIfNotNull(rows, "Date de l’opération", formatDate(a.getDateOperation()));
+      addIfNotNull(rows, "Date de l’opération", formatEventDate(a.getDateOperation()));
       addBooleanOuiNonPdf(rows, "Preuve de paiement indisponible", a.getPreuvePaiementIndisponible());
       addIfNotNull(rows, "Raison absence preuve paiement", a.getRaisonAbsencePreuvePaiement());
       addBooleanOuiNonPdf(rows, "Copie identité transmise à l'auteur", a.getCopieIdentiteTransmiseAuteur());
@@ -751,9 +767,16 @@ public class PdfGenerationAdapter implements PdfGenerationUseCase {
 
     try {
       if (raw.contains("T")) {
-        return LocalDateTime
-          .parse(raw, INPUT_DATE_TIME)
-          .format(DATE_TIME_FORMAT);
+        String[] parts = raw.split("T", 2);
+        String datePart = parts[0];
+        String timePart = parts[1];
+        if (timePart.length() >= 5 && timePart.charAt(2) == ':') {
+          String hourMin = timePart.substring(0, 5);
+          return LocalDateTime
+            .parse(datePart + "T" + hourMin, INPUT_DATE_TIME)
+            .format(DATE_TIME_FORMAT);
+        }
+        return LocalDate.parse(datePart, INPUT_DATE).format(DATE_FORMAT);
       }
 
       return LocalDate

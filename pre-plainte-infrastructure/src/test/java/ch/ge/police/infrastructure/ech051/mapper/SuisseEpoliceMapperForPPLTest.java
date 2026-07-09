@@ -66,6 +66,7 @@ class SuisseEpoliceMapperForPPLTest {
     ip.setPrenom("P");
     ip.setGenre(new RipolCode("1", "M"));
     ip.setNationalite(new RipolCode("8100", "CH"));
+    ip.setLieuOrigine(new RipolCode("6621", "Genève"));
     ip.setDateNaissance("1990-01-01");
     ip.setAdresse(new Adresse("Rue 1", "", "1200", "Genève", "1200", "Suisse", "8100"));
     ip.setTelephone("41790000000");
@@ -156,8 +157,7 @@ class SuisseEpoliceMapperForPPLTest {
     assertThat(doc.getEvents()).hasSize(2);
     assertThat(doc.getEvents().getFirst().getFacts()).isNull();
     assertThat(doc.getEvents().getFirst().getAdditionalInformation()).isEqualTo("Commande frauduleuse");
-    assertThat(doc.getEvents().get(1).getActionPlace().getCountry().getCode())
-        .isEqualTo(Ech051Constants.COUNTRY_UNKNOWN_RIPOL_CODE);
+    assertThat(doc.getEvents().get(1).getActionPlace()).isNull();
 
     assertThat(doc.getObjects().stream().map(Ech0051DocumentPayload.ObjectItem::getKey))
         .contains(Ech051Constants.OBJECT_KEY_CYBER_FRAUDULENT_ORDER_AMOUNT);
@@ -264,8 +264,7 @@ class SuisseEpoliceMapperForPPLTest {
     assertThat(doc.getEvents().get(1).getKey()).isEqualTo(Ech051Constants.EVENT_KEY_PAYMENT);
     assertThat(doc.getEvents().get(1).getFacts()).isNull();
     assertThat(doc.getEvents().get(1).getAdditionalInformation()).isEqualTo("Colis vide");
-    assertThat(doc.getEvents().get(1).getActionPlace().getCountry().getCode())
-        .isEqualTo(Ech051Constants.COUNTRY_UNKNOWN_RIPOL_CODE);
+    assertThat(doc.getEvents().get(1).getActionPlace()).isNull();
 
     assertThat(doc.getObjects()).hasSize(1);
     assertThat(doc.getObjects().getFirst().getKey()).isEqualTo(Ech051Constants.OBJECT_KEY_CYBER_UNDELIVERED_ITEM);
@@ -356,7 +355,7 @@ class SuisseEpoliceMapperForPPLTest {
 
     InformationsPersonnelles ip = basePersonne();
     ip.setTypeDocumentIdentite(TypeDocumentIdentite.CARTE_IDENTITE);
-    ip.setNumeroDocumentIdentite("hgfhghfgh");
+    ip.setNumeroDocumentIdentite("X9876543");
     ip.setTitreSejour(TitreSejour.PERMIS_B);
 
     Ech0051DocumentPayload doc = mapper.toDocument(new PrePlainte("ACHAT-ID-OBJ", ip, Incident.of(cyber)));
@@ -368,7 +367,7 @@ class SuisseEpoliceMapperForPPLTest {
         .orElseThrow();
     assertThat(identity.getTypeOfObject().getCode()).isEqualTo(Ech051Constants.OBJECT_TYPE_CYBER_IDENTITY_CODE);
     assertThat(identity.getIdentification().getType()).isEqualTo("IDPass");
-    assertThat(identity.getIdentification().getNumber()).isEqualTo("hgfhghfgh");
+    assertThat(identity.getIdentification().getNumber()).isEqualTo("X9876543");
     assertThat(identity.getOfficialDocument().getPermitCategory().getCode()).isEqualTo("02");
 
     assertThat(doc.getRelations().getObjectPersonLinks()).hasSize(2);
@@ -510,6 +509,88 @@ class SuisseEpoliceMapperForPPLTest {
 
     assertThat(doc.getBusinessCases().getFirst().getKey()).isEqualTo(Ech051Constants.BUSINESS_CASE_KEY_ENTREPRISE);
     assertThat(doc.getRelations().getPersonLinks()).hasSize(2);
+  }
+
+  @Test
+  void toDocument_withOrganisationAndCybercrime_buildsRepresentativeRelations() {
+    Organisation org = new Organisation();
+    org.setNom("SA Demo");
+    org.setEmail("info@demo.ch");
+    org.setTelephone("0223334455");
+    org.setAdresse(new Adresse("Av. Entreprise 10", "", "1200", "Genève", "1200", "CH", "8100"));
+
+    InformationsPersonnelles ip = basePersonne();
+    ip.setLienAvecPersonne(LienAvecPersonne.ENTREPRISE);
+    ip.setPostePersonneMorale("Gérant");
+    ip.setOrganisation(org);
+
+    AchatNonRecu achat = new AchatNonRecu();
+    achat.setNomVendeur("Vendeur");
+    achat.setPrenomVendeur("Jean");
+    achat.setMoyenPaiement(MoyenPaiement.IBAN);
+    achat.setIbanBeneficiaire("CH9300762011623852957");
+    achat.setDateOperation("2025-09-01");
+
+    Cybercrime cyber = new Cybercrime();
+    cyber.setTypeCybercrime(TypeCybercrime.ACHAT_NON_RECU);
+    cyber.setAchatNonRecu(achat);
+    cyber.setDateDebutEvent("2025-09-01");
+    cyber.setDateFinEvent("2025-09-01");
+
+    Ech0051DocumentPayload doc = mapper.toDocument(new PrePlainte("ORG-CYB", ip, Incident.of(cyber)));
+
+    assertThat(doc.getRelations().getPersonLinks()).anyMatch(link ->
+        Ech051Constants.PERSON_KEY_DECLARANT_ENTREPRISE.equals(link.getPerson1Ref())
+            && Ech051Constants.PERSON_KEY_ORGANISATION.equals(link.getPerson2Ref()));
+    assertThat(doc.getRelations().getInvolvedParties()).anyMatch(party ->
+        Ech051Constants.PERSON_KEY_DECLARANT_ENTREPRISE.equals(party.getPersonRef()));
+    assertThat(doc.getRelations().getInvolvedParties()).anyMatch(party ->
+        Ech051Constants.PERSON_KEY_INFORMANT.equals(party.getPersonRef()));
+  }
+
+  @Test
+  void toDocument_withOrganisationAndCybercrime_linksIdentityObjectToDeclarant() {
+    Organisation org = new Organisation();
+    org.setNom("Demo SA");
+    org.setEmail("contact@demo-sa.example.org");
+    org.setTelephone("4122334455");
+    org.setAdresse(new Adresse("Rue du Test 12", "", "1200", "Genève", "1200", "CH", "8100"));
+
+    InformationsPersonnelles ip = basePersonne();
+    ip.setLienAvecPersonne(LienAvecPersonne.ENTREPRISE);
+    ip.setPostePersonneMorale("Gérant");
+    ip.setOrganisation(org);
+    ip.setTypeDocumentIdentite(TypeDocumentIdentite.CARTE_IDENTITE);
+    ip.setNumeroDocumentIdentite("X9876543");
+    ip.setTitreSejour(TitreSejour.PERMIS_B);
+
+    AchatNonRecu achat = new AchatNonRecu();
+    achat.setNomVendeur("Nom de famille du vendeur");
+    achat.setPrenomVendeur("Prénom du vendeur");
+    achat.setMoyenPaiement(MoyenPaiement.AUTRE);
+    achat.setMoyenPaiementAutre("Autre méthode de paiment");
+    achat.setDateOperation("2026-07-08");
+    achat.setMontantDelitAchatLigne("2342");
+    achat.setArticleNonLivreDescription("Article non livré");
+
+    Cybercrime cyber = new Cybercrime();
+    cyber.setTypeCybercrime(TypeCybercrime.ACHAT_NON_RECU);
+    cyber.setAchatNonRecu(achat);
+    cyber.setDatePremierContact("2026-07-08");
+    cyber.setDateDernierContact("2026-07-09");
+    cyber.setDescriptionCybercrime("Veuillez décrire le déroulement des faits");
+
+    Ech0051DocumentPayload doc = mapper.toDocument(new PrePlainte("ORG-CYB-ID", ip, Incident.of(cyber)));
+
+    assertThat(doc.getObjects().stream()
+        .anyMatch(object -> Ech051Constants.OBJECT_KEY_CYBER_VICTIM_IDENTITY.equals(object.getKey()))).isTrue();
+    assertThat(doc.getRelations().getObjectPersonLinks()).anyMatch(link ->
+        Ech051Constants.OBJECT_KEY_CYBER_VICTIM_IDENTITY.equals(link.getObjectRef())
+            && Ech051Constants.PERSON_KEY_DECLARANT_ENTREPRISE.equals(link.getPersonRef())
+            && link.getPersonRole() == null);
+    assertThat(doc.getRelations().getObjectPersonLinks()).noneMatch(link ->
+        Ech051Constants.OBJECT_KEY_CYBER_VICTIM_IDENTITY.equals(link.getObjectRef())
+            && Ech051Constants.PERSON_KEY_ORGANISATION.equals(link.getPersonRef()));
   }
 
   @Test

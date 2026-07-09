@@ -43,6 +43,7 @@ export const INCIDENT_FIELDS = {
     "localiteEvenementSecondaire",
     "paysEvenementSecondaire",
     "lieuOrigine",
+    "lieuOrigineEvenement",
   ],
   DOMMAGE: [
     "typeDommage",
@@ -78,6 +79,7 @@ export const INCIDENT_FIELDS = {
     "paysEvenement",
     "typeLieu",
     "lieuOrigine",
+    "lieuOrigineEvenement",
     "adresseEvenementSecondaire",
     "adressePostaleEvenementSecondaire",
     "npaEvenementSecondaire",
