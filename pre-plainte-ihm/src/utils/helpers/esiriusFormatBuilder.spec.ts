@@ -35,7 +35,7 @@ describe("format du payload eSirius", () => {
 
     expect(payload.user.personalIdentity).toBeNull();
     expect(payload.user.fixPhone).toBe("ael-ppl-c-7yt77hjzbu");
-    expect(payload.user.phone).toBe("+41791234567");
+    expect(payload.user.phone).toBe("41791234567");
     expect(payload.user.lastName).toBe("Martin");
     expect(payload.user.firstName).toBe("Anne");
     expect(payload.user.address).toEqual({
@@ -66,7 +66,7 @@ describe("format du payload eSirius", () => {
       personalIdentity: null,
       email: CONSTAT_EMAIL,
       fixPhone: "ael-ppl-d-1wo30iy44h",
-      phone: "+41791234567",
+      phone: "41791234567",
       address: {
         line1: "",
         line2: "",
