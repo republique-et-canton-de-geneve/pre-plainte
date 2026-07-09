@@ -560,6 +560,11 @@ When("je renseigne les informations personnelles nominales pour moi-même", () =
   fillField("Prénom", "Anne");
   selectAutocomplete("Genre", "Féminin");
   selectAutocomplete("Nationalité", "Suisse");
+  cy.get("body").then($body => {
+    if (($body.text() ?? "").includes("Lieu d'origine")) {
+      selectAutocomplete("Lieu d'origine", "Geneve");
+    }
+  });
   fillField("Date de naissance", "15.04.1985");
   fillField("Adresse", "Rue du Marche 10");
   fillField("Numéro de rue", "10");
@@ -571,6 +576,8 @@ When("je renseigne les informations personnelles nominales pour moi-même", () =
 
 When("je continue après les informations personnelles", () => {
   cy.get('[data-cy="continuer-informations-personnelles"]').filter(":visible").first().click();
+  cy.window().its("localStorage").invoke("getItem", "pp-step").should("eq", String(STEP_EVENEMENT));
+  cy.contains("Informations sur l'événement").should(bevisible);
 });
 
 When("je continue après les informations sur l'événement", () => {
@@ -578,6 +585,8 @@ When("je continue après les informations sur l'événement", () => {
 });
 
 When("je renseigne un vol simple nominal", () => {
+  cy.get('[data-cy="continuer-evenement"]', { timeout: EMAIL_CHALLENGE_TIMEOUT_MS }).filter(":visible").first().should(bevisible);
+  cy.contains("fieldset", "Certains objets que vous allez déclarer", { timeout: EMAIL_CHALLENGE_TIMEOUT_MS }).should(bevisible);
   selectRadio("Certains objets que vous allez déclarer", "Non");
   selectVisibleOption("Catégorie d'objet", "Informatique");
   selectVisibleOption("Sous-catégorie", "Ordinateur portable / Tablette");
@@ -590,7 +599,7 @@ When("je renseigne un vol simple nominal", () => {
   fillField("Heure de début de l'événement", HEURE_DEBUT_EVENEMENT);
   fillField("Date de fin de l'événement", DATE_EVENEMENT);
   fillField("Heure de fin de l'événement", HEURE_FIN_EVENEMENT);
-  selectRadio("L'adresse correspond à", "L'adresse de la personne lesée");
+  selectRadio("L'adresse correspond à", "L'adresse de la personne lesée (personne physique ou morale)");
   cy.contains(LIBELLE_ORDINATEUR_PORTABLE).should(bevisible);
   cy.contains("button", /Continuer|Poursuivre/).last().click({ force: true });
 });
