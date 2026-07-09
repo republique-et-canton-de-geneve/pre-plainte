@@ -239,11 +239,13 @@ public class SuisseEpoliceRelationsMapper {
   }
 
   private String resolveCyberIdentityPersonRef(List<Person> persons, String victimRef) {
-    String declarantRef = findPersonRefByKey(persons, Ech051Constants.PERSON_KEY_DECLARANT_ENTREPRISE);
-    if (declarantRef != null) {
-      return declarantRef;
-    }
-    return victimRef;
+    return persons.stream()
+        .filter(p -> p != null
+            && Ech051Constants.PERSON_KEY_DECLARANT_ENTREPRISE.equals(p.getKey())
+            && p.getNaturalIdentity() != null)
+        .map(Person::getKey)
+        .findFirst()
+        .orElse(victimRef);
   }
 
   private String findCyberPaymentBeneficiaryRef(List<Person> persons, String victimRef, String sellerRef) {
