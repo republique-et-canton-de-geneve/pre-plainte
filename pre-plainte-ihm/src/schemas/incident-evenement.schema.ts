@@ -572,8 +572,8 @@ const validateAdresseSecondaire = (data: any, ctx: any, t: any) => {
     validateNpaEvenement(data, "npaEvenementSecondaire", ctx, t);
   }
 
-  if (data.isTrajet === false && data.lieuOrigine === null) {
-    addCustomIssue(ctx, "lieuOrigine", t(VALIDATION_CHAMP_REQUIS));
+  if (data.isTrajet === false && data.lieuOrigineEvenement === null) {
+    addCustomIssue(ctx, "lieuOrigineEvenement", t(VALIDATION_CHAMP_REQUIS));
   }
 };
 
@@ -644,7 +644,7 @@ const evenementFields = (t: ComposerTranslation) => ({
   npaEvenementSecondaire: z.string().max(TEXT_FIELD_MAX_LENGTH, t(VALIDATION_LONGUEUR_MAX, { max: TEXT_FIELD_MAX_LENGTH })).optional(),
   localiteEvenementSecondaire: z.string().max(TEXT_FIELD_MAX_LENGTH, t(VALIDATION_LONGUEUR_MAX, { max: TEXT_FIELD_MAX_LENGTH })).optional(),
   paysEvenementSecondaire: z.string().optional(),
-  lieuOrigine: optionalRipolSelectionSchema,
+  lieuOrigineEvenement: optionalRipolSelectionSchema,
   volDansVehicule: z.boolean().nullish(),
 });
 

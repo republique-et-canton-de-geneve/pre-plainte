@@ -95,7 +95,7 @@
 
         <RipolAutocomplete
           v-if="isTrajet === false"
-          v-model="lieuOrigine"
+          v-model="lieuOrigineEvenement"
           :label="t('adresseEvent.lieuOrigine')"
           required
           :fetch-fn="RipolService.searchLieuxOrigine"
@@ -103,7 +103,7 @@
           :preload="false"
           :min-search-length="2"
           class="mb-3"
-          :error-messages="lieuOrigineError"
+          :error-messages="lieuOrigineEvenementError"
         />
       </template>
     </div>
@@ -160,7 +160,7 @@ const { value: localiteEvenement, errorMessage: localiteEvenementError } = useFi
 const { value: paysEvenement } = useField<string>("paysEvenement", undefined, {
   keepValueOnUnmount: true,
 });
-const { value: lieuOrigine, errorMessage: lieuOrigineError } = useField<RipolSelection | null>("lieuOrigine", undefined, {
+const { value: lieuOrigineEvenement, errorMessage: lieuOrigineEvenementError } = useField<RipolSelection | null>("lieuOrigineEvenement", undefined, {
   keepValueOnUnmount: true,
 });
 
@@ -232,7 +232,7 @@ const showAdresseEvenement = computed(
 watch(adresseConnue, isKnown => {
   if (isKnown) {
     clearSecondaryAddressFields();
-    lieuOrigine.value = null;
+    lieuOrigineEvenement.value = null;
   }
 });
 
@@ -250,7 +250,7 @@ watch(adresseLesee, value => {
 
 watch(isTrajet, value => {
   if (value) {
-    lieuOrigine.value = null;
+    lieuOrigineEvenement.value = null;
   }
   if (!value) {
     clearPrimaryAddressFields();
