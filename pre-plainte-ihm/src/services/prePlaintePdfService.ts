@@ -1,11 +1,8 @@
-import { getApiBaseUrl } from "@/config/config";
+import { resolveApiUrl } from "@/config/config";
 import { getUserFacingApiErrorMessage } from "@/utils/api-http-user-message";
 
-const backendUrl = getApiBaseUrl() || "";
-const baseUrl = `${backendUrl}/api/preplainte/pdf`;
-
 export async function downloadPrePlaintePdf(payload: Record<string, any>) {
-  const response = await fetch(baseUrl, {
+  const response = await fetch(resolveApiUrl("/api/preplainte/pdf"), {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
