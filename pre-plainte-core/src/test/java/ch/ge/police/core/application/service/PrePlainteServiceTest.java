@@ -63,6 +63,7 @@ class PrePlainteServiceTest {
     ip.setPrenom("Test");
     ip.setGenre(new RipolCode("2", "Féminin"));
     ip.setNationalite(new RipolCode("8100", "Suisse"));
+    ip.setLieuOrigine(new RipolCode("6621", "Genève"));
     ip.setDateNaissance("1993-01-01");
     ip.setAdresse(new Adresse("Rue du Test 1", null, "1200", "CH", null, "Suisse", null));
     ip.setEmail("test@test.ch");

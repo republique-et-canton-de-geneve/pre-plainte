@@ -28,14 +28,15 @@ class PrePlainteTest {
   void setUp() {
 
     info = new InformationsPersonnelles();
-    info.setNom("Toure");
-    info.setPrenom("Maka");
+    info.setNom("Dupont");
+    info.setPrenom("Jean");
     info.setGenre(new RipolCode("1", "Masculin"));
     info.setNationalite(new RipolCode("8100", "Suisse"));
-    info.setDateNaissance("1993-11-27");
+    info.setLieuOrigine(new RipolCode("6621", "Genève"));
+    info.setDateNaissance("1990-01-01");
     info.setAdresse(new Adresse("Rue du Rhône 10", "Genève", "1204", "CH", null, "Suisse", null));
-    info.setTelephone("41789000000");
-    info.setEmail("maka@example.com");
+    info.setTelephone("41791234567");
+    info.setEmail("jean.dupont@example.org");
     info.setLienAvecPersonne(LienAvecPersonne.MOI_MEME);
     info.setTypeDocumentIdentite(TypeDocumentIdentite.PASSEPORT);
     info.setNumeroDocumentIdentite("X1234567");

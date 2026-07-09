@@ -91,9 +91,6 @@ public class SuisseEpoliceObjectMapper {
     if (infos.hasTiers() && infos.getTiers() != null) {
       return infos.getTiers();
     }
-    if (infos.hasOrganisation()) {
-      return null;
-    }
     return infos;
   }
 

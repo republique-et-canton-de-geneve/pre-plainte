@@ -1,6 +1,6 @@
 import { z } from "zod";
 import type { ComposerTranslation } from "vue-i18n";
-import { TEXT_FIELD_MAX_LENGTH } from "@/constants/constant.ts";
+import { TEXT_FIELD_MAX_LENGTH, VALIDATION_LIMITS } from "@/constants/constant.ts";
 import { validateInternationalPhone } from "@/utils/validations/phoneValidation";
 
 export const createVerificationEmailPageSchema = (t: ComposerTranslation, requireTelephone = false) =>
@@ -16,6 +16,8 @@ export const createVerificationEmailPageSchema = (t: ComposerTranslation, requir
       ),
       confirmationEmail: z.string().optional(),
       telephone: z.string().optional(),
+      nom: z.string().optional(),
+      prenom: z.string().optional(),
     })
     .superRefine((data, ctx) => {
       if (!requireTelephone) {
@@ -26,6 +28,20 @@ export const createVerificationEmailPageSchema = (t: ComposerTranslation, requir
           code: z.ZodIssueCode.custom,
           path: ["telephone"],
           message: t("validation.telephoneFormat"),
+        });
+      }
+      if (!data.nom || data.nom.trim().length < VALIDATION_LIMITS.NOM_MIN) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["nom"],
+          message: t("validation.nomMin", { min: VALIDATION_LIMITS.NOM_MIN }),
+        });
+      }
+      if (!data.prenom || data.prenom.trim().length < VALIDATION_LIMITS.PRENOM_MIN) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["prenom"],
+          message: t("validation.prenomMin", { min: VALIDATION_LIMITS.PRENOM_MIN }),
         });
       }
     });

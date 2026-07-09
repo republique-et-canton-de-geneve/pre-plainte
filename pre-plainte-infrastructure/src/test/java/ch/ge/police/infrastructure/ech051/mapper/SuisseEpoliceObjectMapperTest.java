@@ -1,5 +1,6 @@
 package ch.ge.police.infrastructure.ech051.mapper;
 
+import ch.ge.police.core.domain.model.common.Adresse;
 import ch.ge.police.core.domain.model.common.RipolCode;
 import ch.ge.police.core.domain.model.event.IncidentBase;
 import ch.ge.police.core.domain.model.event.cybercrime.Cybercrime;
@@ -10,6 +11,7 @@ import ch.ge.police.core.domain.model.event.vol.Vol;
 import ch.ge.police.core.domain.model.event.vol.common.ObjetIncident;
 import ch.ge.police.core.domain.model.informationspersonnelles.InformationsPersonnelles;
 import ch.ge.police.core.domain.model.informationspersonnelles.common.LienAvecPersonne;
+import ch.ge.police.core.domain.model.informationspersonnelles.common.Organisation;
 import ch.ge.police.core.domain.model.informationspersonnelles.common.Tiers;
 import ch.ge.police.core.domain.model.informationspersonnelles.common.TitreSejour;
 import ch.ge.police.core.domain.model.informationspersonnelles.common.TypeDocumentIdentite;
@@ -505,6 +507,41 @@ class SuisseEpoliceObjectMapperTest {
     assertEquals("Passport", result.getFirst().getIdentification().getType());
     assertEquals("P-99", result.getFirst().getIdentification().getNumber());
     assertNull(result.getFirst().getOfficialDocument());
+  }
+
+  @Test
+  void shouldBuildCyberObjectsWithEntrepriseDeclarantIdentity() {
+    AchatNonRecu achat = new AchatNonRecu();
+    achat.setMontantDelitAchatLigne("2342");
+
+    Cybercrime cybercrime = new Cybercrime();
+    cybercrime.setTypeCybercrime(TypeCybercrime.ACHAT_NON_RECU);
+    cybercrime.setAchatNonRecu(achat);
+
+    Organisation org = new Organisation();
+    org.setNom("Demo SA");
+    org.setEmail("contact@demo-sa.example.org");
+    org.setTelephone("4122334455");
+    org.setAdresse(new Adresse("Rue du Test 12", "", "1200", "Genève", "1200", "CH", "8100"));
+
+    InformationsPersonnelles infos = new InformationsPersonnelles();
+    infos.setLienAvecPersonne(LienAvecPersonne.ENTREPRISE);
+    infos.setOrganisation(org);
+    infos.setNom("Dupont");
+    infos.setPrenom("Jean");
+    infos.setTypeDocumentIdentite(TypeDocumentIdentite.CARTE_IDENTITE);
+    infos.setNumeroDocumentIdentite("X9876543");
+    infos.setTitreSejour(TitreSejour.PERMIS_B);
+
+    List<ObjectItem> result = mapper.buildCyberObjects(cybercrime, infos);
+
+    assertEquals(2, result.size());
+    ObjectItem identity = result.getFirst();
+    assertEquals(Ech051Constants.OBJECT_KEY_CYBER_VICTIM_IDENTITY, identity.getKey());
+    assertEquals("IDPass", identity.getIdentification().getType());
+    assertEquals("X9876543", identity.getIdentification().getNumber());
+    assertNotNull(identity.getOfficialDocument());
+    assertEquals("02", identity.getOfficialDocument().getPermitCategory().getCode());
   }
 
   @Test

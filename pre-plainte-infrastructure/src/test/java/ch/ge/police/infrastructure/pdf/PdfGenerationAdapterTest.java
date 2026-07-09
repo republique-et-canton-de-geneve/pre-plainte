@@ -152,6 +152,57 @@ class PdfGenerationAdapterTest {
   }
 
   @Test
+  void shouldRenderDommageEventHoursInPdf() throws Exception {
+    DommageMateriel dommage = new DommageMateriel();
+    dommage.setDateDebutEvent("2025-02-15T08:30");
+    dommage.setDateFinEvent("2025-02-15T18:45");
+    dommage.setTypeDommage(TypeDommage.DOMMAGE_VEHICULE);
+    dommage.setDescription("Rayure");
+
+    String text = extractPdfText(adapter.generatePdf(
+      new PrePlainte("DOM-HOURS", basePersonne(), Incident.of(dommage))));
+
+    assertPdfTextContains(text, "Date de début de l'événement");
+    assertPdfTextContains(text, "15.02.2025 à 08:30");
+    assertPdfTextContains(text, "Date de fin de l'événement");
+    assertPdfTextContains(text, "15.02.2025 à 18:45");
+  }
+
+  @Test
+  void shouldRenderCyberAchatNonRecuContactHoursInPdf() throws Exception {
+    AchatNonRecu achat = new AchatNonRecu();
+    achat.setMontantDelitAchatLigne("199.50");
+
+    Cybercrime cyber = new Cybercrime();
+    cyber.setTypeCybercrime(TypeCybercrime.ACHAT_NON_RECU);
+    cyber.setAchatNonRecu(achat);
+    cyber.setDatePremierContact("2025-03-10T09:15");
+    cyber.setDateDernierContact("2025-03-12T14:20");
+    cyber.setDescriptionCybercrime("Colis jamais expédié");
+
+    String text = extractPdfText(adapter.generatePdf(
+      new PrePlainte("CYB-HOURS", basePersonne(), Incident.of(cyber))));
+
+    assertPdfTextContains(text, "Date premier contact");
+    assertPdfTextContains(text, "10.03.2025 à 09:15");
+    assertPdfTextContains(text, "Date dernier contact");
+    assertPdfTextContains(text, "12.03.2025 à 14:20");
+  }
+
+  @Test
+  void shouldRenderEventHoursWithSecondsAndTimezoneInPdf() throws Exception {
+    Vol vol = new Vol();
+    vol.setDateDebutEvent("2025-06-01T07:05:00");
+    vol.setDateFinEvent("2025-06-01T19:45:00+02:00");
+
+    String text = extractPdfText(adapter.generatePdf(
+      new PrePlainte("VOL-SECONDS", basePersonne(), Incident.of(vol))));
+
+    assertPdfTextContains(text, "01.06.2025 à 07:05");
+    assertPdfTextContains(text, "01.06.2025 à 19:45");
+  }
+
+  @Test
   void shouldGeneratePdfVolWithJustificationAbsenceIMEI() {
 
     ObjetIncident o = objetComplet();

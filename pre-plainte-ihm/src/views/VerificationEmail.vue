@@ -63,6 +63,29 @@
         required
       />
 
+      <template v-if="rendezVousOnly">
+        <v-text-field
+          :label="requiredLabel(t('informationsPersonnelles.nom'))"
+          v-model="nom"
+          :error-messages="nomError"
+          class="mb-4"
+          variant="outlined"
+          :hint="t('informationsPersonnelles.hintNom')"
+          persistent-hint
+          autocomplete="family-name"
+        />
+        <v-text-field
+          :label="requiredLabel(t('informationsPersonnelles.prenom'))"
+          v-model="prenom"
+          :error-messages="prenomError"
+          class="mb-4"
+          variant="outlined"
+          :hint="t('informationsPersonnelles.hintPrenom')"
+          persistent-hint
+          autocomplete="given-name"
+        />
+      </template>
+
       <v-alert
         v-if="verifyError"
         type="error"
@@ -157,7 +180,7 @@ const store = useCreatePrePlainteStore();
 const { keyChallenge } = storeToRefs(store);
 const emit = defineEmits<{ cancel: []; continue: [] }>();
 
-type VerificationStepFields = Pick<PrePlainteFormFields, "email" | "confirmationEmail" | "telephone">;
+type VerificationStepFields = Pick<PrePlainteFormFields, "email" | "confirmationEmail" | "telephone" | "nom" | "prenom">;
 
 const rendezVousOnly = computed(() => store.isRendezVousOnly());
 
@@ -171,6 +194,8 @@ const { handleSubmit, validate } = useForm<VerificationStepFields>({
     email: store.userFormData.email ?? "",
     confirmationEmail: store.userFormData.confirmationEmail ?? "",
     telephone: store.userFormData.telephone ?? "",
+    nom: store.userFormData.nom ?? "",
+    prenom: store.userFormData.prenom ?? "",
   },
   validationSchema,
 });
@@ -185,11 +210,24 @@ const challengeEmailSnapshot = ref("");
 
 const { value: email, errorMessage: emailError } = useField<string>("email");
 const { value: telephone, errorMessage: telephoneError } = useField<string>("telephone");
+const { value: nom, errorMessage: nomError } = useField<string>("nom");
+const { value: prenom, errorMessage: prenomError } = useField<string>("prenom");
 
 const emailDisplay = computed(() => (email.value ?? "").trim());
 
 const emailValide = computed(() => verificationEmailOnlySchema.value.safeParse({ email: email.value ?? "" }).success);
 const telephoneValide = computed(() => !rendezVousOnly.value || validateInternationalPhone(telephone.value ?? ""));
+const rendezVousIdentityValide = computed(() => {
+  if (!rendezVousOnly.value) {
+    return true;
+  }
+  return verificationEmailPageSchema.value.safeParse({
+    email: email.value ?? "",
+    telephone: telephone.value ?? "",
+    nom: nom.value ?? "",
+    prenom: prenom.value ?? "",
+  }).success;
+});
 
 const { value: confirmationEmail, errorMessage: confirmationEmailError } = useField<string>(
   "confirmationEmail",
@@ -224,7 +262,7 @@ const canContinue = computed(() => {
     hasSendError: hasSendError.value,
     devBypassEmail,
     emailValide: emailValide.value,
-    telephoneValide: telephoneValide.value,
+    telephoneValide: telephoneValide.value && rendezVousIdentityValide.value,
     codeSent: codeSent.value,
     confirmationEmail: confirmationEmail.value,
   });
@@ -296,12 +334,20 @@ onMounted(() => {
   }
 });
 
-function persistVerifiedEmail(emailTrim: string, confirmation: string, phone: string) {
+function persistVerifiedEmail(
+  emailTrim: string,
+  confirmation: string,
+  phone: string,
+  lastName: string,
+  firstName: string,
+) {
   store.setUserFormData({
     ...store.userFormData,
     email: emailTrim,
     confirmationEmail: confirmation,
     telephone: phone,
+    nom: lastName,
+    prenom: firstName,
   });
   emit("continue");
 }
@@ -329,10 +375,12 @@ async function submitEmailVerification(values: VerificationStepFields) {
   const emailTrim = (values.email ?? "").trim();
   const confirmation = sanitizeEmailChallengeCodeInput(values.confirmationEmail ?? "");
   const phone = (values.telephone ?? "").trim();
+  const lastName = (values.nom ?? "").trim();
+  const firstName = (values.prenom ?? "").trim();
 
   if (devBypassEmail) {
     ensureDevBypassKeyChallenge();
-    persistVerifiedEmail(emailTrim, resolveDevBypassConfirmation(confirmation), phone);
+    persistVerifiedEmail(emailTrim, resolveDevBypassConfirmation(confirmation), phone, lastName, firstName);
     return;
   }
 
@@ -349,7 +397,7 @@ async function submitEmailVerification(values: VerificationStepFields) {
       verifyError.value = messageForVerifyStatus(result.status);
       return;
     }
-    persistVerifiedEmail(emailTrim, confirmation, phone);
+    persistVerifiedEmail(emailTrim, confirmation, phone, lastName, firstName);
   } catch (e) {
     verifyError.value = e instanceof Error ? e.message : t(EMAIL_CHALLENGE_GENERIC_ERROR_KEY);
   } finally {

@@ -71,6 +71,15 @@
                   </dd>
                 </v-col>
 
+                <v-col cols="12" md="6" v-if="data.lieuOrigine">
+                  <dt id="lbl-lieuOriginePersonne">
+                    <v-label class="ge-field-label">{{ t("informationsPersonnelles.lieuOrigine") }}</v-label>
+                  </dt>
+                  <dd class="ge-field-value text-body-1" aria-labelledby="lbl-lieuOriginePersonne">
+                    {{ formatRipol(data.lieuOrigine) }}
+                  </dd>
+                </v-col>
+
                 <v-col cols="12" md="6">
                   <dt id="lbl-dateNaissance">
                     <v-label class="ge-field-label">{{ t("informationsPersonnelles.dateNaissance") }}</v-label>
@@ -603,12 +612,12 @@
                     </template>
 
                     <template v-if="!data.adresseConnue && !data.isTrajet">
-                      <v-col cols="12" md="6" v-if="isFieldVisible('lieuOrigine') && data.lieuOrigine">
-                        <dt id="lbl-lieuOrigine">
+                      <v-col cols="12" md="6" v-if="isFieldVisible('lieuOrigineEvenement') && data.lieuOrigineEvenement">
+                        <dt id="lbl-lieuOrigineEvenement">
                           <v-label class="ge-field-label">{{ t("adresseEvent.lieuOrigine") }}</v-label>
                         </dt>
-                        <dd class="ge-field-value text-body-1" aria-labelledby="lbl-lieuOrigine">
-                          {{ formatRipol(data.lieuOrigine) }}
+                        <dd class="ge-field-value text-body-1" aria-labelledby="lbl-lieuOrigineEvenement">
+                          {{ formatRipol(data.lieuOrigineEvenement) }}
                         </dd>
                       </v-col>
                     </template>
