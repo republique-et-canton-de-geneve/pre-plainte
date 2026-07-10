@@ -115,6 +115,10 @@ public class PdfGenerationAdapter implements PdfGenerationUseCase {
   private static final DateTimeFormatter DATE_TIME_FORMAT =
     DateTimeFormatter.ofPattern("dd.MM.yyyy 'à' HH:mm");
 
+  private static final int DATETIME_ISO_SPLIT_LIMIT = 2;
+  private static final int TIME_HOUR_MINUTE_LENGTH = 5;
+  private static final int TIME_HOUR_MINUTE_SEPARATOR_INDEX = 2;
+
   public static final String RIPOL_AUTRE = "AUTRE";
   private static final String CATEGORIE_DOCUMENTS = "documents";
   private static final String CATEGORIE_PLAQUE = "plaque";
@@ -768,11 +772,12 @@ public class PdfGenerationAdapter implements PdfGenerationUseCase {
 
     try {
       if (raw.contains("T")) {
-        String[] parts = raw.split("T", 2);
+        String[] parts = raw.split("T", DATETIME_ISO_SPLIT_LIMIT);
         String datePart = parts[0];
         String timePart = parts[1];
-        if (timePart.length() >= 5 && timePart.charAt(2) == ':') {
-          String hourMin = timePart.substring(0, 5);
+        if (timePart.length() >= TIME_HOUR_MINUTE_LENGTH
+            && timePart.charAt(TIME_HOUR_MINUTE_SEPARATOR_INDEX) == ':') {
+          String hourMin = timePart.substring(0, TIME_HOUR_MINUTE_LENGTH);
           return LocalDateTime
             .parse(datePart + "T" + hourMin, INPUT_DATE_TIME)
             .format(DATE_TIME_FORMAT);
