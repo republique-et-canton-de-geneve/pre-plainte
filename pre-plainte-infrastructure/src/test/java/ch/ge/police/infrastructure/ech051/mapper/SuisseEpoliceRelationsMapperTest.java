@@ -446,16 +446,11 @@ class SuisseEpoliceRelationsMapperTest {
   }
 
   @Test
-  void shouldOmitAccusedWhenLegalCounterpartyNameIsAucune() {
+  void shouldOmitPersonReceiveRefWhenPaymentBeneficiaryPersonIsAbsent() {
     Person victim = person(Ech051Constants.PERSON_KEY_TIERS);
-    Person notAccused = Person.builder()
-        .key("9")
-        .type(PersonType.LEGAL)
-        .legalIdentity(LegalIdentity.builder().currentName("aucune").build())
-        .build();
-    List<Person> persons = List.of(victim, notAccused);
+    List<Person> persons = List.of(victim);
     List<Event> events = achatNonRecuEvents();
-    BusinessCase businessCase = businessCase("B1");
+    BusinessCase businessCase = businessCase(Ech051Constants.BUSINESS_CASE_KEY);
 
     AchatNonRecu achat = new AchatNonRecu();
     achat.setMoyenPaiement(MoyenPaiement.IBAN);
