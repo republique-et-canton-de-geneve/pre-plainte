@@ -7,6 +7,7 @@ import ch.ge.police.core.domain.model.event.common.TypeIncident;
 import ch.ge.police.core.domain.model.event.cybercrime.Cybercrime;
 import ch.ge.police.core.domain.model.event.cybercrime.common.AchatNonRecu;
 import ch.ge.police.core.domain.model.event.cybercrime.common.CommandeFrauduleuse;
+import ch.ge.police.core.domain.model.event.cybercrime.common.FausseAnnonce;
 import ch.ge.police.core.domain.model.event.cybercrime.common.TypeCybercrime;
 import ch.ge.police.core.domain.model.event.dommagematerial.DommageMateriel;
 import ch.ge.police.core.domain.model.event.dommagematerial.common.NatureDommage;
@@ -30,6 +31,7 @@ import static ch.ge.police.infrastructure.ech051.Ech051Constants.RipolSourceTabl
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -340,6 +342,44 @@ class SuisseEpoliceEventMapperTest {
     assertNotNull(result.getActionPlace());
     assertEquals("Route des Acacias 10", result.getActionPlace().getStreet());
     assertEquals("Carouge", result.getActionPlace().getPlace().getLabel());
+  }
+
+  @Test
+  void shouldBuildTwoEventsForCommandeFrauduleuse() {
+    Cybercrime cybercrime = new Cybercrime();
+    cybercrime.setTypeCybercrime(TypeCybercrime.COMMANDE_FRAUDULEUSE);
+    cybercrime.setCommandeFrauduleuse(new CommandeFrauduleuse());
+    cybercrime.setDescriptionCybercrime("Commande frauduleuse");
+
+    List<Event> events = mapper.buildEvents(cybercrime, null);
+
+    assertEquals(2, events.size());
+    assertEquals(Ech051Constants.EVENT_KEY, events.get(0).getKey());
+    assertEquals(Ech051Constants.EVENT_KEY_PAYMENT, events.get(1).getKey());
+    assertEquals("Commande frauduleuse", events.get(0).getAdditionalInformation());
+    assertNull(events.get(1).getActionPlace());
+  }
+
+  @Test
+  void shouldBuildFausseAnnonceAdditionalInformationWithAnnonceDetails() {
+    FausseAnnonce annonce = new FausseAnnonce();
+    annonce.setUrlComplete("https://example.test/annonce");
+    annonce.setTitreAnnonce("Appartement");
+    annonce.setAdresseBienImmobilier("Rue du Rhône 1");
+    annonce.setMontantDemande(1500.0);
+    annonce.setModePaiementDemande("Virement");
+
+    Cybercrime cybercrime = new Cybercrime();
+    cybercrime.setTypeCybercrime(TypeCybercrime.FAUSSE_ANNONCE);
+    cybercrime.setFausseAnnonce(annonce);
+    cybercrime.setDescriptionCybercrime("Annonce frauduleuse");
+
+    String info = mapper.buildEventAdditionalInformation(cybercrime);
+
+    assertNotNull(info);
+    assertTrue(info.contains("Annonce frauduleuse"));
+    assertTrue(info.contains("URL complète: https://example.test/annonce"));
+    assertTrue(info.contains("Montant demandé: 1500.0"));
   }
 
   @Test
