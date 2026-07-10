@@ -145,6 +145,7 @@ class SuisseEpoliceEventMapperTest {
     when(incident.getDateFinEvent()).thenReturn("2026-03-10T12:00");
     when(incident.getTypeIncident()).thenReturn(TypeIncident.VOL);
     when(incident.getTypeLieu()).thenReturn(null);
+    when(incident.getIsTrajet()).thenReturn(true);
 
     when(addressMapper.isAddressComplete(primaryAddress)).thenReturn(true);
     when(addressMapper.isAddressComplete(secondaryAddress)).thenReturn(true);
