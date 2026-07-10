@@ -347,6 +347,7 @@
   },
   "incidentTypes": {
     "vol": "Roubo",
+    "fichiersObjetsVoles": "Documentos relacionados com o(s) objeto(s) roubado(s) (fatura, foto, etc.)",
     "degatDelit": "Dano e fuga geral",
     "cybercrime": "Cibercrime",
     "volDansVehicule": "Alguns dos objetos que vai declarar foram roubados dentro ou sobre um veículo?",
