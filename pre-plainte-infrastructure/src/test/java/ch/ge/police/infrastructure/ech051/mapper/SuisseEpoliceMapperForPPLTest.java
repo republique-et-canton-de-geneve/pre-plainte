@@ -284,7 +284,8 @@ class SuisseEpoliceMapperForPPLTest {
     assertThat(doc.getRelations().getObjectPersonLinks()).hasSize(1);
     assertThat(doc.getRelations().getObjectPersonLinks().getFirst().getObjectRef())
         .isEqualTo(Ech051Constants.OBJECT_KEY_CYBER_UNDELIVERED_ITEM);
-    assertThat(doc.getRelations().getFinancialTransactions().getFirst().getPersonReceiveRef()).isNull();
+    assertThat(doc.getRelations().getFinancialTransactions().getFirst().getPersonReceiveRef())
+        .isEqualTo(Ech051Constants.PERSON_KEY_CYBER_PAYMENT_BENEFICIARY_ALT);
     assertThat(doc.getRelations().getFinancialTransactions().getFirst().getEventRef())
         .isEqualTo(Ech051Constants.EVENT_KEY_PAYMENT);
   }
@@ -362,7 +363,8 @@ class SuisseEpoliceMapperForPPLTest {
     assertThat(doc.getRelations().getObjectPersonLinks().stream()
         .anyMatch(link -> Ech051Constants.OBJECT_KEY_CYBER_VICTIM_IDENTITY.equals(link.getObjectRef())
             && Ech051Constants.PERSON_KEY_TIERS.equals(link.getPersonRef())
-            && link.getPersonRole() == null)).isTrue();
+            && link.getPersonRole() != null
+            && Ech051Constants.INVOLVEMENT_TYPE_VICTIM_CODE.equals(link.getPersonRole().getCode()))).isTrue();
   }
 
   @Test
@@ -397,7 +399,7 @@ class SuisseEpoliceMapperForPPLTest {
     assertThat(payment.getAccountReceive()).isEqualTo("adresse-email@vers-laquelle-argenta-ete.vire.ch");
     assertThat(payment.getTransactionNumber()).isEqualTo("074343243");
     assertThat(payment.getEventRef()).isEqualTo(Ech051Constants.EVENT_KEY_PAYMENT);
-    assertThat(payment.getPersonReceiveRef()).isNull();
+    assertThat(payment.getPersonReceiveRef()).isEqualTo(Ech051Constants.PERSON_KEY_CYBER_PAYMENT_BENEFICIARY_ALT);
 
     assertThat(doc.getPersons().stream()
         .filter(person -> person != null
