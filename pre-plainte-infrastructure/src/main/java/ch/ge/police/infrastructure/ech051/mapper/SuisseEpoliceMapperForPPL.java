@@ -85,6 +85,7 @@ public class SuisseEpoliceMapperForPPL {
         ? List.of()
         : eventMapper.buildEvents(incident, infos);
     BusinessCase businessCase = businessCaseMapper.buildBusinessCase(prePlainte, declarationType, hasVehicles);
+    ensureCyberAchatNonRecuPaymentBeneficiary(persons, incident, businessCase.getKey());
 
     Relations relations = relationsMapper.buildRelations(
         persons, events, objects, vehicles, businessCase, declarationType, incident
@@ -121,6 +122,27 @@ public class SuisseEpoliceMapperForPPL {
     if (!hasCyberInsurer) {
       persons.add(personMapper.buildInsurancePerson(Ech051Constants.INSURER_REF_CYBER, Ech051Constants.INSURER_NAME_NONE));
     }
+  }
+
+  private void ensureCyberAchatNonRecuPaymentBeneficiary(List<Person> persons, IncidentBase incident, String businessCaseKey) {
+    if (!(incident instanceof Cybercrime cybercrime)
+        || cybercrime.getAchatNonRecu() == null
+        || cybercrime.getAchatNonRecu().getMoyenPaiement() == null
+        || businessCaseKey == null) {
+      return;
+    }
+
+    String beneficiaryKey = SuisseEpolicePersonMapper.resolveCyberPaymentBeneficiaryPersonKey(businessCaseKey);
+    boolean alreadyPresent = persons.stream().anyMatch(person -> person != null && beneficiaryKey.equals(person.getKey()));
+    if (alreadyPresent) {
+      return;
+    }
+
+    persons.add(personMapper.buildCyberPaymentBeneficiaryPerson(
+        beneficiaryKey,
+        SuisseEpolicePersonMapper.resolveCyberPaymentBeneficiaryIdentityKey(businessCaseKey),
+        cybercrime.getAchatNonRecu()
+    ));
   }
 
   private List<Person> applyCyberVictimAttributes(List<Person> persons, IncidentBase incident) {
