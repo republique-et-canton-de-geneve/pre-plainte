@@ -119,7 +119,7 @@ public class SuisseEpoliceEventMapper {
       return cyberEvent;
     }
 
-    return Event.builder()
+    Event.EventBuilder builder = Event.builder()
       .key(Ech051Constants.EVENT_KEY)
       .descriptionShort(Ech051Constants.PRE_PLAINTE_EN_LIGNE)
       .complaintDate(LocalDate.now().toString())
@@ -128,8 +128,9 @@ public class SuisseEpoliceEventMapper {
         .to(incident.getDateFinEvent())
         .build())
       .bootyAmount(buildBootyAmount(incident))
-      .additionalInformation(buildEventAdditionalInformation(incident))
-      .build();
+      .additionalInformation(buildEventAdditionalInformation(incident));
+    applyPhysicalIncidentActionPlaces(builder, incident, infos);
+    return builder.build();
   }
 
   private Event resolveCyberEvent(IncidentBase incident, InformationsPersonnelles infos) {
@@ -171,12 +172,32 @@ public class SuisseEpoliceEventMapper {
     return secondaryActionAddress;
   }
 
+  private void applyPhysicalIncidentActionPlaces(
+      Event.EventBuilder builder,
+      IncidentBase incident,
+      InformationsPersonnelles infos
+  ) {
+    if (incident instanceof Cybercrime) {
+      return;
+    }
+    boolean publicPlace = isPublicPlaceLocation(incident);
+    builder.actionPlace(resolvePrimaryActionPlace(incident, infos, publicPlace));
+    if (!publicPlace && Boolean.TRUE.equals(incident.getIsTrajet())) {
+      builder.secondaryActionPlace(buildActionPlace(resolveSecondaryActionAddress(incident)));
+    }
+  }
+
+  private ActionPlace resolveCyberEventActionPlace(InformationsPersonnelles infos) {
+    return resolveCyberActionPlace(infos);
+  }
+
   private Event buildCyberTransactionEvent(Cybercrime incident, InformationsPersonnelles infos) {
     return Event.builder()
         .key(Ech051Constants.EVENT_KEY)
         .descriptionShort(Ech051Constants.PRE_PLAINTE_EN_LIGNE)
         .complaintDate(LocalDate.now().toString())
         .actionPeriod(resolveCyberActionPeriod(incident))
+        .actionPlace(resolveCyberEventActionPlace(infos))
         .bootyAmount(buildBootyAmount(incident))
         .additionalInformation(buildEventAdditionalInformation(incident))
         .build();
@@ -186,12 +207,14 @@ public class SuisseEpoliceEventMapper {
     ActionPeriod actionPeriod = resolveCyberActionPeriod(incident);
     String complaintDate = LocalDate.now().toString();
     String additionalInformation = resolveCyberDescription(incident);
+    ActionPlace actionPlace = resolveCyberEventActionPlace(infos);
 
     Event deliveryEvent = Event.builder()
         .key(Ech051Constants.EVENT_KEY)
         .descriptionShort(Ech051Constants.PRE_PLAINTE_EN_LIGNE)
         .complaintDate(complaintDate)
         .actionPeriod(actionPeriod)
+        .actionPlace(actionPlace)
         .additionalInformation(additionalInformation)
         .build();
 
@@ -210,12 +233,14 @@ public class SuisseEpoliceEventMapper {
     ActionPeriod actionPeriod = resolveCyberActionPeriod(incident);
     String complaintDate = LocalDate.now().toString();
     String additionalInformation = resolveCyberDescription(incident);
+    ActionPlace actionPlace = resolveCyberEventActionPlace(infos);
 
     Event deliveryEvent = Event.builder()
         .key(Ech051Constants.EVENT_KEY)
         .descriptionShort(Ech051Constants.PRE_PLAINTE_EN_LIGNE)
         .complaintDate(complaintDate)
         .actionPeriod(actionPeriod)
+        .actionPlace(actionPlace)
         .additionalInformation(additionalInformation)
         .build();
 
