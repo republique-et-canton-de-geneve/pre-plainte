@@ -1,5 +1,7 @@
 package ch.ge.police.infrastructure.ech051.mapper;
 
+import ch.ge.police.core.domain.model.event.cybercrime.common.AchatNonRecu;
+import ch.ge.police.core.domain.model.event.cybercrime.common.MoyenPaiement;
 import ch.ge.police.core.domain.model.informationspersonnelles.InformationsPersonnelles;
 import ch.ge.police.core.domain.model.informationspersonnelles.common.InfosPersonne;
 import ch.ge.police.core.domain.model.informationspersonnelles.common.Organisation;
@@ -194,6 +196,47 @@ public class SuisseEpolicePersonMapper {
             .firstName(infos.getPrenom())
             .build())
         .communication(buildCommunication(infos))
+        .build();
+  }
+
+  public Person buildCyberPaymentBeneficiaryPerson(String personKey, String identityKey, AchatNonRecu achat) {
+    Communication communication = buildPaymentBeneficiaryCommunication(achat);
+    return Person.builder()
+        .key(personKey)
+        .type(PersonType.NATURAL)
+        .naturalIdentity(NaturalIdentity.builder()
+            .key(identityKey)
+            .identityCategory(Ech051Constants.IDENTITY_CATEGORY_UNKNOWN)
+            .build())
+        .communication(communication)
+        .build();
+  }
+
+  public static String resolveCyberPaymentBeneficiaryPersonKey(String businessCaseKey) {
+    return Ech051Constants.BUSINESS_CASE_KEY.equals(businessCaseKey)
+        ? Ech051Constants.PERSON_KEY_CYBER_PAYMENT_BENEFICIARY_ALT
+        : Ech051Constants.PERSON_KEY_CYBER_PAYMENT_BENEFICIARY;
+  }
+
+  public static String resolveCyberPaymentBeneficiaryIdentityKey(String businessCaseKey) {
+    return Ech051Constants.BUSINESS_CASE_KEY.equals(businessCaseKey)
+        ? Ech051Constants.IDENTITY_KEY_CYBER_PAYMENT_BENEFICIARY_ALT
+        : Ech051Constants.IDENTITY_KEY_CYBER_PAYMENT_BENEFICIARY;
+  }
+
+  private Communication buildPaymentBeneficiaryCommunication(AchatNonRecu achat) {
+    if (achat == null || achat.getMoyenPaiement() == null) {
+      return null;
+    }
+    String phone = switch (achat.getMoyenPaiement()) {
+      case TWINT -> achat.getNumeroTwintBeneficiaire();
+      default -> null;
+    };
+    if (phone == null || phone.isBlank()) {
+      return null;
+    }
+    return Communication.builder()
+        .mobile(phone.trim())
         .build();
   }
 

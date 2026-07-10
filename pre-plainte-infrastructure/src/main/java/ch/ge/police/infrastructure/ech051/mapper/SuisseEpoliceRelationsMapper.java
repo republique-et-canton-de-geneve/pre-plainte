@@ -4,6 +4,7 @@ import ch.ge.police.core.domain.model.event.IncidentBase;
 import ch.ge.police.core.domain.model.event.cybercrime.Cybercrime;
 import ch.ge.police.core.domain.model.event.cybercrime.common.AchatNonRecu;
 import ch.ge.police.core.domain.model.event.cybercrime.common.MoyenPaiement;
+import ch.ge.police.core.domain.model.event.cybercrime.common.PlateformeUtilisee;
 import ch.ge.police.core.domain.model.event.cybercrime.common.TypeCybercrime;
 import ch.ge.police.infrastructure.ech051.dto.Ech0051DocumentPayload.BusinessCase;
 import ch.ge.police.infrastructure.ech051.dto.Ech0051DocumentPayload.Event;
@@ -17,6 +18,7 @@ import ch.ge.police.infrastructure.ech051.dto.Ech0051DocumentPayload.ObjectPerso
 import ch.ge.police.infrastructure.ech051.dto.Ech0051DocumentPayload.Person;
 import ch.ge.police.infrastructure.ech051.dto.Ech0051DocumentPayload.PersonLink;
 import ch.ge.police.infrastructure.ech051.dto.Ech0051DocumentPayload.Relations;
+import ch.ge.police.infrastructure.ech051.dto.Ech0051DocumentPayload.RipolReference;
 import ch.ge.police.infrastructure.ech051.dto.Ech0051DocumentPayload.VehicleItem;
 import ch.ge.police.infrastructure.ech051.dto.Ech0051DocumentPayload.VehiclePersonLink;
 import ch.ge.police.infrastructure.ech051.Ech051Constants;
@@ -106,7 +108,13 @@ public class SuisseEpoliceRelationsMapper {
     buildInvolvedPartyVictim(victimRef, eventRef1, businessCaseRef, builder);
 
     String paymentEventRef = eventRef2 != null ? eventRef2 : eventRef1;
-    buildFinancialTransaction(incident, paymentEventRef, victimRef, null, builder);
+    String beneficiaryRef = businessCaseRef != null
+        ? SuisseEpolicePersonMapper.resolveCyberPaymentBeneficiaryPersonKey(businessCaseRef)
+        : null;
+    if (beneficiaryRef != null && findPersonRefByKey(persons, beneficiaryRef) == null) {
+      beneficiaryRef = null;
+    }
+    buildFinancialTransaction(incident, paymentEventRef, victimRef, beneficiaryRef, builder);
 
     ObjectItem undeliveredItem = findUndeliveredItem(objects);
     if (undeliveredItem != null) {
@@ -132,10 +140,26 @@ public class SuisseEpoliceRelationsMapper {
       builder.objectPersonLink(
           ObjectPersonLink.builder()
               .objectRef(identityItem.getKey())
+              .personRole(resolveCyberIdentityPersonRole(identityPersonRef))
               .personRef(identityPersonRef)
               .build()
       );
     }
+  }
+
+  private RipolReference resolveCyberIdentityPersonRole(String identityPersonRef) {
+    if (Ech051Constants.PERSON_KEY_DECLARANT_ENTREPRISE.equals(identityPersonRef)) {
+      return RipolReferenceBuilder.of(
+          Ech051Constants.INVOLVEMENT_TYPE_REPRESENTATIVE_CODE,
+          Ech051Constants.INVOLVEMENT_TYPE_REPRESENTATIVE_LABEL,
+          Ech051Constants.INVOLVEMENT_SOURCE_TABLE
+      );
+    }
+    return RipolReferenceBuilder.of(
+        Ech051Constants.INVOLVEMENT_TYPE_VICTIM_CODE,
+        Ech051Constants.INVOLVEMENT_TYPE_VICTIM_LABEL,
+        Ech051Constants.INVOLVEMENT_SOURCE_TABLE
+    );
   }
 
   private String findEventRef(List<Event> events, String key) {
@@ -222,6 +246,7 @@ public class SuisseEpoliceRelationsMapper {
       builder.objectPersonLink(
           ObjectPersonLink.builder()
               .objectRef(identityItem.getKey())
+              .personRole(resolveCyberIdentityPersonRole(identityPersonRef))
               .personRef(identityPersonRef)
               .build()
       );
@@ -285,7 +310,33 @@ public class SuisseEpoliceRelationsMapper {
       case AUTRE -> tx.accountReceive(trimToNull(achat.getMoyenPaiementAutre()));
     }
 
+    applyMarketplaceAttributes(tx, achat);
+
     builder.financialTransaction(tx.build());
+  }
+
+  private void applyMarketplaceAttributes(FinancialTransaction.FinancialTransactionBuilder tx, AchatNonRecu achat) {
+    if (!Boolean.TRUE.equals(achat.getAchatViaPlaceMarche())) {
+      return;
+    }
+    String platformType = resolvePlatformType(achat);
+    String platformId = trimToNull(achat.getPlateformeId());
+    if (platformType != null) {
+      tx.platformType(platformType);
+    }
+    if (platformId != null) {
+      tx.platformId(platformId);
+    }
+  }
+
+  private String resolvePlatformType(AchatNonRecu achat) {
+    if (achat.getPlateformeUtilisee() == null) {
+      return null;
+    }
+    if (achat.getPlateformeUtilisee() == PlateformeUtilisee.AUTRE) {
+      return trimToNull(achat.getPlateformeAutre());
+    }
+    return achat.getPlateformeUtilisee().getLabel();
   }
 
   private String resolvePaymentType(MoyenPaiement moyenPaiement, String moyenPaiementAutre) {

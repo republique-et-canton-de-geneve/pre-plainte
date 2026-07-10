@@ -40,6 +40,10 @@ public final class Ech051Constants {
   public static final String PERSON_KEY_INFORMANT = "8";
   public static final String IDENTITY_KEY_INFORMANT = "7";
   public static final String PERSON_KEY_ASSURANCE_ENTREPRISE = "3";
+  public static final String PERSON_KEY_CYBER_PAYMENT_BENEFICIARY = "9";
+  public static final String IDENTITY_KEY_CYBER_PAYMENT_BENEFICIARY = "10";
+  public static final String PERSON_KEY_CYBER_PAYMENT_BENEFICIARY_ALT = "10";
+  public static final String IDENTITY_KEY_CYBER_PAYMENT_BENEFICIARY_ALT = "9";
   public static final String BUSINESS_CASE_KEY_ENTREPRISE = "10";
   
   // === Clés objets et véhicules ===
