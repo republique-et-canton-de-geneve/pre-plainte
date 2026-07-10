@@ -574,7 +574,8 @@ class SuisseEpoliceMapperForPPLTest {
     assertThat(doc.getRelations().getObjectPersonLinks()).anyMatch(link ->
         Ech051Constants.OBJECT_KEY_CYBER_VICTIM_IDENTITY.equals(link.getObjectRef())
             && Ech051Constants.PERSON_KEY_DECLARANT_ENTREPRISE.equals(link.getPersonRef())
-            && link.getPersonRole() == null);
+            && link.getPersonRole() != null
+            && Ech051Constants.INVOLVEMENT_TYPE_REPRESENTATIVE_CODE.equals(link.getPersonRole().getSourceId()));
     assertThat(doc.getRelations().getObjectPersonLinks()).noneMatch(link ->
         Ech051Constants.OBJECT_KEY_CYBER_VICTIM_IDENTITY.equals(link.getObjectRef())
             && Ech051Constants.PERSON_KEY_ORGANISATION.equals(link.getPersonRef()));

@@ -303,7 +303,8 @@ class SuisseEpoliceRelationsMapperTest {
     assertTrue(result.getObjectPersonLinks().stream()
         .anyMatch(link -> Ech051Constants.OBJECT_KEY_CYBER_VICTIM_IDENTITY.equals(link.getObjectRef())
             && Ech051Constants.PERSON_KEY_DECLARANT_ENTREPRISE.equals(link.getPersonRef())
-            && link.getPersonRole() == null));
+            && link.getPersonRole() != null
+            && Ech051Constants.INVOLVEMENT_TYPE_REPRESENTATIVE_CODE.equals(link.getPersonRole().getSourceId())));
     assertTrue(result.getObjectPersonLinks().stream()
         .noneMatch(link -> Ech051Constants.OBJECT_KEY_CYBER_VICTIM_IDENTITY.equals(link.getObjectRef())
             && Ech051Constants.PERSON_KEY_ORGANISATION.equals(link.getPersonRef())));
@@ -353,6 +354,7 @@ class SuisseEpoliceRelationsMapperTest {
 
     AchatNonRecu achat = new AchatNonRecu();
     achat.setMoyenPaiement(MoyenPaiement.IBAN);
+    achat.setAchatViaPlaceMarche(true);
     achat.setPlateformeUtilisee(PlateformeUtilisee.RICARDO);
     achat.setPlateformeId("RID-778899");
     achat.setIbanBeneficiaire("CH93-0076-2011-6238-5295-7");
@@ -370,8 +372,8 @@ class SuisseEpoliceRelationsMapperTest {
     assertEquals(0, size(result.getObjectPersonLinks()));
     assertEquals("IBAN", result.getFinancialTransactions().getFirst().getPaymentType());
     assertNull(result.getFinancialTransactions().getFirst().getTransactionNumber());
-    assertNull(result.getFinancialTransactions().getFirst().getPlatformType());
-    assertNull(result.getFinancialTransactions().getFirst().getPlatformId());
+    assertEquals("Ricardo", result.getFinancialTransactions().getFirst().getPlatformType());
+    assertEquals("RID-778899", result.getFinancialTransactions().getFirst().getPlatformId());
     assertEquals("Inconnu", result.getFinancialTransactions().getFirst().getAccountSend());
     assertEquals("CH93-0076-2011-6238-5295-7", result.getFinancialTransactions().getFirst().getAccountReceive());
     assertEquals(Ech051Constants.EVENT_KEY_PAYMENT, result.getFinancialTransactions().getFirst().getEventRef());
@@ -517,7 +519,8 @@ class SuisseEpoliceRelationsMapperTest {
     assertEquals(2, size(result.getObjectPersonLinks()));
     assertTrue(result.getObjectPersonLinks().stream()
         .anyMatch(link -> Ech051Constants.OBJECT_KEY_CYBER_VICTIM_IDENTITY.equals(link.getObjectRef())
-            && link.getPersonRole() == null));
+            && link.getPersonRole() != null
+            && Ech051Constants.INVOLVEMENT_TYPE_VICTIM_CODE.equals(link.getPersonRole().getSourceId())));
     assertNull(result.getFinancialTransactions().getFirst().getPersonReceiveRef());
     assertEquals(Ech051Constants.EVENT_KEY_PAYMENT, result.getFinancialTransactions().getFirst().getEventRef());
     assertEquals("0791234567", result.getFinancialTransactions().getFirst().getAccountReceive());
