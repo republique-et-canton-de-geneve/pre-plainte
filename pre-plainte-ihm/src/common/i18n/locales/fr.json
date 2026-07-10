@@ -347,6 +347,7 @@
   },
   "incidentTypes": {
     "vol": "Vol (sans effraction)",
+    "fichiersObjetsVoles": "Documents liés à/aux l'objet(s) volé(s) (Facture, photo, etc.)",
     "degatDelit": "Dégât-délit général",
     "cybercrime": "Cybercrime",
     "volDansVehicule": "Certains objets que vous allez déclarer ont-ils été volés dans ou sur un véhicule ?",

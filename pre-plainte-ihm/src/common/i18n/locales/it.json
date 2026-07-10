@@ -347,6 +347,7 @@
   },
   "incidentTypes": {
     "vol": "Furto",
+    "fichiersObjetsVoles": "Documenti relativi all'oggetto/i oggetto/i rubato/i (fattura, foto, ecc.)",
     "degatDelit": "Danneggiamento generale",
     "cybercrime": "Criminalità informatica",
     "volDansVehicule": "Alcuni degli oggetti che state per dichiarare sono stati rubati all'interno o sopra un veicolo?",
