@@ -304,7 +304,7 @@ class SuisseEpoliceRelationsMapperTest {
         .anyMatch(link -> Ech051Constants.OBJECT_KEY_CYBER_VICTIM_IDENTITY.equals(link.getObjectRef())
             && Ech051Constants.PERSON_KEY_DECLARANT_ENTREPRISE.equals(link.getPersonRef())
             && link.getPersonRole() != null
-            && Ech051Constants.INVOLVEMENT_TYPE_REPRESENTATIVE_CODE.equals(link.getPersonRole().getSourceId())));
+            && Ech051Constants.INVOLVEMENT_TYPE_REPRESENTATIVE_CODE.equals(link.getPersonRole().getCode())));
     assertTrue(result.getObjectPersonLinks().stream()
         .noneMatch(link -> Ech051Constants.OBJECT_KEY_CYBER_VICTIM_IDENTITY.equals(link.getObjectRef())
             && Ech051Constants.PERSON_KEY_ORGANISATION.equals(link.getPersonRef())));
@@ -520,7 +520,7 @@ class SuisseEpoliceRelationsMapperTest {
     assertTrue(result.getObjectPersonLinks().stream()
         .anyMatch(link -> Ech051Constants.OBJECT_KEY_CYBER_VICTIM_IDENTITY.equals(link.getObjectRef())
             && link.getPersonRole() != null
-            && Ech051Constants.INVOLVEMENT_TYPE_VICTIM_CODE.equals(link.getPersonRole().getSourceId())));
+            && Ech051Constants.INVOLVEMENT_TYPE_VICTIM_CODE.equals(link.getPersonRole().getCode())));
     assertNull(result.getFinancialTransactions().getFirst().getPersonReceiveRef());
     assertEquals(Ech051Constants.EVENT_KEY_PAYMENT, result.getFinancialTransactions().getFirst().getEventRef());
     assertEquals("0791234567", result.getFinancialTransactions().getFirst().getAccountReceive());
