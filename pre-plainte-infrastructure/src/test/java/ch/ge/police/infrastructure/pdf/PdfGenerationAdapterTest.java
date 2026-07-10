@@ -454,6 +454,22 @@ class PdfGenerationAdapterTest {
   }
 
   @Test
+  void shouldIncludeLieuOrigineInPersonalInfoPdf() throws Exception {
+    InformationsPersonnelles ip = basePersonne();
+    ip.setNationalite(new RipolCode("8100", "Suisse"));
+    ip.setLieuOrigine(new RipolCode("6621", "Genève"));
+
+    Vol vol = new Vol();
+    vol.setDateDebutEvent("2025-06-01");
+    vol.setDateFinEvent("2025-06-01");
+
+    String text = extractPdfText(adapter.generatePdf(new PrePlainte("LIEU-ORIGINE", ip, Incident.of(vol))));
+
+    assertPdfTextContains(text, "Lieu d'origine");
+    assertPdfTextContains(text, "Genève");
+  }
+
+  @Test
   void shouldGeneratePdfWithTiers() {
 
     Tiers t = new Tiers();
