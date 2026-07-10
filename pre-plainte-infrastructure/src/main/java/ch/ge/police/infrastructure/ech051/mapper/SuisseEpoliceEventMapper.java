@@ -546,23 +546,11 @@ public class SuisseEpoliceEventMapper {
     }
     MyAbiAdditionalInformationFormatter.addLabeled(details, "URL complète", annonce.getUrlComplete());
     MyAbiAdditionalInformationFormatter.addLabeled(details, "Titre de l'annonce", annonce.getTitreAnnonce());
-    MyAbiAdditionalInformationFormatter.addLabeled(details, "Nom du bailleur", annonce.getNomBailleur());
-    MyAbiAdditionalInformationFormatter.addLabeled(details, "Email bailleur inconnu", formatBoolean(annonce.getEmailBailleurInconnu()));
-    MyAbiAdditionalInformationFormatter.addLabeled(details, "Email bailleur", annonce.getEmailBailleur());
-    MyAbiAdditionalInformationFormatter.addLabeled(details, "Téléphone bailleur inconnu", formatBoolean(annonce.getTelephoneBailleurInconnu()));
-    MyAbiAdditionalInformationFormatter.addLabeled(details, "Téléphone bailleur", annonce.getTelephoneBailleur());
     MyAbiAdditionalInformationFormatter.addLabeled(details, "Adresse du bien immobilier", annonce.getAdresseBienImmobilier());
     if (annonce.getMontantDemande() != null) {
       MyAbiAdditionalInformationFormatter.addLabeled(details, "Montant demandé", annonce.getMontantDemande().toString());
     }
     MyAbiAdditionalInformationFormatter.addLabeled(details, "Mode de paiement demandé", annonce.getModePaiementDemande());
-  }
-
-  private String formatBoolean(Boolean value) {
-    if (value == null) {
-      return null;
-    }
-    return value ? "oui" : "non";
   }
 
   /**

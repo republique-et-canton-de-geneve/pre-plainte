@@ -76,6 +76,8 @@ public class SuisseEpoliceRelationsMapper {
       }
       if (declarationType == DeclarationType.ENTREPRISE) {
         buildEntrepriseRepresentativeRelations(persons, primaryEventRef, businessCaseRef, relationsBuilder);
+      } else if (declarationType == DeclarationType.TIERS) {
+        buildTiersRepresentativeRelations(persons, primaryEventRef, businessCaseRef, relationsBuilder);
       }
       return relationsBuilder.build();
     }
@@ -101,32 +103,11 @@ public class SuisseEpoliceRelationsMapper {
       Relations.RelationsBuilder builder
   ) {
     String victimRef = findPersonRefByKey(persons, Ech051Constants.PERSON_KEY_TIERS);
-    String sellerRef = findCyberAccusedPersonRef(persons, victimRef);
-    String beneficiaryRef = findCyberPaymentBeneficiaryRef(persons, victimRef, sellerRef);
 
     buildInvolvedPartyVictim(victimRef, eventRef1, businessCaseRef, builder);
 
-    if (sellerRef != null) {
-      buildInvolvedPartySupplier(sellerRef, eventRef1, businessCaseRef, builder);
-      buildInvolvedPartyAccused(sellerRef, eventRef1, businessCaseRef, builder);
-      buildVictimSupplierPersonLink(victimRef, sellerRef, builder);
-      buildCyberVictimAccusedPersonLink(victimRef, sellerRef, builder);
-    }
-
-    if (beneficiaryRef != null) {
-      buildInvolvedPartyRecipient(beneficiaryRef, eventRef2, businessCaseRef, builder);
-      buildInvolvedPartyAccused(beneficiaryRef, eventRef2, businessCaseRef, builder);
-      buildCyberRecipientPersonLink(victimRef, beneficiaryRef, builder);
-      buildCyberVictimAccusedPersonLink(victimRef, beneficiaryRef, builder);
-      if (sellerRef != null) {
-        buildSupplierRecipientPersonLink(sellerRef, beneficiaryRef, builder);
-        buildCyberVictimAccusedPersonLink(sellerRef, beneficiaryRef, builder);
-      }
-    }
-
-    String paymentReceiverRef = beneficiaryRef != null ? beneficiaryRef : sellerRef;
     String paymentEventRef = eventRef2 != null ? eventRef2 : eventRef1;
-    buildFinancialTransaction(incident, paymentEventRef, victimRef, paymentReceiverRef, builder);
+    buildFinancialTransaction(incident, paymentEventRef, victimRef, null, builder);
 
     ObjectItem undeliveredItem = findUndeliveredItem(objects);
     if (undeliveredItem != null) {
@@ -343,16 +324,8 @@ public class SuisseEpoliceRelationsMapper {
       Relations.RelationsBuilder builder
   ) {
     String victimRef = findPersonRefByKey(persons, Ech051Constants.PERSON_KEY_TIERS);
-    String accusedRef = findCyberAccusedPersonRef(persons, victimRef);
 
     buildInvolvedPartyVictim(victimRef, eventRef, businessCaseRef, builder);
-
-    if (accusedRef != null) {
-      buildInvolvedPartySupplier(accusedRef, eventRef, businessCaseRef, builder);
-      buildInvolvedPartyAccused(accusedRef, eventRef, businessCaseRef, builder);
-      buildVictimSupplierPersonLink(victimRef, accusedRef, builder);
-      buildCyberVictimAccusedPersonLink(victimRef, accusedRef, builder);
-    }
 
     ObjectItem amountItem = findFraudulentOrderAmountItem(objects);
     if (amountItem != null) {
@@ -402,11 +375,7 @@ public class SuisseEpoliceRelationsMapper {
       Relations.RelationsBuilder builder
   ) {
     String victimRef = findPersonRefByKey(persons, Ech051Constants.PERSON_KEY_TIERS);
-    String accusedRef = findCyberAccusedPersonRef(persons, victimRef);
     buildInvolvedPartyVictim(victimRef, eventRef, businessCaseRef, builder);
-    buildInvolvedPartyAccused(accusedRef, eventRef, businessCaseRef, builder);
-    buildCyberVictimAccusedPersonLink(victimRef, accusedRef, builder);
-    buildFinancialTransaction(incident, eventRef, victimRef, accusedRef, builder);
   }
 
   private void buildFinancialTransaction(
@@ -649,6 +618,25 @@ public class SuisseEpoliceRelationsMapper {
     buildPersonLinkInformant(informantRef, organisationRef, builder);
     buildInvolvedPartyRepresentative(declarantRef, eventRef, businessCaseRef, builder);
     buildInvolvedPartyInformant(informantRef, eventRef, businessCaseRef, builder);
+  }
+
+  private void buildTiersRepresentativeRelations(
+      List<Person> persons,
+      String eventRef,
+      String businessCaseRef,
+      Relations.RelationsBuilder builder
+  ) {
+    String tiersRef = findPersonRefByKey(persons, Ech051Constants.PERSON_KEY_TIERS);
+    if (tiersRef == null && !persons.isEmpty()) {
+      tiersRef = persons.getFirst().getKey();
+    }
+    String declarantRef = findPersonRefByKey(persons, Ech051Constants.PERSON_KEY_DECLARANT);
+    if (declarantRef == null && persons.size() > 1) {
+      declarantRef = persons.get(1).getKey();
+    }
+
+    buildPersonLink(declarantRef, tiersRef, builder);
+    buildInvolvedPartyRepresentative(declarantRef, eventRef, businessCaseRef, builder);
   }
 
   /**
