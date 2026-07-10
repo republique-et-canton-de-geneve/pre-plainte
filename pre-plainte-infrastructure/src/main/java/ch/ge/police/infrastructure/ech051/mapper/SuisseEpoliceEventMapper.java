@@ -255,18 +255,6 @@ public class SuisseEpoliceEventMapper {
     return List.of(deliveryEvent, secondEvent);
   }
 
-  private ActionPlace buildUnknownCountryActionPlace() {
-    RipolLocation unknownCountry = RipolLocation.builder()
-        .code(Ech051Constants.COUNTRY_UNKNOWN_RIPOL_CODE)
-        .label(Ech051Constants.COUNTRY_UNKNOWN_LABEL)
-        .sourceTable("EXT_GPNATI")
-        .zipCode(null)
-        .build();
-    return ActionPlace.builder()
-        .country(unknownCountry)
-        .build();
-  }
-
   private String resolveCyberDescription(Cybercrime cybercrime) {
     if (cybercrime == null) {
       return null;
