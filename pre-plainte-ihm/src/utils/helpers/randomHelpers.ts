@@ -5,6 +5,7 @@ const AEL_DEMANDE_ID_PREFIX = "AEL-PPL-";
 const AEL_DEMANDE_ID_RANDOM_LENGTH = 10;
 const AEL_DEMANDE_ID_ALPHANUM = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 let fallbackUuidCounter = 0;
+let fallbackAelCounter = 0;
 
 const TYPE_INCIDENT_AEL_CODE: Record<string, string> = {
   vol: "V",
@@ -27,6 +28,12 @@ export function generateUuid(): string {
   return `fallback-${Date.now().toString(UUID_FALLBACK_RADIX)}-${fallbackUuidCounter.toString(UUID_FALLBACK_RADIX)}`;
 }
 
+function fallbackAelSuffix(): string {
+  fallbackAelCounter += 1;
+  const raw = `${Date.now().toString(UUID_FALLBACK_RADIX)}${fallbackAelCounter.toString(UUID_FALLBACK_RADIX)}`.toUpperCase();
+  return raw.padEnd(AEL_DEMANDE_ID_RANDOM_LENGTH, "A").slice(0, AEL_DEMANDE_ID_RANDOM_LENGTH);
+}
+
 function randomAelSuffix(): string {
   if (typeof crypto !== "undefined" && typeof crypto.getRandomValues === "function") {
     const bytes = new Uint8Array(AEL_DEMANDE_ID_RANDOM_LENGTH);
@@ -34,9 +41,7 @@ function randomAelSuffix(): string {
     return Array.from(bytes, byte => AEL_DEMANDE_ID_ALPHANUM[byte % AEL_DEMANDE_ID_ALPHANUM.length]).join("");
   }
 
-  return Array.from({ length: AEL_DEMANDE_ID_RANDOM_LENGTH }, () =>
-    AEL_DEMANDE_ID_ALPHANUM[Math.floor(Math.random() * AEL_DEMANDE_ID_ALPHANUM.length)],
-  ).join("");
+  return fallbackAelSuffix();
 }
 
 export function generateAelDemandeId(typeIncident?: string | null): string {

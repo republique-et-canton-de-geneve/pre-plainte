@@ -2,6 +2,7 @@ package ch.ge.police.infrastructure.ech051.mapper;
 
 import ch.ge.police.core.domain.model.event.cybercrime.Cybercrime;
 import ch.ge.police.core.domain.model.event.cybercrime.common.AchatNonRecu;
+import ch.ge.police.core.domain.model.event.cybercrime.common.FausseAnnonce;
 import ch.ge.police.core.domain.model.event.cybercrime.common.MoyenPaiement;
 import ch.ge.police.core.domain.model.event.cybercrime.common.PlateformeUtilisee;
 import ch.ge.police.core.domain.model.event.cybercrime.common.TypeCybercrime;
@@ -309,6 +310,37 @@ class SuisseEpoliceRelationsMapperTest {
   }
 
   @Test
+  void shouldBuildTiersRepresentativeRelationsForCyberFausseAnnonce() {
+    Person tier = person(Ech051Constants.PERSON_KEY_TIERS);
+    Person declarant = person(Ech051Constants.PERSON_KEY_DECLARANT);
+
+    FausseAnnonce annonce = new FausseAnnonce();
+    annonce.setNomBailleur("Arnaqueur");
+
+    Cybercrime cybercrime = new Cybercrime();
+    cybercrime.setTypeCybercrime(TypeCybercrime.FAUSSE_ANNONCE);
+    cybercrime.setFausseAnnonce(annonce);
+
+    Relations result = mapper.buildRelations(
+        List.of(tier, declarant),
+        List.of(event(Ech051Constants.EVENT_KEY)),
+        List.of(),
+        List.of(),
+        businessCase("B1"),
+        DeclarationType.TIERS,
+        cybercrime
+    );
+
+    assertTrue(result.getPersonLinks().stream()
+        .anyMatch(link -> Ech051Constants.PERSON_KEY_DECLARANT.equals(link.getPerson1Ref())
+            && Ech051Constants.PERSON_KEY_TIERS.equals(link.getPerson2Ref())));
+    assertTrue(result.getInvolvedParties().stream()
+        .anyMatch(party -> Ech051Constants.PERSON_KEY_TIERS.equals(party.getPersonRef())));
+    assertTrue(result.getInvolvedParties().stream()
+        .anyMatch(party -> Ech051Constants.PERSON_KEY_DECLARANT.equals(party.getPersonRef())));
+  }
+
+  @Test
   void shouldBuildFinancialTransactionForAchatNonRecu() {
     Person victim = person(Ech051Constants.PERSON_KEY_TIERS);
     Person accused = Person.builder()
@@ -344,7 +376,7 @@ class SuisseEpoliceRelationsMapperTest {
     assertEquals("CH93-0076-2011-6238-5295-7", result.getFinancialTransactions().getFirst().getAccountReceive());
     assertEquals(Ech051Constants.EVENT_KEY_PAYMENT, result.getFinancialTransactions().getFirst().getEventRef());
     assertEquals(Ech051Constants.PERSON_KEY_TIERS, result.getFinancialTransactions().getFirst().getPersonSendRef());
-    assertEquals("8", result.getFinancialTransactions().getFirst().getPersonReceiveRef());
+    assertNull(result.getFinancialTransactions().getFirst().getPersonReceiveRef());
   }
 
   @Test
@@ -486,11 +518,11 @@ class SuisseEpoliceRelationsMapperTest {
     assertTrue(result.getObjectPersonLinks().stream()
         .anyMatch(link -> Ech051Constants.OBJECT_KEY_CYBER_VICTIM_IDENTITY.equals(link.getObjectRef())
             && link.getPersonRole() == null));
-    assertEquals("10", result.getFinancialTransactions().getFirst().getPersonReceiveRef());
+    assertNull(result.getFinancialTransactions().getFirst().getPersonReceiveRef());
     assertEquals(Ech051Constants.EVENT_KEY_PAYMENT, result.getFinancialTransactions().getFirst().getEventRef());
     assertEquals("0791234567", result.getFinancialTransactions().getFirst().getAccountReceive());
     assertNull(result.getFinancialTransactions().getFirst().getTransactionNumber());
-    assertTrue(result.getPersonLinks().size() >= 4);
+    assertTrue(result.getPersonLinks().isEmpty());
   }
 
   private Relations buildFinancialTransactionRelations(

@@ -93,7 +93,7 @@ class SuisseEpoliceMapperForPPLTest {
   }
 
   @Test
-  void toDocument_mapsCyberAchatWithDirectEnterpriseSellerAsNaturalPerson() {
+  void toDocument_mapsCyberAchatWithDirectEnterpriseSeller_doesNotMapSellerPerson() {
     AchatNonRecu achat = new AchatNonRecu();
     achat.setNomVendeur("Nom de famille du venduer");
     achat.setPrenomVendeur("Prénom du vendeur");
@@ -113,14 +113,11 @@ class SuisseEpoliceMapperForPPLTest {
     PrePlainte p = new PrePlainte("CYB-ENT", basePersonne(), Incident.of(cyber));
     Ech0051DocumentPayload doc = mapper.toDocument(p);
 
-    Ech0051DocumentPayload.Person seller = doc.getPersons().stream()
-        .filter(person -> person != null && person.getType() == PersonType.NATURAL)
-        .filter(person -> "Prénom du vendeur".equals(person.getNaturalIdentity().getFirstName()))
-        .findFirst()
-        .orElseThrow();
-
-    assertThat(seller.getCommunication().getUri()).isEqualTo("www.site.ch");
-    assertThat(seller.getCommunication().getUriProvider()).isEqualTo(Ech051Constants.URI_PROVIDER_ENTREPRISE_VENDEUR);
+    assertThat(doc.getPersons().stream()
+        .filter(person -> person != null
+            && person.getNaturalIdentity() != null
+            && "Prénom du vendeur".equals(person.getNaturalIdentity().getFirstName()))
+        .findFirst()).isEmpty();
     assertThat(doc.getPersons().stream().filter(
         person -> person != null && person.getType() == PersonType.LEGAL))
         .extracting(person -> person.getLegalIdentity().getCurrentName())
@@ -169,15 +166,10 @@ class SuisseEpoliceMapperForPPLTest {
     assertThat(victim.getDeliveredAbroad()).isTrue();
     assertThat(victim.getCreditCardUsed()).isFalse();
 
-    Ech0051DocumentPayload.Person counterparty = doc.getPersons().stream()
+    assertThat(doc.getPersons().stream()
         .filter(person -> person.getNaturalIdentity() != null
             && Ech051Constants.IDENTITY_CATEGORY_UNKNOWN.equals(person.getNaturalIdentity().getIdentityCategory()))
-        .findFirst()
-        .orElseThrow();
-    assertThat(counterparty.getAdditionalInformation()).isEqualTo("Boutique en ligne");
-    assertThat(counterparty.getNaturalIdentity().getOfficialName()).isEqualTo("Dupont");
-    assertThat(counterparty.getAddresses()).hasSize(2);
-    assertThat(counterparty.getAddresses().getFirst().getAddressLine()).contains("Paris");
+        .findFirst()).isEmpty();
 
     assertThat(doc.getRelations().getFinancialTransactions()).isEmpty();
     assertThat(doc.getRelations().getEventObjectLinks()).isNotEmpty();
@@ -187,7 +179,7 @@ class SuisseEpoliceMapperForPPLTest {
   }
 
   @Test
-  void toDocument_mapsCyberFausseAnnonce_naturalCounterparty() {
+  void toDocument_mapsCyberFausseAnnonce_withoutCounterpartyPerson() {
     FausseAnnonce f = new FausseAnnonce();
     f.setTitreAnnonce("Appartement");
     f.setNomBailleur("Martin");
@@ -216,8 +208,14 @@ class SuisseEpoliceMapperForPPLTest {
     assertThat(doc.getEvents().getFirst().getAdditionalInformation())
         .startsWith("Autre indications;")
         .contains("Arnaque au loyer")
-        .contains("URL complète:");
-    assertThat(doc.getPersons().stream().filter(x -> x != null && x.getType() == PersonType.NATURAL).count()).isGreaterThanOrEqualTo(2);
+        .contains("URL complète:")
+        .doesNotContain("Nom du bailleur")
+        .doesNotContain("Martin");
+    assertThat(doc.getPersons().stream()
+        .filter(person -> person != null
+            && person.getNaturalIdentity() != null
+            && Ech051Constants.IDENTITY_CATEGORY_UNKNOWN.equals(person.getNaturalIdentity().getIdentityCategory()))
+        .findFirst()).isEmpty();
   }
 
   @Test
@@ -280,23 +278,11 @@ class SuisseEpoliceMapperForPPLTest {
     assertThat(victim.getReporterIdCopySent()).isFalse();
     assertThat(victim.getPerpetratorIdCopyReceived()).isFalse();
 
-    Ech0051DocumentPayload.Person seller = doc.getPersons().stream()
-        .filter(person -> person.getNaturalIdentity() != null
-            && "Victor".equals(person.getNaturalIdentity().getFirstName()))
-        .findFirst()
-        .orElseThrow();
-    assertThat(seller.getCommunication().getUriProvider()).isEqualTo("Ricardo");
-    assertThat(seller.getCommunication().getUri()).isEqualTo("ricardo-99");
-
-    assertThat(doc.getPersons().stream().anyMatch(person ->
-        person.getRemark() != null && person.getRemark().contains("ACME"))).isTrue();
-
     assertThat(doc.getRelations().getEventObjectLinks()).hasSize(1);
     assertThat(doc.getRelations().getObjectPersonLinks()).hasSize(1);
     assertThat(doc.getRelations().getObjectPersonLinks().getFirst().getObjectRef())
         .isEqualTo(Ech051Constants.OBJECT_KEY_CYBER_UNDELIVERED_ITEM);
-    assertThat(doc.getRelations().getFinancialTransactions().getFirst().getPersonReceiveRef())
-        .isNotEqualTo(seller.getKey());
+    assertThat(doc.getRelations().getFinancialTransactions().getFirst().getPersonReceiveRef()).isNull();
     assertThat(doc.getRelations().getFinancialTransactions().getFirst().getEventRef())
         .isEqualTo(Ech051Constants.EVENT_KEY_PAYMENT);
   }
@@ -409,14 +395,13 @@ class SuisseEpoliceMapperForPPLTest {
     assertThat(payment.getAccountReceive()).isEqualTo("adresse-email@vers-laquelle-argenta-ete.vire.ch");
     assertThat(payment.getTransactionNumber()).isEqualTo("074343243");
     assertThat(payment.getEventRef()).isEqualTo(Ech051Constants.EVENT_KEY_PAYMENT);
+    assertThat(payment.getPersonReceiveRef()).isNull();
 
-    Ech0051DocumentPayload.Person seller = doc.getPersons().stream()
-        .filter(person -> person != null && person.getType() == PersonType.NATURAL)
-        .filter(person -> "Prénom du vendeur".equals(person.getNaturalIdentity().getFirstName()))
-        .findFirst()
-        .orElseThrow();
-    assertThat(seller.getCommunication().getUri()).isEqualTo("www.site.ch");
-    assertThat(seller.getCommunication().getUriProvider()).isEqualTo(Ech051Constants.URI_PROVIDER_ENTREPRISE_VENDEUR);
+    assertThat(doc.getPersons().stream()
+        .filter(person -> person != null
+            && person.getNaturalIdentity() != null
+            && "Prénom du vendeur".equals(person.getNaturalIdentity().getFirstName()))
+        .findFirst()).isEmpty();
   }
 
   @Test
@@ -434,7 +419,7 @@ class SuisseEpoliceMapperForPPLTest {
   }
 
   @Test
-  void toDocument_commandeFrauduleuse_mapsCounterpartyPrestataire() {
+  void toDocument_commandeFrauduleuse_doesNotMapCounterpartyPerson() {
     CommandeFrauduleuse cf = new CommandeFrauduleuse();
     cf.setPrestataire("Ma boutique");
     cf.setDateDecouverte("2025-07-01");
@@ -456,7 +441,7 @@ class SuisseEpoliceMapperForPPLTest {
         p -> p != null
             && "Ma boutique".equals(p.getAdditionalInformation())
             && p.getNaturalIdentity() != null
-            && "Martin".equals(p.getNaturalIdentity().getOfficialName()))).isTrue();
+            && "Martin".equals(p.getNaturalIdentity().getOfficialName()))).isFalse();
   }
 
   @Test
