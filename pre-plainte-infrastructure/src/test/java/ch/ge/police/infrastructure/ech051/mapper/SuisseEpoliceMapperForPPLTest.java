@@ -154,6 +154,7 @@ class SuisseEpoliceMapperForPPLTest {
     assertThat(doc.getEvents()).hasSize(2);
     assertThat(doc.getEvents().getFirst().getFacts()).isNull();
     assertThat(doc.getEvents().getFirst().getAdditionalInformation()).isEqualTo("Commande frauduleuse");
+    assertThat(doc.getEvents().getFirst().getActionPlace()).isNotNull();
     assertThat(doc.getEvents().get(1).getActionPlace()).isNull();
 
     assertThat(doc.getObjects().stream().map(Ech0051DocumentPayload.ObjectItem::getKey))
@@ -262,6 +263,7 @@ class SuisseEpoliceMapperForPPLTest {
     assertThat(doc.getEvents().get(1).getKey()).isEqualTo(Ech051Constants.EVENT_KEY_PAYMENT);
     assertThat(doc.getEvents().get(1).getFacts()).isNull();
     assertThat(doc.getEvents().get(1).getAdditionalInformation()).isEqualTo("Colis vide");
+    assertThat(doc.getEvents().getFirst().getActionPlace()).isNotNull();
     assertThat(doc.getEvents().get(1).getActionPlace()).isNull();
 
     assertThat(doc.getObjects()).hasSize(1);
