@@ -193,6 +193,7 @@ public class PdfGenerationAdapter implements PdfGenerationUseCase {
     addIfNotNull(rows, "Prénom", ip.getPrenom());
     addIfNotNull(rows, "Genre", ip.getGenreLabel());
     addIfNotNull(rows, "Nationalité", ip.getNationaliteLabel());
+    addIfNotNull(rows, "Lieu d'origine", ip.getLieuOrigineLabel());
     addIfNotNull(rows, "Titre de séjour",
       ip.getTitreSejour() != null ? ip.getTitreSejour().getLabel() : null);
     addIfNotNull(rows, "Date de naissance", formatDate(ip.getDateNaissance()));
