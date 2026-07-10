@@ -347,6 +347,7 @@
   },
   "incidentTypes": {
     "vol": "Theft",
+    "fichiersObjetsVoles": "Documents related to the stolen object(s) (invoice, photo, etc.)",
     "degatDelit": "General hit-and-run / damage offence",
     "cybercrime": "Cybercrime",
     "volDansVehicule": "Were any of the items you are going to declare stolen in or on a vehicle?",

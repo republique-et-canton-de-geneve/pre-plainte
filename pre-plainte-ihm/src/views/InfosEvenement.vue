@@ -158,7 +158,7 @@
       <div v-if="showEventFilesUpload" class="mb-8">
         <PieceJointe
           v-model="fichiers"
-          :label="t('dommages.fichiers')"
+          :label="eventFilesUploadLabel"
           :subtitle="typeIncident === 'degat-delit' ? t('dommages.photosRecommandees') : ''"
         />
       </div>
@@ -376,6 +376,12 @@ const showEventFilesUpload = computed(() => {
   }
   return typeIncident.value !== DEGAT_DELIT || !requiresConstatQuestion(typeDommage.value);
 });
+
+const eventFilesUploadLabel = computed(() =>
+  typeIncident.value === TYPE_INCIDENT.VOL
+    ? t("incidentTypes.fichiersObjetsVoles")
+    : t("dommages.fichiers"),
+);
 
 const createInputHandler = (maskFn: (e: InputEvent, value: any) => void, target: any) => (e: InputEvent) => {
   maskFn(e, target);
