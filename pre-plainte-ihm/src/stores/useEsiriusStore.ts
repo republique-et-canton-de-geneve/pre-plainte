@@ -17,6 +17,7 @@ export const useEsiriusStore = defineStore("esirius", {
     loading: false,
     error: null as string | null,
     errorMessage: "",
+    availabilitiesLoadId: 0,
   }),
 
   getters: {
@@ -45,44 +46,74 @@ export const useEsiriusStore = defineStore("esirius", {
     },
 
     async loadAllAvailabilitiesForPPEL(begin?: string, period = 15) {
+      const loadId = ++this.availabilitiesLoadId;
       this.startLoading();
-      this.allAvailabilities = [];
 
       if (!begin) {
         const now = new Date();
         now.setHours(now.getHours() + 1);
-        begin = new Date(now.getTime() - now.getTimezoneOffset() * MILLISECONDS_IN_MINUTE).toISOString().slice(0, ISO_SLICE_LENGTH);
+        begin = new Date(now.getTime() - now.getTimezoneOffset() * MILLISECONDS_IN_MINUTE)
+          .toISOString()
+          .slice(0, ISO_SLICE_LENGTH);
       }
 
       try {
-        const services = await EsiriusService.getServiceListBySiteCode(PPEL_CODE);
+        const services =
+          this.services.length > 0
+            ? this.services
+            : await EsiriusService.getServiceListBySiteCode(PPEL_CODE);
+
+        if (loadId !== this.availabilitiesLoadId) {
+          return;
+        }
+
+        if (this.services.length === 0) {
+          this.services = services;
+        }
+
         const availableServices = services.filter((s: any) => s.existAvailabilities);
-
-        const results = await Promise.all(
+        const results = await Promise.allSettled(
           availableServices.map(async (service: any) => {
-            const availabilities = await EsiriusService.getAvailability(
-              PPEL_CODE,
-              service.key,
-              begin,
-              String(period),
-            );
+            try {
+              const availabilities = await EsiriusService.getAvailability(
+                PPEL_CODE,
+                service.key,
+                begin,
+                String(period),
+              );
 
-            if (Array.isArray(availabilities) && availabilities.length > 0) {
-              return {
-                serviceName: service.name,
-                serviceId: service.key,
-                availabilities,
-              };
+              if (Array.isArray(availabilities) && availabilities.length > 0) {
+                return {
+                  serviceName: service.name,
+                  serviceId: service.key,
+                  availabilities,
+                };
+              }
+              return null;
+            } catch {
+              return null;
             }
-            return null;
           }),
         );
 
-        this.allAvailabilities = results.filter(r => r && r.availabilities.length > 0) as any[];
+        if (loadId !== this.availabilitiesLoadId) {
+          return;
+        }
+
+        this.allAvailabilities = results.flatMap(result => {
+          if (result.status !== "fulfilled" || result.value === null) {
+            return [];
+          }
+          return [result.value];
+        });
       } catch (err: any) {
-        this.handleError(err);
+        if (loadId === this.availabilitiesLoadId) {
+          this.handleError(err);
+        }
       } finally {
-        this.stopLoading();
+        if (loadId === this.availabilitiesLoadId) {
+          this.stopLoading();
+        }
       }
     },
 
