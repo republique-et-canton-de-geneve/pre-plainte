@@ -352,6 +352,7 @@ const onSuggestNearest = (service: any) => {
 <style scoped>
 .title-mobile {
   font-weight: 400;
+  padding:10px; 
 }
 
 @media (max-width: 959px) {

@@ -1,6 +1,6 @@
 <template>
   <v-container fluid>
-    <div class="top-bar mb-4">
+    <div class="top-bar mb-4 px-2">
       <div class="top-bar-left">
         <h1 class="text-h1 text-md-h2 d-md-none mobile-title">
           {{ t("titreApplication.prePlainte") }}
