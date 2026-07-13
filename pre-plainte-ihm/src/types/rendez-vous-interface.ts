@@ -28,6 +28,7 @@ export interface Availability {
   beginDateTime: string;
   endDateTime: string;
   serviceId: string;
+  serviceName?: string;
   siteCode: string;
   resource?: AvailabilityResource;
 }

@@ -2,7 +2,10 @@ import { describe, expect, it } from "vitest";
 import {
   filterCompatibleCreneaux,
   filterServicesByIncident,
+  findClosestAvailableDate,
+  formatCreneauLieu,
   getRendezVousWarning,
+  isSameSelectedDate,
 } from "@/utils/workflows/rendez-vous-workflow";
 import {
   availabilitiesRendezVousWorkflow,
@@ -47,5 +50,36 @@ describe("regles metier du workflow rendez-vous", () => {
         expect(warning?.messageKey).toBe(example.errorMessage);
       });
     });
+  });
+});
+
+describe("formatCreneauLieu", () => {
+  it("affiche le poste apres le prefixe RDV", () => {
+    expect(formatCreneauLieu("RDV - Poste de police de Carouge")).toBe("Poste de police de Carouge");
+  });
+
+  it("utilise le serviceName si la ressource vaut seulement RDV", () => {
+    expect(formatCreneauLieu("RDV", "Pré-plainte pour vol - Cornavin")).toBe("Pré-plainte pour vol - Cornavin");
+  });
+
+  it("conserve le premier segment si ce n'est pas RDV", () => {
+    expect(formatCreneauLieu("Poste 1 - Salle A")).toBe("Poste 1");
+  });
+});
+
+describe("findClosestAvailableDate", () => {
+  it("conserve la date si elle reste disponible", () => {
+    expect(findClosestAvailableDate("2026-07-15", ["2026-07-10", "2026-07-15", "2026-07-20"])).toBe("2026-07-15");
+  });
+
+  it("choisit la date la plus proche si la selection n'est plus disponible", () => {
+    expect(findClosestAvailableDate("2026-07-15", ["2026-07-10", "2026-07-20"])).toBe("2026-07-10");
+  });
+});
+
+describe("isSameSelectedDate", () => {
+  it("filtre correctement une date ISO", () => {
+    expect(isSameSelectedDate("20260715 10:00", "2026-07-15")).toBe(true);
+    expect(isSameSelectedDate("20260716 10:00", "2026-07-15")).toBe(false);
   });
 });
