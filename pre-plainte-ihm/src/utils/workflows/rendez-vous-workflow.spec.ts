@@ -68,7 +68,13 @@ describe("formatCreneauLieu", () => {
   });
 
   it("conserve le premier segment si ce n'est pas RDV", () => {
-    expect(formatCreneauLieu("Poste 1 - Salle A")).toBe("Poste 1");
+    expect(formatCreneauLieu("Poste 1 - Salle A")).toBe("Poste");
+  });
+
+  it("retire l'index technique de la ressource eSirius", () => {
+    expect(formatCreneauLieu("Plainpalais 1")).toBe("Plainpalais");
+    expect(formatCreneauLieu("Pâquis 2")).toBe("Pâquis");
+    expect(formatCreneauLieu("Servette 1")).toBe("Servette");
   });
 });
 
