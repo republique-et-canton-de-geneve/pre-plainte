@@ -76,6 +76,14 @@ const esiriusStore = useEsiriusStore();
 
 const traductionTousLesPostes = "rendezVous.tousLesPostes";
 
+const DATE_LOCALE_BY_APP_LOCALE: Record<string, string> = {
+  fr: "fr-CH",
+  de: "de-CH",
+  en: "en-GB",
+  it: "it-CH",
+  pt: "pt-PT",
+};
+
 const { value: dateSouhaitee, errorMessage: dateSouhaiteeError } = useField<string>("dateSouhaitee");
 
 const dateSouhaiteeSelection = computed({
@@ -88,7 +96,7 @@ const dateSouhaiteeSelection = computed({
 });
 
 const dateOptions = computed(() => {
-  const formatter = new Intl.DateTimeFormat(locale.value, {
+  const formatter = new Intl.DateTimeFormat(DATE_LOCALE_BY_APP_LOCALE[locale.value] ?? locale.value, {
     weekday: "long",
     day: "2-digit",
     month: "2-digit",
