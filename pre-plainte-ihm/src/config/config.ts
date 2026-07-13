@@ -22,15 +22,15 @@ export function resolveApiUrl(path: string): string {
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
   const backendUrl = getApiBaseUrl()?.trim();
 
-  if (shouldUseRelativeApiUrl(backendUrl)) {
+  if (shouldUseRelativeApiUrl(backendUrl) || backendUrl === undefined) {
     return normalizedPath;
   }
 
-  return `${backendUrl!.replace(/\/$/, "")}${normalizedPath}`;
+  return `${backendUrl.replace(/\/$/, "")}${normalizedPath}`;
 }
 
 function shouldUseRelativeApiUrl(backendUrl?: string): boolean {
-  if (typeof globalThis.location === "undefined") {
+  if (globalThis.location === undefined) {
     return !backendUrl;
   }
 

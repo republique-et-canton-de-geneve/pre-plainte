@@ -32,6 +32,7 @@ const EMAIL_CHALLENGE_KEY_CYPRESS = "challenge-cypress";
 const CONTINUER_RENDEZ_VOUS_SELECTOR = '[data-cy="continuer-rendez-vous"]';
 const CONTINUER_VERIFICATION_EMAIL_SELECTOR = '[data-cy="continuer-verification-email"]';
 const CONTINUER_INFORMATIONS_GENERALES_SELECTOR = '[data-cy="continuer-informations-generales"]';
+const CONTINUER_EVENEMENT_SELECTOR = '[data-cy="continuer-evenement"]';
 const CONFIRMER_DISCLAIMER_SELECTOR = '[data-cy="confirmer-disclaimer"]';
 const TYPE_PERSONNE_NATIVE_SELECTOR = '[data-cy="type-personne-native"]';
 const ARIA_DISABLED_ATTRIBUTE = "aria-disabled";
@@ -579,11 +580,11 @@ When("je continue après les informations personnelles", () => {
 });
 
 When("je continue après les informations sur l'événement", () => {
-  cy.get('[data-cy="continuer-evenement"]').filter(":visible").first().click();
+  cy.get(CONTINUER_EVENEMENT_SELECTOR).filter(":visible").first().click();
 });
 
 When("je renseigne un vol simple nominal", () => {
-  cy.get('[data-cy="continuer-evenement"]', { timeout: EMAIL_CHALLENGE_TIMEOUT_MS }).filter(":visible").first().should(bevisible);
+  cy.get(CONTINUER_EVENEMENT_SELECTOR, { timeout: EMAIL_CHALLENGE_TIMEOUT_MS }).filter(":visible").first().should(bevisible);
   cy.contains("fieldset", "Certains objets que vous allez déclarer", { timeout: EMAIL_CHALLENGE_TIMEOUT_MS }).should(bevisible);
   selectRadio("Certains objets que vous allez déclarer", "Non");
   selectVisibleOption("Catégorie d'objet", "Informatique");
@@ -672,7 +673,7 @@ Then("je reste sur l'étape informations personnelles", () => {
 
 Then("je reste sur l'étape informations sur l'événement", () => {
   cy.contains("Informations sur l'événement").should(bevisible);
-  cy.get('[data-cy="continuer-evenement"]').filter(":visible").first().should(bevisible);
+  cy.get(CONTINUER_EVENEMENT_SELECTOR).filter(":visible").first().should(bevisible);
   cy.window().its("localStorage").invoke("getItem", "pp-step").should("eq", String(STEP_EVENEMENT));
 });
 
