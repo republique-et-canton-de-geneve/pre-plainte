@@ -54,12 +54,17 @@ describe("regles metier du workflow rendez-vous", () => {
 });
 
 describe("formatCreneauLieu", () => {
+  const ressourceRdvSeule = "RDV";
+  const ressourceRdvAvecPoste = "RDV - Poste de police de Carouge";
+  const posteCarouge = "Poste de police de Carouge";
+  const serviceCornavin = "Pré-plainte pour vol - Cornavin";
+
   it("affiche le poste apres le prefixe RDV", () => {
-    expect(formatCreneauLieu("RDV - Poste de police de Carouge")).toBe("Poste de police de Carouge");
+    expect(formatCreneauLieu(ressourceRdvAvecPoste)).toBe(posteCarouge);
   });
 
   it("utilise le serviceName si la ressource vaut seulement RDV", () => {
-    expect(formatCreneauLieu("RDV", "Pré-plainte pour vol - Cornavin")).toBe("Pré-plainte pour vol - Cornavin");
+    expect(formatCreneauLieu(ressourceRdvSeule, serviceCornavin)).toBe(serviceCornavin);
   });
 
   it("conserve le premier segment si ce n'est pas RDV", () => {
@@ -68,18 +73,26 @@ describe("formatCreneauLieu", () => {
 });
 
 describe("findClosestAvailableDate", () => {
+  const dateSelectionnee = "2026-07-15";
+  const dateProcheAvant = "2026-07-10";
+  const dateProcheApres = "2026-07-20";
+
   it("conserve la date si elle reste disponible", () => {
-    expect(findClosestAvailableDate("2026-07-15", ["2026-07-10", "2026-07-15", "2026-07-20"])).toBe("2026-07-15");
+    expect(findClosestAvailableDate(dateSelectionnee, [dateProcheAvant, dateSelectionnee, dateProcheApres])).toBe(
+      dateSelectionnee,
+    );
   });
 
   it("choisit la date la plus proche si la selection n'est plus disponible", () => {
-    expect(findClosestAvailableDate("2026-07-15", ["2026-07-10", "2026-07-20"])).toBe("2026-07-10");
+    expect(findClosestAvailableDate(dateSelectionnee, [dateProcheAvant, dateProcheApres])).toBe(dateProcheAvant);
   });
 });
 
 describe("isSameSelectedDate", () => {
+  const dateIso = "2026-07-15";
+
   it("filtre correctement une date ISO", () => {
-    expect(isSameSelectedDate("20260715 10:00", "2026-07-15")).toBe(true);
-    expect(isSameSelectedDate("20260716 10:00", "2026-07-15")).toBe(false);
+    expect(isSameSelectedDate("20260715 10:00", dateIso)).toBe(true);
+    expect(isSameSelectedDate("20260716 10:00", dateIso)).toBe(false);
   });
 });

@@ -772,11 +772,11 @@ class PdfGenerationAdapterTest {
     handleVol.invoke(adapter, rows, vol);
 
     assertTrue(rows.stream().anyMatch(row ->
-        "Type de l'objet".equals(row[0]) && "Téléphone mobile Apple iPhone 14".equals(row[1])));
+        "Type de l'objet (identifié)".equals(row[0]) && "Téléphone mobile Apple iPhone 14".equals(row[1])));
     assertTrue(rows.stream().anyMatch(row ->
         "Numéro de série".equals(row[0]) && "SER123".equals(row[1])));
     assertTrue(rows.stream().anyMatch(row ->
-        "Objets sans identification".equals(row[0])
+        "Types d'objets (non identifiés)".equals(row[0])
             && "- Ordinateur portable Apple MacBook Pro Noir\n- Sac à main Louis Vuitton Neverfull Marron".equals(row[1])));
     assertFalse(rows.stream().anyMatch(row ->
         row[0] != null && row[0].startsWith("Objet volé (2)")));

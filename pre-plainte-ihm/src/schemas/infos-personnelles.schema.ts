@@ -193,13 +193,21 @@ export const createInfosPersonnellesSchema = (t: ComposerTranslation) => {
 };
 
 const addBaseValidation = (t: ComposerTranslation, data: any, ctx: z.RefinementCtx,) => {
+  validateDeclarantIdentityDocument(t, data, ctx);
+  validateDeclarantNationalite(t, data, ctx);
+  validateDeclarantRepresentation(t, data, ctx);
+};
+
+const validateDeclarantIdentityDocument = (t: ComposerTranslation, data: any, ctx: z.RefinementCtx) => {
   if (
     data.typeDocumentIdentite !== "documents_voles_perdus"
     && !data.numeroDocumentIdentite
   ) {
     addCustomIssue(ctx, "numeroDocumentIdentite", t("validation.numeroDocumentRequis"));
   }
+};
 
+const validateDeclarantNationalite = (t: ComposerTranslation, data: any, ctx: z.RefinementCtx) => {
   const isSuisse = isNationaliteSuisse(data.nationalite);
 
   if (
@@ -213,7 +221,9 @@ const addBaseValidation = (t: ComposerTranslation, data: any, ctx: z.RefinementC
   if (isSuisse && !data.lieuOrigine?.code) {
     addCustomIssue(ctx, "lieuOrigine", t("validation.lieuOrigineRequis"));
   }
+};
 
+const validateDeclarantRepresentation = (t: ComposerTranslation, data: any, ctx: z.RefinementCtx) => {
   if (
     data.lienAvecPersonne === INFORMATIONS_PERSONNELLES_TIERS
     && !data.typeRepresentation
