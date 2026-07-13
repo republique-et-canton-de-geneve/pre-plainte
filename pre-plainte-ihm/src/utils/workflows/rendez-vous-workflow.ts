@@ -18,6 +18,7 @@ export interface RendezVousAvailability {
   beginDateTime?: string;
   endDateTime?: string;
   serviceId?: string;
+  serviceName?: string;
   siteCode?: string;
   resource?: { key?: string; name?: string };
 }
@@ -56,6 +57,7 @@ export function flattenAvailabilities(availabilityGroups: RendezVousAvailability
     (serviceAvailabilities.availabilities || []).map(creneau => ({
       ...creneau,
       serviceId: creneau.serviceId ?? serviceAvailabilities.serviceId,
+      serviceName: creneau.serviceName ?? serviceAvailabilities.serviceName,
       siteCode: creneau.siteCode ?? "PPEL",
     })),
   );
@@ -158,6 +160,62 @@ export function isSameSelectedDate(beginDateTime: string | undefined, selectedDa
 
   const dateCreneauJour = `${beginDateTime.slice(YEAR_START, YEAR_END)}-${beginDateTime.slice(MONTH_START, MONTH_END)}-${beginDateTime.slice(DAY_START, DAY_END)}`;
   return dateCreneauJour === (toIsoDate(selectedDate) ?? selectedDate);
+}
+
+export function findClosestAvailableDate(selectedDate: string, dates: string[]): string {
+  if (dates.length === 0) {
+    return "";
+  }
+
+  if (dates.includes(selectedDate)) {
+    return selectedDate;
+  }
+
+  const selectedTime = new Date(`${selectedDate}T00:00:00`).getTime();
+  if (Number.isNaN(selectedTime)) {
+    return dates[0];
+  }
+
+  return dates.reduce((closest, current) => {
+    const closestDiff = Math.abs(new Date(`${closest}T00:00:00`).getTime() - selectedTime);
+    const currentDiff = Math.abs(new Date(`${current}T00:00:00`).getTime() - selectedTime);
+    return currentDiff < closestDiff ? current : closest;
+  });
+}
+
+export function formatCreneauLieu(resourceName?: string, serviceName?: string): string {
+  const fromResource = extractMeaningfulLieu(resourceName);
+  if (fromResource) {
+    return fromResource;
+  }
+
+  const fromService = serviceName?.trim();
+  if (fromService) {
+    return fromService;
+  }
+
+  return "-";
+}
+
+function extractMeaningfulLieu(lieu?: string): string {
+  if (!lieu?.trim()) {
+    return "";
+  }
+
+  const parts = lieu
+    .split(" - ")
+    .map(part => part.trim())
+    .filter(Boolean);
+
+  if (parts.length === 0) {
+    return "";
+  }
+
+  if (parts[0].toLocaleUpperCase("fr-CH") === "RDV") {
+    return parts.slice(1).join(" - ");
+  }
+
+  return parts[0];
 }
 
 export function isInRollingAppointmentWindow(date: Date, now = new Date()): boolean {

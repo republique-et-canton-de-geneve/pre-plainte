@@ -54,7 +54,7 @@
           <td>{{ formatDate(creneau.beginDateTime) }}</td>
           <td>{{ formatHeure(creneau.beginDateTime) }}</td>
           <td>{{ formatHeure(creneau.endDateTime) }}</td>
-          <td>{{ formatLieu(creneau.resource?.name) }}</td>
+          <td>{{ formatLieu(creneau) }}</td>
         </tr>
       </tbody>
     </v-table>
@@ -102,7 +102,7 @@
                     {{ formatDate(creneau.beginDateTime) }}
                   </div>
                   <div class="text-body-2 text-medium-emphasis">
-                    {{ formatLieu(creneau.resource?.name) }}
+                    {{ formatLieu(creneau) }}
                   </div>
                 </div>
               </div>
@@ -134,6 +134,7 @@ import { useI18n } from "vue-i18n";
 import { useDisplay } from "vuetify";
 import { useEsiriusStore } from "@/stores/useEsiriusStore";
 import { DAY_END, DAY_START, MONTH_END, MONTH_START, TIME_START, YEAR_END, YEAR_START } from "@/constants/constant.ts";
+import { formatCreneauLieu } from "@/utils/workflows/rendez-vous-workflow";
 
 const DATE_MIN_LENGTH = 8;
 const DATETIME_MIN_LENGTH = 10;
@@ -192,18 +193,13 @@ const formatHeure = (dateTime?: string) => {
   return timePart.replace(":", "h");
 };
 
-const formatLieu = (lieu?: string) => {
-  if (!lieu) {
-    return "-";
-  }
-  return lieu.split(" - ")[0].trim();
-};
+const formatLieu = (creneau: any) => formatCreneauLieu(creneau?.resource?.name, creneau?.serviceName);
 
 const getCreneauRadioAriaLabel = (creneau: any) => {
   const date = formatDate(creneau?.beginDateTime);
   const debut = formatHeure(creneau?.beginDateTime);
   const fin = formatHeure(creneau?.endDateTime);
-  const lieu = formatLieu(creneau?.resource?.name);
+  const lieu = formatLieu(creneau);
 
   return t("rendezVous.ariaSelectionCreneau", {
     date,
