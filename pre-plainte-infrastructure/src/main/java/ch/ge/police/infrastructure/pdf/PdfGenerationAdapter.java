@@ -122,7 +122,8 @@ public class PdfGenerationAdapter implements PdfGenerationUseCase {
   public static final String RIPOL_AUTRE = "AUTRE";
   private static final String CATEGORIE_DOCUMENTS = "documents";
   private static final String CATEGORIE_PLAQUE = "plaque";
-  private static final String PDF_NON_STRUCTURED_OBJECTS_LABEL = "Objets sans identification";
+  private static final String PDF_TYPE_OBJET_IDENTIFIE_LABEL = "Type de l'objet (identifié)";
+  private static final String PDF_NON_STRUCTURED_OBJECTS_LABEL = "Types d'objets (non identifiés)";
   private static final String PDF_NON_STRUCTURED_OBJECTS_BULLET_PREFIX = "- ";
 
   @Override
@@ -382,7 +383,7 @@ public class PdfGenerationAdapter implements PdfGenerationUseCase {
   }
 
   private void addObjetIncident(List<String[]> rows, ObjetIncident o) {
-    addIfNotNull(rows, "Type de l'objet", formatObjetDescriptifLigne(o));
+    addIfNotNull(rows, PDF_TYPE_OBJET_IDENTIFIE_LABEL, formatObjetDescriptifLigne(o));
 
     addIfNotNull(rows, "Couleur", o.getCouleurLabel());
     addIfNotNull(rows, "Couleur secondaire", o.getCouleurSecondaireLabel());
