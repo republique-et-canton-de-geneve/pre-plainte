@@ -9,7 +9,7 @@ export const fillField = (champ, valeur, options = {}) => {
 export const selectAutocomplete = (champ, valeur) => {
   fieldInput(champ).click({ force: true });
   fieldInput(champ).type(`{selectall}${valeur}`, { force: true });
-  cy.contains(".v-overlay-container .v-list-item", valeur, { timeout: 10000 })
+  cy.contains(".v-list-item-title", valeur, { timeout: 10000 })
     .should("be.visible")
     .click({ force: true });
 };
