@@ -473,9 +473,12 @@ When("je renseigne le type de véhicule {string}", (typeVehicule) => {
   fieldRoot("Type de l'objet")
     .should(bevisible)
     .within(() => {
-      cy.get("input").first().should("not.be.disabled").click({ force: true }).type(`{selectall}${typeVehicule}`, { force: true });
+      cy.get("input").first().should("not.be.disabled").click({ force: true });
     });
-  cy.contains(".v-list-item-title", typeVehicule, { timeout: 10000 }).should(bevisible).click({ force: true });
+  cy.get(".v-overlay-container .v-list-item", { timeout: 10000 }).should("have.length.at.least", 1);
+  cy.contains(".v-overlay-container .v-list-item", typeVehicule, { timeout: 10000 })
+    .should(bevisible)
+    .click({ force: true });
 });
 
 When("je sélectionne {string} dans l'autocomplétion {string}", (valeur, champ) => {
