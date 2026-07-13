@@ -5,6 +5,8 @@ const PPEL_CODE = "PPEL";
 const BAD_REQUEST_ERROR = 400;
 const MILLISECONDS_IN_MINUTE = 60000;
 const ISO_SLICE_LENGTH = 19;
+const AVAILABILITY_FETCH_CONCURRENCY = 3;
+const AVAILABILITY_FETCH_RETRIES = 2;
 
 export const useEsiriusStore = defineStore("esirius", {
   state: () => ({
@@ -72,40 +74,19 @@ export const useEsiriusStore = defineStore("esirius", {
         }
 
         const availableServices = services.filter((s: any) => s.existAvailabilities);
-        const results = await Promise.allSettled(
-          availableServices.map(async (service: any) => {
-            try {
-              const availabilities = await EsiriusService.getAvailability(
-                PPEL_CODE,
-                service.key,
-                begin,
-                String(period),
-              );
-
-              if (Array.isArray(availabilities) && availabilities.length > 0) {
-                return {
-                  serviceName: service.name,
-                  serviceId: service.key,
-                  availabilities,
-                };
-              }
-              return null;
-            } catch {
-              return null;
-            }
-          }),
+        const results = await runWithConcurrency(
+          availableServices,
+          AVAILABILITY_FETCH_CONCURRENCY,
+          service => fetchServiceAvailabilities(service, begin!, String(period)),
         );
 
         if (loadId !== this.availabilitiesLoadId) {
           return;
         }
 
-        this.allAvailabilities = results.flatMap(result => {
-          if (result.status !== "fulfilled" || result.value === null) {
-            return [];
-          }
-          return [result.value];
-        });
+        this.allAvailabilities = results.filter(
+          (result): result is ServiceAvailabilities => result !== null,
+        );
       } catch (err: any) {
         if (loadId === this.availabilitiesLoadId) {
           this.handleError(err);
@@ -196,3 +177,90 @@ export const useEsiriusStore = defineStore("esirius", {
     },
   },
 });
+
+interface ServiceAvailabilities {
+  serviceName: string;
+  serviceId: string;
+  availabilities: any[];
+}
+
+async function fetchServiceAvailabilities(
+  service: any,
+  begin: string,
+  period: string,
+): Promise<ServiceAvailabilities | null> {
+  for (let attempt = 0; attempt <= AVAILABILITY_FETCH_RETRIES; attempt++) {
+    try {
+      const availabilities = await EsiriusService.getAvailability(
+        PPEL_CODE,
+        service.key,
+        begin,
+        period,
+      );
+
+      if (isEsiriusErrorPayload(availabilities)) {
+        if (attempt < AVAILABILITY_FETCH_RETRIES) {
+          continue;
+        }
+        return null;
+      }
+
+      if (Array.isArray(availabilities) && availabilities.length > 0) {
+        return {
+          serviceName: service.name,
+          serviceId: service.key,
+          availabilities,
+        };
+      }
+
+      return null;
+    } catch {
+      if (attempt >= AVAILABILITY_FETCH_RETRIES) {
+        return null;
+      }
+    }
+  }
+
+  return null;
+}
+
+function isEsiriusErrorPayload(availabilities: unknown): boolean {
+  if (!Array.isArray(availabilities) || availabilities.length === 0) {
+    return false;
+  }
+
+  return availabilities.every(
+    (item: any) =>
+      item &&
+      typeof item === "object" &&
+      "code" in item &&
+      !("beginDateTime" in item),
+  );
+}
+
+async function runWithConcurrency<T, R>(
+  items: T[],
+  concurrency: number,
+  worker: (item: T) => Promise<R>,
+): Promise<R[]> {
+  if (items.length === 0) {
+    return [];
+  }
+
+  const results = new Array<R>(items.length);
+  let nextIndex = 0;
+
+  const runNext = async () => {
+    while (nextIndex < items.length) {
+      const currentIndex = nextIndex;
+      nextIndex += 1;
+      results[currentIndex] = await worker(items[currentIndex]);
+    }
+  };
+
+  await Promise.all(
+    Array.from({ length: Math.min(concurrency, items.length) }, () => runNext()),
+  );
+
+  return results;
+}

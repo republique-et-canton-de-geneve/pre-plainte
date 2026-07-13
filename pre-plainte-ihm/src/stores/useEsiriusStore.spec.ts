@@ -80,4 +80,41 @@ describe("useEsiriusStore.loadAllAvailabilitiesForPPEL", () => {
     ]);
     expect(store.loading).toBe(false);
   });
+
+  it("retente un appel en erreur puis conserve le poste si le retry reussit", async () => {
+    const store = useEsiriusStore();
+    store.services = [servicePaquis];
+    let attempts = 0;
+
+    vi.mocked(EsiriusService.getAvailability).mockImplementation(async () => {
+      attempts += 1;
+      if (attempts === 1) {
+        throw new Error("timeout eSirius");
+      }
+      return [creneau];
+    });
+
+    await store.loadAllAvailabilitiesForPPEL("2026-07-13T10:00:00", 15);
+
+    expect(attempts).toBe(2);
+    expect(store.allAvailabilities.map(item => item.serviceId)).toEqual([servicePaquis.key]);
+    expect(store.loading).toBe(false);
+  });
+
+  it("ignore les payloads d'erreur eSirius renvoyes en HTTP 200", async () => {
+    const store = useEsiriusStore();
+    store.services = [serviceCornavin, servicePaquis];
+
+    vi.mocked(EsiriusService.getAvailability).mockImplementation(async (_site, serviceId) => {
+      if (serviceId === servicePaquis.key) {
+        return [{ code: 500, details: "eSirius indisponible" }];
+      }
+      return [creneau];
+    });
+
+    await store.loadAllAvailabilitiesForPPEL("2026-07-13T10:00:00", 15);
+
+    expect(store.allAvailabilities.map(item => item.serviceId)).toEqual([serviceCornavin.key]);
+    expect(store.loading).toBe(false);
+  });
 });
