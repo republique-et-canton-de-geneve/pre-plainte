@@ -1,9 +1,9 @@
 <template>
   <div class="mt-5">
-    <h3 id="rdv-table-title" class="pre-plainte-main-card-title text-h4 text-md-h5" style="font-weight: 500">
+    <h3 id="rdv-table-title" class="text-h4 text-md-h5 px-0 mt-4">
       {{ t("rendezVous.tableTitre") }}
     </h3>
-    <p class="text-body-4 mt-1 mb-0">
+    <p class="text-body-4 mt-2 mb-2">
       {{ t("rendezVous.rdvSelectionne") }}
     </p>
   </div>

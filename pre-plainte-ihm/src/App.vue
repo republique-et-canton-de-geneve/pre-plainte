@@ -122,7 +122,7 @@ const vuetifyMessages = {
   .v-card h1.pre-plainte-main-card-title,
   .v-card h2.pre-plainte-main-card-title,
   .v-card h3.pre-plainte-main-card-title {
-    padding: 15px !important;
+    padding: 20px 5px 0 0px !important;
     box-sizing: border-box !important;
   }
 
