@@ -3,11 +3,12 @@ import { getUserFacingApiErrorMessage } from "@/utils/api-http-user-message";
 
 const backendUrl = getApiBaseUrl() || "";
 const baseUrl = `${backendUrl}/api/esirius`;
+const NO_STORE_CACHE: RequestCache = "no-store";
 
 export class EsiriusService {
   static async getServiceListBySiteCode(siteCode: string): Promise<any[]> {
     const url = `${baseUrl}/sites/${siteCode}/listServices`;
-    const response = await fetch(url);
+    const response = await fetch(url, { cache: NO_STORE_CACHE });
     if (!response.ok) {
       const bodyText = await response.text();
       throw new Error(getUserFacingApiErrorMessage(response.status, bodyText));
@@ -18,7 +19,7 @@ export class EsiriusService {
   static async getAvailability(siteCode: string, serviceId: string, begin: string, period: string): Promise<any[]> {
     const encodedBegin = encodeURIComponent(begin);
     const url = `${baseUrl}/sites/${siteCode}/services/${serviceId}/plannings/begins/${encodedBegin}/periods/${period}/availabilities`;
-    const response = await fetch(url);
+    const response = await fetch(url, { cache: NO_STORE_CACHE });
     if (!response.ok) {
       const bodyText = await response.text();
       throw new Error(getUserFacingApiErrorMessage(response.status, bodyText));
@@ -42,7 +43,7 @@ export class EsiriusService {
 
   static async getAppointmentByCode(codeRdv: string): Promise<any> {
     const url = `${baseUrl}/appointments/${codeRdv}`;
-    const response = await fetch(url);
+    const response = await fetch(url, { cache: NO_STORE_CACHE });
     if (!response.ok) {
       const bodyText = await response.text();
       throw new Error(getUserFacingApiErrorMessage(response.status, bodyText));
@@ -52,7 +53,7 @@ export class EsiriusService {
 
   static async cancelAppointment(codeRdv: string): Promise<any> {
     const url = `${baseUrl}/appointments/${codeRdv}`;
-    const response = await fetch(url, { method: "DELETE" });
+    const response = await fetch(url, { method: "DELETE", cache: NO_STORE_CACHE });
     if (!response.ok) {
       const bodyText = await response.text();
       throw new Error(getUserFacingApiErrorMessage(response.status, bodyText));
@@ -71,6 +72,6 @@ export class EsiriusService {
       const errorText = await response.text();
       throw new Error(getUserFacingApiErrorMessage(response.status, errorText));
     }
-    return  response.json();
+    return response.json();
   }
 }
