@@ -5,10 +5,13 @@ const PPEL_CODE = "PPEL";
 const BAD_REQUEST_ERROR = 400;
 const MILLISECONDS_IN_MINUTE = 60000;
 const ISO_SLICE_LENGTH = 19;
-const AVAILABILITY_FETCH_CONCURRENCY = 3;
-const AVAILABILITY_FETCH_RETRIES = 2;
+const AVAILABILITY_FETCH_RETRIES = 3;
+const AVAILABILITY_RETRY_DELAY_MS = 300;
 const DEFAULT_AVAILABILITY_PERIOD_DAYS = 15;
 const DEFAULT_BEGIN_OFFSET_HOURS = 1;
+const FETCH_STATUS_OK = "ok";
+const FETCH_STATUS_EMPTY = "empty";
+const FETCH_STATUS_ERROR = "error";
 
 export const useEsiriusStore = defineStore("esirius", {
   state: () => ({
@@ -72,17 +75,28 @@ export const useEsiriusStore = defineStore("esirius", {
 
         const availableServices = services.filter((s: any) => s.existAvailabilities);
         const periodAsString = String(period);
-        const results = await runWithConcurrency(
+        const results = await fetchAvailabilitiesSequentially(
           availableServices,
-          AVAILABILITY_FETCH_CONCURRENCY,
-          service => fetchServiceAvailabilities(service, beginDateTime, periodAsString),
+          beginDateTime,
+          periodAsString,
         );
 
         if (loadId !== this.availabilitiesLoadId) {
           return;
         }
 
-        this.allAvailabilities = results.flatMap(result => (result ? [result] : []));
+        const recovered = await recoverFailedAvailabilities(
+          availableServices,
+          results,
+          beginDateTime,
+          periodAsString,
+        );
+
+        if (loadId !== this.availabilitiesLoadId) {
+          return;
+        }
+
+        this.allAvailabilities = recovered.flatMap(result => (result ? [result] : []));
       } catch (err: any) {
         if (loadId === this.availabilitiesLoadId) {
           this.handleError(err);
@@ -180,6 +194,11 @@ interface ServiceAvailabilities {
   availabilities: any[];
 }
 
+type AvailabilityFetchResult =
+  | { status: typeof FETCH_STATUS_OK; value: ServiceAvailabilities }
+  | { status: typeof FETCH_STATUS_EMPTY }
+  | { status: typeof FETCH_STATUS_ERROR };
+
 function buildDefaultBeginDateTime(): string {
   const now = new Date();
   now.setHours(now.getHours() + DEFAULT_BEGIN_OFFSET_HOURS);
@@ -188,12 +207,28 @@ function buildDefaultBeginDateTime(): string {
     .slice(0, ISO_SLICE_LENGTH);
 }
 
+async function fetchAvailabilitiesSequentially(
+  services: any[],
+  begin: string,
+  period: string,
+): Promise<AvailabilityFetchResult[]> {
+  const results: AvailabilityFetchResult[] = [];
+  for (const service of services) {
+    results.push(await fetchServiceAvailabilities(service, begin, period));
+  }
+  return results;
+}
+
 async function fetchServiceAvailabilities(
   service: any,
   begin: string,
   period: string,
-): Promise<ServiceAvailabilities | null> {
+): Promise<AvailabilityFetchResult> {
   for (let attempt = 0; attempt <= AVAILABILITY_FETCH_RETRIES; attempt++) {
+    if (attempt > 0) {
+      await wait(AVAILABILITY_RETRY_DELAY_MS * attempt);
+    }
+
     try {
       const availabilities = await EsiriusService.getAvailability(
         PPEL_CODE,
@@ -203,29 +238,62 @@ async function fetchServiceAvailabilities(
       );
 
       if (isEsiriusErrorPayload(availabilities)) {
-        if (attempt < AVAILABILITY_FETCH_RETRIES) {
-          continue;
-        }
-        return null;
+        continue;
       }
 
       if (Array.isArray(availabilities) && availabilities.length > 0) {
         return {
-          serviceName: service.name,
-          serviceId: service.key,
-          availabilities,
+          status: FETCH_STATUS_OK,
+          value: {
+            serviceName: service.name,
+            serviceId: service.key,
+            availabilities,
+          },
         };
       }
 
-      return null;
-    } catch {
+      return { status: FETCH_STATUS_EMPTY };
+    } catch (error: unknown) {
       if (attempt >= AVAILABILITY_FETCH_RETRIES) {
-        return null;
+        return { status: FETCH_STATUS_ERROR };
+      }
+      if (!(error instanceof Error)) {
+        continue;
       }
     }
   }
 
-  return null;
+  return { status: FETCH_STATUS_ERROR };
+}
+
+async function recoverFailedAvailabilities(
+  services: any[],
+  results: AvailabilityFetchResult[],
+  begin: string,
+  period: string,
+): Promise<Array<ServiceAvailabilities | null>> {
+  const recovered: Array<ServiceAvailabilities | null> = results.map(result =>
+    result.status === FETCH_STATUS_OK ? result.value : null,
+  );
+
+  const failedIndexes = results.flatMap((result, index) =>
+    result.status === FETCH_STATUS_ERROR ? [index] : [],
+  );
+
+  if (failedIndexes.length === 0) {
+    return recovered;
+  }
+
+  await wait(AVAILABILITY_RETRY_DELAY_MS);
+
+  for (const index of failedIndexes) {
+    const retryResult = await fetchServiceAvailabilities(services[index], begin, period);
+    if (retryResult.status === FETCH_STATUS_OK) {
+      recovered[index] = retryResult.value;
+    }
+  }
+
+  return recovered;
 }
 
 function isEsiriusErrorPayload(availabilities: unknown): boolean {
@@ -242,29 +310,8 @@ function isEsiriusErrorPayload(availabilities: unknown): boolean {
   );
 }
 
-async function runWithConcurrency<T, R>(
-  items: T[],
-  concurrency: number,
-  worker: (item: T) => Promise<R>,
-): Promise<R[]> {
-  if (items.length === 0) {
-    return [];
-  }
-
-  const results: R[] = [];
-  let nextIndex = 0;
-
-  const runNext = async () => {
-    while (nextIndex < items.length) {
-      const currentIndex = nextIndex;
-      nextIndex += 1;
-      results[currentIndex] = await worker(items[currentIndex]);
-    }
-  };
-
-  await Promise.all(
-    Array.from({ length: Math.min(concurrency, items.length) }, () => runNext()),
-  );
-
-  return results;
+function wait(ms: number): Promise<void> {
+  return new Promise(resolve => {
+    globalThis.setTimeout(resolve, ms);
+  });
 }

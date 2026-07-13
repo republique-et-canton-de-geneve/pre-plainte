@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createPinia, setActivePinia } from "pinia";
 import { useEsiriusStore } from "@/stores/useEsiriusStore";
 import { EsiriusService } from "@/services/esiriusService";
@@ -39,10 +39,21 @@ const creneau = {
   resource: { key: "RDV", name: "RDV - Poste" },
 };
 
+async function loadAvailabilities(store: ReturnType<typeof useEsiriusStore>) {
+  const loading = store.loadAllAvailabilitiesForPPEL(BEGIN_DATE_TIME, AVAILABILITY_PERIOD_DAYS);
+  await vi.runAllTimersAsync();
+  await loading;
+}
+
 describe("useEsiriusStore.loadAllAvailabilitiesForPPEL", () => {
   beforeEach(() => {
     setActivePinia(createPinia());
     vi.clearAllMocks();
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it("conserve les postes valides quand un appel disponibilites echoue", async () => {
@@ -56,7 +67,7 @@ describe("useEsiriusStore.loadAllAvailabilitiesForPPEL", () => {
       return [creneau];
     });
 
-    await store.loadAllAvailabilitiesForPPEL(BEGIN_DATE_TIME, AVAILABILITY_PERIOD_DAYS);
+    await loadAvailabilities(store);
 
     expect(store.allAvailabilities.map(item => item.serviceId).sort()).toEqual([
       serviceCornavin.key,
@@ -77,7 +88,7 @@ describe("useEsiriusStore.loadAllAvailabilitiesForPPEL", () => {
       return [creneau];
     });
 
-    await store.loadAllAvailabilitiesForPPEL(BEGIN_DATE_TIME, AVAILABILITY_PERIOD_DAYS);
+    await loadAvailabilities(store);
 
     expect(store.allAvailabilities.map(item => item.serviceId).sort()).toEqual([
       serviceCornavin.key,
@@ -99,7 +110,7 @@ describe("useEsiriusStore.loadAllAvailabilitiesForPPEL", () => {
       return [creneau];
     });
 
-    await store.loadAllAvailabilitiesForPPEL(BEGIN_DATE_TIME, AVAILABILITY_PERIOD_DAYS);
+    await loadAvailabilities(store);
 
     expect(attempts).toBe(EXPECTED_RETRY_ATTEMPTS);
     expect(store.allAvailabilities.map(item => item.serviceId)).toEqual([servicePaquis.key]);
@@ -117,7 +128,7 @@ describe("useEsiriusStore.loadAllAvailabilitiesForPPEL", () => {
       return [creneau];
     });
 
-    await store.loadAllAvailabilitiesForPPEL(BEGIN_DATE_TIME, AVAILABILITY_PERIOD_DAYS);
+    await loadAvailabilities(store);
 
     expect(store.allAvailabilities.map(item => item.serviceId)).toEqual([serviceCornavin.key]);
     expect(store.loading).toBe(false);
