@@ -219,7 +219,35 @@ function extractMeaningfulLieu(lieu?: string): string {
 }
 
 function stripTrailingResourceIndex(lieu: string): string {
-  return lieu.replace(/\s+\d+$/u, "").trim();
+  let end = lieu.length;
+
+  while (end > 0 && isAsciiDigit(lieu[end - 1])) {
+    end -= 1;
+  }
+
+  if (end === lieu.length) {
+    return lieu.trim();
+  }
+
+  const indexBeforeDigits = end;
+
+  while (end > 0 && isAsciiSpace(lieu[end - 1])) {
+    end -= 1;
+  }
+
+  if (end === indexBeforeDigits) {
+    return lieu.trim();
+  }
+
+  return lieu.slice(0, end).trim();
+}
+
+function isAsciiDigit(char: string): boolean {
+  return char >= "0" && char <= "9";
+}
+
+function isAsciiSpace(char: string): boolean {
+  return char === " " || char === "\t" || char === "\n" || char === "\r" || char === "\f";
 }
 export function isInRollingAppointmentWindow(date: Date, now = new Date()): boolean {
   const start = new Date(now);
