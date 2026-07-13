@@ -180,7 +180,7 @@ export function findClosestAvailableDate(selectedDate: string, dates: string[]):
     const closestDiff = Math.abs(new Date(`${closest}T00:00:00`).getTime() - selectedTime);
     const currentDiff = Math.abs(new Date(`${current}T00:00:00`).getTime() - selectedTime);
     return currentDiff < closestDiff ? current : closest;
-  });
+  }, dates[0]);
 }
 
 export function formatCreneauLieu(resourceName?: string, serviceName?: string): string {
