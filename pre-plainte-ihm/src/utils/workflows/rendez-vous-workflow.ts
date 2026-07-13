@@ -212,12 +212,15 @@ function extractMeaningfulLieu(lieu?: string): string {
   }
 
   if (parts[0].toLocaleUpperCase("fr-CH") === "RDV") {
-    return parts.slice(1).join(" - ");
+    return stripTrailingResourceIndex(parts.slice(1).join(" - "));
   }
 
-  return parts[0];
+  return stripTrailingResourceIndex(parts[0]);
 }
 
+function stripTrailingResourceIndex(lieu: string): string {
+  return lieu.replace(/\s+\d+$/u, "").trim();
+}
 export function isInRollingAppointmentWindow(date: Date, now = new Date()): boolean {
   const start = new Date(now);
   start.setHours(0, 0, 0, 0);
