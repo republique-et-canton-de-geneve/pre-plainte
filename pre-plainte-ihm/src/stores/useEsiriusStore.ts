@@ -7,6 +7,8 @@ const MILLISECONDS_IN_MINUTE = 60000;
 const ISO_SLICE_LENGTH = 19;
 const AVAILABILITY_FETCH_CONCURRENCY = 3;
 const AVAILABILITY_FETCH_RETRIES = 2;
+const DEFAULT_AVAILABILITY_PERIOD_DAYS = 15;
+const DEFAULT_BEGIN_OFFSET_HOURS = 1;
 
 export const useEsiriusStore = defineStore("esirius", {
   state: () => ({
@@ -47,17 +49,12 @@ export const useEsiriusStore = defineStore("esirius", {
       }
     },
 
-    async loadAllAvailabilitiesForPPEL(begin?: string, period = 15) {
-      const loadId = ++this.availabilitiesLoadId;
+    async loadAllAvailabilitiesForPPEL(begin?: string, period = DEFAULT_AVAILABILITY_PERIOD_DAYS) {
+      this.availabilitiesLoadId += 1;
+      const loadId = this.availabilitiesLoadId;
       this.startLoading();
 
-      if (!begin) {
-        const now = new Date();
-        now.setHours(now.getHours() + 1);
-        begin = new Date(now.getTime() - now.getTimezoneOffset() * MILLISECONDS_IN_MINUTE)
-          .toISOString()
-          .slice(0, ISO_SLICE_LENGTH);
-      }
+      const beginDateTime = begin ?? buildDefaultBeginDateTime();
 
       try {
         const services =
@@ -74,19 +71,18 @@ export const useEsiriusStore = defineStore("esirius", {
         }
 
         const availableServices = services.filter((s: any) => s.existAvailabilities);
+        const periodAsString = String(period);
         const results = await runWithConcurrency(
           availableServices,
           AVAILABILITY_FETCH_CONCURRENCY,
-          service => fetchServiceAvailabilities(service, begin!, String(period)),
+          service => fetchServiceAvailabilities(service, beginDateTime, periodAsString),
         );
 
         if (loadId !== this.availabilitiesLoadId) {
           return;
         }
 
-        this.allAvailabilities = results.filter(
-          (result): result is ServiceAvailabilities => result !== null,
-        );
+        this.allAvailabilities = results.flatMap(result => (result ? [result] : []));
       } catch (err: any) {
         if (loadId === this.availabilitiesLoadId) {
           this.handleError(err);
@@ -184,6 +180,14 @@ interface ServiceAvailabilities {
   availabilities: any[];
 }
 
+function buildDefaultBeginDateTime(): string {
+  const now = new Date();
+  now.setHours(now.getHours() + DEFAULT_BEGIN_OFFSET_HOURS);
+  return new Date(now.getTime() - now.getTimezoneOffset() * MILLISECONDS_IN_MINUTE)
+    .toISOString()
+    .slice(0, ISO_SLICE_LENGTH);
+}
+
 async function fetchServiceAvailabilities(
   service: any,
   begin: string,
@@ -247,7 +251,7 @@ async function runWithConcurrency<T, R>(
     return [];
   }
 
-  const results = new Array<R>(items.length);
+  const results: R[] = [];
   let nextIndex = 0;
 
   const runNext = async () => {

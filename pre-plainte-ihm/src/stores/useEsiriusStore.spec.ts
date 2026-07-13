@@ -10,6 +10,11 @@ vi.mock("@/services/esiriusService", () => ({
   },
 }));
 
+const BEGIN_DATE_TIME = "2026-07-13T10:00:00";
+const AVAILABILITY_PERIOD_DAYS = 15;
+const TIMEOUT_ESIRIUS_ERROR = "timeout eSirius";
+const EXPECTED_RETRY_ATTEMPTS = 2;
+
 const serviceCornavin = {
   key: "VOL-CORNAVIN",
   name: "Pré-plainte pour vol - Cornavin",
@@ -46,12 +51,12 @@ describe("useEsiriusStore.loadAllAvailabilitiesForPPEL", () => {
 
     vi.mocked(EsiriusService.getAvailability).mockImplementation(async (_site, serviceId) => {
       if (serviceId === servicePaquis.key) {
-        throw new Error("timeout eSirius");
+        throw new Error(TIMEOUT_ESIRIUS_ERROR);
       }
       return [creneau];
     });
 
-    await store.loadAllAvailabilitiesForPPEL("2026-07-13T10:00:00", 15);
+    await store.loadAllAvailabilitiesForPPEL(BEGIN_DATE_TIME, AVAILABILITY_PERIOD_DAYS);
 
     expect(store.allAvailabilities.map(item => item.serviceId).sort()).toEqual([
       serviceCornavin.key,
@@ -72,7 +77,7 @@ describe("useEsiriusStore.loadAllAvailabilitiesForPPEL", () => {
       return [creneau];
     });
 
-    await store.loadAllAvailabilitiesForPPEL("2026-07-13T10:00:00", 15);
+    await store.loadAllAvailabilitiesForPPEL(BEGIN_DATE_TIME, AVAILABILITY_PERIOD_DAYS);
 
     expect(store.allAvailabilities.map(item => item.serviceId).sort()).toEqual([
       serviceCornavin.key,
@@ -89,14 +94,14 @@ describe("useEsiriusStore.loadAllAvailabilitiesForPPEL", () => {
     vi.mocked(EsiriusService.getAvailability).mockImplementation(async () => {
       attempts += 1;
       if (attempts === 1) {
-        throw new Error("timeout eSirius");
+        throw new Error(TIMEOUT_ESIRIUS_ERROR);
       }
       return [creneau];
     });
 
-    await store.loadAllAvailabilitiesForPPEL("2026-07-13T10:00:00", 15);
+    await store.loadAllAvailabilitiesForPPEL(BEGIN_DATE_TIME, AVAILABILITY_PERIOD_DAYS);
 
-    expect(attempts).toBe(2);
+    expect(attempts).toBe(EXPECTED_RETRY_ATTEMPTS);
     expect(store.allAvailabilities.map(item => item.serviceId)).toEqual([servicePaquis.key]);
     expect(store.loading).toBe(false);
   });
@@ -112,7 +117,7 @@ describe("useEsiriusStore.loadAllAvailabilitiesForPPEL", () => {
       return [creneau];
     });
 
-    await store.loadAllAvailabilitiesForPPEL("2026-07-13T10:00:00", 15);
+    await store.loadAllAvailabilitiesForPPEL(BEGIN_DATE_TIME, AVAILABILITY_PERIOD_DAYS);
 
     expect(store.allAvailabilities.map(item => item.serviceId)).toEqual([serviceCornavin.key]);
     expect(store.loading).toBe(false);
