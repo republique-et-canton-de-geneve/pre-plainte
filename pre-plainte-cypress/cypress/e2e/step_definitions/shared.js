@@ -564,11 +564,8 @@ When("je renseigne les informations personnelles nominales pour moi-même", () =
   fillField("Numéro de téléphone", "0791234567");
   selectAutocomplete("Genre", "Féminin");
   selectAutocomplete("Nationalité", "Suisse");
-  cy.get("body").then($body => {
-    if (($body.text() ?? "").includes("Lieu d'origine")) {
-      selectAutocomplete("Lieu d'origine", "Geneve");
-    }
-  });
+  cy.contains("label", "Lieu d'origine", { timeout: 10000 }).should(bevisible);
+  selectAutocomplete("Lieu d'origine", "Geneve");
   fillField("Date de naissance", "15.04.1985");
   fillField("Adresse", "Rue du Marche 10");
   fillField("Numéro de rue", "10");
