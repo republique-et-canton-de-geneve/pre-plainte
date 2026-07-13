@@ -16,7 +16,8 @@ export class EsiriusService {
   }
 
   static async getAvailability(siteCode: string, serviceId: string, begin: string, period: string): Promise<any[]> {
-    const url = `${baseUrl}/sites/${siteCode}/services/${serviceId}/plannings/begins/${begin}/periods/${period}/availabilities`;
+    const encodedBegin = encodeURIComponent(begin);
+    const url = `${baseUrl}/sites/${siteCode}/services/${serviceId}/plannings/begins/${encodedBegin}/periods/${period}/availabilities`;
     const response = await fetch(url);
     if (!response.ok) {
       const bodyText = await response.text();
