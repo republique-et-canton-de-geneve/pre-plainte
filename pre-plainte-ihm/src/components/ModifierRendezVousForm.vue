@@ -141,6 +141,7 @@ import type {AlertType, Availability, IncidentType, SelectedCreneau} from "@/typ
 import { buildUpdateAppointmentPayload, resolveEsiriusDemandeReference } from "@/utils/helpers/esiriusFormatBuilder";
 import { getCaptchaSitekey } from "@/config/config.ts";
 import { DAY_END, DAY_START, MONTH_END, MONTH_START, TIME_START, YEAR_END, YEAR_START, STEP_UPDATE_APPOINTMENT_VALIDATION } from "@/constants/constant.ts";
+import { formatCreneauLieu } from "@/utils/workflows/rendez-vous-workflow";
 
 const props = defineProps<{
   currentStep: number;
@@ -326,7 +327,14 @@ const availabilitiesByPoste = computed(() => {
 });
 
 const creneauxFiltres = computed(() => {
-  const allAvail = availabilitiesByPoste.value.flatMap(s => s.availabilities || []);
+  const allAvail = availabilitiesByPoste.value.flatMap(s =>
+    (s.availabilities || []).map((creneau: Availability) => ({
+      ...creneau,
+      serviceId: creneau.serviceId ?? s.serviceId,
+      serviceName: creneau.serviceName ?? s.serviceName,
+      siteCode: creneau.siteCode ?? "PPEL",
+    })),
+  );
 
   const minDateTime =
     currentAppointment.value?.beginDate && currentAppointment.value?.beginTime
@@ -458,7 +466,7 @@ const onSelectCreneau = () => {
     dateAffichee: `${rawDate.split("-").reverse().join(".")}`,
     heureDebut,
     heureFin,
-    lieu: c.resource?.name || "-",
+    lieu: formatCreneauLieu(c.resource?.name, c.serviceName),
     serviceId: c.serviceId,
     siteCode: c.siteCode,
     resource: c.resource,
