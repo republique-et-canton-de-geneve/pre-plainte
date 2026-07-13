@@ -384,6 +384,16 @@ async function submitEmailVerification(values: VerificationStepFields) {
     return;
   }
 
+  await verifyAndPersistEmail(emailTrim, confirmation, phone, lastName, firstName);
+}
+
+async function verifyAndPersistEmail(
+  emailTrim: string,
+  confirmation: string,
+  phone: string,
+  lastName: string,
+  firstName: string,
+) {
   const keyResult = getKeyChallengeOrError();
   if (!keyResult.ok) {
     verifyError.value = keyResult.message;
