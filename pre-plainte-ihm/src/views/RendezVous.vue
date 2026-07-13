@@ -112,6 +112,8 @@ import {
   filterCompatibleCreneaux,
   filterCreneauxByPosteAndDate,
   filterServicesByIncident,
+  findClosestAvailableDate,
+  formatCreneauLieu,
   getRendezVousWarning,
 } from "@/utils/workflows/rendez-vous-workflow";
 
@@ -248,10 +250,14 @@ watch(dateSouhaitee, () => {
 
 watch(datesDisponibles, dates => {
   const selectedDate = toIsoDate(dateSouhaitee.value) ?? dateSouhaitee.value;
-  if (selectedDate && !dates.includes(selectedDate)) {
-    dateSouhaitee.value = "";
+  if (!selectedDate) {
+    return;
   }
-});
+
+  if (!dates.includes(selectedDate)) {
+    dateSouhaitee.value = findClosestAvailableDate(selectedDate, dates);
+  }
+}, { flush: "sync" });
 
 watch(
   [() => poste.value?.key, dateSouhaitee, () => creneauxFiltres.value.length],
@@ -322,7 +328,7 @@ const onSubmit = handleSubmit(
       dateAffichee,
       heureDebut,
       heureFin,
-      lieu: c.resource?.name || "-",
+      lieu: formatCreneauLieu(c.resource?.name, c.serviceName),
       serviceId: c.serviceId,
       siteCode: c.siteCode,
       resource: c.resource,
