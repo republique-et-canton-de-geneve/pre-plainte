@@ -3,13 +3,16 @@ ARG OCI_CATALOG_HOST=example.com
 FROM $OCI_CATALOG_HOST/ch/ge/common/middlewares/java/ubi9-openjdk21:4.0.1-20250803_065025 AS maven
 
 USER root
-RUN microdnf install -y tar vim-minimal \
+RUN microdnf install -y tar vim-minimal python3 \
   && microdnf clean all
 
 ARG APP_WORKDIR="/11729-PPEL-formulaire-api"
 WORKDIR $APP_WORKDIR
 
 COPY pre-plainte-rest/target/pre-plainte-rest-*.war $APP_WORKDIR/pre-plainte.war
+
+COPY scripts $APP_WORKDIR/scripts
+RUN chmod +x $APP_WORKDIR/scripts/ripol/*.sh
 
 EXPOSE 8080
 HEALTHCHECK CMD curl --fail http://localhost:8080/actuator/health || exit 1
