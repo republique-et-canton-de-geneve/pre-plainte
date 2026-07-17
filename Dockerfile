@@ -11,8 +11,8 @@ WORKDIR $APP_WORKDIR
 
 COPY pre-plainte-rest/target/pre-plainte-rest-*.war $APP_WORKDIR/pre-plainte.war
 
-COPY scripts $APP_WORKDIR/scripts
-RUN chmod +x $APP_WORKDIR/scripts/ripol/*.sh
+COPY import-ripol.sh import_csv_to_sqlite.py $APP_WORKDIR/scripts/ripol/
+RUN chmod +x $APP_WORKDIR/scripts/ripol/import-ripol.sh
 
 EXPOSE 8080
 HEALTHCHECK CMD curl --fail http://localhost:8080/actuator/health || exit 1
