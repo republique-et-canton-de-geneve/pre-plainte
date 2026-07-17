@@ -94,6 +94,14 @@
     </v-card>
 
     <v-alert
+      v-if="errorMessage"
+      type="error"
+      density="comfortable"
+      class="mt-2"
+      :text="errorMessage"
+    />
+
+    <v-alert
       v-if="rejectedFiles.length > 0"
       type="error"
       closable
@@ -152,6 +160,7 @@ const props = withDefaults(
     showTitle?: boolean;
     required?: boolean;
     subtitle?: string;
+    errorMessages?: string | string[];
   }>(),
   {
     modelValue: () => [],
@@ -163,6 +172,7 @@ const props = withDefaults(
     showTitle: true,
     required: false,
     subtitle: "",
+    errorMessages: undefined,
   },
 );
 
@@ -203,6 +213,12 @@ const acceptedExtensions = computed(() =>
 const maxFileSizeMo = computed(() => Math.round(props.maxFileSize / BYTES_PER_MEGABYTE));
 const maxFilesAllowed = computed(() => (props.multiple ? props.maxFiles : 1));
 const displayLabel = computed(() => (props.required ? requiredLabel(props.label) : props.label));
+const errorMessage = computed(() => {
+  if (!props.errorMessages) {
+    return "";
+  }
+  return Array.isArray(props.errorMessages) ? (props.errorMessages[0] ?? "") : props.errorMessages;
+});
 
 watch(files, newValue => {
   emit(EMIT_UPDATE_MODEL_VALUE, newValue);

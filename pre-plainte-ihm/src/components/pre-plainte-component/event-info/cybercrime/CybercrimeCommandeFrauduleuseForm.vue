@@ -192,6 +192,7 @@
         :label="t('cybercrime.telechargerCopieIdentiteTransmiseAuteur')"
         :multiple="false"
         :required="!copieIdentiteTransmiseAuteurDocumentIndisponible"
+        :error-messages="copieIdentiteTransmiseAuteurDocumentError"
       />
       <v-checkbox
         v-model="copieIdentiteTransmiseAuteurDocumentIndisponible"
@@ -227,6 +228,7 @@
         :label="t('cybercrime.telechargerCopieIdentiteAuteurTransmise')"
         :multiple="false"
         :required="!copieIdentiteAuteurDocumentIndisponible"
+        :error-messages="copieIdentiteAuteurDocumentError"
       />
       <v-checkbox
         v-model="copieIdentiteAuteurDocumentIndisponible"
@@ -290,14 +292,16 @@ const { value: livraisonPays } = useField<string>("livraisonPays");
 
 const { value: copieIdentiteTransmiseAuteur, errorMessage: copieIdentiteTransmiseAuteurError } =
   useField<boolean>("copieIdentiteTransmiseAuteur");
-const { value: copieIdentiteTransmiseAuteurDocument } = useField<File[]>("copieIdentiteTransmiseAuteurDocument");
+const { value: copieIdentiteTransmiseAuteurDocument, errorMessage: copieIdentiteTransmiseAuteurDocumentError } =
+  useField<File[]>("copieIdentiteTransmiseAuteurDocument");
 const { value: copieIdentiteTransmiseAuteurDocumentIndisponible } =
   useField<boolean>("copieIdentiteTransmiseAuteurDocumentIndisponible");
 const { value: raisonAbsenceCopieIdentiteTransmiseAuteur, errorMessage: raisonAbsenceCopieIdentiteTransmiseAuteurError } =
   useField<string>("raisonAbsenceCopieIdentiteTransmiseAuteur");
 const { value: copieIdentiteAuteurTransmise, errorMessage: copieIdentiteAuteurTransmiseError } =
   useField<boolean>("copieIdentiteAuteurTransmise");
-const { value: copieIdentiteAuteurDocument } = useField<File[]>("copieIdentiteAuteurDocument");
+const { value: copieIdentiteAuteurDocument, errorMessage: copieIdentiteAuteurDocumentError } =
+  useField<File[]>("copieIdentiteAuteurDocument");
 const { value: copieIdentiteAuteurDocumentIndisponible } = useField<boolean>("copieIdentiteAuteurDocumentIndisponible");
 const { value: raisonAbsenceCopieIdentiteAuteur, errorMessage: raisonAbsenceCopieIdentiteAuteurError } =
   useField<string>("raisonAbsenceCopieIdentiteAuteur");
