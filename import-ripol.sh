@@ -13,8 +13,17 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+if [[ -d "${SCRIPT_DIR}/../../pre-plainte-rest" ]]; then
+  REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+elif [[ -d "${SCRIPT_DIR}/pre-plainte-rest" ]]; then
+  REPO_ROOT="${SCRIPT_DIR}"
+else
+  REPO_ROOT="$(pwd)"
+fi
 PYTHON_SCRIPT="${SCRIPT_DIR}/import_csv_to_sqlite.py"
+if [[ ! -f "${PYTHON_SCRIPT}" && -f "${SCRIPT_DIR}/import-ripol.py" ]]; then
+  PYTHON_SCRIPT="${SCRIPT_DIR}/import-ripol.py"
+fi
 
 if ! command -v python3 >/dev/null 2>&1 && ! command -v python >/dev/null 2>&1; then
   echo "Erreur: Python 3 requis." >&2
