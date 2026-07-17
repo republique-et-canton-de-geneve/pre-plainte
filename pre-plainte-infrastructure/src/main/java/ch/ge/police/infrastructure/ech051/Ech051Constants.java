@@ -144,7 +144,7 @@ public final class Ech051Constants {
   public static final class MessageTypes {
     private MessageTypes() {}
 
-    public static final String VOL = "5357";
+    public static final String VOL = "5358";
     public static final String VELO_MOFA = "5350";
     public static final String DOMMAGE = "5352";
     public static final String CYBER_COMMANDE_FRAUDULEUSE = "5388";

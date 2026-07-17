@@ -185,6 +185,7 @@
         :multiple="false"
         :show-title="false"
         :required="!annonceDocumentIndisponible"
+        :error-messages="annonceDocumentError"
       />
       <v-checkbox
         v-model="annonceDocumentIndisponible"
@@ -371,6 +372,7 @@
         accept=".pdf"
         :max-file-size-bytes="maxPieceJointe5Mo"
         :required="!preuvePaiementIndisponible"
+        :error-messages="preuvePaiementDocumentError"
       />
       <v-checkbox
         v-model="preuvePaiementIndisponible"
@@ -405,6 +407,7 @@
         :label="t('cybercrime.telechargerCopieIdentiteTransmiseAuteur')"
         :multiple="false"
         :required="!copieIdentiteTransmiseAuteurDocumentIndisponible"
+        :error-messages="copieIdentiteTransmiseAuteurDocumentError"
       />
       <v-checkbox
         v-model="copieIdentiteTransmiseAuteurDocumentIndisponible"
@@ -439,6 +442,7 @@
         :label="t('cybercrime.telechargerCopieIdentiteAuteurTransmise')"
         :multiple="false"
         :required="!copieIdentiteAuteurDocumentIndisponible"
+        :error-messages="copieIdentiteAuteurDocumentError"
       />
       <v-checkbox
         v-model="copieIdentiteAuteurDocumentIndisponible"
@@ -501,7 +505,7 @@ const { value: plateformeAutre, errorMessage: plateformeAutreError } = useField(
 const { value: plateformeId, errorMessage: plateformeIdError } = useField("plateformeId");
 const { value: nomEntrepriseVendeur, errorMessage: nomEntrepriseVendeurError } = useField("nomEntrepriseVendeur");
 const { value: siteWebEntrepriseVendeur, errorMessage: siteWebEntrepriseVendeurError } = useField("siteWebEntrepriseVendeur");
-const { value: annonceDocument } = useField<File[]>("annonceDocument");
+const { value: annonceDocument, errorMessage: annonceDocumentError } = useField<File[]>("annonceDocument");
 const { value: annonceDocumentIndisponible } = useField<boolean>("annonceDocumentIndisponible");
 const { value: raisonAbsenceAnnonce, errorMessage: raisonAbsenceAnnonceError } = useField("raisonAbsenceAnnonce");
 const { value: moyenPaiement, errorMessage: moyenPaiementError } = useField("moyenPaiement");
@@ -519,15 +523,15 @@ const { value: societeBeneficiaire, errorMessage: societeBeneficiaireError } = u
 const { value: nomBeneficiaire, errorMessage: nomBeneficiaireError } = useField("nomBeneficiaire");
 const { value: prenomBeneficiaire, errorMessage: prenomBeneficiaireError } = useField("prenomBeneficiaire");
 const { value: dateOperation, errorMessage: dateOperationError } = useField("dateOperation");
-const { value: preuvePaiementDocument } = useField<File[]>("preuvePaiementDocument");
+const { value: preuvePaiementDocument, errorMessage: preuvePaiementDocumentError } = useField<File[]>("preuvePaiementDocument");
 const { value: preuvePaiementIndisponible } = useField<boolean>("preuvePaiementIndisponible");
 const { value: raisonAbsencePreuvePaiement, errorMessage: raisonAbsencePreuvePaiementError } = useField("raisonAbsencePreuvePaiement");
 const { value: copieIdentiteTransmiseAuteur, errorMessage: copieIdentiteTransmiseAuteurError } = useField<boolean>("copieIdentiteTransmiseAuteur");
-const { value: copieIdentiteTransmiseAuteurDocument } = useField<File[]>("copieIdentiteTransmiseAuteurDocument");
+const { value: copieIdentiteTransmiseAuteurDocument, errorMessage: copieIdentiteTransmiseAuteurDocumentError } = useField<File[]>("copieIdentiteTransmiseAuteurDocument");
 const { value: copieIdentiteTransmiseAuteurDocumentIndisponible } = useField<boolean>("copieIdentiteTransmiseAuteurDocumentIndisponible");
 const { value: raisonAbsenceCopieIdentiteTransmiseAuteur, errorMessage: raisonAbsenceCopieIdentiteTransmiseAuteurError } = useField<string>("raisonAbsenceCopieIdentiteTransmiseAuteur");
 const { value: copieIdentiteAuteurTransmise, errorMessage: copieIdentiteAuteurTransmiseError } = useField<boolean>("copieIdentiteAuteurTransmise");
-const { value: copieIdentiteAuteurDocument } = useField<File[]>("copieIdentiteAuteurDocument");
+const { value: copieIdentiteAuteurDocument, errorMessage: copieIdentiteAuteurDocumentError } = useField<File[]>("copieIdentiteAuteurDocument");
 const { value: copieIdentiteAuteurDocumentIndisponible } = useField<boolean>("copieIdentiteAuteurDocumentIndisponible");
 const { value: raisonAbsenceCopieIdentiteAuteur, errorMessage: raisonAbsenceCopieIdentiteAuteurError } = useField<string>("raisonAbsenceCopieIdentiteAuteur");
 
