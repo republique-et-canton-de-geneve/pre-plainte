@@ -16,8 +16,17 @@ import sys
 import time
 from pathlib import Path
 
-REPO_ROOT = Path(__file__).resolve().parents[2]
-DEFAULT_DB_DIR = REPO_ROOT / "pre-plainte-rest" / "src" / "main" / "resources" / "bdd"
+def resolve_repo_root() -> Path:
+    script = Path(__file__).resolve()
+    for parent in (script.parent, *script.parents):
+        if (parent / "pre-plainte-rest").is_dir():
+            return parent
+    return script.parent
+
+
+REPO_ROOT = resolve_repo_root()
+_CANDIDATE_DB_DIR = REPO_ROOT / "pre-plainte-rest" / "src" / "main" / "resources" / "bdd"
+DEFAULT_DB_DIR = _CANDIDATE_DB_DIR if _CANDIDATE_DB_DIR.is_dir() else Path.cwd()
 DEFAULT_DB_PATH = DEFAULT_DB_DIR / "dbppel3"
 BACKUP_SUFFIX = ".backup"
 NEW_SUFFIX = ".new"
