@@ -50,6 +50,9 @@ fi
 if [[ "${NO_BACKUP:-0}" == "1" ]]; then
   ARGS+=(--no-backup)
 fi
+if [[ -n "${RIPOL_DB_OUTPUT:-}" ]]; then
+  ARGS+=(--output "${RIPOL_DB_OUTPUT}")
+fi
 
 if [[ $# -eq 1 ]]; then
   ARGS+=(--input-dir "$1")
@@ -58,12 +61,16 @@ elif [[ $# -eq 2 ]]; then
 else
   echo "Usage: $0 <dossier_csv>" >&2
   echo "   ou: $0 <TBINCIDENTCODE.csv> <TBLOCALIZATION.csv>" >&2
+  echo "Env : RIPOL_DB_OUTPUT=/chemin/dbppel3  DRY_RUN=1  NO_BACKUP=1  SKIP_TESTS=1" >&2
   exit 1
 fi
 
 echo "=== Import RIPOL CSV -> SQLite ==="
 echo "Python : $($PYTHON --version 2>&1)"
 echo "Script : ${PYTHON_SCRIPT}"
+if [[ -n "${RIPOL_DB_OUTPUT:-}" ]]; then
+  echo "Output : ${RIPOL_DB_OUTPUT}"
+fi
 "${PYTHON}" "${PYTHON_SCRIPT}" "${ARGS[@]}"
 
 if [[ "${DRY_RUN:-0}" == "1" ]] || [[ "${SKIP_TESTS:-0}" == "1" ]]; then

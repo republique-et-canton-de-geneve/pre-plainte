@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import os
 import shutil
 import sqlite3
 import sys
@@ -26,7 +27,7 @@ def resolve_repo_root() -> Path:
 
 REPO_ROOT = resolve_repo_root()
 _CANDIDATE_DB_DIR = REPO_ROOT / "pre-plainte-rest" / "src" / "main" / "resources" / "bdd"
-DEFAULT_DB_DIR = _CANDIDATE_DB_DIR if _CANDIDATE_DB_DIR.is_dir() else Path.cwd()
+DEFAULT_DB_DIR = _CANDIDATE_DB_DIR if _CANDIDATE_DB_DIR.is_dir() else Path("/tmp")
 DEFAULT_DB_PATH = DEFAULT_DB_DIR / "dbppel3"
 BACKUP_SUFFIX = ".backup"
 NEW_SUFFIX = ".new"
@@ -235,10 +236,23 @@ def import_database(
     if output_path.exists():
         output_path.unlink()
 
-    output_path.parent.mkdir(parents=True, exist_ok=True)
+    parent = output_path.parent
+    try:
+        parent.mkdir(parents=True, exist_ok=True)
+    except OSError as error:
+        raise OSError(
+            f"Impossible de créer le dossier de sortie {parent} : {error}"
+        ) from error
 
+    log(f"Ecriture SQLite : {output_path}")
     started = time.time()
-    conn = sqlite3.connect(output_path)
+    try:
+        conn = sqlite3.connect(str(output_path))
+    except sqlite3.OperationalError as error:
+        raise OSError(
+            f"Impossible d'ouvrir {output_path} "
+            f"(dossier={parent}, writable={os.access(parent, os.W_OK)}) : {error}"
+        ) from error
     try:
         conn.execute("PRAGMA journal_mode = OFF")
         conn.execute("PRAGMA synchronous = OFF")
@@ -318,8 +332,9 @@ def main() -> int:
         log(f"Erreur : {error}")
         return 1
 
-    target = args.output.resolve()
+    target = args.output.expanduser().resolve()
     generated = target.with_name(target.name + NEW_SUFFIX)
+    log(f"Sortie cible : {target}")
 
     try:
         import_database(incident_csv, localization_csv, generated)
