@@ -16,7 +16,7 @@ export const nowRendezVousWorkflow = new Date("2026-07-01T08:00:00");
 export const servicesRendezVousWorkflow = [
   { key: "vol", name: "Pre-plainte pour vol" },
   { key: "dommage", name: "Pre-plainte pour dommage" },
-  { key: "cyber", name: "Pre-plainte pour cybercrime" },
+  { key: "cyber", name: "Pre-plainte pour cyber-escroquerie" },
 ];
 
 export const availabilitiesRendezVousWorkflow = [
@@ -37,7 +37,7 @@ export const availabilitiesRendezVousWorkflow = [
   },
   {
     serviceId: "cyber",
-    serviceName: "Pre-plainte pour cybercrime",
+    serviceName: "Pre-plainte pour cyber-escroquerie",
     availabilities: [
       { beginDateTime: "20260716T10:00", endDateTime: "20260716T10:30", resource: { key: "r4", name: "Poste 4" } },
     ],
@@ -76,6 +76,14 @@ export const reglesRendezVousWorkflow: BusinessRule<RendezVousWorkflowRuleData>[
         },
         valid: true,
         errorPath: ["dommage"],
+      },
+      {
+        label: "incident cyber conserve uniquement le service cyber-escroquerie",
+        data: {
+          typeIncident: "cybercrime",
+        },
+        valid: true,
+        errorPath: ["cyber"],
       },
     ],
   },
