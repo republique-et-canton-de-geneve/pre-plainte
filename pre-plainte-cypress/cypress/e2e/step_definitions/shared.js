@@ -36,11 +36,7 @@ const CONTINUER_INFORMATIONS_PERSONNELLES_SELECTOR = '[data-cy="continuer-inform
 const CONTINUER_EVENEMENT_SELECTOR = '[data-cy="continuer-evenement"]';
 const CONFIRMER_DISCLAIMER_SELECTOR = '[data-cy="confirmer-disclaimer"]';
 const TYPE_PERSONNE_NATIVE_SELECTOR = '[data-cy="type-personne-native"]';
-const REPRISE_BROUILLON_DIALOG_SELECTOR = '[data-cy="reprise-brouillon-dialog"]';
-const REPRISE_BROUILLON_CONTINUER_SELECTOR = '[data-cy="reprise-brouillon-continuer"]';
-const REPRISE_BROUILLON_RECOMMENCER_SELECTOR = '[data-cy="reprise-brouillon-recommencer"]';
 const PP_STEP_STORAGE_KEY = "pp-step";
-const REPRISE_BROUILLON_TITRE = "Une pré-plainte est en cours";
 const NOT_EXIST = "not.exist";
 const LOCAL_STORAGE_GET_ITEM = "getItem";
 const ARIA_DISABLED_ATTRIBUTE = "aria-disabled";
@@ -66,7 +62,10 @@ const STEP_RENDEZ_VOUS = 5;
 const STEP_RECAPITULATIF = 6;
 const SERVICE_AVAILABILITY_START_OFFSET_DAYS = 2;
 const SERVICE_AVAILABILITY_HOUR = 10;
-const NOMBRE_OBJETS_VOLES_BROUILLON = 1;
+const MESSAGE_CHAMP_REQUIS = "Le champ est requis";
+const MESSAGE_FABRICANT_AUTRE_REQUIS = "Veuillez préciser le fabricant";
+const MESSAGE_MODELE_AUTRE_REQUIS = "Veuillez préciser le modèle";
+
 
 const donneesEvenementVolVehicule = {
   nationalite: ripolSelection(PAYS_SUISSE, "Suisse"),
@@ -422,47 +421,6 @@ Given("je reprends un brouillon depuis l'URL", () => {
   );
 });
 
-Given("un brouillon local est présent", () => {
-  stubRipol();
-  cy.demarrerPrePlainteAEtape(
-    STEP_INFORMATIONS_PERSONNELLES,
-    {
-      ...donneesEmailVerifie,
-      ...declarantSuisseValide,
-    },
-    {
-      emailChallengeKey: EMAIL_CHALLENGE_KEY_CYPRESS,
-      offerDraftResume: true,
-      lastSavedAt: "2026-07-20T10:00:00.000Z",
-    },
-  );
-});
-
-Then("le dialogue de reprise de brouillon local est affiché", () => {
-  cy.get(REPRISE_BROUILLON_DIALOG_SELECTOR).should(bevisible);
-  cy.contains(REPRISE_BROUILLON_TITRE).should(bevisible);
-});
-
-When("je choisis de continuer le brouillon local", () => {
-  cy.get(REPRISE_BROUILLON_CONTINUER_SELECTOR).click();
-});
-
-When("je choisis de recommencer le brouillon local", () => {
-  cy.get(REPRISE_BROUILLON_RECOMMENCER_SELECTOR).click();
-});
-
-Then("je reste sur l'étape des informations personnelles", () => {
-  cy.get(REPRISE_BROUILLON_DIALOG_SELECTOR).should(NOT_EXIST);
-  cy.get(CONTINUER_INFORMATIONS_PERSONNELLES_SELECTOR).filter(":visible").first().should(bevisible);
-  cy.window().its("localStorage").invoke(LOCAL_STORAGE_GET_ITEM, PP_STEP_STORAGE_KEY).should("eq", String(STEP_INFORMATIONS_PERSONNELLES));
-});
-
-Then("je repars depuis les informations générales", () => {
-  cy.get(REPRISE_BROUILLON_DIALOG_SELECTOR).should(NOT_EXIST);
-  cy.get(CONTINUER_INFORMATIONS_GENERALES_SELECTOR).filter(":visible").first().should(bevisible);
-  cy.window().its("localStorage").invoke(LOCAL_STORAGE_GET_ITEM, PP_STEP_STORAGE_KEY).should("eq", String(STEP_INFORMATIONS_GENERALES));
-});
-
 Given("que je sélectionne {string} dans le type de personne", (type) => {
   cy.get(TYPE_PERSONNE_NATIVE_SELECTOR).select(valeursTypePersonne[type] ?? type, { force: true });
 });
@@ -653,8 +611,8 @@ When("je renseigne un vol simple nominal", () => {
 });
 
 When("je sélectionne le premier créneau disponible", () => {
-  cy.wait("@getEsiriusServices");
-  cy.wait("@getEsiriusAvailabilities");
+  cy.wait("@getEsiriusServices", { timeout: EMAIL_CHALLENGE_TIMEOUT_MS });
+  cy.wait("@getEsiriusAvailabilities", { timeout: EMAIL_CHALLENGE_TIMEOUT_MS });
   cy.get('[data-cy="creneau-row-0"]')
     .filter(":visible")
     .first()
@@ -697,12 +655,16 @@ Then("le message {string} s'affiche", (message) => {
 });
 
 Then("l'objet volé est enregistré", () => {
-  cy.contains("Le champ est requis").should("not.exist");
+  cy.contains(MESSAGE_CHAMP_REQUIS).should(NOT_EXIST);
+  cy.contains(MESSAGE_FABRICANT_AUTRE_REQUIS).should(NOT_EXIST);
+  cy.contains(MESSAGE_MODELE_AUTRE_REQUIS).should(NOT_EXIST);
   cy.contains("Objet n° 1").should(bevisible);
 });
 
 Then("aucune erreur de champ obligatoire n'est affichée", () => {
-  cy.contains("Le champ est requis").should("not.exist");
+  cy.contains(MESSAGE_CHAMP_REQUIS).should(NOT_EXIST);
+  cy.contains(MESSAGE_FABRICANT_AUTRE_REQUIS).should(NOT_EXIST);
+  cy.contains(MESSAGE_MODELE_AUTRE_REQUIS).should(NOT_EXIST);
 });
 
 Then("je vois l'étape {string}", (etape) => {

@@ -6,20 +6,10 @@ export const STORAGE_KEYS = [
   "pre-plainte-locale",
 ];
 
-export const SESSION_DRAFT_PROMPT_HANDLED = "pp-draft-prompt-handled";
-
 export const clearPrePlainteStorage = (storage) => {
   for (const key of STORAGE_KEYS) {
     storage.removeItem(key);
   }
-};
-
-export const markDraftPromptHandled = (sessionStorage) => {
-  sessionStorage.setItem(SESSION_DRAFT_PROMPT_HANDLED, "1");
-};
-
-export const clearDraftPromptHandled = (sessionStorage) => {
-  sessionStorage.removeItem(SESSION_DRAFT_PROMPT_HANDLED);
 };
 
 export const setPrePlainteStep = (storage, step, data = {}, options = {}) => {

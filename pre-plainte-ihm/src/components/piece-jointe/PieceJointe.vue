@@ -187,7 +187,7 @@ const props = withDefaults(
     showTitle?: boolean;
     required?: boolean;
     subtitle?: string;
-    errorMessages?: string | string[];
+    errorMessages?: string | string[] | null;
   }>(),
   {
     modelValue: () => [],
@@ -199,7 +199,7 @@ const props = withDefaults(
     showTitle: true,
     required: false,
     subtitle: "",
-    errorMessages: undefined,
+    errorMessages: null,
   },
 );
 
@@ -281,7 +281,12 @@ function openCameraPicker() {
 }
 
 function onCameraSelected(value: File | File[] | null) {
-  const selected = Array.isArray(value) ? value : value ? [value] : [];
+  let selected: File[] = [];
+  if (Array.isArray(value)) {
+    selected = value;
+  } else if (value) {
+    selected = [value];
+  }
   cameraFiles.value = [];
   if (selected.length > 0) {
     onFilesSelected(selected);
