@@ -126,7 +126,7 @@ const escapeSelectorValue = (value: string): string => {
   if (typeof CSS !== "undefined" && typeof CSS.escape === "function") {
     return CSS.escape(value);
   }
-  return value.replaceAll(/["\\]/g, "\\$&");
+  return value.replaceAll(/["\\]/g, String.raw`\$&`);
 };
 
 const findFieldElement = (field: string): Element | null => {

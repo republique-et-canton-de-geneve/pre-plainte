@@ -9,18 +9,17 @@
         <div class="d-flex d-md-none flex-column mobile-stepper">
           <div class="d-flex justify-space-between align-center">
             <v-chip color="primary" variant="outlined" size="large">
-              {{ t("common.etape") }} {{ stepDisplay }} {{ t("common.sur") }} 6
+              {{ t("common.etape") }} {{ stepDisplay }} {{ t("common.sur") }} {{ FORM_STEPS_COUNT }}
             </v-chip>
-            <div class="d-flex align-center gap-2" role="list" :aria-label="t('common.progressionEtapes')">
-              <div
-                v-for="i in 6"
+            <ul class="d-flex align-center gap-2 ma-0 pa-0" :aria-label="t('common.progressionEtapes')" style="list-style: none">
+              <li
+                v-for="i in FORM_STEPS_COUNT"
                 :key="i"
                 class="step-dot"
-                role="listitem"
                 :class="{ active: i <= stepDisplay, completed: i < stepDisplay }"
                 :aria-current="i === stepDisplay ? 'step' : undefined"
-              ></div>
-            </div>
+              ></li>
+            </ul>
           </div>
         </div>
       </div>
@@ -93,7 +92,8 @@ import { preplainteDtoToForm } from "@/utils/preplainteFormatBuilder";
 import { useI18n } from "vue-i18n";
 import LanguageSwitcher from "@/components/actions/LanguageSwitcher.vue";
 import { useMobileKeyboardInset } from "@/composables/useMobileKeyboardInset";
-import { hasPersistedDraft, markDraftPromptHandledForSession, shouldOfferDraftResume } from "@/utils/validations/field-validation.utils";
+import { markDraftPromptHandledForSession, shouldOfferDraftResume } from "@/utils/validations/field-validation.utils";
+import { STEPS } from "@/constants/constant";
 
 const { t } = useI18n();
 const store = useCreatePrePlainteStore();
@@ -103,7 +103,8 @@ const resumeDraftDialog = ref<InstanceType<typeof ResumeDraftDialog> | null>(nul
 
 useMobileKeyboardInset();
 
-const stepDisplay = computed(() => (step.value > 6 ? 6 : step.value));
+const FORM_STEPS_COUNT = STEPS.length - 1;
+const stepDisplay = computed(() => Math.min(step.value, FORM_STEPS_COUNT));
 
 const handleCancel = () => {
   store.prevStep();

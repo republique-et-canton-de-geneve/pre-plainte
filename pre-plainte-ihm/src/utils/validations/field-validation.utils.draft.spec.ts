@@ -34,7 +34,8 @@ describe("reprise de brouillon local", () => {
   });
 
   it("detecte un brouillon quand l'etape est superieure a 1", () => {
-    saveCurrentStep(3);
+    const stepInformationsPersonnelles = 3;
+    saveCurrentStep(stepInformationsPersonnelles);
     saveFormData(getInitialFormData());
 
     expect(hasPersistedDraft()).toBe(true);

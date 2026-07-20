@@ -73,6 +73,15 @@
     "@vue/devtools-kit": "8.0.5",
     "@vue/devtools-shared": "8.0.5",
     "quansync": "1.0.0",
-    "rollup": "4.60.4"
+    "rollup": "4.60.4",
+    "@typescript-eslint/eslint-plugin": "8.64.0",
+    "@typescript-eslint/parser": "8.64.0",
+    "@typescript-eslint/types": "8.64.0",
+    "@typescript-eslint/typescript-estree": "8.64.0",
+    "@typescript-eslint/utils": "8.64.0",
+    "@typescript-eslint/visitor-keys": "8.64.0",
+    "@typescript-eslint/scope-manager": "8.64.0",
+    "@typescript-eslint/type-utils": "8.64.0",
+    "typescript-eslint": "8.64.0"
   }
 }

@@ -40,13 +40,13 @@ const props = withDefaults(
     items?: FormValidationErrorItem[];
     messages?: string[];
     maxVisible?: number;
-    summaryMessage?: string;
+    summaryMessage?: string | null;
   }>(),
   {
     items: () => [],
     messages: () => [],
     maxVisible: 5,
-    summaryMessage: undefined,
+    summaryMessage: null,
   },
 );
 
