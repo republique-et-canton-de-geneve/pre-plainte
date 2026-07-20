@@ -1,6 +1,6 @@
 <template>
   <div class="inputs-fields">
-    <h3 class="pre-plainte-main-card-title mb-4 text-h3">{{ t("informationsEvenement.adresseEvenement") }}</h3>
+    <h3 class="pre-plainte-main-card-title mb-4 text-h5 text-md-h4">{{ t("informationsEvenement.adresseEvenement") }}</h3>
 
     <BaseRadioGroup
       v-model="adresseLesee"

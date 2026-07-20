@@ -1,6 +1,6 @@
 <template>
   <v-container fluid>
-    <h1 class="mb-4 text-h1 text-md-h2 d-md-none">{{ t("modification.titre") }}</h1>
+    <h1 class="mb-4 text-h4 text-md-h2 d-md-none">{{ t("modification.titre") }}</h1>
     <div class="d-flex d-md-none justify-space-between align-center mb-4">
       <v-chip color="primary" variant="outlined" size="large">
         {{ t("common.etape") }} {{ step > 3 ? 3 : step }} {{ t("common.sur") }} 3
@@ -10,7 +10,7 @@
       </div>
     </div>
     <StepLoadingSkeleton v-if="isLoading" :step="step" />
-    <v-row v-else>
+    <v-row v-else class="ma-0">
       <v-col cols="12" md="9">
         <ModifierRendezVousForm
           v-if="step <= 2"

@@ -3,7 +3,7 @@
     <v-form @submit.prevent="onSubmit">
       <h1 class="mb-5 text-h1 text-md-h2 d-none d-md-block">{{ t("titreApplication.prePlainte") }}</h1>
       <v-card class="pa-2 pa-md-6 mb-4">
-        <h2 class="pre-plainte-main-card-title mb-4 text-h2 text-md-h1 mt-4">
+        <h2 class="pre-plainte-main-card-title mb-4 text-h4 text-md-h2 mt-4">
           {{ t("informationsPersonnelles.titre") }}
         </h2>
         <AccessibleVSelect
