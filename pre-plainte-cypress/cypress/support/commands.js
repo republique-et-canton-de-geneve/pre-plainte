@@ -1,8 +1,4 @@
-import {
-  clearDraftPromptHandled,
-  markDraftPromptHandled,
-  setPrePlainteStep,
-} from "./helpers/local-storage";
+import { setPrePlainteStep } from "./helpers/local-storage";
 import { applyGeThemeVariables } from "./helpers/ge-theme";
 
 Cypress.Commands.add("demarrerPrePlainteAEtape", (step, data = {}, options = {}) => {
@@ -14,13 +10,6 @@ Cypress.Commands.add("demarrerPrePlainteAEtape", (step, data = {}, options = {})
     onBeforeLoad(win) {
       applyGeThemeVariables(win);
       setPrePlainteStep(win.localStorage, step, data, options);
-
-      if (options.offerDraftResume === true) {
-        clearDraftPromptHandled(win.sessionStorage);
-      } else {
-        markDraftPromptHandled(win.sessionStorage);
-      }
-
       if (originalOnBeforeLoad) {
         originalOnBeforeLoad(win);
       }

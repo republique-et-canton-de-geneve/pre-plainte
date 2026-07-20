@@ -627,99 +627,91 @@ const validatePlaque = (): boolean => {
 };
 
 const validateVehicule = async (): Promise<boolean> => {
-  let isValid = true;
+  const fabricantModeleOk = await validateFabricantEtModele({
+    fabricant: fabricant.value,
+    fabricantAutre: fabricantAutre.value,
+    modele: modele.value,
+    modeleAutre: modeleAutre.value,
+    setFieldError: setFieldError as any,
+    t,
+  });
 
-  if (
-    !(await validateFabricantEtModele({
-      fabricant: fabricant.value,
-      fabricantAutre: fabricantAutre.value,
-      modele: modele.value,
-      modeleAutre: modeleAutre.value,
-      setFieldError: setFieldError as any,
-      t,
-    }))
-  ) {
-    isValid = false;
-  }
+  const cadreVinOk = validateNumeroCadreEtVin({
+    isVeloCategory: isVeloCategory.value,
+    numeroCadreInconnu: numeroCadreInconnu.value,
+    numeroCadre: numeroCadre.value,
+    hasVin: hasVin.value,
+    vinInconnu: vinInconnu.value,
+    vin: vin.value,
+    setFieldError: setFieldError as any,
+    t,
+  });
 
-  if (
-    !validateNumeroCadreEtVin({
-      isVeloCategory: isVeloCategory.value,
-      numeroCadreInconnu: numeroCadreInconnu.value,
-      numeroCadre: numeroCadre.value,
-      hasVin: hasVin.value,
-      vinInconnu: vinInconnu.value,
-      vin: vin.value,
-      setFieldError: setFieldError as any,
-      t,
-    })
-  ) {
-    isValid = false;
-  }
+  const plaqueVehiculeOk = validerPlaqueVehicule(
+    {
+      sousCategorie: sousCategorie.value,
+      plaqueInconnu: plaqueInconnu.value,
+      plaqueNumero: plaqueNumero.value,
+      plaquePays: plaquePays.value,
+      plaqueCanton: plaqueCanton.value,
+    },
+    setFieldError as (field: string, message: string) => void,
+    t,
+  );
 
-  if (
-    !validerPlaqueVehicule(
-      {
-        sousCategorie: sousCategorie.value,
-        plaqueInconnu: plaqueInconnu.value,
-        plaqueNumero: plaqueNumero.value,
-        plaquePays: plaquePays.value,
-        plaqueCanton: plaqueCanton.value,
-      },
-      setFieldError as (field: string, message: string) => void,
-      t,
-    )
-  ) {
-    isValid = false;
-  }
-
-  return isValid;
+  return fabricantModeleOk && cadreVinOk && plaqueVehiculeOk;
 };
 
 const validateNumeroSerieEtIMEI = (): boolean => {
-  let isValid = true;
+  const serieOk = validateNumeroSerieRequis();
+  const imeiPresenceOk = validateNumeroIMEIRequis();
+  const imeiFormatOk = validateNumeroIMEIFormat();
+  const justificationOk = validateJustificationAbsenceIMEI();
+  return serieOk && imeiPresenceOk && imeiFormatOk && justificationOk;
+};
 
+const validateNumeroSerieRequis = (): boolean => {
   if (
     numeroSerieRequis.value
     && !numeroSerieInconnu.value
     && !chaineFormulaire(numeroSerie.value).trim()
   ) {
     setFieldError("numeroSerie", t("validation.numeroSerieRequis"));
-    isValid = false;
+    return false;
   }
+  return true;
+};
 
-  if (
-    numeroIMEIRequis.value
-    && !chaineFormulaire(numeroIMEI.value).trim()
-  ) {
+const validateNumeroIMEIRequis = (): boolean => {
+  if (numeroIMEIRequis.value && !chaineFormulaire(numeroIMEI.value).trim()) {
     setFieldError(
       "numeroIMEI",
       t("validation.numeroIMEIRequis", { max: NUMERO_IMEI_MAX_LENGTH }),
     );
-    isValid = false;
+    return false;
   }
+  return true;
+};
 
+const validateNumeroIMEIFormat = (): boolean => {
   const numeroIMEITrim = chaineFormulaire(numeroIMEI.value).trim();
-
-  if (
-    !numeroIMEIInconnu.value
-    && numeroIMEITrim
-    && !NUMERO_IMEI_REGEX.test(numeroIMEITrim)
-  ) {
+  if (!numeroIMEIInconnu.value && numeroIMEITrim && !NUMERO_IMEI_REGEX.test(numeroIMEITrim)) {
     setFieldError("numeroIMEI", t("validation.numeroIMEIFormat"));
-    isValid = false;
+    return false;
   }
+  return true;
+};
 
+const validateJustificationAbsenceIMEI = (): boolean => {
   if (
     typeObjet.value?.code === RIPOL.CODE_TELEPHONE_MOBILE
     && numeroIMEIInconnu.value
     && !chaineFormulaire(justificationAbsenceIMEI.value).trim()
   ) {
     setFieldError("justificationAbsenceIMEI", t("validation.justificationAbsenceIMEIRequise"));
-    isValid = false;
+    return false;
   }
-
-  return isValid;
+  return true;
 };
 
 const enregistrerObjetVole = (snapshot: VolObjetFormSnapshot) => {

@@ -27,6 +27,8 @@
               :aria-label="t('common.ouvrirCalendrier')"
               role="button"
               tabindex="0"
+              @keydown.enter.prevent="menuProps.onClick?.($event)"
+              @keydown.space.prevent="menuProps.onClick?.($event)"
             />
           </template>
           <v-date-picker
@@ -49,26 +51,34 @@ import { useI18n } from "vue-i18n";
 import { fromIsoDate, toIsoDate } from "@/utils/helpers/dateHelpers";
 
 const ANNEE_MIN_ISO = "1900-01-01";
+const DATE_DIGIT_LIMIT = 8;
+const DATE_PART_PAD_LENGTH = 2;
+const DATE_PART_PAD_CHAR = "0";
+const DAY_DIGITS_END = 2;
+const MONTH_DIGITS_END = 4;
+const NON_DIGIT_PATTERN = /\D/g;
+const DATE_SEPARATOR = ".";
+
 
 const props = withDefaults(
   defineProps<{
     modelValue?: string | null;
     label: string;
-    errorMessages?: string | string[];
-    hint?: string;
+    errorMessages?: string | string[] | null;
+    hint?: string | null;
     persistentHint?: boolean;
     disabled?: boolean;
-    name?: string;
-    fieldClass?: string;
+    name?: string | null;
+    fieldClass?: string | null;
   }>(),
   {
     modelValue: "",
-    errorMessages: undefined,
-    hint: undefined,
+    errorMessages: null,
+    hint: null,
     persistentHint: false,
     disabled: false,
-    name: undefined,
-    fieldClass: undefined,
+    name: null,
+    fieldClass: null,
   },
 );
 
@@ -79,11 +89,13 @@ const emit = defineEmits<{
 const { t } = useI18n();
 const menuOpen = ref(false);
 
+function padDatePart(value: number): string {
+  return String(value).padStart(DATE_PART_PAD_LENGTH, DATE_PART_PAD_CHAR);
+}
+
 const maxIso = computed(() => {
   const now = new Date();
-  const month = String(now.getMonth() + 1).padStart(2, "0");
-  const day = String(now.getDate()).padStart(2, "0");
-  return `${now.getFullYear()}-${month}-${day}`;
+  return `${now.getFullYear()}-${padDatePart(now.getMonth() + 1)}-${padDatePart(now.getDate())}`;
 });
 
 const minIso = ANNEE_MIN_ISO;
@@ -108,9 +120,7 @@ function normalizePickerValue(value: unknown): string | undefined {
     return value.slice(0, 10);
   }
   if (value instanceof Date && !Number.isNaN(value.getTime())) {
-    const month = String(value.getMonth() + 1).padStart(2, "0");
-    const day = String(value.getDate()).padStart(2, "0");
-    return `${value.getFullYear()}-${month}-${day}`;
+    return `${value.getFullYear()}-${padDatePart(value.getMonth() + 1)}-${padDatePart(value.getDate())}`;
   }
   if (Array.isArray(value) && value.length > 0) {
     return normalizePickerValue(value[0]);
@@ -119,14 +129,14 @@ function normalizePickerValue(value: unknown): string | undefined {
 }
 
 function applyDateMaskFromString(raw: string): string {
-  const digits = raw.replace(/\D/g, "").slice(0, 8);
-  if (digits.length <= 2) {
+  const digits = raw.replaceAll(NON_DIGIT_PATTERN, "").slice(0, DATE_DIGIT_LIMIT);
+  if (digits.length <= DAY_DIGITS_END) {
     return digits;
   }
-  if (digits.length <= 4) {
-    return `${digits.slice(0, 2)}.${digits.slice(2)}`;
+  if (digits.length <= MONTH_DIGITS_END) {
+    return `${digits.slice(0, DAY_DIGITS_END)}${DATE_SEPARATOR}${digits.slice(DAY_DIGITS_END)}`;
   }
-  return `${digits.slice(0, 2)}.${digits.slice(2, 4)}.${digits.slice(4)}`;
+  return `${digits.slice(0, DAY_DIGITS_END)}${DATE_SEPARATOR}${digits.slice(DAY_DIGITS_END, MONTH_DIGITS_END)}${DATE_SEPARATOR}${digits.slice(MONTH_DIGITS_END)}`;
 }
 </script>
 
