@@ -1,9 +1,9 @@
 <template>
-  <main>
+  <main class="recapitulatif-dense">
     <h1 class="mb-4 text-h1 text-md-h1 d-none d-md-block">{{ t("titreApplication.prePlainte") }}</h1>
 
     <section aria-labelledby="recap-title" class="mb-6">
-      <h2 id="recap-title" class="pre-plainte-main-card-title text-h2">{{ t("steps.recapitulatif") }}</h2>
+      <h2 id="recap-title" class="pre-plainte-main-card-title text-h4 text-md-h2">{{ t("steps.recapitulatif") }}</h2>
     </section>
 
     <v-alert
@@ -17,7 +17,7 @@
     </v-alert>
 
     <v-card v-if="!isRendezVousOnly" class="pa-2 pa-md-6 mb-4">
-      <h2 id="recap-personal-info" class="pre-plainte-main-card-title mb-4 text-h2 text-md-h1 text-wrap">
+      <h2 id="recap-personal-info" class="pre-plainte-main-card-title mb-4 text-h4 text-md-h2 text-wrap">
         {{ t("steps.informationsPersonnelles") }}
       </h2>
       <div class="mb-4">
@@ -182,7 +182,7 @@
 
         <!-- Identité tiers concerné -->
         <section v-if="isTiers">
-          <h3 class="pre-plainte-main-card-title text-h3 mb-3">
+          <h3 class="pre-plainte-main-card-title text-h5 text-md-h4 mb-3">
             {{ t("informationsPersonnelles.identiteTiersConcerne") }}
           </h3>
 
@@ -338,7 +338,7 @@
 
         <!-- Informations organisation -->
         <section v-if="isEntreprise">
-          <h3 class="pre-plainte-main-card-title text-h3 mb-3">
+          <h3 class="pre-plainte-main-card-title text-h5 text-md-h4 mb-3">
             {{ t("informationsPersonnelles.identiteOrganisation") }}
           </h3>
 
@@ -440,7 +440,7 @@
     </v-card>
 
     <v-card v-if="!isRendezVousOnly" class="pa-2 pa-md-6 mb-4">
-      <h2 id="recap-event" class="pre-plainte-main-card-title mb-4 text-h2 text-wrap">
+      <h2 id="recap-event" class="pre-plainte-main-card-title mb-4 text-h4 text-md-h2 text-wrap">
         {{ t("informationsEvenement.titre") }}
       </h2>
       <div class="mb-4">
@@ -1512,7 +1512,7 @@
     </v-card>
 
     <v-card v-if="data.dateSouhaitee || data.creneauPrefere || data.selectedCreneau" class="pa-2 pa-md-6 mb-4">
-      <h2 class="pre-plainte-main-card-title mb-4 text-h2 text-wrap">{{ t("steps.prendreRendezVous") }}</h2>
+      <h2 class="pre-plainte-main-card-title mb-4 text-h4 text-md-h2 text-wrap">{{ t("steps.prendreRendezVous") }}</h2>
       <div class="mb-4">
         <v-row class="ma-0">
           <v-col cols="12" class="pa-0">

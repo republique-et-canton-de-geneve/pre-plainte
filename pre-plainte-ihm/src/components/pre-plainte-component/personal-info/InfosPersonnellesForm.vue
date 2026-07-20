@@ -1,6 +1,6 @@
 <template>
   <div>
-    <h3 class="pre-plainte-main-card-title mb-4 mb-md-6 text-h4 text-md-h3">
+    <h3 class="pre-plainte-main-card-title mb-4 mb-md-6 text-h5 text-md-h4">
       {{ t("informationsPersonnelles.identitePersonneSignalant") }}
     </h3>
 
@@ -13,6 +13,7 @@
       variant="outlined"
       :hint="t('informationsPersonnelles.hintNom')"
       persistent-hint
+      autocomplete="family-name"
     />
     <v-text-field
       :label="t('informationsPersonnelles.nomNaissance')"
@@ -22,6 +23,7 @@
       variant="outlined"
       :hint="t('informationsPersonnelles.hintNomNaissance')"
       persistent-hint
+      autocomplete="additional-name"
     />
     <v-text-field
       :label="requiredLabel(t('informationsPersonnelles.prenom'))"
@@ -31,9 +33,10 @@
       variant="outlined"
       :hint="t('informationsPersonnelles.hintPrenom')"
       persistent-hint
+      autocomplete="given-name"
     />
 
-    <h3 class="pre-plainte-main-card-title mb-4 mb-md-6 text-h4 text-md-h3">
+    <h3 class="pre-plainte-main-card-title mb-4 mb-md-6 text-h5 text-md-h4">
       {{ t("informationsPersonnelles.coordonneesPersonneSignalant") }}
     </h3>
 
@@ -101,21 +104,18 @@
       persistent-hint
     />
 
-    <v-text-field
-      :label="requiredLabel(t('informationsPersonnelles.dateNaissance'))"
+    <MaskedDateField
       v-model="dateNaissance"
-      type="text"
-      placeholder="JJ.MM.AAAA"
+      :label="requiredLabel(t('informationsPersonnelles.dateNaissance'))"
       :error-messages="dateNaissanceError"
       class="mb-8"
-      variant="outlined"
-      prepend-inner-icon="mdi-calendar"
       :hint="t('informationsPersonnelles.hintDateNaissance')"
       persistent-hint
-      @input="onDateNaissanceInput"
+      name="dateNaissance"
+      field-class="mb-8"
     />
 
-    <h4 class="mb-4 mt-6 text-h4">
+    <h4 class="mb-4 mt-6 text-h6">
       {{ t("informationsPersonnelles.adressePersonneSignalant") }}
     </h4>
 
@@ -170,7 +170,7 @@
       persistent-hint
     />
 
-    <h4 class="mb-8 mb-md-4 mt-4 mt-md-6 text-h4 text-md-h4 font-weight-bold">
+    <h4 class="mb-8 mb-md-4 mt-4 mt-md-6 text-h6 text-md-h5 font-weight-bold">
       {{ t("informationsPersonnelles.documentIdentite") }}
     </h4>
     <AccessibleVSelect
@@ -226,7 +226,7 @@ import type { CountrySelection } from "@/types/country.types";
 import { RipolService } from "@/services/ripolService";
 import { fetchGenresSorted, fetchNationalitiesForPersonForm } from "@/utils/helpers/ripolHelpers.ts";
 import AccessibleVSelect from "@/components/accessibility/AccessibleVSelect.vue";
-import { applyDateMask } from "@/utils/helpers/dateHelpers.ts";
+import MaskedDateField from "@/components/form/MaskedDateField.vue";
 import { createHintAdresse } from "@/utils/helpers/adresseHelpers.ts";
 import { requiredLabel } from "@/utils/helpers/labelHelpers";
 
@@ -342,10 +342,6 @@ const localiteHint = createHintAdresse(
 
 const onCountryChanged = (country: CountrySelection) => {
   pays.value = country.ripolCode;
-};
-
-const onDateNaissanceInput = (e: InputEvent) => {
-  applyDateMask(e, dateNaissance);
 };
 
 watch(typeDocumentIdentite, newValue => {

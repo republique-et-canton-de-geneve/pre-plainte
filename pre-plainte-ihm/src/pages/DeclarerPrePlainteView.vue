@@ -1,17 +1,26 @@
 <template>
-  <v-container fluid>
+  <v-container fluid class="pre-plainte-page">
     <div class="top-bar mb-4 px-2">
       <div class="top-bar-left">
-        <h1 class="text-h1 text-md-h2 d-md-none mobile-title">
+        <h1 class="text-h4 text-md-h2 d-md-none mobile-title">
           {{ t("titreApplication.prePlainte") }}
         </h1>
 
-        <div class="d-flex d-md-none justify-space-between align-center mobile-stepper">
-          <v-chip color="primary" variant="outlined" size="large">
-            {{ t("common.etape") }} {{ step > 6 ? 6 : step }} {{ t("common.sur") }} 6
-          </v-chip>
-          <div class="d-flex align-center gap-2">
-            <div v-for="i in 6" :key="i" class="step-dot" :class="{ active: i <= step, completed: i < step }"></div>
+        <div class="d-flex d-md-none flex-column mobile-stepper">
+          <div class="d-flex justify-space-between align-center">
+            <v-chip color="primary" variant="outlined" size="large">
+              {{ t("common.etape") }} {{ stepDisplay }} {{ t("common.sur") }} 6
+            </v-chip>
+            <div class="d-flex align-center gap-2" role="list" :aria-label="t('common.progressionEtapes')">
+              <div
+                v-for="i in 6"
+                :key="i"
+                class="step-dot"
+                role="listitem"
+                :class="{ active: i <= stepDisplay, completed: i < stepDisplay }"
+                :aria-current="i === stepDisplay ? 'step' : undefined"
+              ></div>
+            </div>
           </div>
         </div>
       </div>
@@ -21,7 +30,7 @@
 
     <StepLoadingSkeleton v-if="isLoading" :step="step" />
 
-    <v-row v-else>
+    <v-row v-else class="ma-0">
       <v-col cols="12" md="8">
         <Disclaimer v-if="step === 1" :key="`step-${step}`" @continue="handleContinue" />
         <VerificationEmail v-if="step === 2" :key="`step-${step}`" @cancel="handleCancel" @continue="handleContinue" />
@@ -49,6 +58,12 @@
         <Recapitulatif v-if="step === 6" :key="`step-${step}`" @continue="handleContinue" @cancel="handleContinue" />
         <ValidationCard v-if="step === 7" :key="`step-${step}`" @restart="handleRestart" />
         <SaveAndQuitForm ref="saveDialog" />
+        <ResumeDraftDialog
+          ref="resumeDraftDialog"
+          :saved-at="lastLocalSavedAt"
+          @continue="onDraftResumeContinue"
+          @restart="onDraftResumeRestart"
+        />
       </v-col>
       <v-col md="4" class="d-none d-md-block">
         <StepperPrePlainte />
@@ -68,19 +83,27 @@ import InfosEvenement from "@/views/InfosEvenement.vue";
 import ValidationCard from "@/views/ValidationCard.vue";
 import Recapitulatif from "@/views/Recapitulatif.vue";
 import RendezVous from "@/views/RendezVous.vue";
-import { nextTick, onMounted, ref, watch } from "vue";
+import { computed, nextTick, onMounted, ref, watch } from "vue";
 import SaveAndQuitForm from "@/components/dialogs/SaveAndQuitForm.vue";
+import ResumeDraftDialog from "@/components/dialogs/ResumeDraftDialog.vue";
 import { SauvegardeService } from "@/services/sauvegardeService";
 import { useRoute, useRouter } from "vue-router";
 import StepLoadingSkeleton from "@/components/loading/StepLoadingSkeleton.vue";
 import { preplainteDtoToForm } from "@/utils/preplainteFormatBuilder";
 import { useI18n } from "vue-i18n";
 import LanguageSwitcher from "@/components/actions/LanguageSwitcher.vue";
+import { useMobileKeyboardInset } from "@/composables/useMobileKeyboardInset";
+import { hasPersistedDraft, markDraftPromptHandledForSession, shouldOfferDraftResume } from "@/utils/validations/field-validation.utils";
 
 const { t } = useI18n();
 const store = useCreatePrePlainteStore();
-const { step, isLoading } = storeToRefs(store);
+const { step, isLoading, lastLocalSavedAt } = storeToRefs(store);
 const saveDialog = ref<InstanceType<typeof SaveAndQuitForm> | null>(null);
+const resumeDraftDialog = ref<InstanceType<typeof ResumeDraftDialog> | null>(null);
+
+useMobileKeyboardInset();
+
+const stepDisplay = computed(() => (step.value > 6 ? 6 : step.value));
 
 const handleCancel = () => {
   store.prevStep();
@@ -96,6 +119,14 @@ const handleRestart = () => {
 
 const handleSave = () => {
   saveDialog.value?.open();
+};
+
+const onDraftResumeContinue = () => {
+  markDraftPromptHandledForSession();
+};
+
+const onDraftResumeRestart = () => {
+  markDraftPromptHandledForSession();
 };
 
 const handleRecup = async (code: string) => {
@@ -115,11 +146,24 @@ async function verifierCodeDanslUrl() {
     await handleRecup(demandeId);
     const { demandeId: _omit, ...rest } = route.query;
     router.replace({ query: { ...rest } });
+    return true;
   }
+  return false;
 }
 
 onMounted(async () => {
-  await verifierCodeDanslUrl();
+  const repriseServeur = await verifierCodeDanslUrl();
+  if (repriseServeur) {
+    markDraftPromptHandledForSession();
+    return;
+  }
+
+  if (shouldOfferDraftResume()) {
+    resumeDraftDialog.value?.open();
+    return;
+  }
+
+  markDraftPromptHandledForSession();
 });
 
 watch(step, () => {

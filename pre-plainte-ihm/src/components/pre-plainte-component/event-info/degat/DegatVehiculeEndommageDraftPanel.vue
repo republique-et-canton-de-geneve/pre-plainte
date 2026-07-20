@@ -22,13 +22,15 @@
       <v-text-field
         :label="t('incidentTypes.valeurReelle')"
         :model-value="valeurReelle"
-        @update:model-value="emit('update:valeurReelle', $event)"
         type="number"
+        min="0"
         class="my-4"
         :error-messages="valeurReelleError"
         variant="outlined"
         :hint="t('incidentTypes.hintValeurReelle')"
         persistent-hint
+        @keydown="bloquerSaisieValeurNegative"
+        @update:model-value="onValeurReelleInput"
       />
 
       <div class="d-flex justify-start mt-2">
@@ -67,4 +69,20 @@ const { t } = useI18n();
 const numeroObjet = computed(() =>
   props.objetIndex === undefined ? props.objetsCount + 1 : props.objetIndex + 1,
 );
+
+const bloquerSaisieValeurNegative = (event: KeyboardEvent) => {
+  if (event.key === "-" || event.key === "e" || event.key === "E" || event.key === "+") {
+    event.preventDefault();
+  }
+};
+
+const onValeurReelleInput = (value: string | number | null) => {
+  const raw = value == null ? "" : String(value);
+  if (!raw.trim()) {
+    emit("update:valeurReelle", "");
+    return;
+  }
+  const parsed = Number(raw);
+  emit("update:valeurReelle", Number.isFinite(parsed) && parsed < 0 ? "" : raw);
+};
 </script>
