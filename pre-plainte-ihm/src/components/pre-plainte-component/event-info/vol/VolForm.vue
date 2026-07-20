@@ -627,53 +627,39 @@ const validatePlaque = (): boolean => {
 };
 
 const validateVehicule = async (): Promise<boolean> => {
-  let isValid = true;
+  const fabricantModeleOk = await validateFabricantEtModele({
+    fabricant: fabricant.value,
+    fabricantAutre: fabricantAutre.value,
+    modele: modele.value,
+    modeleAutre: modeleAutre.value,
+    setFieldError: setFieldError as any,
+    t,
+  });
 
-  if (
-    !(await validateFabricantEtModele({
-      fabricant: fabricant.value,
-      fabricantAutre: fabricantAutre.value,
-      modele: modele.value,
-      modeleAutre: modeleAutre.value,
-      setFieldError: setFieldError as any,
-      t,
-    }))
-  ) {
-    isValid = false;
-  }
+  const cadreVinOk = validateNumeroCadreEtVin({
+    isVeloCategory: isVeloCategory.value,
+    numeroCadreInconnu: numeroCadreInconnu.value,
+    numeroCadre: numeroCadre.value,
+    hasVin: hasVin.value,
+    vinInconnu: vinInconnu.value,
+    vin: vin.value,
+    setFieldError: setFieldError as any,
+    t,
+  });
 
-  if (
-    !validateNumeroCadreEtVin({
-      isVeloCategory: isVeloCategory.value,
-      numeroCadreInconnu: numeroCadreInconnu.value,
-      numeroCadre: numeroCadre.value,
-      hasVin: hasVin.value,
-      vinInconnu: vinInconnu.value,
-      vin: vin.value,
-      setFieldError: setFieldError as any,
-      t,
-    })
-  ) {
-    isValid = false;
-  }
+  const plaqueVehiculeOk = validerPlaqueVehicule(
+    {
+      sousCategorie: sousCategorie.value,
+      plaqueInconnu: plaqueInconnu.value,
+      plaqueNumero: plaqueNumero.value,
+      plaquePays: plaquePays.value,
+      plaqueCanton: plaqueCanton.value,
+    },
+    setFieldError as (field: string, message: string) => void,
+    t,
+  );
 
-  if (
-    !validerPlaqueVehicule(
-      {
-        sousCategorie: sousCategorie.value,
-        plaqueInconnu: plaqueInconnu.value,
-        plaqueNumero: plaqueNumero.value,
-        plaquePays: plaquePays.value,
-        plaqueCanton: plaqueCanton.value,
-      },
-      setFieldError as (field: string, message: string) => void,
-      t,
-    )
-  ) {
-    isValid = false;
-  }
-
-  return isValid;
+  return fabricantModeleOk && cadreVinOk && plaqueVehiculeOk;
 };
 
 const validateNumeroSerieEtIMEI = (): boolean => {
