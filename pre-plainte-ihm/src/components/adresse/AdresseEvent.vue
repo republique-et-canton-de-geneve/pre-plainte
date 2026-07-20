@@ -1,9 +1,10 @@
 <template>
   <div class="inputs-fields">
-    <h3 class="pre-plainte-main-card-title mb-4 text-h3">{{ t("informationsEvenement.adresseEvenement") }}</h3>
+    <h3 class="pre-plainte-main-card-title mb-4 text-h5 text-md-h4">{{ t("informationsEvenement.adresseEvenement") }}</h3>
 
     <BaseRadioGroup
       v-model="adresseLesee"
+      name="adresseLesee"
       :label="t('adresseEvent.adresseCorrespond')"
       required
       :options="[
@@ -26,6 +27,7 @@
     <div v-if="adresseLesee === false">
       <RipolAutocomplete
         v-model="typeLieu"
+        name="typeLieu"
         :label="t('adresseEvent.typeLieu')"
         required
         :fetch-fn="RipolService.searchLocationTypes"
@@ -38,6 +40,7 @@
 
       <BaseRadioGroup
         v-model="adresseConnue"
+        name="adresseConnue"
         :label="t('adresseEvent.adresseConnue')"
         required
         :options="[
@@ -50,6 +53,7 @@
       <div v-if="adresseConnue === false" class="mb-4">
         <BaseRadioGroup
           v-model="isTrajet"
+          name="isTrajet"
           :label="t('adresseEvent.adresseTrajet')"
           required
           :options="[
@@ -96,6 +100,7 @@
         <RipolAutocomplete
           v-if="isTrajet === false"
           v-model="lieuOrigineEvenement"
+          name="lieuOrigineEvenement"
           :label="t('adresseEvent.lieuOrigine')"
           required
           :fetch-fn="RipolService.searchLieuxOrigine"

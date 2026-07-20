@@ -2,13 +2,24 @@ export const STORAGE_KEYS = [
   "pp-data",
   "pp-step",
   "pp-email-challenge-key",
+  "pp-last-saved-at",
   "pre-plainte-locale",
 ];
+
+export const SESSION_DRAFT_PROMPT_HANDLED = "pp-draft-prompt-handled";
 
 export const clearPrePlainteStorage = (storage) => {
   for (const key of STORAGE_KEYS) {
     storage.removeItem(key);
   }
+};
+
+export const markDraftPromptHandled = (sessionStorage) => {
+  sessionStorage.setItem(SESSION_DRAFT_PROMPT_HANDLED, "1");
+};
+
+export const clearDraftPromptHandled = (sessionStorage) => {
+  sessionStorage.removeItem(SESSION_DRAFT_PROMPT_HANDLED);
 };
 
 export const setPrePlainteStep = (storage, step, data = {}, options = {}) => {
@@ -18,5 +29,13 @@ export const setPrePlainteStep = (storage, step, data = {}, options = {}) => {
 
   if (options.emailChallengeKey) {
     storage.setItem("pp-email-challenge-key", options.emailChallengeKey);
+  }
+
+  if (options.lastSavedAt) {
+    const value =
+      options.lastSavedAt instanceof Date
+        ? options.lastSavedAt.toISOString()
+        : String(options.lastSavedAt);
+    storage.setItem("pp-last-saved-at", value);
   }
 };

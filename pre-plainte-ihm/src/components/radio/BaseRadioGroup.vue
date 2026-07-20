@@ -1,5 +1,5 @@
 <template>
-  <fieldset class="mb-4">
+  <fieldset class="mb-4" :data-field="name || undefined">
     <legend class="text-subtitle-1 mb-2">
       {{ displayLabel }}
     </legend>
@@ -12,6 +12,7 @@
       :hint="hint"
       :persistent-hint="!!hint"
       :class="{ 'mb-4': hint }"
+      :name="name"
       inline
     >
       <v-radio
@@ -38,6 +39,7 @@ const props = defineProps<{
   errorMessages?: string | string[]
   hint?: string
   required?: boolean
+  name?: string
 }>()
 
 const emit = defineEmits<{

@@ -2,7 +2,11 @@
   <v-form @submit.prevent="onSubmit">
     <h1 class="mb-4 text-h1 text-md-h2 d-none d-md-block">{{ t("titreApplication.prePlainte") }}</h1>
     <v-card class="pa-2 pa-md-6 mb-4">
-      <h2 class="pre-plainte-main-card-title mb-4 text-h2">{{ t("informationsEvenement.titre") }}</h2>
+      <FormErrorSummary
+        :items="formErrorItemsAffiches"
+        :summary-message="objetVoleIncomplet ? t('incidentTypes.objetVoleInformationsManquantes') : undefined"
+      />
+      <h2 class="pre-plainte-main-card-title mb-4 text-h4 text-md-h2">{{ t("informationsEvenement.titre") }}</h2>
       <VolForm v-if="typeIncident === 'vol'" ref="volFormRef" />
       <DegatMaterielForm v-if="typeIncident === 'degat-delit'" ref="degatMaterielFormRef" />
 
@@ -35,60 +39,46 @@
       <template v-if="typeIncident === 'vol' || typeIncident === 'degat-delit' || typeCybercrime === TYPE_CYBERCRIME_COMMANDE_FRAUDULEUSE">
         <v-row class="mb-4" align="center" dense>
           <v-col cols="12" md="6">
-            <v-text-field
-              :label="requiredLabel(dateDebutEvenementLabel)"
+            <MaskedDateField
               v-model="dateDebutEvenement"
+              :label="requiredLabel(dateDebutEvenementLabel)"
               :error-messages="dateDebutEvenementError"
-              type="text"
-              placeholder="JJ.MM.AAAA"
-              variant="outlined"
-              prepend-inner-icon="mdi-calendar"
               :hint="dateDebutEvenementHint"
               persistent-hint
-              @input="onDateDebutEvenementInput"
+              name="dateDebutEvenement"
             />
           </v-col>
           <v-col cols="12" md="6" class="mt-4 mt-md-0">
-            <v-text-field
-              :label="requiredLabel(heureDebutEvenementLabel)"
+            <MaskedTimeField
               v-model="heureDebutEvenement"
+              :label="requiredLabel(heureDebutEvenementLabel)"
               :error-messages="heureDebutEvenementError"
-              type="text"
-              placeholder="HH:MM"
-              variant="outlined"
               :hint="heureDebutEvenementHint"
               persistent-hint
-              @input="onHeureDebutEvenementInput"
+              name="heureDebutEvenement"
             />
           </v-col>
         </v-row>
 
         <v-row class="mb-4" align="center" dense>
           <v-col cols="12" md="6">
-            <v-text-field
-              :label="requiredLabel(dateFinEvenementLabel)"
+            <MaskedDateField
               v-model="dateFinEvenement"
+              :label="requiredLabel(dateFinEvenementLabel)"
               :error-messages="dateFinEvenementError"
-              type="text"
-              placeholder="JJ.MM.AAAA"
-              variant="outlined"
-              prepend-inner-icon="mdi-calendar"
               :hint="dateFinEvenementHint"
               persistent-hint
-              @input="onDateFinEvenementInput"
+              name="dateFinEvenement"
             />
           </v-col>
           <v-col cols="12" md="6" class="mt-4 mt-md-0">
-            <v-text-field
-              :label="requiredLabel(heureFinEvenementLabel)"
+            <MaskedTimeField
               v-model="heureFinEvenement"
+              :label="requiredLabel(heureFinEvenementLabel)"
               :error-messages="heureFinEvenementError"
-              type="text"
-              placeholder="HH:MM"
-              variant="outlined"
               :hint="heureFinEvenementHint"
               persistent-hint
-              @input="onHeureFinEvenementInput"
+              name="heureFinEvenement"
             />
           </v-col>
         </v-row>
@@ -97,59 +87,45 @@
       <template v-if="typeCybercrime === TYPE_CYBERCRIME_ACHAT_NON_RECU || typeCybercrime === TYPE_CYBERCRIME_FAUSSE_ANNONCE">
         <v-row class="mb-4 mt-4" align="center" dense>
           <v-col cols="12" md="6">
-            <v-text-field
-              :label="requiredLabel(t('cybercrime.datePremierContact'))"
+            <MaskedDateField
               v-model="datePremierContact"
-              type="text"
-              placeholder="JJ.MM.AAAA"
+              :label="requiredLabel(t('cybercrime.datePremierContact'))"
               :error-messages="datePremierContactError"
-              variant="outlined"
-              prepend-inner-icon="mdi-calendar"
               :hint="t('cybercrime.hintDatePremierContact')"
               persistent-hint
-              @input="onDatePremierContactInput"
+              name="datePremierContact"
             />
           </v-col>
           <v-col cols="12" md="6" class="mt-4 mt-md-0">
-            <v-text-field
-              :label="requiredLabel(t('cybercrime.heurePremierContact'))"
+            <MaskedTimeField
               v-model="heurePremierContact"
+              :label="requiredLabel(t('cybercrime.heurePremierContact'))"
               :error-messages="heurePremierContactError"
-              type="text"
-              placeholder="HH:MM"
-              variant="outlined"
               :hint="t('cybercrime.hintHeurePremierContact')"
               persistent-hint
-              @input="onHeurePremierContactInput"
+              name="heurePremierContact"
             />
           </v-col>
         </v-row>
         <v-row class="mb-4" align="center" dense>
           <v-col cols="12" md="6">
-            <v-text-field
-              :label="requiredLabel(t('cybercrime.dateDernierContact'))"
+            <MaskedDateField
               v-model="dateDernierContact"
-              type="text"
-              placeholder="JJ.MM.AAAA"
+              :label="requiredLabel(t('cybercrime.dateDernierContact'))"
               :error-messages="dateDernierContactError"
-              variant="outlined"
-              prepend-inner-icon="mdi-calendar"
               :hint="t('cybercrime.hintDateDernierContact')"
               persistent-hint
-              @input="onDateDernierContactInput"
+              name="dateDernierContact"
             />
           </v-col>
           <v-col cols="12" md="6" class="mt-4 mt-md-0">
-            <v-text-field
-              :label="requiredLabel(t('cybercrime.heureDernierContact'))"
+            <MaskedTimeField
               v-model="heureDernierContact"
+              :label="requiredLabel(t('cybercrime.heureDernierContact'))"
               :error-messages="heureDernierContactError"
-              type="text"
-              placeholder="HH:MM"
-              variant="outlined"
               :hint="t('cybercrime.hintHeureDernierContact')"
               persistent-hint
-              @input="onHeureDernierContactInput"
+              name="heureDernierContact"
             />
           </v-col>
         </v-row>
@@ -165,16 +141,14 @@
       <AdresseEvent v-if="typeIncident !== 'cybercrime'" />
 
       <div class="d-md-none mt-4">
-        <div class="pre-plainte-mobile-step-actions d-flex flex-column gap-4 mb-2">
+        <div class="pre-plainte-mobile-step-actions pre-plainte-mobile-step-actions--sticky d-flex flex-column gap-2">
           <v-btn variant="outlined" color="primary" class="w-100" @click="handleCancelClick">
             {{ t("common.precedent") }}
           </v-btn>
-          <v-btn type="submit" variant="flat" color="primary" class="w-100">
+          <v-btn type="submit" variant="flat" color="primary" class="w-100" :loading="isSubmitting">
             {{ t("common.continuer") }}
           </v-btn>
-        </div>
-        <div class="d-flex justify-center">
-          <v-btn variant="plain" color="primary" class="pa-0" @click="handleSaveClick">
+          <v-btn variant="plain" color="primary" class="w-100" @click="handleSaveClick">
             {{ t("common.sauvegarder") }}
           </v-btn>
         </div>
@@ -185,7 +159,7 @@
     </div>
 
     <v-row class="mt-4 d-none d-md-flex" align="center">
-      <v-col cols="12" md="auto" class="d-flex">
+      <v-col cols="12" md="auto" class="d-flex flex-column">
         <v-btn variant="plain" color="primary" @click="handleSaveClick">
           {{ t("common.sauvegarder") }}
         </v-btn>
@@ -195,7 +169,7 @@
         <v-btn variant="outlined" color="primary" class="me-4" @click="handleCancelClick">
           {{ t("common.precedent") }}
         </v-btn>
-          <v-btn type="submit" variant="flat" color="primary" data-cy="continuer-evenement">
+          <v-btn type="submit" variant="flat" color="primary" data-cy="continuer-evenement" :loading="isSubmitting">
             {{ t("common.poursuivre") }}
           </v-btn>
       </v-col>
@@ -210,11 +184,14 @@ import { toTypedSchema } from "@vee-validate/zod";
 import { useField, useForm } from "vee-validate";
 import { computed, nextTick, onBeforeUnmount, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
-import { useDisplay } from "vuetify";
 import { createIncidentSchema } from "@/schemas/incident-evenement.schema.ts";
 import type { AddressResult } from "@/types/adresse.interface";
 import { useFormErrorScroll } from "@/composables/useFormErrorScroll";
 import { useFormReset, resetConditions } from "@/composables/useFormReset";
+import { collectValidationErrorItems, excludeVolObjetBrouillonErrors, type FormValidationErrorItem } from "@/utils/helpers/formErrorHelpers";
+import FormErrorSummary from "@/components/form/FormErrorSummary.vue";
+import MaskedDateField from "@/components/form/MaskedDateField.vue";
+import MaskedTimeField from "@/components/form/MaskedTimeField.vue";
 import CybercrimeAchatNonRecuForm from "@/components/pre-plainte-component/event-info/cybercrime/CybercrimeAchatNonRecuForm.vue";
 import CybercrimeCommandeFrauduleuseForm from "@/components/pre-plainte-component/event-info/cybercrime/CybercrimeCommandeFrauduleuseForm.vue";
 import CybercrimeFausseAnnonceForm from "@/components/pre-plainte-component/event-info/cybercrime/CybercrimeFausseAnnonceForm.vue";
@@ -222,7 +199,6 @@ import VolForm from "@/components/pre-plainte-component/event-info/vol/VolForm.v
 import DegatMaterielForm from "@/components/pre-plainte-component/event-info/degat/DegatMaterielForm.vue";
 import AdresseEvent from "@/components/adresse/AdresseEvent.vue";
 import PieceJointe from "@/components/piece-jointe/PieceJointe.vue";
-import { applyDateMask, applyTimeMask } from "@/utils/helpers/dateHelpers.ts";
 import ExitActionsForm from "@/components/actions/ExitActionsForm.vue";
 import { isCybercrimeTypeWithoutDetailFields } from "@/constants/constant";
 import { TYPE_INCIDENT } from "@/utils/incident-fields";
@@ -230,15 +206,24 @@ import { requiredLabel } from "@/utils/helpers/labelHelpers";
 import { requiresConstatQuestion } from "@/utils/workflows/disclaimer-workflow";
 
 const { t, locale } = useI18n();
-const { mobile } = useDisplay();
 const emit = defineEmits<{ cancel: []; continue: []; save: [] }>();
 const store = useCreatePrePlainteStore();
-const { scrollToTopOnConditionalErrors } = useFormErrorScroll();
+const { scrollToFormErrorSummary } = useFormErrorScroll();
+const submitErrorItems = ref<FormValidationErrorItem[]>([]);
+const objetVoleIncomplet = ref(false);
+const isSubmitting = ref(false);
+
+const formErrorItemsAffiches = computed(() => {
+  if (!objetVoleIncomplet.value) {
+    return submitErrorItems.value;
+  }
+  return excludeVolObjetBrouillonErrors(submitErrorItems.value);
+});
 
 const DEGAT_DELIT = "degat-delit";
 
 type FormulaireAvecBrouillon = {
-  validerBrouillonAvantNavigation: () => boolean;
+  validerBrouillonAvantNavigation: () => boolean | Promise<boolean>;
 };
 
 const volFormRef = ref<FormulaireAvecBrouillon | null>(null);
@@ -254,13 +239,12 @@ const form = useForm<PrePlainteFormFields>({
   validationSchema,
 });
 
-const { handleSubmit, setFieldValue, values } = form;
+const { setFieldValue, values, errors, validate } = form;
 
 const { value: typeIncident } = useField<string>("typeIncident");
 const { value: typeDommage } = useField<string>("typeDommage");
 
 const openFromRecap = localStorage.getItem("pp-open-section");
-
 switch (openFromRecap) {
   case "vol":
     typeIncident.value = "vol";
@@ -382,20 +366,6 @@ const eventFilesUploadLabel = computed(() =>
     ? t("incidentTypes.fichiersObjetsVoles")
     : t("dommages.fichiers"),
 );
-
-const createInputHandler = (maskFn: (e: InputEvent, value: any) => void, target: any) => (e: InputEvent) => {
-  maskFn(e, target);
-};
-
-const onDateDebutEvenementInput = createInputHandler(applyDateMask, dateDebutEvenement);
-const onHeureDebutEvenementInput = createInputHandler(applyTimeMask, heureDebutEvenement);
-const onDateFinEvenementInput = createInputHandler(applyDateMask, dateFinEvenement);
-const onHeureFinEvenementInput = createInputHandler(applyTimeMask, heureFinEvenement);
-
-const onDatePremierContactInput = createInputHandler(applyDateMask, datePremierContact);
-const onHeurePremierContactInput = createInputHandler(applyTimeMask, heurePremierContact);
-const onDateDernierContactInput = createInputHandler(applyDateMask, dateDernierContact);
-const onHeureDernierContactInput = createInputHandler(applyTimeMask, heureDernierContact);
 
 useFormReset(form, resetConditions.eventInfo, () => {
   selectedEventAddress.value = null;
@@ -578,32 +548,43 @@ watch(
   { immediate: true },
 );
 
-const soumettreFormulaire = handleSubmit(
-  formValues => {
-    store.setUserFormData(formValues);
-    emit("continue");
-  },
-  errors => {
-    scrollToTopOnConditionalErrors(errors);
-  },
-);
+const afficherErreursEtRemonter = async (source: unknown = errors.value) => {
+  submitErrorItems.value = collectValidationErrorItems(source);
+  await scrollToFormErrorSummary();
+};
 
-const validerBrouillonActif = (): boolean => {
+const validerBrouillonActif = async (): Promise<boolean> => {
   if (typeIncident.value === "vol") {
-    return volFormRef.value?.validerBrouillonAvantNavigation() ?? true;
+    return (await volFormRef.value?.validerBrouillonAvantNavigation()) ?? true;
   }
   if (typeIncident.value === DEGAT_DELIT) {
-    return degatMaterielFormRef.value?.validerBrouillonAvantNavigation() ?? true;
+    return (await degatMaterielFormRef.value?.validerBrouillonAvantNavigation()) ?? true;
   }
   return true;
 };
 
 const onSubmit = async () => {
-  if (!validerBrouillonActif()) {
+  const brouillonOk = await validerBrouillonActif();
+  await nextTick();
+
+  const { valid } = await validate();
+  await nextTick();
+
+  if (!brouillonOk || !valid) {
+    objetVoleIncomplet.value = typeIncident.value === "vol" && !brouillonOk;
+    await afficherErreursEtRemonter(errors.value);
     return;
   }
-  await nextTick();
-  await soumettreFormulaire();
+
+  objetVoleIncomplet.value = false;
+  submitErrorItems.value = [];
+  isSubmitting.value = true;
+  try {
+    store.setUserFormData(values as PrePlainteFormFields);
+    emit("continue");
+  } finally {
+    isSubmitting.value = false;
+  }
 };
 
 const persistCurrentValues = () => {

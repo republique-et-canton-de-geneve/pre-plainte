@@ -16,7 +16,6 @@ const MIN_ADRESSE_EVENEMENT_TAILLE = 5;
 const VALIDATION_FORMAT_DATE_INVALIDE = "validation.formatDateInvalide";
 const VALIDATION_FORMAT_HEURE_INVALIDE = "validation.formatHeureInvalide";
 const VALIDATION_LONGUEUR_MAX = "validation.longueurMax";
-const VALIDATION_CHAMP_REQUIS = "validation.champRequis";
 
 const NUMERO_IMEI_REGEX = /^\d{15}$/;
 const PLAQUE_SUISSE_PATTERN = /^[A-Z]{2}\s\d{1,6}$/;
@@ -35,6 +34,25 @@ const optionalStringFromForm = (t: ComposerTranslation) =>
     v => (typeof v === "string" ? v : ""),
     z.string()
       .max(TEXT_FIELD_MAX_LENGTH, t(VALIDATION_LONGUEUR_MAX, { max: TEXT_FIELD_MAX_LENGTH }))
+      .optional(),
+  );
+
+const optionalMontantPositifFromForm = (t: ComposerTranslation) =>
+  z.preprocess(
+    v => (typeof v === "string" ? v : ""),
+    z
+      .string()
+      .max(TEXT_FIELD_MAX_LENGTH, t(VALIDATION_LONGUEUR_MAX, { max: TEXT_FIELD_MAX_LENGTH }))
+      .refine(
+        value => {
+          if (!value?.trim()) {
+            return true;
+          }
+          const parsed = Number(value);
+          return Number.isFinite(parsed) && parsed >= 0;
+        },
+        { message: t("validation.montantPositif") },
+      )
       .optional(),
   );
 
@@ -64,10 +82,10 @@ const createIncidentRequirements = (t: ComposerTranslation): Record<string, { fi
 
 const isEmpty = (value: unknown) => value === undefined || value === null || value === "";
 
-const addCustomIssue = (ctx: z.RefinementCtx, path: string, message: string) => {
+const addCustomIssue = (ctx: z.RefinementCtx, path: string | (string | number)[], message: string) => {
   ctx.addIssue({
     code: z.ZodIssueCode.custom,
-    path: [path],
+    path: Array.isArray(path) ? path : [path],
     message,
   });
 };
@@ -186,7 +204,7 @@ const validateVehicleBrandAndModel = (
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       path: [...basePath, "fabricantAutre"],
-      message: t(VALIDATION_CHAMP_REQUIS),
+      message: t("validation.fabricantAutreRequis"),
     });
   }
   if (data.fabricant?.code !== "AUTRE") {
@@ -194,7 +212,7 @@ const validateVehicleBrandAndModel = (
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: [...basePath, "modeleAutre"],
-        message: t(VALIDATION_CHAMP_REQUIS),
+        message: t("validation.modeleAutreRequis"),
       });
     }
     if (!data.modele?.code && !data.modeleAutre?.trim()) {
@@ -206,7 +224,7 @@ const validateVehicleBrandAndModel = (
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: [...basePath, "modeleAutre"],
-        message: t(VALIDATION_CHAMP_REQUIS),
+        message: t("validation.modeleAutreRequis"),
       });
     }
   }
@@ -275,27 +293,46 @@ const validateVolSpecificRules = (data: Record<string, any>, ctx: z.RefinementCt
 const validateObjetsVolesEnregistres = (data: Record<string, any>, ctx: z.RefinementCtx, t: ComposerTranslation,) => {
   data.objetsVolesValides.forEach((objet: unknown, index: number) => {
     if (objet && typeof objet === "object") {
-      validateVehicleFields(objet as Record<string, any>, ctx, t, ["objetsVolesValides", index]);
+      const objetData = objet as Record<string, any>;
+      const basePath = ["objetsVolesValides", index];
+      validateVehicleFields(objetData, ctx, t, basePath);
+      validateNumeroSerie(objetData, ctx, t, basePath);
+      validateNumeroIMEI(objetData, ctx, t, basePath);
     }
   });
 };
 
-const validateNumeroSerie = (data: Record<string, any>, ctx: z.RefinementCtx, t: ComposerTranslation,) => {
+const validateNumeroSerie = (
+  data: Record<string, any>,
+  ctx: z.RefinementCtx,
+  t: ComposerTranslation,
+  basePath: (string | number)[] = [],
+) => {
   const needsNumeroSerie = CATEGORIES_AVEC_NUMERO_SERIE.includes(data.categorieObjet) && !data.numeroSerieInconnu && !data.numeroSerie?.trim();
   if (needsNumeroSerie) {
-    addCustomIssue(ctx, "numeroSerie", t("validation.numeroSerieRequis"));
+    addCustomIssue(ctx, [...basePath, "numeroSerie"], t("validation.numeroSerieRequis"));
   }
 };
 
-const validateNumeroIMEI = (data: Record<string, any>, ctx: z.RefinementCtx, t: ComposerTranslation) => {
+const validateNumeroIMEI = (
+  data: Record<string, any>,
+  ctx: z.RefinementCtx,
+  t: ComposerTranslation,
+  basePath: (string | number)[] = [],
+) => {
   const imei = data.numeroIMEI?.trim();
+  const isTelephoneMobile = data.typeObjet?.code === RIPOL.CODE_TELEPHONE_MOBILE;
 
-  if (data.typeObjet?.code === RIPOL.CODE_TELEPHONE_MOBILE && !data.numeroIMEIInconnu && !imei) {
-    addCustomIssue(ctx, "numeroIMEI", t("validation.numeroIMEIRequis"));
+  if (isTelephoneMobile && !data.numeroIMEIInconnu && !imei) {
+    addCustomIssue(ctx, [...basePath, "numeroIMEI"], t("validation.numeroIMEIRequis"));
   }
 
   if (!data.numeroIMEIInconnu && imei && !NUMERO_IMEI_REGEX.test(imei)) {
-    addCustomIssue(ctx, "numeroIMEI", t("validation.numeroIMEIFormat", {max: NUMERO_IMEI_MAX_LENGTH}));
+    addCustomIssue(ctx, [...basePath, "numeroIMEI"], t("validation.numeroIMEIFormat", {max: NUMERO_IMEI_MAX_LENGTH}));
+  }
+
+  if (isTelephoneMobile && data.numeroIMEIInconnu && !data.justificationAbsenceIMEI?.trim()) {
+    addCustomIssue(ctx, [...basePath, "justificationAbsenceIMEI"], t("validation.justificationAbsenceIMEIRequise"));
   }
 };
 
@@ -452,7 +489,7 @@ const validatePlaqueRequiredFields = (data: Record<string, any>, ctx: z.Refineme
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       path: [...basePath, "plaquePays"],
-      message: t(VALIDATION_CHAMP_REQUIS),
+      message: t("validation.plaquePaysRequise"),
     });
   }
 
@@ -463,7 +500,7 @@ const validatePlaqueRequiredFields = (data: Record<string, any>, ctx: z.Refineme
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       path: [...basePath, "plaqueCanton"],
-      message: t(VALIDATION_CHAMP_REQUIS),
+      message: t("validation.plaqueCantonRequis"),
     });
   }
 
@@ -471,7 +508,7 @@ const validatePlaqueRequiredFields = (data: Record<string, any>, ctx: z.Refineme
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       path: [...basePath, "plaqueNumero"],
-      message: t(VALIDATION_CHAMP_REQUIS),
+      message: t("validation.plaqueNumeroRequise"),
     });
   }
 };
@@ -531,7 +568,7 @@ const validatePlaqueInternationale = (numero: string, ctx: z.RefinementCtx, t: C
 
 const validateAdresseLesee = (data: any, ctx: any, t: any) => {
   if (data.adresseLesee === null) {
-    addCustomIssue(ctx, "adresseLesee", t(VALIDATION_CHAMP_REQUIS));
+    addCustomIssue(ctx, "adresseLesee", t("validation.adresseCorrespondRequise"));
   }
 };
 
@@ -541,11 +578,11 @@ const validateAdressePrincipale = (data: any, ctx: any, t: any) => {
   }
 
   if (data.adresseConnue === null) {
-    addCustomIssue(ctx, "adresseConnue", t(VALIDATION_CHAMP_REQUIS));
+    addCustomIssue(ctx, "adresseConnue", t("validation.adresseConnueRequise"));
   }
 
   if (data.typeLieu === null) {
-    addCustomIssue(ctx, "typeLieu", t(VALIDATION_CHAMP_REQUIS));
+    addCustomIssue(ctx, "typeLieu", t("validation.typeLieuRequis"));
   }
 
   if (data.adresseConnue || data.isTrajet) {
@@ -556,7 +593,7 @@ const validateAdressePrincipale = (data: any, ctx: any, t: any) => {
   }
 
   if (data.adresseConnue === false && data.isTrajet === null) {
-    addCustomIssue(ctx, "isTrajet", t(VALIDATION_CHAMP_REQUIS));
+    addCustomIssue(ctx, "isTrajet", t("validation.adresseTrajetRequise"));
   }
 };
 
@@ -573,7 +610,7 @@ const validateAdresseSecondaire = (data: any, ctx: any, t: any) => {
   }
 
   if (data.isTrajet === false && data.lieuOrigineEvenement === null) {
-    addCustomIssue(ctx, "lieuOrigineEvenement", t(VALIDATION_CHAMP_REQUIS));
+    addCustomIssue(ctx, "lieuOrigineEvenement", t("validation.lieuOrigineRequis"));
   }
 };
 
@@ -660,7 +697,7 @@ const objetFields = (t: ComposerTranslation) => ({
   modeleAutre: z.string().max(TEXT_FIELD_MAX_LENGTH, t(VALIDATION_LONGUEUR_MAX, { max: TEXT_FIELD_MAX_LENGTH })).optional(),
   couleur: optionalRipolSelectionSchema,
   couleurSecondaire: optionalRipolSelectionSchema,
-  valeurReelle: optionalStringFromForm(t),
+  valeurReelle: optionalMontantPositifFromForm(t),
   numeroSerie: z.string().max(TEXT_FIELD_MAX_LENGTH, t(VALIDATION_LONGUEUR_MAX, { max: TEXT_FIELD_MAX_LENGTH })).optional(),
   numeroSerieInconnu: z.boolean().optional(),
   numeroCadre: z.string().max(TEXT_FIELD_MAX_LENGTH, t(VALIDATION_LONGUEUR_MAX, { max: TEXT_FIELD_MAX_LENGTH })).optional(),

@@ -1,6 +1,6 @@
 <template>
   <v-card class="pa-2 pa-md-6 mb-4">
-    <h3 class="pre-plainte-main-card-title mb-4 mb-md-6 text-h4 text-md-h3">
+    <h3 class="pre-plainte-main-card-title mb-4 mb-md-6 text-h5 text-md-h4">
       {{ t("informationsPersonnelles.identiteTiersConcerne") }}
     </h3>
     <v-text-field
@@ -48,21 +48,16 @@
       :min-search-length="0"
       class="mb-4"
     />
-    <v-text-field
-      :label="requiredLabel(t('informationsPersonnelles.dateNaissance'))"
+    <MaskedDateField
       v-model="tiersDateNaissance"
-      type="text"
-      placeholder="JJ.MM.AAAA"
+      :label="requiredLabel(t('informationsPersonnelles.dateNaissance'))"
       :error-messages="tiersDateNaissanceError"
-      class="mb-8"
-      variant="outlined"
-      prepend-inner-icon="mdi-calendar"
+      field-class="mb-8"
       :hint="t('informationsPersonnelles.hintDateNaissanceTiers')"
       persistent-hint
-      required
-      @input="onTiersDateNaissanceInput"
+      name="tiersDateNaissance"
     />
-    <h4 class="mb-8 mb-md-4 mt-4 mt-md-6 text-h4 text-md-h4 font-weight-bold">
+    <h4 class="mb-8 mb-md-4 mt-4 mt-md-6 text-h6 text-md-h5 font-weight-bold">
       {{ t("informationsPersonnelles.adresseTiersConcerne") }}
     </h4>
 
@@ -122,7 +117,7 @@
       required
     />
 
-    <h4 class="mb-8 mb-md-4 mt-4 mt-md-6 text-h4 text-md-h4 font-weight-bold">
+    <h4 class="mb-8 mb-md-4 mt-4 mt-md-6 text-h6 text-md-h5 font-weight-bold">
       {{ t("informationsPersonnelles.documentIdentiteTiers") }}
     </h4>
     <AccessibleVSelect
@@ -154,7 +149,7 @@
       persistent-hint
     />
 
-    <h4 class="mb-8 mb-md-4 mt-4 mt-md-6 text-h4 text-md-h4 font-weight-bold">
+    <h4 class="mb-8 mb-md-4 mt-4 mt-md-6 text-h6 text-md-h5 font-weight-bold">
       {{ t("informationsPersonnelles.coordonneesTiers") }}
     </h4>
     <PhoneInput
@@ -208,7 +203,7 @@ import { GENRE_LABEL_KEYS, TYPES_DOCUMENT_IDENTITE } from "@/constants/constant.
 import { toTranslatedOptions } from "@/utils/helpers/traductionHelper";
 import { fetchGenresSorted, fetchNationalitiesForPersonForm } from "@/utils/helpers/ripolHelpers.ts";
 import AccessibleVSelect from "@/components/accessibility/AccessibleVSelect.vue";
-import { applyDateMask } from "@/utils/helpers/dateHelpers.ts";
+import MaskedDateField from "@/components/form/MaskedDateField.vue";
 import { createHintAdresse } from "@/utils/helpers/adresseHelpers.ts";
 import { requiredLabel } from "@/utils/helpers/labelHelpers";
 
@@ -326,10 +321,6 @@ const localiteHint = createHintAdresse(
 
 const onTiersCountryChanged = (country: CountrySelection) => {
   tiersPays.value = country.ripolCode;
-};
-
-const onTiersDateNaissanceInput = (e: InputEvent) => {
-  applyDateMask(e, tiersDateNaissance);
 };
 
 watch(tiersTypeDocumentIdentite, newValue => {

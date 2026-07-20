@@ -1,6 +1,6 @@
 <template>
   <v-card class="pa-2 pa-md-6 mb-4">
-    <h3 class="pre-plainte-main-card-title mb-4 mb-md-6 text-h4 text-md-h3">
+    <h3 class="pre-plainte-main-card-title mb-4 mb-md-6 text-h5 text-md-h4">
       {{ t("informationsPersonnelles.identiteOrganisation") }}
     </h3>
 
@@ -15,7 +15,7 @@
       required
     />
 
-    <h4 class="mb-8 mb-md-4 mt-4 mt-md-6 text-h4 text-md-h4 font-weight-bold">
+    <h4 class="mb-8 mb-md-4 mt-4 mt-md-6 text-h6 text-md-h5 font-weight-bold">
       {{ t("informationsPersonnelles.adresseOrganisation") }}
     </h4>
 
@@ -76,7 +76,7 @@
       required
     />
 
-    <h4 class="mb-8 mb-md-4 mt-4 mt-md-6 text-h4 text-md-h4 font-weight-bold">
+    <h4 class="mb-8 mb-md-4 mt-4 mt-md-6 text-h6 text-md-h5 font-weight-bold">
       {{ t("informationsPersonnelles.coordonneesOrganisation") }}
     </h4>
 
