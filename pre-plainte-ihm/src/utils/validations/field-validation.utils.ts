@@ -115,7 +115,50 @@ export const STORAGE_KEYS = {
   STEP: "pp-step",
   OPEN_SECTION: "pp-open-section",
   EMAIL_CHALLENGE_KEY: "pp-email-challenge-key",
+  LAST_SAVED_AT: "pp-last-saved-at",
 } as const;
+
+export const SESSION_KEYS = {
+  DRAFT_PROMPT_HANDLED: "pp-draft-prompt-handled",
+} as const;
+
+export const markDraftPromptHandledForSession = (): void => {
+  try {
+    sessionStorage.setItem(SESSION_KEYS.DRAFT_PROMPT_HANDLED, "1");
+  } catch {
+    // ignore
+  }
+};
+
+export const wasDraftPromptHandledThisSession = (): boolean => {
+  try {
+    return sessionStorage.getItem(SESSION_KEYS.DRAFT_PROMPT_HANDLED) === "1";
+  } catch {
+    return false;
+  }
+};
+
+export const saveLastLocalSavedAt = (date: Date): void => {
+  try {
+    localStorage.setItem(STORAGE_KEYS.LAST_SAVED_AT, date.toISOString());
+  } catch (error) {
+    console.warn("Erreur lors de la sauvegarde de la date du brouillon:", error);
+  }
+};
+
+export const loadLastLocalSavedAt = (): Date | null => {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.LAST_SAVED_AT);
+    if (!raw) {
+      return null;
+    }
+    const date = new Date(raw);
+    return Number.isNaN(date.getTime()) ? null : date;
+  } catch (error) {
+    console.warn("Erreur lors du chargement de la date du brouillon:", error);
+    return null;
+  }
+};
 
 export const saveEmailChallengeKey = (key: string | null | undefined): void => {
   try {
@@ -210,6 +253,29 @@ export const clearStorageData = (): void => {
     localStorage.removeItem(key);
   });
 };
+
+export const hasPersistedDraft = (): boolean => {
+  try {
+    const step = loadCurrentStep();
+    if (step > 1) {
+      return true;
+    }
+    const data = loadFormData();
+    return Boolean(
+      data.typeIncident ||
+        data.email ||
+        data.nom ||
+        data.prenom ||
+        (data.objetsVolesValides?.length ?? 0) > 0 ||
+        (data.objetsDegradesValides?.length ?? 0) > 0,
+    );
+  } catch {
+    return false;
+  }
+};
+
+export const shouldOfferDraftResume = (): boolean =>
+  hasPersistedDraft() && !wasDraftPromptHandledThisSession();
 
 /**
  * Valide qu'un numéro d'étape est dans la plage autorisée

@@ -2,7 +2,7 @@
   <v-form @submit.prevent="onSubmit">
     <h1 class="mb-5 text-h1 text-md-h2 d-none d-md-block">{{ t("titreApplication.prePlainte") }}</h1>
     <v-card class="pa-2 pa-md-8" elevation="1">
-      <h2 class="pre-plainte-main-card-title text-h2 mb-4">{{ t("steps.verificationEmail") }}</h2>
+      <h2 class="pre-plainte-main-card-title text-h4 text-md-h2 mb-4">{{ t("steps.verificationEmail") }}</h2>
 
       <v-alert type="info" class="mb-6" density="comfortable">
         <div class="text-body-2 text-md-body-1">
@@ -14,6 +14,7 @@
         :label="requiredLabel(t('informationsPersonnelles.email'))"
         v-model="email"
         type="email"
+        inputmode="email"
         :error-messages="emailError"
         class="mb-2"
         variant="outlined"
@@ -97,8 +98,8 @@
         {{ verifyError }}
       </v-alert>
 
-      <div class="pre-plainte-mobile-step-actions d-md-none mt-4 d-flex flex-column gap-4 mb-2">
-        <v-btn variant="outlined" color="primary" class="w-100" data-cy="precedent-verification-email" @click="emit('cancel')">
+      <div class="pre-plainte-mobile-otp-actions d-md-none mt-4 d-flex flex-column mb-2">
+        <v-btn variant="outlined" color="primary" class="w-100 mb-4" data-cy="precedent-verification-email" @click="emit('cancel')">
           {{ t("common.precedent") }}
         </v-btn>
         <v-btn

@@ -103,4 +103,14 @@ onUnmounted(() => {
   display: flex;
   justify-content: center;
 }
+
+@media (max-width: 959px) {
+  .frc-captcha {
+    transform: scale(0.92);
+    transform-origin: center top;
+    min-height: 64px;
+    max-width: 100%;
+    overflow: hidden;
+  }
+}
 </style>
