@@ -1,9 +1,9 @@
 <template>
   <v-form @submit.prevent="onSubmit">
     <h1 class="mb-4 text-h1 text-md-h2 d-none d-md-block">{{ t("steps.prendreRendezVous") }}</h1>
-    <FormErrorSummary :messages="submitErrorMessages" />
     <v-sheet class="pa-2 pa-md-8" rounded="lg" elevation="1">
-      <h2 class="pre-plainte-main-card-title mb-4 mb-md-5 text-h4 text-md-h4 title-mobile">
+      <FormErrorSummary :items="submitErrorItems" />
+      <h2 class="pre-plainte-main-card-title mb-4 mb-md-5 text-h4 text-md-h2 title-mobile">
         {{ t("rendezVous.selectionPoste") }}
       </h2>
 
@@ -42,7 +42,7 @@
       </div>
 
       <div class="d-md-none mt-4">
-        <div class="pre-plainte-mobile-step-actions d-flex flex-column gap-2">
+        <div class="pre-plainte-mobile-step-actions pre-plainte-mobile-step-actions--sticky d-flex flex-column gap-2">
           <v-btn variant="outlined" color="primary" class="w-100" data-cy="precedent-rendez-vous" @click="$emit('cancel')">
             {{ t("common.precedent") }}
           </v-btn>
@@ -61,7 +61,7 @@
     </div>
 
     <v-row class="mt-4 d-none d-md-flex" align="center">
-      <v-col cols="12" md="auto" class="d-flex">
+      <v-col cols="12" md="auto" class="d-flex flex-column">
         <v-btn variant="plain" color="primary" @click="$emit('save')">
           {{ t("common.sauvegarder") }}
         </v-btn>
@@ -76,17 +76,6 @@
         </v-btn>
       </v-col>
     </v-row>
-
-    <v-alert
-      v-model="showCreneauError"
-      type="error"
-      class="mt-6"
-      density="comfortable"
-      :icon="mobile ? false : undefined"
-      closable
-    >
-      {{ creneauErrorMessage }}
-    </v-alert>
   </v-form>
 </template>
 
@@ -103,7 +92,7 @@ import { toIsoDate } from "@/utils/helpers/dateHelpers.ts";
 import { rendezvousInfoSchema } from "@/schemas/rdv-schema.ts";
 import { toTypedSchema } from "@vee-validate/zod";
 import { useFormErrorScroll } from "@/composables/useFormErrorScroll.ts";
-import { flattenValidationErrorMessages } from "@/utils/helpers/formErrorHelpers";
+import { collectValidationErrorItems, type FormValidationErrorItem } from "@/utils/helpers/formErrorHelpers";
 import FormErrorSummary from "@/components/form/FormErrorSummary.vue";
 import { useDisplay } from "vuetify/framework";
 import ExitActionsForm from "@/components/actions/ExitActionsForm.vue";
@@ -125,8 +114,8 @@ const { t, locale } = useI18n();
 const { mobile } = useDisplay();
 const store = useCreatePrePlainteStore();
 const esiriusStore = useEsiriusStore();
-const { scrollToFirstValidationError } = useFormErrorScroll();
-const submitErrorMessages = ref<string[]>([]);
+const { scrollToFormErrorSummary } = useFormErrorScroll();
+const submitErrorItems = ref<FormValidationErrorItem[]>([]);
 const isSubmitting = ref(false);
 const emit = defineEmits(["save", "cancel", "continue"]);
 
@@ -134,8 +123,6 @@ const { value: dateSouhaitee } = useField<string>("dateSouhaitee");
 
 const poste = ref<any | null>(null);
 const creneauPrefere = ref<number | null>(null);
-const showCreneauError = ref(false);
-const creneauErrorMessage = ref("");
 const page = ref(1);
 const creneauxSection = ref<HTMLElement | null>(null);
 const itemsParPage = 5;
@@ -293,11 +280,10 @@ watch(locale, () => {
 
 const onSubmit = handleSubmit(
   () => {
-    submitErrorMessages.value = [];
+    submitErrorItems.value = [];
     isSubmitting.value = true;
     try {
       if (isVehiculeVoleAvecPlaque.value && creneauPrefere.value === null) {
-        showCreneauError.value = false;
         store.setUserFormData({
           ...store.userFormData,
           dateSouhaitee: "",
@@ -310,20 +296,18 @@ const onSubmit = handleSubmit(
       }
 
       if (creneauPrefere.value === null) {
-        showCreneauError.value = true;
-        creneauErrorMessage.value = t("rendezVous.creneauNonSelectionne");
-        submitErrorMessages.value = [creneauErrorMessage.value];
+        const message = t("rendezVous.creneauNonSelectionne");
+        submitErrorItems.value = [{ path: "creneauPrefere", message }];
+        scrollToFormErrorSummary();
         return;
       }
       const c = creneauxPagines.value[creneauPrefere.value];
       if (!c) {
-        showCreneauError.value = true;
-        creneauErrorMessage.value = t("rendezVous.creneauNonDisponible");
-        submitErrorMessages.value = [creneauErrorMessage.value];
+        const message = t("rendezVous.creneauNonDisponible");
+        submitErrorItems.value = [{ path: "creneauPrefere", message }];
+        scrollToFormErrorSummary();
         return;
       }
-
-      showCreneauError.value = false;
 
       const rawDate = `${c.beginDateTime.slice(YEAR_START, YEAR_END)}-${c.beginDateTime.slice(MONTH_START, MONTH_END)}-${c.beginDateTime.slice(DAY_START, DAY_END)}`;
       const heureDebut = c.beginDateTime.substring(TIME_START).trim();
@@ -357,14 +341,8 @@ const onSubmit = handleSubmit(
     }
   },
   errors => {
-    submitErrorMessages.value = flattenValidationErrorMessages(errors);
-    nextTick(() => {
-      document.querySelector('[data-cy="form-error-summary"]')?.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
-      scrollToFirstValidationError(errors);
-    });
+    submitErrorItems.value = collectValidationErrorItems(errors);
+    scrollToFormErrorSummary();
   },
 );
 
@@ -376,7 +354,6 @@ const onSuggestNearest = (service: any) => {
 <style scoped>
 .title-mobile {
   font-weight: 400;
-  padding:10px; 
 }
 
 @media (max-width: 959px) {

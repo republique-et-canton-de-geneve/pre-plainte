@@ -2,8 +2,8 @@
   <div>
     <v-form @submit.prevent="onSubmit">
       <h1 class="mb-5 text-h1 text-md-h2 d-none d-md-block">{{ t("titreApplication.prePlainte") }}</h1>
-      <FormErrorSummary :messages="submitErrorMessages" />
       <v-card class="pa-2 pa-md-6 mb-4">
+        <FormErrorSummary :items="submitErrorItems" />
         <h2 class="pre-plainte-main-card-title mb-4 text-h4 text-md-h2 mt-4">
           {{ t("informationsPersonnelles.titre") }}
         </h2>
@@ -27,7 +27,7 @@
         <InfosPersonnellesForm />
 
         <div v-if="!showTiersSection && !showOrganisationSection" class="d-md-none mt-4">
-          <div class="pre-plainte-mobile-step-actions d-flex flex-column gap-2">
+          <div class="pre-plainte-mobile-step-actions pre-plainte-mobile-step-actions--sticky d-flex flex-column gap-2">
             <v-btn variant="outlined" color="primary" class="w-100" data-cy="precedent-informations-personnelles" @click="$emit('cancel')">
               {{ t("common.precedent") }}
             </v-btn>
@@ -43,7 +43,7 @@
       <InfosTiersForm v-if="showTiersSection">
         <template #buttons>
           <div class="d-md-none mt-4">
-            <div class="pre-plainte-mobile-step-actions d-flex flex-column gap-2">
+            <div class="pre-plainte-mobile-step-actions pre-plainte-mobile-step-actions--sticky d-flex flex-column gap-2">
               <v-btn variant="outlined" color="primary" class="w-100" data-cy="precedent-informations-personnelles" @click="$emit('cancel')">
                 {{ t("common.precedent") }}
               </v-btn>
@@ -61,7 +61,7 @@
       <InfosOrganisationForm v-if="showOrganisationSection">
         <template #buttons>
           <div class="d-md-none mt-4">
-            <div class="pre-plainte-mobile-step-actions d-flex flex-column gap-2">
+            <div class="pre-plainte-mobile-step-actions pre-plainte-mobile-step-actions--sticky d-flex flex-column gap-2">
               <v-btn variant="outlined" color="primary" class="w-100" data-cy="precedent-informations-personnelles" @click="$emit('cancel')">
                 {{ t("common.precedent") }}
               </v-btn>
@@ -81,7 +81,7 @@
       </div>
 
       <v-row class="mt-4 d-none d-md-flex" align="center">
-        <v-col cols="12" md="auto" class="d-flex">
+        <v-col cols="12" md="auto" class="d-flex flex-column">
           <v-btn variant="plain" color="primary" @click="onSave">
             {{ t("common.sauvegarder") }}
           </v-btn>
@@ -107,11 +107,11 @@ import { useCreatePrePlainteStore } from "@/stores/createPrePlainteStore";
 import type { PrePlainteFormFields } from "@/types/pre-plainte.interface";
 import { toTypedSchema } from "@vee-validate/zod";
 import { useField, useForm } from "vee-validate";
-import { computed, nextTick, ref, watch } from "vue";
+import { computed, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { useFormErrorScroll } from "@/composables/useFormErrorScroll";
 import { useFormReset, resetConditions } from "@/composables/useFormReset";
-import { flattenValidationErrorMessages } from "@/utils/helpers/formErrorHelpers";
+import { collectValidationErrorItems, type FormValidationErrorItem } from "@/utils/helpers/formErrorHelpers";
 import FormErrorSummary from "@/components/form/FormErrorSummary.vue";
 import TiersRepresentationForm from "@/components/pre-plainte-component/personal-info/TiersRepresentationForm.vue";
 import EntrepriseRepresentationForm from "@/components/pre-plainte-component/personal-info/EntrepriseRepresentationForm.vue";
@@ -124,8 +124,8 @@ import ExitActionsForm from "@/components/actions/ExitActionsForm.vue";
 const { t, locale } = useI18n();
 const emit = defineEmits<{ cancel: []; continue: []; save: [] }>();
 const store = useCreatePrePlainteStore();
-const { scrollToFirstValidationError } = useFormErrorScroll();
-const submitErrorMessages = ref<string[]>([]);
+const { scrollToFormErrorSummary } = useFormErrorScroll();
+const submitErrorItems = ref<FormValidationErrorItem[]>([]);
 const isSubmitting = ref(false);
 
 const LIEN_TIERS = "TIERS";
@@ -161,7 +161,7 @@ useFormReset(form, resetConditions.personalInfo);
 
 const onSubmit = handleSubmit(
   formValues => {
-    submitErrorMessages.value = [];
+    submitErrorItems.value = [];
     isSubmitting.value = true;
     try {
       store.setUserFormData(formValues);
@@ -171,14 +171,8 @@ const onSubmit = handleSubmit(
     }
   },
   errors => {
-    submitErrorMessages.value = flattenValidationErrorMessages(errors);
-    nextTick(() => {
-      document.querySelector('[data-cy="form-error-summary"]')?.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
-      scrollToFirstValidationError(errors);
-    });
+    submitErrorItems.value = collectValidationErrorItems(errors);
+    scrollToFormErrorSummary();
   },
 );
 

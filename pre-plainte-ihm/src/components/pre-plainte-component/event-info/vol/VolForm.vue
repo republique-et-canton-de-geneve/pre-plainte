@@ -73,6 +73,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <AppSnackbar ref="snackbarRef" />
   </div>
 </template>
 
@@ -84,16 +85,17 @@ import { useDisplay } from "vuetify";
 import {
   AUTRE_OPTION,
   CATEGORIES_OBJETS,
-  EMPTY_VALUE_EM_DASH,
   NUMERO_IMEI_MAX_LENGTH,
   RIPOL,
   TEXT_FIELD_MAX_LENGTH,
   TEXTAREA_MAX_LENGTH,
   VEHICULE_CATEGORIES_AVEC_VIN,
-  VOL_OBJET_CATEGORIE
+  VOL_OBJET_CATEGORIE,
+  EMPTY_VALUE_EM_DASH
 } from "@/constants/constant";
-import VolObjetVoleResumeSheet from "./VolObjetVoleResumeSheet.vue";
 import VolObjetVoleDraftPanel from "./VolObjetVoleDraftPanel.vue";
+import VolObjetVoleResumeSheet from "./VolObjetVoleResumeSheet.vue";
+import AppSnackbar from "@/components/feedback/AppSnackbar.vue";
 import type { VolObjetVoleDraftBrouillon } from "@/types/volObjetVoleBrouillon.types";
 import { RipolService } from "@/services/ripolService";
 import { filterNationalities, sortRipolByLabelFr } from "@/utils/helpers/ripolHelpers.ts";
@@ -115,8 +117,6 @@ import {
 const TEXTE_VIDE = "";
 const NUMERO_IMEI_REGEX = /^\d{15}$/;
 const VALIDATION_LONGUEUR_MAX = "validation.longueurMax";
-const VALIDATION_CHAMP_REQUIS = "validation.champRequis";
-const CHAMP_REQUIS_ERREUR = "validation.champRequis";
 
 const LONGUEURS_FIELDS = [
   { field: "fabricantAutre", value: () => fabricantAutre.value, max: TEXT_FIELD_MAX_LENGTH },
@@ -538,41 +538,65 @@ const numeroIMEIRequis = computed(
 );
 
 const validerBrouillonObjetVole = async (): Promise<boolean> => {
-  if (!await validateChampsObligatoires()) {
-    return false;
-  }
-
-  if (!validateNumeroSerieEtIMEI()) {
-    return false;
-  }
-
-  return validateLongueurs(
+  const champsOk = await validateChampsObligatoires();
+  const valeurOk = validateValeurReelle();
+  const serieImeiOk = validateNumeroSerieEtIMEI();
+  const longueursOk = validateLongueurs(
     LONGUEURS_FIELDS,
     setFieldError as any,
     t,
     VALIDATION_LONGUEUR_MAX,
   );
+
+  return champsOk && valeurOk && serieImeiOk && longueursOk;
 };
 
 const validateChampsObligatoires = async (): Promise<boolean> => {
+  let isValid = true;
+
   if (!categorieObjet.value?.trim()) {
-    setFieldError("categorieObjet", t(VALIDATION_CHAMP_REQUIS));
-    return false;
+    setFieldError("categorieObjet", t("validation.categorieObjetRequise"));
+    isValid = false;
   }
 
   if (!validatePlaque()) {
-    return false;
+    isValid = false;
+  }
+
+  if (isPlaqueCategory.value) {
+    return isValid;
   }
 
   if (!typeObjet.value?.code) {
     setFieldError("typeObjet", t("validation.typeObjetRequis"));
+    isValid = false;
+  }
+
+  if (!couleur.value?.code) {
+    setFieldError("couleur", t("validation.couleurRequise"));
+    isValid = false;
+  }
+
+  if (categorieObjet.value === VOL_OBJET_CATEGORIE.VEHICULE && !(await validateVehicule())) {
+    isValid = false;
+  }
+
+  return isValid;
+};
+
+const validateValeurReelle = (): boolean => {
+  const raw = chaineFormulaire(valeurReelle.value).trim();
+  if (!raw) {
+    return true;
+  }
+
+  const parsed = Number(raw);
+  if (!Number.isFinite(parsed) || parsed < 0) {
+    setFieldError("valeurReelle", t("validation.montantPositif"));
     return false;
   }
 
-  return !(categorieObjet.value === VOL_OBJET_CATEGORIE.VEHICULE
-    && !await validateVehicule());
-
-
+  return true;
 };
 
 const validatePlaque = (): boolean => {
@@ -580,12 +604,14 @@ const validatePlaque = (): boolean => {
     return true;
   }
 
+  let isValid = true;
+
   if (!plaquePays.value?.code) {
-    setFieldError("plaquePays", t(VALIDATION_CHAMP_REQUIS));
-    return false;
+    setFieldError("plaquePays", t("validation.plaquePaysRequise"));
+    isValid = false;
   }
 
-  return validerNumeroPlaque(
+  const numeroOk = validerNumeroPlaque(
     {
       sousCategorie: sousCategorie.value,
       plaqueInconnu: plaqueInconnu.value,
@@ -596,26 +622,24 @@ const validatePlaque = (): boolean => {
     setFieldError as (field: string, message: string) => void,
     t,
   );
+
+  return isValid && numeroOk;
 };
 
 const validateVehicule = async (): Promise<boolean> => {
+  let isValid = true;
+
   if (
-    !await validateFabricantEtModele({
+    !(await validateFabricantEtModele({
       fabricant: fabricant.value,
       fabricantAutre: fabricantAutre.value,
       modele: modele.value,
       modeleAutre: modeleAutre.value,
       setFieldError: setFieldError as any,
       t,
-      champRequisErreur: CHAMP_REQUIS_ERREUR,
-    })
+    }))
   ) {
-    return false;
-  }
-
-  if (!couleur.value?.code) {
-    setFieldError("couleur", t("validation.couleurRequise"));
-    return false;
+    isValid = false;
   }
 
   if (
@@ -630,30 +654,38 @@ const validateVehicule = async (): Promise<boolean> => {
       t,
     })
   ) {
-    return false;
+    isValid = false;
   }
 
-  return validerPlaqueVehicule(
-    {
-      sousCategorie: sousCategorie.value,
-      plaqueInconnu: plaqueInconnu.value,
-      plaqueNumero: plaqueNumero.value,
-      plaquePays: plaquePays.value,
-      plaqueCanton: plaqueCanton.value,
-    },
-    setFieldError as (field: string, message: string) => void,
-    t,
-  );
+  if (
+    !validerPlaqueVehicule(
+      {
+        sousCategorie: sousCategorie.value,
+        plaqueInconnu: plaqueInconnu.value,
+        plaqueNumero: plaqueNumero.value,
+        plaquePays: plaquePays.value,
+        plaqueCanton: plaqueCanton.value,
+      },
+      setFieldError as (field: string, message: string) => void,
+      t,
+    )
+  ) {
+    isValid = false;
+  }
+
+  return isValid;
 };
 
 const validateNumeroSerieEtIMEI = (): boolean => {
+  let isValid = true;
+
   if (
     numeroSerieRequis.value
     && !numeroSerieInconnu.value
     && !chaineFormulaire(numeroSerie.value).trim()
   ) {
     setFieldError("numeroSerie", t("validation.numeroSerieRequis"));
-    return false;
+    isValid = false;
   }
 
   if (
@@ -664,7 +696,7 @@ const validateNumeroSerieEtIMEI = (): boolean => {
       "numeroIMEI",
       t("validation.numeroIMEIRequis", { max: NUMERO_IMEI_MAX_LENGTH }),
     );
-    return false;
+    isValid = false;
   }
 
   const numeroIMEITrim = chaineFormulaire(numeroIMEI.value).trim();
@@ -675,10 +707,19 @@ const validateNumeroSerieEtIMEI = (): boolean => {
     && !NUMERO_IMEI_REGEX.test(numeroIMEITrim)
   ) {
     setFieldError("numeroIMEI", t("validation.numeroIMEIFormat"));
-    return false;
+    isValid = false;
   }
 
-  return true;
+  if (
+    typeObjet.value?.code === RIPOL.CODE_TELEPHONE_MOBILE
+    && numeroIMEIInconnu.value
+    && !chaineFormulaire(justificationAbsenceIMEI.value).trim()
+  ) {
+    setFieldError("justificationAbsenceIMEI", t("validation.justificationAbsenceIMEIRequise"));
+    isValid = false;
+  }
+
+  return isValid;
 };
 
 const enregistrerObjetVole = (snapshot: VolObjetFormSnapshot) => {
@@ -700,6 +741,7 @@ const finaliserValidationObjetVole = () => {
   clearDraftChampsObjet();
   afficherFicheSaisieNouvelObjet.value = false;
 };
+const snackbarRef = ref<{ show: (text: string) => void } | null>(null);
 const validerObjetVole = async (): Promise<boolean> => {
   effacerErreursBrouillon();
 
@@ -711,6 +753,7 @@ const validerObjetVole = async (): Promise<boolean> => {
 
   enregistrerObjetVole(buildSnapshotFromDraft());
   finaliserValidationObjetVole();
+  snackbarRef.value?.show(t("incidentTypes.objetVoleEnregistre"));
   return true;
 };
 
@@ -718,11 +761,7 @@ const validerBrouillonAvantNavigation = async (): Promise<boolean> => {
   if (!afficherFicheSaisieNouvelObjet.value) {
     return true;
   }
-  const brouillonValide = await validerObjetVole();
-  if (!brouillonValide) {
-    void nextTick(() => draftPanelRef.value?.scrollIntoView({ behavior: "smooth", block: "start" }));
-  }
-  return brouillonValide;
+  return validerObjetVole();
 };
 
 defineExpose({ validerBrouillonAvantNavigation });
@@ -897,6 +936,27 @@ watch(
     brouillon.reinitialiserDependancesChangementCategorie(value);
   },
 );
+
+watch(numeroSerieInconnu, checked => {
+  if (brouillon.isRestoring || !checked) {
+    return;
+  }
+  setFieldValue("numeroSerie", TEXTE_VIDE);
+  setFieldError("numeroSerie", undefined);
+});
+
+watch(numeroIMEIInconnu, checked => {
+  if (brouillon.isRestoring) {
+    return;
+  }
+  if (checked) {
+    setFieldValue("numeroIMEI", TEXTE_VIDE);
+    setFieldError("numeroIMEI", undefined);
+    return;
+  }
+  setFieldValue("justificationAbsenceIMEI", TEXTE_VIDE);
+  setFieldError("justificationAbsenceIMEI", undefined);
+});
 
 type ActionDialogObjetVol = "modifier" | "supprimer";
 

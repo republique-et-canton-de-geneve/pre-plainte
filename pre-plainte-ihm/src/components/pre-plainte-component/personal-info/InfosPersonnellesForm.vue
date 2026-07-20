@@ -104,20 +104,15 @@
       persistent-hint
     />
 
-    <v-text-field
-      :label="requiredLabel(t('informationsPersonnelles.dateNaissance'))"
+    <MaskedDateField
       v-model="dateNaissance"
-      type="text"
-      placeholder="JJ.MM.AAAA"
+      :label="requiredLabel(t('informationsPersonnelles.dateNaissance'))"
       :error-messages="dateNaissanceError"
       class="mb-8"
-      variant="outlined"
-      prepend-inner-icon="mdi-calendar"
       :hint="t('informationsPersonnelles.hintDateNaissance')"
       persistent-hint
-      inputmode="numeric"
-      autocomplete="bday"
-      @input="onDateNaissanceInput"
+      name="dateNaissance"
+      field-class="mb-8"
     />
 
     <h4 class="mb-4 mt-6 text-h6">
@@ -231,7 +226,7 @@ import type { CountrySelection } from "@/types/country.types";
 import { RipolService } from "@/services/ripolService";
 import { fetchGenresSorted, fetchNationalitiesForPersonForm } from "@/utils/helpers/ripolHelpers.ts";
 import AccessibleVSelect from "@/components/accessibility/AccessibleVSelect.vue";
-import { applyDateMask } from "@/utils/helpers/dateHelpers.ts";
+import MaskedDateField from "@/components/form/MaskedDateField.vue";
 import { createHintAdresse } from "@/utils/helpers/adresseHelpers.ts";
 import { requiredLabel } from "@/utils/helpers/labelHelpers";
 
@@ -347,10 +342,6 @@ const localiteHint = createHintAdresse(
 
 const onCountryChanged = (country: CountrySelection) => {
   pays.value = country.ripolCode;
-};
-
-const onDateNaissanceInput = (e: InputEvent) => {
-  applyDateMask(e, dateNaissance);
 };
 
 watch(typeDocumentIdentite, newValue => {

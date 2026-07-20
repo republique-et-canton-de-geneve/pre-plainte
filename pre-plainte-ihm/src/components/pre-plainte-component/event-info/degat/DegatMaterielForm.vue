@@ -91,8 +91,6 @@
       :error-messages="descriptionError"
       class="mb-8"
       variant="outlined"
-      :hint="t('dommages.hintDescriptionDommage')"
-      persistent-hint
     >
       <template #append-inner>
         <v-tooltip location="top">
@@ -155,7 +153,6 @@ import {
 } from "@/utils/helpers/vehiculeValidationHelper.ts";
 
 const TEXTE_VIDE = "";
-const CHAMP_REQUIS_ERREUR = "validation.champRequis";
 const VALIDATION_LONGUEUR_MAX = "validation.longueurMax";
 
 const LONGUEURS_FIELDS = [
@@ -398,6 +395,10 @@ const validerVehiculeDommage = async (): Promise<boolean> => {
     return false;
   }
 
+  if (!validateValeurReelle()) {
+    return false;
+  }
+
   if (!validateLongueurs(
     LONGUEURS_FIELDS,
     setFieldError as any,
@@ -413,9 +414,24 @@ const validerVehiculeDommage = async (): Promise<boolean> => {
   return true;
 };
 
+const validateValeurReelle = (): boolean => {
+  const raw = chaineFormulaire(valeurReelle.value).trim();
+  if (!raw) {
+    return true;
+  }
+
+  const parsed = Number(raw);
+  if (!Number.isFinite(parsed) || parsed < 0) {
+    setFieldError("valeurReelle", t("validation.montantPositif"));
+    return false;
+  }
+
+  return true;
+};
+
 const validateChampsObligatoires = async (): Promise<boolean> => {
   if (!sousCategorie.value?.trim()) {
-    setFieldError("sousCategorie", t(CHAMP_REQUIS_ERREUR));
+    setFieldError("sousCategorie", t("validation.sousCategorieRequise"));
     return false;
   }
 
@@ -432,7 +448,6 @@ const validateChampsObligatoires = async (): Promise<boolean> => {
       modeleAutre: modeleAutre.value,
       setFieldError: setFieldError as any,
       t,
-      champRequisErreur: CHAMP_REQUIS_ERREUR,
     })
   ) {
     return false;
@@ -501,11 +516,7 @@ const validerBrouillonAvantNavigation = async (): Promise<boolean> => {
   if (typeDommage.value !== "dommage-vehicule" || !afficherFicheSaisie.value) {
     return true;
   }
-  const brouillonValide = await validerVehiculeDommage();
-  if (!brouillonValide) {
-    void nextTick(() => draftPanelRef.value?.scrollIntoView({ behavior: "smooth", block: "start" }));
-  }
-  return brouillonValide;
+  return validerVehiculeDommage();
 };
 
 defineExpose({ validerBrouillonAvantNavigation });
