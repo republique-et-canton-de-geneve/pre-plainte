@@ -142,7 +142,6 @@ import { buildUpdateAppointmentPayload, resolveEsiriusDemandeReference } from "@
 import { getCaptchaSitekey } from "@/config/config.ts";
 import { DAY_END, DAY_START, MONTH_END, MONTH_START, TIME_START, YEAR_END, YEAR_START, STEP_UPDATE_APPOINTMENT_VALIDATION } from "@/constants/constant.ts";
 import { formatCreneauLieu } from "@/utils/workflows/rendez-vous-workflow";
-
 const props = defineProps<{
   currentStep: number;
 }>();

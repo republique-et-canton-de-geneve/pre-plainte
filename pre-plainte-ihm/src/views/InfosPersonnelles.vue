@@ -2,6 +2,7 @@
   <div>
     <v-form @submit.prevent="onSubmit">
       <h1 class="mb-5 text-h1 text-md-h2 d-none d-md-block">{{ t("titreApplication.prePlainte") }}</h1>
+      <FormErrorSummary :messages="submitErrorMessages" />
       <v-card class="pa-2 pa-md-6 mb-4">
         <h2 class="pre-plainte-main-card-title mb-4 text-h4 text-md-h2 mt-4">
           {{ t("informationsPersonnelles.titre") }}
@@ -26,16 +27,14 @@
         <InfosPersonnellesForm />
 
         <div v-if="!showTiersSection && !showOrganisationSection" class="d-md-none mt-4">
-          <div class="pre-plainte-mobile-step-actions d-flex flex-column gap-4 mb-4">
+          <div class="pre-plainte-mobile-step-actions d-flex flex-column gap-2">
             <v-btn variant="outlined" color="primary" class="w-100" data-cy="precedent-informations-personnelles" @click="$emit('cancel')">
               {{ t("common.precedent") }}
             </v-btn>
-            <v-btn type="submit" variant="flat" color="primary" class="w-100" data-cy="continuer-informations-personnelles" @click="onSubmit">
+            <v-btn type="submit" variant="flat" color="primary" class="w-100" data-cy="continuer-informations-personnelles" :loading="isSubmitting" @click="onSubmit">
               {{ t("common.continuer") }}
             </v-btn>
-          </div>
-          <div class="d-flex justify-center">
-            <v-btn variant="plain" color="primary" class="pa-0" @click="onSave">
+            <v-btn variant="plain" color="primary" class="w-100" @click="onSave">
               {{ t("common.sauvegarder") }}
             </v-btn>
           </div>
@@ -44,16 +43,14 @@
       <InfosTiersForm v-if="showTiersSection">
         <template #buttons>
           <div class="d-md-none mt-4">
-            <div class="pre-plainte-mobile-step-actions d-flex flex-column gap-4 mb-4">
+            <div class="pre-plainte-mobile-step-actions d-flex flex-column gap-2">
               <v-btn variant="outlined" color="primary" class="w-100" data-cy="precedent-informations-personnelles" @click="$emit('cancel')">
                 {{ t("common.precedent") }}
               </v-btn>
-              <v-btn type="submit" variant="flat" color="primary" class="w-100" data-cy="continuer-informations-personnelles" @click="onSubmit">
+              <v-btn type="submit" variant="flat" color="primary" class="w-100" data-cy="continuer-informations-personnelles" :loading="isSubmitting" @click="onSubmit">
                 {{ t("common.continuer") }}
               </v-btn>
-            </div>
-            <div class="d-flex justify-center">
-              <v-btn variant="plain" color="primary" class="pa-0" @click="onSave">
+              <v-btn variant="plain" color="primary" class="w-100" @click="onSave">
                 {{ t("common.sauvegarder") }}
               </v-btn>
             </div>
@@ -64,16 +61,14 @@
       <InfosOrganisationForm v-if="showOrganisationSection">
         <template #buttons>
           <div class="d-md-none mt-4">
-            <div class="pre-plainte-mobile-step-actions d-flex flex-column gap-4 mb-4">
+            <div class="pre-plainte-mobile-step-actions d-flex flex-column gap-2">
               <v-btn variant="outlined" color="primary" class="w-100" data-cy="precedent-informations-personnelles" @click="$emit('cancel')">
                 {{ t("common.precedent") }}
               </v-btn>
-              <v-btn type="submit" variant="flat" color="primary" class="w-100" data-cy="continuer-informations-personnelles" @click="onSubmit">
+              <v-btn type="submit" variant="flat" color="primary" class="w-100" data-cy="continuer-informations-personnelles" :loading="isSubmitting" @click="onSubmit">
                 {{ t("common.continuer") }}
               </v-btn>
-            </div>
-            <div class="d-flex justify-center">
-              <v-btn variant="plain" color="primary" class="pa-0" @click="onSave">
+              <v-btn variant="plain" color="primary" class="w-100" @click="onSave">
                 {{ t("common.sauvegarder") }}
               </v-btn>
             </div>
@@ -96,7 +91,7 @@
           <v-btn variant="outlined" color="primary" class="me-4" data-cy="precedent-informations-personnelles" @click="$emit('cancel')">
             {{ t("common.precedent") }}
           </v-btn>
-          <v-btn type="submit" variant="flat" color="primary" data-cy="continuer-informations-personnelles">
+          <v-btn type="submit" variant="flat" color="primary" data-cy="continuer-informations-personnelles" :loading="isSubmitting">
             {{ t("common.poursuivre") }}
           </v-btn>
         </v-col>
@@ -112,10 +107,12 @@ import { useCreatePrePlainteStore } from "@/stores/createPrePlainteStore";
 import type { PrePlainteFormFields } from "@/types/pre-plainte.interface";
 import { toTypedSchema } from "@vee-validate/zod";
 import { useField, useForm } from "vee-validate";
-import { computed, watch } from "vue";
+import { computed, nextTick, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { useFormErrorScroll } from "@/composables/useFormErrorScroll";
 import { useFormReset, resetConditions } from "@/composables/useFormReset";
+import { flattenValidationErrorMessages } from "@/utils/helpers/formErrorHelpers";
+import FormErrorSummary from "@/components/form/FormErrorSummary.vue";
 import TiersRepresentationForm from "@/components/pre-plainte-component/personal-info/TiersRepresentationForm.vue";
 import EntrepriseRepresentationForm from "@/components/pre-plainte-component/personal-info/EntrepriseRepresentationForm.vue";
 import InfosTiersForm from "@/components/pre-plainte-component/personal-info/InfosTiersForm.vue";
@@ -128,6 +125,8 @@ const { t, locale } = useI18n();
 const emit = defineEmits<{ cancel: []; continue: []; save: [] }>();
 const store = useCreatePrePlainteStore();
 const { scrollToFirstValidationError } = useFormErrorScroll();
+const submitErrorMessages = ref<string[]>([]);
+const isSubmitting = ref(false);
 
 const LIEN_TIERS = "TIERS";
 const LIEN_ENTREPRISE = "ENTREPRISE";
@@ -162,11 +161,24 @@ useFormReset(form, resetConditions.personalInfo);
 
 const onSubmit = handleSubmit(
   formValues => {
-    store.setUserFormData(formValues);
-    emit("continue");
+    submitErrorMessages.value = [];
+    isSubmitting.value = true;
+    try {
+      store.setUserFormData(formValues);
+      emit("continue");
+    } finally {
+      isSubmitting.value = false;
+    }
   },
   errors => {
-    scrollToFirstValidationError(errors);
+    submitErrorMessages.value = flattenValidationErrorMessages(errors);
+    nextTick(() => {
+      document.querySelector('[data-cy="form-error-summary"]')?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+      scrollToFirstValidationError(errors);
+    });
   },
 );
 

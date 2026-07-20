@@ -99,6 +99,13 @@ const vuetifyMessages = {
   margin-bottom: 8px !important;
 }
 
+.v-field input,
+.v-field textarea,
+.v-select .v-field__input,
+.v-autocomplete .v-field__input {
+  font-size: 16px !important;
+}
+
 .step-dot {
   width: 12px;
   height: 12px;
@@ -126,13 +133,22 @@ const vuetifyMessages = {
 }
 
 .v-main {
-  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 @media (max-width: 959px) {
   .step-dot {
     width: 10px;
     height: 10px;
+  }
+
+  .v-main .mb-8 {
+    margin-bottom: 16px !important;
+  }
+
+  .v-main .v-card,
+  .v-main .v-sheet {
+    overflow: visible !important;
   }
 
   .v-card h1.pre-plainte-main-card-title,
@@ -143,11 +159,13 @@ const vuetifyMessages = {
   }
 
   .pre-plainte-mobile-step-actions {
-    gap: 10px !important;
+    gap: 8px !important;
   }
 
-  .pre-plainte-mobile-step-actions > .v-btn:first-child {
-    margin-bottom: 8px !important;
+  .frc-captcha {
+    transform: scale(0.92);
+    transform-origin: center top;
+    min-height: 64px;
   }
 }
 </style>
