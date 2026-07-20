@@ -276,12 +276,18 @@ export function matchIncidentWithService(incident: string, serviceName: string):
   }
 
   if (normalizedIncident.includes("cyber")) {
-    return normalizedServiceName.includes("cybercrime");
+    return hasCyberServiceName(normalizedServiceName);
   }
 
   if (normalizedIncident.includes("dommage-cybercrime")) {
-    return normalizedServiceName.includes("dommage") || normalizedServiceName.includes("cybercrime");
+    return normalizedServiceName.includes("dommage") || hasCyberServiceName(normalizedServiceName);
   }
 
   return false;
+}
+
+function hasCyberServiceName(normalizedServiceName: string): boolean {
+  return normalizedServiceName.includes("cybercrime")
+    || normalizedServiceName.includes("cyber-escroquerie")
+    || normalizedServiceName.includes("cyber escroquerie");
 }
