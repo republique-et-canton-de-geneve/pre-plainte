@@ -61,8 +61,8 @@ function invalidMessageFn({ example }: { label?: string; example?: string }) {
 
 <style>
 .v-overlay-container .v-overlay__content:has(.v-phone-input__country__icon) .v-list {
-  min-width: 500px;
-  max-width: 500px;
+  min-width: min(500px, calc(100vw - 32px));
+  max-width: min(500px, calc(100vw - 32px));
 }
 
 .v-phone-input__country__input {

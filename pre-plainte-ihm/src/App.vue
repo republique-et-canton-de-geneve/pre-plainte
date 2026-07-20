@@ -3,11 +3,9 @@
     <ge-header-public maxWidth="false" class="sticky-header"></ge-header-public>
     <v-main>
       <v-container fluid class="mt-12 wrapper pa-0 mb-12">
-        <v-row justify="center" align="center">
-          <v-locale-provider :locale="currentLocale" :messages="vuetifyMessages">
-            <router-view :key="route.fullPath" />
-          </v-locale-provider>
-        </v-row>
+        <v-locale-provider :locale="currentLocale" :messages="vuetifyMessages">
+          <router-view :key="route.fullPath" />
+        </v-locale-provider>
       </v-container>
     </v-main>
     <ge-footer maxWidth="false" />
@@ -86,6 +84,17 @@ const vuetifyMessages = {
 </style>
 
 <style>
+.v-container {
+  width: 100%;
+  padding: 4px !important;
+  margin-right: auto;
+  margin-left: auto;
+}
+
+.v-row > [class*="v-col"] {
+  padding: 4px !important;
+}
+
 .v-field__details {
   margin-bottom: 8px !important;
 }
@@ -110,7 +119,14 @@ const vuetifyMessages = {
 .pre-plainte-main-card-title {
   padding-left: 10px !important;
   padding-right: 10px !important;
+  padding-bottom: 12px !important;
   box-sizing: border-box;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+.v-main {
+  overflow-x: hidden;
 }
 
 @media (max-width: 959px) {
@@ -122,12 +138,16 @@ const vuetifyMessages = {
   .v-card h1.pre-plainte-main-card-title,
   .v-card h2.pre-plainte-main-card-title,
   .v-card h3.pre-plainte-main-card-title {
-    padding: 20px 5px 0 0px !important;
+    padding: 20px 5px 12px 0 !important;
     box-sizing: border-box !important;
   }
 
+  .pre-plainte-mobile-step-actions {
+    gap: 10px !important;
+  }
+
   .pre-plainte-mobile-step-actions > .v-btn:first-child {
-    margin-bottom: 5px !important;
+    margin-bottom: 8px !important;
   }
 }
 </style>

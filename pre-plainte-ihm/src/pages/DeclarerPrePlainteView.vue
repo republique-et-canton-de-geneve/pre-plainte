@@ -1,8 +1,8 @@
 <template>
-  <v-container fluid>
+  <v-container fluid class="pre-plainte-page">
     <div class="top-bar mb-4 px-2">
       <div class="top-bar-left">
-        <h1 class="text-h1 text-md-h2 d-md-none mobile-title">
+        <h1 class="text-h4 text-md-h2 d-md-none mobile-title">
           {{ t("titreApplication.prePlainte") }}
         </h1>
 
@@ -21,7 +21,7 @@
 
     <StepLoadingSkeleton v-if="isLoading" :step="step" />
 
-    <v-row v-else>
+    <v-row v-else class="ma-0">
       <v-col cols="12" md="8">
         <Disclaimer v-if="step === 1" :key="`step-${step}`" @continue="handleContinue" />
         <VerificationEmail v-if="step === 2" :key="`step-${step}`" @cancel="handleCancel" @continue="handleContinue" />

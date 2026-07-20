@@ -59,7 +59,7 @@
       </tbody>
     </v-table>
 
-    <v-sheet v-if="mobile" class="d-md-none" :class="['mx-n2', 'px-2']" color="transparent">
+    <v-sheet v-if="mobile" class="d-md-none" color="transparent">
       <v-sheet v-if="esiriusStore.loading" class="text-center py-6" color="transparent">
         <v-progress-circular indeterminate color="primary" size="32" />
         <div class="mt-2 text-body-2">{{ t("common.donneeEnCoursDeChargement") }}</div>

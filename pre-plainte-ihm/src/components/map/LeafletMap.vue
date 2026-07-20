@@ -95,9 +95,7 @@ onUnmounted(() => {
 
 @media (max-width: 959px) {
   .leaflet-map {
-    width: 102%;
-    margin-left: -1%;
-    margin-right: -1%;
+    width: 100%;
   }
 }
 
