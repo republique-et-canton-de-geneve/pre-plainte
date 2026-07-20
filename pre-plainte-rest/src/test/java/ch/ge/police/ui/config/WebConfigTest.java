@@ -28,6 +28,7 @@ import java.util.Arrays;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @ExtendWith(SpringExtension.class)
@@ -54,6 +55,12 @@ class WebConfigTest {
   static class ApiController {
     @GetMapping(value = "/api/test", produces = MediaType.TEXT_PLAIN_VALUE)
     public String ok() { return "ok"; }
+
+    @PostMapping(value = "/api/preplainte/soumission", produces = MediaType.TEXT_PLAIN_VALUE)
+    public String submit() { return "ok"; }
+
+    @PostMapping(value = "/api/preplainte/draft", produces = MediaType.TEXT_PLAIN_VALUE)
+    public String draft() { return "ok"; }
   }
 
   @RestController
@@ -99,5 +106,19 @@ class WebConfigTest {
            .andExpect(content().string("ok"));
 
     verify(interceptor, never()).preHandle(any(), any(), any());
+  }
+
+  @Test
+  @DisplayName("Sur /api/preplainte/** (POST), l'intercepteur est invoqué")
+  void interceptorInvokedWhenPreplaintePost() throws Exception {
+    var interceptor = wac.getBean(FriendlyCaptchaInterceptor.class);
+    doReturn(true).when(interceptor).preHandle(any(), any(), any());
+
+    mockMvc.perform(post("/api/preplainte/soumission")
+            .header("X-Captcha-Token", "fake-token"))
+        .andExpect(status().isOk())
+        .andExpect(content().string("ok"));
+
+    verify(interceptor).preHandle(any(), any(), any());
   }
 }

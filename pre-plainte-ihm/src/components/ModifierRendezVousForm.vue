@@ -278,7 +278,7 @@ const filterServiceByIncidentType = (service: Service, incidentType: IncidentTyp
     return name.includes("dommage");
   }
   if (incidentType === "cyber") {
-    return name.includes("cybercrime");
+    return name.includes("cybercrime") || name.includes("cyber-escroquerie") || name.includes("cyber escroquerie");
   }
   return true;
 };
