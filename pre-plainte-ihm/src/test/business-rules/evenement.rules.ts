@@ -200,6 +200,15 @@ export const reglesEvenement: BusinessRule<EvenementRuleData>[] = [
     precision: "Un vol doit indiquer si l'objet etait dans un vehicule, la categorie de l'objet et l'existence de degradations.",
     examples: [
       {
+        label: "indication vol dans vehicule absente est refusee",
+        data: {
+          volDansVehicule: null,
+        },
+        valid: false,
+        errorPath: ["volDansVehicule"],
+        errorMessage: "validation.volDansVehiculeRequis",
+      },
+      {
         label: "categorie d'objet absente est refusee",
         data: {
           categorieObjet: "",
@@ -220,6 +229,39 @@ export const reglesEvenement: BusinessRule<EvenementRuleData>[] = [
     ],
   },
   {
+    section: "Informations sur l'evenement",
+    champDemande: "Adresse de l'evenement",
+    obligatoire: "Oui",
+    precision: "L'adresse connue et le type de lieu doivent etre renseignes quand l'adresse n'est pas celle du lese.",
+    examples: [
+      {
+        label: "adresse connue absente est refusee",
+        data: {
+          adresseLesee: false,
+          adresseConnue: null,
+        },
+        valid: false,
+        errorPath: ["adresseConnue"],
+        errorMessage: "validation.adresseConnueRequise",
+      },
+      {
+        label: "type de lieu absent est refuse",
+        data: {
+          adresseLesee: false,
+          adresseConnue: true,
+          typeLieu: null,
+          adresseEvenement: "Rue du Test 1",
+          npaEvenement: "1200",
+          localiteEvenement: "Geneve",
+          paysEvenement: "8100",
+        },
+        valid: false,
+        errorPath: ["typeLieu"],
+        errorMessage: "validation.typeLieuRequis",
+      },
+    ],
+  },
+  {
     section: "Vol",
     champDemande: "Numero de serie",
     obligatoire: "Selon le cas",
@@ -234,6 +276,7 @@ export const reglesEvenement: BusinessRule<EvenementRuleData>[] = [
           numeroSerie: "",
           numeroSerieInconnu: false,
           numeroIMEIInconnu: true,
+          justificationAbsenceIMEI: "Boite introuvable",
         },
         valid: false,
         errorPath: ["numeroSerie"],
@@ -248,6 +291,7 @@ export const reglesEvenement: BusinessRule<EvenementRuleData>[] = [
           numeroSerie: "SN123456",
           numeroSerieInconnu: false,
           numeroIMEIInconnu: true,
+          justificationAbsenceIMEI: "Appareil perdu sans boite",
         },
         valid: true,
       },
@@ -257,7 +301,7 @@ export const reglesEvenement: BusinessRule<EvenementRuleData>[] = [
     section: "Vol",
     champDemande: "Numero IMEI",
     obligatoire: "Selon le cas",
-    precision: "Obligatoire et compose de 15 chiffres pour un telephone mobile sauf si le numero est inconnu.",
+    precision: "Obligatoire et compose de 15 chiffres pour un telephone mobile sauf si le numero est inconnu, auquel cas une justification est requise.",
     examples: [
       {
         label: "telephone mobile sans IMEI est refuse",
@@ -299,6 +343,32 @@ export const reglesEvenement: BusinessRule<EvenementRuleData>[] = [
         },
         valid: true,
       },
+      {
+        label: "IMEI inconnu sans justification est refuse",
+        data: {
+          categorieObjet: "telephone",
+          typeObjet: telephoneMobile,
+          couleur: noir,
+          numeroSerie: "SN123456",
+          numeroIMEIInconnu: true,
+          justificationAbsenceIMEI: "",
+        },
+        valid: false,
+        errorPath: ["justificationAbsenceIMEI"],
+        errorMessage: "validation.justificationAbsenceIMEIRequise",
+      },
+      {
+        label: "IMEI inconnu avec justification est accepte",
+        data: {
+          categorieObjet: "telephone",
+          typeObjet: telephoneMobile,
+          couleur: noir,
+          numeroSerie: "SN123456",
+          numeroIMEIInconnu: true,
+          justificationAbsenceIMEI: "Boite et facture introuvables",
+        },
+        valid: true,
+      },
     ],
   },
   {
@@ -323,7 +393,7 @@ export const reglesEvenement: BusinessRule<EvenementRuleData>[] = [
         },
         valid: false,
         errorPath: ["plaqueCanton"],
-        errorMessage: "validation.champRequis",
+        errorMessage: "validation.plaqueCantonRequis",
       },
       {
         label: "plaque suisse complete est acceptee",

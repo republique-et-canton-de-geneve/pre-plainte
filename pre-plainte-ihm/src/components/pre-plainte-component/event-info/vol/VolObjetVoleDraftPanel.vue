@@ -50,11 +50,20 @@
           @update:model-value="onPlaqueInput"
           :label="requiredLabel(t('incidentTypes.plaqueNumero'))"
           :error-messages="brouillon.plaqueNumeroError"
-          :hint="t('incidentTypes.hintPlaqueNumero')"
           variant="outlined"
-          persistent-hint
           class="my-4"
-        />
+        >
+          <template #append-inner>
+            <v-tooltip location="top">
+              <template #activator="{ props }">
+                <v-icon v-bind="props" color="primary" size="small"> mdi-information-outline </v-icon>
+              </template>
+              <div class="white-space">
+                {{ t("incidentTypes.plaqueNumeroTooltip") }}
+              </div>
+            </v-tooltip>
+          </template>
+        </v-text-field>
       </template>
 
       <template
@@ -178,13 +187,17 @@
       <v-text-field
         v-if="brouillon.categorieObjet && brouillon.categorieObjet !== VOL_OBJET_CATEGORIE.PLAQUE"
         :label="t('incidentTypes.valeurReelle')"
-        v-model="brouillon.valeurReelle"
+        :model-value="brouillon.valeurReelle"
         type="number"
+        min="0"
+        inputmode="decimal"
         class="my-4"
         :error-messages="brouillon.valeurReelleError"
         variant="outlined"
         :hint="t('incidentTypes.hintValeurReelle')"
         persistent-hint
+        @keydown="bloquerSaisieValeurNegative"
+        @update:model-value="onValeurReelleInput"
       />
 
       <template
@@ -195,35 +208,38 @@
         "
       >
         <v-text-field
+          :key="`numero-serie-${brouillon.numeroSerieInconnu ? 'inconnu' : 'connu'}`"
           :label="(!brouillon.numeroSerieRequis || brouillon.numeroSerieInconnu) ? t('incidentTypes.numeroSerie') : requiredLabel(t('incidentTypes.numeroSerie'))"
-          v-model="brouillon.numeroSerie"
+          :model-value="brouillon.numeroSerie"
           :disabled="brouillon.numeroSerieRequis && brouillon.numeroSerieInconnu"
           class="my-4"
           :error-messages="brouillon.numeroSerieError"
           variant="outlined"
           :hint="t('incidentTypes.hintNumeroSerie')"
           persistent-hint
+          @update:model-value="onNumeroSerieInput"
         />
         <v-checkbox
           v-if="brouillon.numeroSerieRequis"
-          v-model="brouillon.numeroSerieInconnu"
+          :model-value="brouillon.numeroSerieInconnu"
           :label="t('incidentTypes.numeroSerieInconnu')"
           class="my-4"
           hide-details
+          @update:model-value="onNumeroSerieInconnuChange"
         />
 
         <template v-if="brouillon.hasImei">
           <v-text-field
+            :key="`numero-imei-${brouillon.numeroIMEIInconnu ? 'inconnu' : 'connu'}`"
             :label="brouillon.numeroIMEIInconnu ? t('incidentTypes.numeroImei') : requiredLabel(t('incidentTypes.numeroImei'))"
-            v-model="brouillon.numeroIMEI"
+            :model-value="brouillon.numeroIMEI"
             :disabled="brouillon.numeroIMEIInconnu"
             :error-messages="brouillon.numeroIMEIError"
             class="my-4"
             variant="outlined"
-            :hint="t('incidentTypes.hintNumeroImei')"
-            persistent-hint
-            :maxlength=NUMERO_IMEI_MAX_LENGTH
+            :maxlength="NUMERO_IMEI_MAX_LENGTH"
             inputmode="numeric"
+            @update:model-value="onNumeroIMEIInput"
           >
             <template #append-inner>
               <v-tooltip location="top">
@@ -237,10 +253,11 @@
             </template>
           </v-text-field>
           <v-checkbox
-            v-model="brouillon.numeroIMEIInconnu"
+            :model-value="brouillon.numeroIMEIInconnu"
             :label="t('incidentTypes.numeroIMEIInconnu')"
             class="my-4"
             hide-details
+            @update:model-value="onNumeroIMEIInconnuChange"
           />
           <template v-if="brouillon.numeroIMEIInconnu">
             <v-alert type="info" class="my-4" density="comfortable" :icon="mobile ? false : undefined">
@@ -250,7 +267,7 @@
             </v-alert>
             <v-textarea
               v-model="brouillon.justificationAbsenceIMEI"
-              :label="t('incidentTypes.justificationAbsenceIMEI')"
+              :label="requiredLabel(t('incidentTypes.justificationAbsenceIMEI'))"
               :hint="t('incidentTypes.hintJustificationAbsenceIMEI')"
               :error-messages="brouillon.justificationAbsenceIMEIError"
               variant="outlined"
@@ -306,6 +323,48 @@ const onPlaqueInput = (value: string) => {
     value,
     props.brouillon.plaquePays?.code,
   );
+};
+
+const bloquerSaisieValeurNegative = (event: KeyboardEvent) => {
+  if (event.key === "-" || event.key === "e" || event.key === "E" || event.key === "+") {
+    event.preventDefault();
+  }
+};
+
+const onValeurReelleInput = (value: string | number | null) => {
+  const raw = value == null ? "" : String(value);
+  if (!raw.trim()) {
+    props.brouillon.valeurReelle = "";
+    return;
+  }
+  const parsed = Number(raw);
+  props.brouillon.valeurReelle = Number.isFinite(parsed) && parsed < 0 ? "" : raw;
+};
+
+const onNumeroSerieInput = (value: string | null) => {
+  props.brouillon.numeroSerie = value ?? "";
+};
+
+const onNumeroSerieInconnuChange = (checked: boolean | null) => {
+  const isChecked = !!checked;
+  props.brouillon.numeroSerieInconnu = isChecked;
+  if (isChecked) {
+    props.brouillon.numeroSerie = "";
+  }
+};
+
+const onNumeroIMEIInput = (value: string | null) => {
+  props.brouillon.numeroIMEI = value ?? "";
+};
+
+const onNumeroIMEIInconnuChange = (checked: boolean | null) => {
+  const isChecked = !!checked;
+  props.brouillon.numeroIMEIInconnu = isChecked;
+  if (isChecked) {
+    props.brouillon.numeroIMEI = "";
+    return;
+  }
+  props.brouillon.justificationAbsenceIMEI = "";
 };
 </script>
 

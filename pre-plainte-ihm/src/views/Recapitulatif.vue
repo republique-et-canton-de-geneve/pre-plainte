@@ -1,5 +1,5 @@
 <template>
-  <main>
+  <main class="recapitulatif-dense">
     <h1 class="mb-4 text-h1 text-md-h1 d-none d-md-block">{{ t("titreApplication.prePlainte") }}</h1>
 
     <section aria-labelledby="recap-title" class="mb-6">

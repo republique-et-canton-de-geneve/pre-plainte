@@ -18,6 +18,9 @@
     :no-filter="disableVuetifyFilter"
     :no-data-text="noDataText"
     :value-comparator="compareByCode"
+    :name="name"
+    :data-field="name"
+    @focus="scrollFieldIntoView"
   >
     <template #item="{ props: itemProps, item }">
       <v-list-item v-bind="itemProps" :title="getDisplayLabel(item.raw)" :subtitle="showCode ? item.raw.code : undefined" />
@@ -30,7 +33,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from "vue";
+import { ref, computed, watch, onMounted, nextTick } from "vue";
 import { useI18n } from "vue-i18n";
 import type { Ripol, RipolSelection } from "@/types/ripol.interface";
 import { useRipolLoading } from "@/composables/useRipolLoading";
@@ -63,6 +66,7 @@ interface Props {
   displayLabel?: (item: RipolSelection) => string;
   autoSelectWhenSingleResult?: boolean;
   required?: boolean;
+  name?: string;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -247,6 +251,20 @@ watch(
   },
   { immediate: true }
 );
+
+const scrollFieldIntoView = async () => {
+  await nextTick();
+  const active = document.activeElement;
+  if (!(active instanceof HTMLElement)) {
+    return;
+  }
+  const field = active.closest(".v-input, .v-autocomplete, .v-field");
+  (field ?? active).scrollIntoView({
+    behavior: "smooth",
+    block: "center",
+    inline: "nearest",
+  });
+};
 
 onMounted(() => {
   if (props.modelValue && !items.value.some(item => item.code === props.modelValue?.code)) {

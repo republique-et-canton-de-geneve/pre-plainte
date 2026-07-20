@@ -14,6 +14,8 @@ import {
   getPreviousStep,
   loadEmailChallengeKey,
   saveEmailChallengeKey,
+  saveLastLocalSavedAt,
+  loadLastLocalSavedAt,
 } from "@/utils/validations/field-validation.utils";
 import { getInitialFormData } from "@/utils/form/initial-form-data";
 import { isRendezVousOnlyDommage } from "@/utils/workflows/disclaimer-workflow";
@@ -36,6 +38,7 @@ export const useCreatePrePlainteStore = defineStore("createPrePlainte", () => {
   const isLoading = ref(false);
   const isRdvDataLoading = ref(false);
   const isStoragePersistenceEnabled = ref(true);
+  const lastLocalSavedAt = ref<Date | null>(loadLastLocalSavedAt());
 
   const keyChallenge = ref<string | null>(loadEmailChallengeKey());
 
@@ -146,6 +149,9 @@ export const useCreatePrePlainteStore = defineStore("createPrePlainte", () => {
     formData => {
       if (isStoragePersistenceEnabled.value) {
         saveFormData(formData);
+        const now = new Date();
+        lastLocalSavedAt.value = now;
+        saveLastLocalSavedAt(now);
       }
     },
     { deep: true },
@@ -158,6 +164,7 @@ export const useCreatePrePlainteStore = defineStore("createPrePlainte", () => {
     steps: STEPS,
     isLoading,
     isRdvDataLoading,
+    lastLocalSavedAt,
     nextStep,
     prevStep,
     setStep,

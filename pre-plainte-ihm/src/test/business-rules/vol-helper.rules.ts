@@ -42,7 +42,7 @@ export const reglesVolHelpers: BusinessRule<VolHelperRuleData>[] = [
         },
         valid: false,
         errorPath: ["plaqueCanton"],
-        errorMessage: "validation.champRequis",
+        errorMessage: "validation.plaqueCantonRequis",
       },
       {
         label: "plaque suisse au mauvais format est refusee",

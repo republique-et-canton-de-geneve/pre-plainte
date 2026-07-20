@@ -414,6 +414,47 @@ Given("je reprends un brouillon depuis l'URL", () => {
   );
 });
 
+Given("qu'un brouillon local est présent", () => {
+  stubRipol();
+  cy.demarrerPrePlainteAEtape(
+    STEP_INFORMATIONS_PERSONNELLES,
+    {
+      ...donneesEmailVerifie,
+      ...declarantSuisseValide,
+    },
+    {
+      emailChallengeKey: EMAIL_CHALLENGE_KEY_CYPRESS,
+      offerDraftResume: true,
+      lastSavedAt: "2026-07-20T10:00:00.000Z",
+    },
+  );
+});
+
+Then("le dialogue de reprise de brouillon local est affiché", () => {
+  cy.get('[data-cy="reprise-brouillon-dialog"]').should(bevisible);
+  cy.contains("Une pré-plainte est en cours").should(bevisible);
+});
+
+When("je choisis de continuer le brouillon local", () => {
+  cy.get('[data-cy="reprise-brouillon-continuer"]').click();
+});
+
+When("je choisis de recommencer le brouillon local", () => {
+  cy.get('[data-cy="reprise-brouillon-recommencer"]').click();
+});
+
+Then("je reste sur l'étape des informations personnelles", () => {
+  cy.get('[data-cy="reprise-brouillon-dialog"]').should("not.exist");
+  cy.get('[data-cy="continuer-informations-personnelles"]').filter(":visible").first().should(bevisible);
+  cy.window().its("localStorage").invoke("getItem", "pp-step").should("eq", String(STEP_INFORMATIONS_PERSONNELLES));
+});
+
+Then("je repars depuis les informations générales", () => {
+  cy.get('[data-cy="reprise-brouillon-dialog"]').should("not.exist");
+  cy.get(CONTINUER_INFORMATIONS_GENERALES_SELECTOR).filter(":visible").first().should(bevisible);
+  cy.window().its("localStorage").invoke("getItem", "pp-step").should("eq", String(STEP_INFORMATIONS_GENERALES));
+});
+
 Given("que je sélectionne {string} dans le type de personne", (type) => {
   cy.get(TYPE_PERSONNE_NATIVE_SELECTOR).select(valeursTypePersonne[type] ?? type, { force: true });
 });

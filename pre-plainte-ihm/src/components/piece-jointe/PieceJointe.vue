@@ -19,6 +19,14 @@
       class="d-none"
       @update:model-value="onFilesSelected"
     />
+    <v-file-input
+      ref="cameraInputRef"
+      v-model="cameraFiles"
+      accept="image/*"
+      capture="environment"
+      class="d-none"
+      @update:model-value="onCameraSelected"
+    />
 
     <v-card
       class="confirmation-card pa-2 pa-md-6 mb-4 cursor-pointer"
@@ -50,19 +58,37 @@
           <v-divider class="flex-grow-1" />
         </div>
 
-        <v-btn
-          color="primary"
-          variant="flat"
-          rounded="pill"
-          size="large"
-          class="text-white"
-          @click.stop="openFilePicker"
-        >
-          {{ t("pieceJointe.chargerFichiers") }}
-          <template #append>
-            <v-icon icon="mdi-upload" size="18" color="white" />
-          </template>
-        </v-btn>
+        <div class="d-flex flex-column flex-sm-row align-center ga-3">
+          <v-btn
+            color="primary"
+            variant="flat"
+            rounded="pill"
+            size="large"
+            class="text-white"
+            @click.stop="openFilePicker"
+          >
+            {{ t("pieceJointe.chargerFichiers") }}
+            <template #append>
+              <v-icon icon="mdi-upload" size="18" color="white" />
+            </template>
+          </v-btn>
+          <v-btn
+            v-if="mobile"
+            color="primary"
+            variant="outlined"
+            rounded="pill"
+            size="large"
+            @click.stop="openCameraPicker"
+          >
+            {{ t("pieceJointe.prendrePhoto") }}
+            <template #append>
+              <v-icon icon="mdi-camera" size="18" />
+            </template>
+          </v-btn>
+        </div>
+        <div v-if="files.length > 0" class="text-body-2 text-medium-emphasis mt-4">
+          {{ t("pieceJointe.espaceUtilise", { used: usedSizeMo, max: maxTotalSizeMo }) }}
+        </div>
       </div>
     </v-card>
 
@@ -129,7 +155,7 @@
 <script setup lang="ts">
 import { ref, watch, computed } from "vue";
 import { useI18n } from "vue-i18n";
-import { useTheme } from "vuetify";
+import { useDisplay, useTheme } from "vuetify";
 import {
   BYTES_PER_MEGABYTE,
   MAX_FILE_SIZE,
@@ -146,6 +172,7 @@ const EMIT_UPDATE_MODEL_VALUE = "update:modelValue" as const;
 
 const { t } = useI18n();
 const theme = useTheme();
+const { mobile } = useDisplay();
 const isDarkMode = computed(() => theme.global.current.value.dark);
 
 const props = withDefaults(
@@ -199,9 +226,13 @@ const files = ref<File[]>(normalizeFiles(props.modelValue));
 const rejectedFiles = ref<string[]>([]);
 const showRejectedDetails = ref(false);
 const fileInputRef = ref<any>(null);
+const cameraInputRef = ref<any>(null);
+const cameraFiles = ref<File[]>([]);
 const isDragging = ref(false);
 
 const totalSize = computed(() => files.value.reduce((sum, f) => sum + f.size, 0));
+const usedSizeMo = computed(() => (totalSize.value / BYTES_PER_MEGABYTE).toFixed(1));
+const maxTotalSizeMo = computed(() => Math.round(props.maxTotalSize / BYTES_PER_MEGABYTE));
 
 const acceptedExtensions = computed(() =>
   props.accept
@@ -242,6 +273,19 @@ watch(
 function openFilePicker() {
   const input = fileInputRef.value?.$el?.querySelector('input[type="file"]') as HTMLInputElement | null;
   input?.click();
+}
+
+function openCameraPicker() {
+  const input = cameraInputRef.value?.$el?.querySelector('input[type="file"]') as HTMLInputElement | null;
+  input?.click();
+}
+
+function onCameraSelected(value: File | File[] | null) {
+  const selected = Array.isArray(value) ? value : value ? [value] : [];
+  cameraFiles.value = [];
+  if (selected.length > 0) {
+    onFilesSelected(selected);
+  }
 }
 
 function onDragOver() {

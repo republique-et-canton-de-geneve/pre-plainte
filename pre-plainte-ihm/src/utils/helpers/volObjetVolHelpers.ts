@@ -11,8 +11,6 @@ const PLAQUE_FRANCE_SIV_REGEX = /^[A-Z]{2}-\d{3}-[A-Z]{2}$/;
 const PLAQUE_FRANCE_FNI_REGEX = /^\d{1,4}\s[A-Z]{1,3}\s(\d{2,3}|2A|2B)$/;
 const PLAQUE_INTERNATIONALE_REGEX = /^[A-Z\d]{1,12}$/;
 
-const VALIDATION_CHAMP_REQUIS = "validation.champRequis";
-
 export type VolObjetVolTranslate = (key: string, ...args: unknown[]) => string;
 
 export function hasImeiPourSnapshotVol(obj: VolObjetFormSnapshot): boolean {
@@ -104,11 +102,11 @@ export function validerPlaqueVehicule(
     return true;
   }
   if (!champs.plaquePays?.code) {
-    setFieldError("plaquePays", t(VALIDATION_CHAMP_REQUIS));
+    setFieldError("plaquePays", t("validation.plaquePaysRequise"));
     return false;
   }
   if (champs.plaquePays.code === RIPOL.PAYS_SUISSE && !champs.plaqueCanton?.code) {
-    setFieldError("plaqueCanton", t(VALIDATION_CHAMP_REQUIS));
+    setFieldError("plaqueCanton", t("validation.plaqueCantonRequis"));
     return false;
   }
   return validerNumeroPlaque(champs, setFieldError, t);
@@ -157,7 +155,7 @@ export function validerNumeroPlaque(
     }
     return true;
   } else {
-    setFieldError("plaqueNumero", t(VALIDATION_CHAMP_REQUIS));
+    setFieldError("plaqueNumero", t("validation.plaqueNumeroRequise"));
     return false;
   }
 }
