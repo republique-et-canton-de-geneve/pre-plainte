@@ -229,41 +229,47 @@ async function fetchServiceAvailabilities(
       await wait(AVAILABILITY_RETRY_DELAY_MS * attempt);
     }
 
-    try {
-      const availabilities = await EsiriusService.getAvailability(
-        PPEL_CODE,
-        service.key,
-        begin,
-        period,
-      );
-
-      if (isEsiriusErrorPayload(availabilities)) {
-        continue;
-      }
-
-      if (Array.isArray(availabilities) && availabilities.length > 0) {
-        return {
-          status: FETCH_STATUS_OK,
-          value: {
-            serviceName: service.name,
-            serviceId: service.key,
-            availabilities,
-          },
-        };
-      }
-
-      return { status: FETCH_STATUS_EMPTY };
-    } catch (error: unknown) {
-      if (attempt >= AVAILABILITY_FETCH_RETRIES) {
-        return { status: FETCH_STATUS_ERROR };
-      }
-      if (!(error instanceof Error)) {
-        continue;
-      }
+    const result = await tryFetchServiceAvailabilities(service, begin, period);
+    if (result.status !== FETCH_STATUS_ERROR || attempt >= AVAILABILITY_FETCH_RETRIES) {
+      return result;
     }
   }
 
   return { status: FETCH_STATUS_ERROR };
+}
+
+async function tryFetchServiceAvailabilities(
+  service: any,
+  begin: string,
+  period: string,
+): Promise<AvailabilityFetchResult> {
+  try {
+    const availabilities = await EsiriusService.getAvailability(
+      PPEL_CODE,
+      service.key,
+      begin,
+      period,
+    );
+
+    if (isEsiriusErrorPayload(availabilities)) {
+      return { status: FETCH_STATUS_ERROR };
+    }
+
+    if (Array.isArray(availabilities) && availabilities.length > 0) {
+      return {
+        status: FETCH_STATUS_OK,
+        value: {
+          serviceName: service.name,
+          serviceId: service.key,
+          availabilities,
+        },
+      };
+    }
+
+    return { status: FETCH_STATUS_EMPTY };
+  } catch {
+    return { status: FETCH_STATUS_ERROR };
+  }
 }
 
 async function recoverFailedAvailabilities(

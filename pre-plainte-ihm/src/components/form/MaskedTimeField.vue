@@ -18,23 +18,26 @@
 </template>
 
 <script setup lang="ts">
+const TIME_DIGIT_LIMIT = 4;
+const NON_DIGIT_PATTERN = /\D/g;
+
 withDefaults(
   defineProps<{
     modelValue?: string | null;
     label: string;
-    errorMessages?: string | string[];
-    hint?: string;
+    errorMessages?: string | string[] | null;
+    hint?: string | null;
     persistentHint?: boolean;
     disabled?: boolean;
-    name?: string;
+    name?: string | null;
   }>(),
   {
     modelValue: "",
-    errorMessages: undefined,
-    hint: undefined,
+    errorMessages: null,
+    hint: null,
     persistentHint: false,
     disabled: false,
-    name: undefined,
+    name: null,
   },
 );
 
@@ -47,7 +50,7 @@ const onTextInput = (value: unknown) => {
 };
 
 function applyTimeMaskFromString(raw: string): string {
-  const digits = raw.replace(/\D/g, "").slice(0, 4);
+  const digits = raw.replaceAll(NON_DIGIT_PATTERN, "").slice(0, TIME_DIGIT_LIMIT);
   if (digits.length <= 2) {
     return digits;
   }

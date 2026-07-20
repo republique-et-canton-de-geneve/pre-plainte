@@ -66,7 +66,10 @@ const STEP_RENDEZ_VOUS = 5;
 const STEP_RECAPITULATIF = 6;
 const SERVICE_AVAILABILITY_START_OFFSET_DAYS = 2;
 const SERVICE_AVAILABILITY_HOUR = 10;
-const NOMBRE_OBJETS_VOLES_BROUILLON = 1;
+const MESSAGE_CHAMP_REQUIS = "Le champ est requis";
+const MESSAGE_FABRICANT_AUTRE_REQUIS = "Veuillez préciser le fabricant";
+const MESSAGE_MODELE_AUTRE_REQUIS = "Veuillez préciser le modèle";
+
 
 const donneesEvenementVolVehicule = {
   nationalite: ripolSelection(PAYS_SUISSE, "Suisse"),
@@ -459,7 +462,7 @@ Then("je reste sur l'étape des informations personnelles", () => {
 
 Then("je repars depuis les informations générales", () => {
   cy.get(REPRISE_BROUILLON_DIALOG_SELECTOR).should(NOT_EXIST);
-  cy.get(CONTINUER_INFORMATIONS_GENERALES_SELECTOR).filter(":visible").first().should(bevisible);
+  cy.get(CONFIRMER_DISCLAIMER_SELECTOR).filter(":visible").first().should(bevisible);
   cy.window().its("localStorage").invoke(LOCAL_STORAGE_GET_ITEM, PP_STEP_STORAGE_KEY).should("eq", String(STEP_INFORMATIONS_GENERALES));
 });
 
@@ -653,8 +656,8 @@ When("je renseigne un vol simple nominal", () => {
 });
 
 When("je sélectionne le premier créneau disponible", () => {
-  cy.wait("@getEsiriusServices");
-  cy.wait("@getEsiriusAvailabilities");
+  cy.wait("@getEsiriusServices", { timeout: EMAIL_CHALLENGE_TIMEOUT_MS });
+  cy.wait("@getEsiriusAvailabilities", { timeout: EMAIL_CHALLENGE_TIMEOUT_MS });
   cy.get('[data-cy="creneau-row-0"]')
     .filter(":visible")
     .first()
@@ -697,12 +700,16 @@ Then("le message {string} s'affiche", (message) => {
 });
 
 Then("l'objet volé est enregistré", () => {
-  cy.contains("Le champ est requis").should("not.exist");
+  cy.contains(MESSAGE_CHAMP_REQUIS).should(NOT_EXIST);
+  cy.contains(MESSAGE_FABRICANT_AUTRE_REQUIS).should(NOT_EXIST);
+  cy.contains(MESSAGE_MODELE_AUTRE_REQUIS).should(NOT_EXIST);
   cy.contains("Objet n° 1").should(bevisible);
 });
 
 Then("aucune erreur de champ obligatoire n'est affichée", () => {
-  cy.contains("Le champ est requis").should("not.exist");
+  cy.contains(MESSAGE_CHAMP_REQUIS).should(NOT_EXIST);
+  cy.contains(MESSAGE_FABRICANT_AUTRE_REQUIS).should(NOT_EXIST);
+  cy.contains(MESSAGE_MODELE_AUTRE_REQUIS).should(NOT_EXIST);
 });
 
 Then("je vois l'étape {string}", (etape) => {

@@ -677,49 +677,55 @@ const validateVehicule = async (): Promise<boolean> => {
 };
 
 const validateNumeroSerieEtIMEI = (): boolean => {
-  let isValid = true;
+  const serieOk = validateNumeroSerieRequis();
+  const imeiPresenceOk = validateNumeroIMEIRequis();
+  const imeiFormatOk = validateNumeroIMEIFormat();
+  const justificationOk = validateJustificationAbsenceIMEI();
+  return serieOk && imeiPresenceOk && imeiFormatOk && justificationOk;
+};
 
+const validateNumeroSerieRequis = (): boolean => {
   if (
     numeroSerieRequis.value
     && !numeroSerieInconnu.value
     && !chaineFormulaire(numeroSerie.value).trim()
   ) {
     setFieldError("numeroSerie", t("validation.numeroSerieRequis"));
-    isValid = false;
+    return false;
   }
+  return true;
+};
 
-  if (
-    numeroIMEIRequis.value
-    && !chaineFormulaire(numeroIMEI.value).trim()
-  ) {
+const validateNumeroIMEIRequis = (): boolean => {
+  if (numeroIMEIRequis.value && !chaineFormulaire(numeroIMEI.value).trim()) {
     setFieldError(
       "numeroIMEI",
       t("validation.numeroIMEIRequis", { max: NUMERO_IMEI_MAX_LENGTH }),
     );
-    isValid = false;
+    return false;
   }
+  return true;
+};
 
+const validateNumeroIMEIFormat = (): boolean => {
   const numeroIMEITrim = chaineFormulaire(numeroIMEI.value).trim();
-
-  if (
-    !numeroIMEIInconnu.value
-    && numeroIMEITrim
-    && !NUMERO_IMEI_REGEX.test(numeroIMEITrim)
-  ) {
+  if (!numeroIMEIInconnu.value && numeroIMEITrim && !NUMERO_IMEI_REGEX.test(numeroIMEITrim)) {
     setFieldError("numeroIMEI", t("validation.numeroIMEIFormat"));
-    isValid = false;
+    return false;
   }
+  return true;
+};
 
+const validateJustificationAbsenceIMEI = (): boolean => {
   if (
     typeObjet.value?.code === RIPOL.CODE_TELEPHONE_MOBILE
     && numeroIMEIInconnu.value
     && !chaineFormulaire(justificationAbsenceIMEI.value).trim()
   ) {
     setFieldError("justificationAbsenceIMEI", t("validation.justificationAbsenceIMEIRequise"));
-    isValid = false;
+    return false;
   }
-
-  return isValid;
+  return true;
 };
 
 const enregistrerObjetVole = (snapshot: VolObjetFormSnapshot) => {
