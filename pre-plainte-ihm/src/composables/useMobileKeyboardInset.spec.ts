@@ -3,9 +3,11 @@ import { defineComponent, nextTick } from "vue";
 import { mount } from "@vue/test-utils";
 import { useMobileKeyboardInset } from "@/composables/useMobileKeyboardInset";
 
+const KEYBOARD_INSET_CSS_VAR = "--vv-keyboard-inset";
+
 describe("useMobileKeyboardInset", () => {
   afterEach(() => {
-    document.documentElement.style.removeProperty("--vv-keyboard-inset");
+    document.documentElement.style.removeProperty(KEYBOARD_INSET_CSS_VAR);
     vi.unstubAllGlobals();
     vi.restoreAllMocks();
   });
@@ -23,7 +25,7 @@ describe("useMobileKeyboardInset", () => {
     const wrapper = mount(Comp);
     await nextTick();
 
-    expect(document.documentElement.style.getPropertyValue("--vv-keyboard-inset")).toBe("");
+    expect(document.documentElement.style.getPropertyValue(KEYBOARD_INSET_CSS_VAR)).toBe("");
     wrapper.unmount();
   });
 
@@ -38,7 +40,7 @@ describe("useMobileKeyboardInset", () => {
       removeEventListener: vi.fn(),
     };
 
-    Object.defineProperty(window, "innerHeight", {
+    Object.defineProperty(globalThis, "innerHeight", {
       configurable: true,
       value: 800,
     });
@@ -54,18 +56,18 @@ describe("useMobileKeyboardInset", () => {
     const wrapper = mount(Comp);
     await nextTick();
 
-    expect(document.documentElement.style.getPropertyValue("--vv-keyboard-inset")).toBe("300px");
+    expect(document.documentElement.style.getPropertyValue(KEYBOARD_INSET_CSS_VAR)).toBe("300px");
     expect(visualViewport.addEventListener).toHaveBeenCalledWith("resize", expect.any(Function));
     expect(visualViewport.addEventListener).toHaveBeenCalledWith("scroll", expect.any(Function));
 
     visualViewport.height = 700;
     listeners.get("resize")?.(new Event("resize"));
-    expect(document.documentElement.style.getPropertyValue("--vv-keyboard-inset")).toBe("100px");
+    expect(document.documentElement.style.getPropertyValue(KEYBOARD_INSET_CSS_VAR)).toBe("100px");
 
     wrapper.unmount();
     await nextTick();
 
     expect(visualViewport.removeEventListener).toHaveBeenCalled();
-    expect(document.documentElement.style.getPropertyValue("--vv-keyboard-inset")).toBe("");
+    expect(document.documentElement.style.getPropertyValue(KEYBOARD_INSET_CSS_VAR)).toBe("");
   });
 });
