@@ -13,6 +13,7 @@
       variant="outlined"
       :hint="t('informationsPersonnelles.hintNom')"
       persistent-hint
+      autocomplete="family-name"
     />
     <v-text-field
       :label="t('informationsPersonnelles.nomNaissance')"
@@ -22,6 +23,7 @@
       variant="outlined"
       :hint="t('informationsPersonnelles.hintNomNaissance')"
       persistent-hint
+      autocomplete="additional-name"
     />
     <v-text-field
       :label="requiredLabel(t('informationsPersonnelles.prenom'))"
@@ -31,6 +33,7 @@
       variant="outlined"
       :hint="t('informationsPersonnelles.hintPrenom')"
       persistent-hint
+      autocomplete="given-name"
     />
 
     <h3 class="pre-plainte-main-card-title mb-4 mb-md-6 text-h5 text-md-h4">
@@ -112,6 +115,8 @@
       prepend-inner-icon="mdi-calendar"
       :hint="t('informationsPersonnelles.hintDateNaissance')"
       persistent-hint
+      inputmode="numeric"
+      autocomplete="bday"
       @input="onDateNaissanceInput"
     />
 

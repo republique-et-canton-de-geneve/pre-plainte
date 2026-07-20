@@ -14,6 +14,7 @@
         :label="requiredLabel(t('informationsPersonnelles.email'))"
         v-model="email"
         type="email"
+        inputmode="email"
         :error-messages="emailError"
         class="mb-2"
         variant="outlined"
@@ -97,8 +98,8 @@
         {{ verifyError }}
       </v-alert>
 
-      <div class="pre-plainte-mobile-step-actions d-md-none mt-4 d-flex flex-column gap-4 mb-2">
-        <v-btn variant="outlined" color="primary" class="w-100" data-cy="precedent-verification-email" @click="emit('cancel')">
+      <div class="pre-plainte-mobile-otp-actions d-md-none mt-4 d-flex flex-column mb-2">
+        <v-btn variant="outlined" color="primary" class="w-100 mb-4" data-cy="precedent-verification-email" @click="emit('cancel')">
           {{ t("common.precedent") }}
         </v-btn>
         <v-btn

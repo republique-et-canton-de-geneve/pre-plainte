@@ -122,7 +122,9 @@
     "telechargerPdf": "PDF herunterladen",
     "ajouterAgenda": "Zu meinem Kalender hinzufügen",
     "erreurTelechargementPdf": "Fehler beim Herunterladen der PDF-Datei.",
-    "descriptionCaptcha": "Friendly-Captcha-Sicherheitsprüfung gegen Bots"
+    "descriptionCaptcha": "Friendly-Captcha-Sicherheitsprüfung gegen Bots",
+    "erreursFormulaire": "{count} Fehler zu korrigieren: | {count} Fehler zu korrigieren:",
+    "erreursFormulaireAutres": "… und {count} weitere | … und {count} weitere"
   },
   "apiErrors": {
     "erreurServeur": "Auf dem Server ist ein technischer Fehler aufgetreten. Bitte versuchen Sie es in einigen Augenblicken erneut. Wenn das Problem weiterhin besteht, können Sie es später nochmals versuchen oder sich an die Polizei wenden.",

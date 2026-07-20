@@ -122,7 +122,9 @@
     "telechargerPdf": "Scarica il PDF",
     "ajouterAgenda": "Aggiungi alla mia agenda",
     "erreurTelechargementPdf": "Errore durante il download del PDF.",
-    "descriptionCaptcha": "Test di sicurezza anti-bot Friendly Captcha"
+    "descriptionCaptcha": "Test di sicurezza anti-bot Friendly Captcha",
+    "erreursFormulaire": "{count} errore da correggere: | {count} errori da correggere:",
+    "erreursFormulaireAutres": "… e altro {count} | … e altri {count}"
   },
   "apiErrors": {
     "erreurServeur": "Si è verificato un errore tecnico sul server. Riprovate tra qualche istante. Se il problema persiste, riprovate più tardi o contattate la polizia per ricevere assistenza.",

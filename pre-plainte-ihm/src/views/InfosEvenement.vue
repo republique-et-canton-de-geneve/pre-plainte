@@ -1,6 +1,7 @@
 <template>
   <v-form @submit.prevent="onSubmit">
     <h1 class="mb-4 text-h1 text-md-h2 d-none d-md-block">{{ t("titreApplication.prePlainte") }}</h1>
+    <FormErrorSummary :messages="submitErrorMessages" />
     <v-card class="pa-2 pa-md-6 mb-4">
       <h2 class="pre-plainte-main-card-title mb-4 text-h4 text-md-h2">{{ t("informationsEvenement.titre") }}</h2>
       <VolForm v-if="typeIncident === 'vol'" ref="volFormRef" />
@@ -165,16 +166,14 @@
       <AdresseEvent v-if="typeIncident !== 'cybercrime'" />
 
       <div class="d-md-none mt-4">
-        <div class="pre-plainte-mobile-step-actions d-flex flex-column gap-4 mb-2">
+        <div class="pre-plainte-mobile-step-actions d-flex flex-column gap-2">
           <v-btn variant="outlined" color="primary" class="w-100" @click="handleCancelClick">
             {{ t("common.precedent") }}
           </v-btn>
-          <v-btn type="submit" variant="flat" color="primary" class="w-100">
+          <v-btn type="submit" variant="flat" color="primary" class="w-100" :loading="isSubmitting">
             {{ t("common.continuer") }}
           </v-btn>
-        </div>
-        <div class="d-flex justify-center">
-          <v-btn variant="plain" color="primary" class="pa-0" @click="handleSaveClick">
+          <v-btn variant="plain" color="primary" class="w-100" @click="handleSaveClick">
             {{ t("common.sauvegarder") }}
           </v-btn>
         </div>
@@ -195,7 +194,7 @@
         <v-btn variant="outlined" color="primary" class="me-4" @click="handleCancelClick">
           {{ t("common.precedent") }}
         </v-btn>
-          <v-btn type="submit" variant="flat" color="primary" data-cy="continuer-evenement">
+          <v-btn type="submit" variant="flat" color="primary" data-cy="continuer-evenement" :loading="isSubmitting">
             {{ t("common.poursuivre") }}
           </v-btn>
       </v-col>
@@ -215,6 +214,8 @@ import { createIncidentSchema } from "@/schemas/incident-evenement.schema.ts";
 import type { AddressResult } from "@/types/adresse.interface";
 import { useFormErrorScroll } from "@/composables/useFormErrorScroll";
 import { useFormReset, resetConditions } from "@/composables/useFormReset";
+import { flattenValidationErrorMessages } from "@/utils/helpers/formErrorHelpers";
+import FormErrorSummary from "@/components/form/FormErrorSummary.vue";
 import CybercrimeAchatNonRecuForm from "@/components/pre-plainte-component/event-info/cybercrime/CybercrimeAchatNonRecuForm.vue";
 import CybercrimeCommandeFrauduleuseForm from "@/components/pre-plainte-component/event-info/cybercrime/CybercrimeCommandeFrauduleuseForm.vue";
 import CybercrimeFausseAnnonceForm from "@/components/pre-plainte-component/event-info/cybercrime/CybercrimeFausseAnnonceForm.vue";
@@ -234,8 +235,11 @@ const { mobile } = useDisplay();
 const emit = defineEmits<{ cancel: []; continue: []; save: [] }>();
 const store = useCreatePrePlainteStore();
 const { scrollToTopOnConditionalErrors } = useFormErrorScroll();
+const submitErrorMessages = ref<string[]>([]);
+const isSubmitting = ref(false);
 
 const DEGAT_DELIT = "degat-delit";
+const DOMMAGE_VEHICULE = "dommage-vehicule";
 
 type FormulaireAvecBrouillon = {
   validerBrouillonAvantNavigation: () => boolean;
@@ -260,7 +264,6 @@ const { value: typeIncident } = useField<string>("typeIncident");
 const { value: typeDommage } = useField<string>("typeDommage");
 
 const openFromRecap = localStorage.getItem("pp-open-section");
-
 switch (openFromRecap) {
   case "vol":
     typeIncident.value = "vol";
@@ -580,11 +583,24 @@ watch(
 
 const soumettreFormulaire = handleSubmit(
   formValues => {
-    store.setUserFormData(formValues);
-    emit("continue");
+    submitErrorMessages.value = [];
+    isSubmitting.value = true;
+    try {
+      store.setUserFormData(formValues);
+      emit("continue");
+    } finally {
+      isSubmitting.value = false;
+    }
   },
   errors => {
-    scrollToTopOnConditionalErrors(errors);
+    submitErrorMessages.value = flattenValidationErrorMessages(errors);
+    nextTick(() => {
+      document.querySelector('[data-cy="form-error-summary"]')?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+      scrollToTopOnConditionalErrors(errors);
+    });
   },
 );
 

@@ -1,6 +1,7 @@
 <template>
   <v-form @submit.prevent="onSubmit">
     <h1 class="mb-4 text-h1 text-md-h2 d-none d-md-block">{{ t("steps.prendreRendezVous") }}</h1>
+    <FormErrorSummary :messages="submitErrorMessages" />
     <v-sheet class="pa-2 pa-md-8" rounded="lg" elevation="1">
       <h2 class="pre-plainte-main-card-title mb-4 mb-md-5 text-h4 text-md-h4 title-mobile">
         {{ t("rendezVous.selectionPoste") }}
@@ -41,16 +42,14 @@
       </div>
 
       <div class="d-md-none mt-4">
-        <div class="pre-plainte-mobile-step-actions d-flex flex-column gap-4 mb-2">
+        <div class="pre-plainte-mobile-step-actions d-flex flex-column gap-2">
           <v-btn variant="outlined" color="primary" class="w-100" data-cy="precedent-rendez-vous" @click="$emit('cancel')">
             {{ t("common.precedent") }}
           </v-btn>
-          <v-btn type="submit" variant="flat" color="primary" class="w-100" data-cy="continuer-rendez-vous">
+          <v-btn type="submit" variant="flat" color="primary" class="w-100" data-cy="continuer-rendez-vous" :loading="isSubmitting">
             {{ t("common.continuer") }}
           </v-btn>
-        </div>
-        <div class="d-flex justify-center">
-          <v-btn variant="plain" color="primary" class="pa-0" @click="$emit('save')">
+          <v-btn variant="plain" color="primary" class="w-100" @click="$emit('save')">
             {{ t("common.sauvegarder") }}
           </v-btn>
         </div>
@@ -72,7 +71,7 @@
         <v-btn variant="outlined" color="primary" class="me-4" data-cy="precedent-rendez-vous" @click="$emit('cancel')">
           {{ t("common.precedent") }}
         </v-btn>
-        <v-btn type="submit" variant="flat" color="primary" data-cy="continuer-rendez-vous">
+        <v-btn type="submit" variant="flat" color="primary" data-cy="continuer-rendez-vous" :loading="isSubmitting">
           {{ t("common.poursuivre") }}
         </v-btn>
       </v-col>
@@ -104,6 +103,8 @@ import { toIsoDate } from "@/utils/helpers/dateHelpers.ts";
 import { rendezvousInfoSchema } from "@/schemas/rdv-schema.ts";
 import { toTypedSchema } from "@vee-validate/zod";
 import { useFormErrorScroll } from "@/composables/useFormErrorScroll.ts";
+import { flattenValidationErrorMessages } from "@/utils/helpers/formErrorHelpers";
+import FormErrorSummary from "@/components/form/FormErrorSummary.vue";
 import { useDisplay } from "vuetify/framework";
 import ExitActionsForm from "@/components/actions/ExitActionsForm.vue";
 import { hasVehiculeVoleAvecPlaque } from "@/utils/helpers/volObjetVolHelpers.ts";
@@ -125,6 +126,8 @@ const { mobile } = useDisplay();
 const store = useCreatePrePlainteStore();
 const esiriusStore = useEsiriusStore();
 const { scrollToFirstValidationError } = useFormErrorScroll();
+const submitErrorMessages = ref<string[]>([]);
+const isSubmitting = ref(false);
 const emit = defineEmits(["save", "cancel", "continue"]);
 
 const { value: dateSouhaitee } = useField<string>("dateSouhaitee");
@@ -290,63 +293,78 @@ watch(locale, () => {
 
 const onSubmit = handleSubmit(
   () => {
-    if (isVehiculeVoleAvecPlaque.value && creneauPrefere.value === null) {
+    submitErrorMessages.value = [];
+    isSubmitting.value = true;
+    try {
+      if (isVehiculeVoleAvecPlaque.value && creneauPrefere.value === null) {
+        showCreneauError.value = false;
+        store.setUserFormData({
+          ...store.userFormData,
+          dateSouhaitee: "",
+          creneauPrefere: "",
+          selectedCreneau: null,
+          codeRdv: "",
+        });
+        emit("continue");
+        return;
+      }
+
+      if (creneauPrefere.value === null) {
+        showCreneauError.value = true;
+        creneauErrorMessage.value = t("rendezVous.creneauNonSelectionne");
+        submitErrorMessages.value = [creneauErrorMessage.value];
+        return;
+      }
+      const c = creneauxPagines.value[creneauPrefere.value];
+      if (!c) {
+        showCreneauError.value = true;
+        creneauErrorMessage.value = t("rendezVous.creneauNonDisponible");
+        submitErrorMessages.value = [creneauErrorMessage.value];
+        return;
+      }
+
       showCreneauError.value = false;
+
+      const rawDate = `${c.beginDateTime.slice(YEAR_START, YEAR_END)}-${c.beginDateTime.slice(MONTH_START, MONTH_END)}-${c.beginDateTime.slice(DAY_START, DAY_END)}`;
+      const heureDebut = c.beginDateTime.substring(TIME_START).trim();
+      const heureFin = c.endDateTime.substring(TIME_START).trim();
+      const dateAffichee = `${rawDate.split("-").reverse().join(".")}`;
+
+      const selectedCreneau = {
+        id: Date.now().toString(),
+        date: rawDate,
+        dateAffichee,
+        heureDebut,
+        heureFin,
+        lieu: formatCreneauLieu(c.resource?.name, c.serviceName),
+        serviceId: c.serviceId,
+        siteCode: c.siteCode,
+        resource: c.resource,
+        beginDateTime: c.beginDateTime,
+        endDateTime: c.endDateTime,
+      };
+
       store.setUserFormData({
         ...store.userFormData,
-        dateSouhaitee: "",
-        creneauPrefere: "",
-        selectedCreneau: null,
-        codeRdv: "",
+        dateSouhaitee: rawDate,
+        creneauPrefere: `${dateAffichee} ${heureDebut} - ${heureFin} @ ${selectedCreneau.lieu}`,
+        selectedCreneau,
       });
+
       emit("continue");
-      return;
+    } finally {
+      isSubmitting.value = false;
     }
-
-    if (creneauPrefere.value === null) {
-      showCreneauError.value = true;
-      creneauErrorMessage.value = t("rendezVous.creneauNonSelectionne");
-      return;
-    }
-    const c = creneauxPagines.value[creneauPrefere.value];
-    if (!c) {
-      showCreneauError.value = true;
-      creneauErrorMessage.value = t("rendezVous.creneauNonDisponible");
-      return;
-    }
-
-    showCreneauError.value = false;
-
-    const rawDate = `${c.beginDateTime.slice(YEAR_START, YEAR_END)}-${c.beginDateTime.slice(MONTH_START, MONTH_END)}-${c.beginDateTime.slice(DAY_START, DAY_END)}`;
-    const heureDebut = c.beginDateTime.substring(TIME_START).trim();
-    const heureFin = c.endDateTime.substring(TIME_START).trim();
-    const dateAffichee = `${rawDate.split("-").reverse().join(".")}`;
-
-    const selectedCreneau = {
-      id: Date.now().toString(),
-      date: rawDate,
-      dateAffichee,
-      heureDebut,
-      heureFin,
-      lieu: formatCreneauLieu(c.resource?.name, c.serviceName),
-      serviceId: c.serviceId,
-      siteCode: c.siteCode,
-      resource: c.resource,
-      beginDateTime: c.beginDateTime,
-      endDateTime: c.endDateTime,
-    };
-
-    store.setUserFormData({
-      ...store.userFormData,
-      dateSouhaitee: rawDate,
-      creneauPrefere: `${dateAffichee} ${heureDebut} - ${heureFin} @ ${selectedCreneau.lieu}`,
-      selectedCreneau,
-    });
-
-    emit("continue");
   },
   errors => {
-    scrollToFirstValidationError(errors);
+    submitErrorMessages.value = flattenValidationErrorMessages(errors);
+    nextTick(() => {
+      document.querySelector('[data-cy="form-error-summary"]')?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+      scrollToFirstValidationError(errors);
+    });
   },
 );
 

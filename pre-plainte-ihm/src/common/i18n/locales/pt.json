@@ -122,7 +122,9 @@
     "telechargerPdf": "Descarregar o PDF",
     "ajouterAgenda": "Adicionar ao meu calendário",
     "erreurTelechargementPdf": "Erro ao descarregar o PDF.",
-    "descriptionCaptcha": "Teste de segurança anti-robôs Friendly Captcha"
+    "descriptionCaptcha": "Teste de segurança anti-robôs Friendly Captcha",
+    "erreursFormulaire": "{count} erro a corrigir: | {count} erros a corrigir:",
+    "erreursFormulaireAutres": "… e mais {count} | … e mais {count}"
   },
   "apiErrors": {
     "erreurServeur": "Ocorreu um erro técnico no servidor. Tente novamente dentro de alguns instantes. Se o problema persistir, pode tentar mais tarde ou contactar a polícia para obter orientação.",
