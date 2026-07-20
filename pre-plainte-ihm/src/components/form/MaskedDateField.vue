@@ -54,7 +54,11 @@ const ANNEE_MIN_ISO = "1900-01-01";
 const DATE_DIGIT_LIMIT = 8;
 const DATE_PART_PAD_LENGTH = 2;
 const DATE_PART_PAD_CHAR = "0";
+const DAY_DIGITS_END = 2;
+const MONTH_DIGITS_END = 4;
 const NON_DIGIT_PATTERN = /\D/g;
+const DATE_SEPARATOR = ".";
+
 
 const props = withDefaults(
   defineProps<{
@@ -126,13 +130,13 @@ function normalizePickerValue(value: unknown): string | undefined {
 
 function applyDateMaskFromString(raw: string): string {
   const digits = raw.replaceAll(NON_DIGIT_PATTERN, "").slice(0, DATE_DIGIT_LIMIT);
-  if (digits.length <= 2) {
+  if (digits.length <= DAY_DIGITS_END) {
     return digits;
   }
-  if (digits.length <= 4) {
-    return `${digits.slice(0, 2)}.${digits.slice(2)}`;
+  if (digits.length <= MONTH_DIGITS_END) {
+    return `${digits.slice(0, DAY_DIGITS_END)}${DATE_SEPARATOR}${digits.slice(DAY_DIGITS_END)}`;
   }
-  return `${digits.slice(0, 2)}.${digits.slice(2, 4)}.${digits.slice(4)}`;
+  return `${digits.slice(0, DAY_DIGITS_END)}${DATE_SEPARATOR}${digits.slice(DAY_DIGITS_END, MONTH_DIGITS_END)}${DATE_SEPARATOR}${digits.slice(MONTH_DIGITS_END)}`;
 }
 </script>
 

@@ -57,12 +57,6 @@
         <Recapitulatif v-if="step === 6" :key="`step-${step}`" @continue="handleContinue" @cancel="handleContinue" />
         <ValidationCard v-if="step === 7" :key="`step-${step}`" @restart="handleRestart" />
         <SaveAndQuitForm ref="saveDialog" />
-        <ResumeDraftDialog
-          ref="resumeDraftDialog"
-          :saved-at="lastLocalSavedAt"
-          @continue="onDraftResumeContinue"
-          @restart="onDraftResumeRestart"
-        />
       </v-col>
       <v-col md="4" class="d-none d-md-block">
         <StepperPrePlainte />
@@ -84,7 +78,6 @@ import Recapitulatif from "@/views/Recapitulatif.vue";
 import RendezVous from "@/views/RendezVous.vue";
 import { computed, nextTick, onMounted, ref, watch } from "vue";
 import SaveAndQuitForm from "@/components/dialogs/SaveAndQuitForm.vue";
-import ResumeDraftDialog from "@/components/dialogs/ResumeDraftDialog.vue";
 import { SauvegardeService } from "@/services/sauvegardeService";
 import { useRoute, useRouter } from "vue-router";
 import StepLoadingSkeleton from "@/components/loading/StepLoadingSkeleton.vue";
@@ -92,14 +85,12 @@ import { preplainteDtoToForm } from "@/utils/preplainteFormatBuilder";
 import { useI18n } from "vue-i18n";
 import LanguageSwitcher from "@/components/actions/LanguageSwitcher.vue";
 import { useMobileKeyboardInset } from "@/composables/useMobileKeyboardInset";
-import { markDraftPromptHandledForSession, shouldOfferDraftResume } from "@/utils/validations/field-validation.utils";
 import { STEPS } from "@/constants/constant";
 
 const { t } = useI18n();
 const store = useCreatePrePlainteStore();
-const { step, isLoading, lastLocalSavedAt } = storeToRefs(store);
+const { step, isLoading } = storeToRefs(store);
 const saveDialog = ref<InstanceType<typeof SaveAndQuitForm> | null>(null);
-const resumeDraftDialog = ref<InstanceType<typeof ResumeDraftDialog> | null>(null);
 
 useMobileKeyboardInset();
 
@@ -122,14 +113,6 @@ const handleSave = () => {
   saveDialog.value?.open();
 };
 
-const onDraftResumeContinue = () => {
-  markDraftPromptHandledForSession();
-};
-
-const onDraftResumeRestart = () => {
-  markDraftPromptHandledForSession();
-};
-
 const handleRecup = async (code: string) => {
   const dto = await SauvegardeService.reprendrePreplainte(code);
   const mapped = preplainteDtoToForm(dto, store.userFormData);
@@ -147,24 +130,11 @@ async function verifierCodeDanslUrl() {
     await handleRecup(demandeId);
     const { demandeId: _omit, ...rest } = route.query;
     router.replace({ query: { ...rest } });
-    return true;
   }
-  return false;
 }
 
 onMounted(async () => {
-  const repriseServeur = await verifierCodeDanslUrl();
-  if (repriseServeur) {
-    markDraftPromptHandledForSession();
-    return;
-  }
-
-  if (shouldOfferDraftResume()) {
-    resumeDraftDialog.value?.open();
-    return;
-  }
-
-  markDraftPromptHandledForSession();
+  await verifierCodeDanslUrl();
 });
 
 watch(step, () => {

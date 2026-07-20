@@ -229,8 +229,8 @@ async function fetchServiceAvailabilities(
       await wait(AVAILABILITY_RETRY_DELAY_MS * attempt);
     }
 
-    const result = await tryFetchServiceAvailabilities(service, begin, period);
-    if (result.status !== FETCH_STATUS_ERROR || attempt >= AVAILABILITY_FETCH_RETRIES) {
+    const result = await attemptFetchServiceAvailabilities(service, begin, period);
+    if (result !== null) {
       return result;
     }
   }
@@ -238,11 +238,11 @@ async function fetchServiceAvailabilities(
   return { status: FETCH_STATUS_ERROR };
 }
 
-async function tryFetchServiceAvailabilities(
+async function attemptFetchServiceAvailabilities(
   service: any,
   begin: string,
   period: string,
-): Promise<AvailabilityFetchResult> {
+): Promise<AvailabilityFetchResult | null> {
   try {
     const availabilities = await EsiriusService.getAvailability(
       PPEL_CODE,
@@ -252,7 +252,7 @@ async function tryFetchServiceAvailabilities(
     );
 
     if (isEsiriusErrorPayload(availabilities)) {
-      return { status: FETCH_STATUS_ERROR };
+      return null;
     }
 
     if (Array.isArray(availabilities) && availabilities.length > 0) {
@@ -268,7 +268,7 @@ async function tryFetchServiceAvailabilities(
 
     return { status: FETCH_STATUS_EMPTY };
   } catch {
-    return { status: FETCH_STATUS_ERROR };
+    return null;
   }
 }
 

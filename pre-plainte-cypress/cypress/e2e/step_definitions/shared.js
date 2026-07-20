@@ -36,11 +36,7 @@ const CONTINUER_INFORMATIONS_PERSONNELLES_SELECTOR = '[data-cy="continuer-inform
 const CONTINUER_EVENEMENT_SELECTOR = '[data-cy="continuer-evenement"]';
 const CONFIRMER_DISCLAIMER_SELECTOR = '[data-cy="confirmer-disclaimer"]';
 const TYPE_PERSONNE_NATIVE_SELECTOR = '[data-cy="type-personne-native"]';
-const REPRISE_BROUILLON_DIALOG_SELECTOR = '[data-cy="reprise-brouillon-dialog"]';
-const REPRISE_BROUILLON_CONTINUER_SELECTOR = '[data-cy="reprise-brouillon-continuer"]';
-const REPRISE_BROUILLON_RECOMMENCER_SELECTOR = '[data-cy="reprise-brouillon-recommencer"]';
 const PP_STEP_STORAGE_KEY = "pp-step";
-const REPRISE_BROUILLON_TITRE = "Une pré-plainte est en cours";
 const NOT_EXIST = "not.exist";
 const LOCAL_STORAGE_GET_ITEM = "getItem";
 const ARIA_DISABLED_ATTRIBUTE = "aria-disabled";
@@ -423,47 +419,6 @@ Given("je reprends un brouillon depuis l'URL", () => {
       emailChallengeKey: EMAIL_CHALLENGE_KEY_CYPRESS,
     },
   );
-});
-
-Given("un brouillon local est présent", () => {
-  stubRipol();
-  cy.demarrerPrePlainteAEtape(
-    STEP_INFORMATIONS_PERSONNELLES,
-    {
-      ...donneesEmailVerifie,
-      ...declarantSuisseValide,
-    },
-    {
-      emailChallengeKey: EMAIL_CHALLENGE_KEY_CYPRESS,
-      offerDraftResume: true,
-      lastSavedAt: "2026-07-20T10:00:00.000Z",
-    },
-  );
-});
-
-Then("le dialogue de reprise de brouillon local est affiché", () => {
-  cy.get(REPRISE_BROUILLON_DIALOG_SELECTOR).should(bevisible);
-  cy.contains(REPRISE_BROUILLON_TITRE).should(bevisible);
-});
-
-When("je choisis de continuer le brouillon local", () => {
-  cy.get(REPRISE_BROUILLON_CONTINUER_SELECTOR).click();
-});
-
-When("je choisis de recommencer le brouillon local", () => {
-  cy.get(REPRISE_BROUILLON_RECOMMENCER_SELECTOR).click();
-});
-
-Then("je reste sur l'étape des informations personnelles", () => {
-  cy.get(REPRISE_BROUILLON_DIALOG_SELECTOR).should(NOT_EXIST);
-  cy.get(CONTINUER_INFORMATIONS_PERSONNELLES_SELECTOR).filter(":visible").first().should(bevisible);
-  cy.window().its("localStorage").invoke(LOCAL_STORAGE_GET_ITEM, PP_STEP_STORAGE_KEY).should("eq", String(STEP_INFORMATIONS_PERSONNELLES));
-});
-
-Then("je repars depuis les informations générales", () => {
-  cy.get(REPRISE_BROUILLON_DIALOG_SELECTOR).should(NOT_EXIST);
-  cy.get(CONFIRMER_DISCLAIMER_SELECTOR).filter(":visible").first().should(bevisible);
-  cy.window().its("localStorage").invoke(LOCAL_STORAGE_GET_ITEM, PP_STEP_STORAGE_KEY).should("eq", String(STEP_INFORMATIONS_GENERALES));
 });
 
 Given("que je sélectionne {string} dans le type de personne", (type) => {
