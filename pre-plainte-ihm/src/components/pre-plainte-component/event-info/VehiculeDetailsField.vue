@@ -153,18 +153,14 @@
     persistent-hint
   />
 
-  <v-text-field
-    :label="t('incidentTypes.dateAchat')"
+  <MaskedDateField
     v-model="dateAchat"
-    type="text"
-    placeholder="JJ.MM.AAAA"
-    class="mb-8"
+    :label="t('incidentTypes.dateAchat')"
     :error-messages="dateAchatError"
-    variant="outlined"
-    prepend-inner-icon="mdi-calendar"
+    field-class="mb-8"
     :hint="t('incidentTypes.hintDateAchat')"
     persistent-hint
-    @input="onDateAchatInput"
+    name="dateAchat"
   />
 
   <h5 class="mb-2 text-subtitle-1">{{ t("incidentTypes.assuranceVehicule") }}</h5>
@@ -256,9 +252,18 @@
       class="mb-2"
       :error-messages="plaqueNumeroError"
       variant="outlined"
-      :hint="isPlaqueObligatoire ? t('incidentTypes.hintPlaqueNumeroObligatoire') : t('incidentTypes.hintPlaqueNumero')"
-      persistent-hint
-    />
+    >
+      <template #append-inner>
+        <v-tooltip location="top">
+          <template #activator="{ props }">
+            <v-icon v-bind="props" color="primary" size="small"> mdi-information-outline </v-icon>
+          </template>
+          <div class="white-space">
+            {{ t("incidentTypes.plaqueNumeroTooltip") }}
+          </div>
+        </v-tooltip>
+      </template>
+    </v-text-field>
     <v-checkbox
       v-if="!isPlaqueObligatoire"
       v-model="plaqueInconnu"
@@ -276,8 +281,8 @@ import { useI18n } from "vue-i18n";
 import RipolAutocomplete from "@/components/ripol/RipolAutocomplete.vue";
 import { useVehicleDetailsRipol } from "@/composables/useVehicleDetailsRipol";
 import AccessibleVSelect from "@/components/accessibility/AccessibleVSelect.vue";
+import MaskedDateField from "@/components/form/MaskedDateField.vue";
 import { CATEGORIES_OBJETS, VEHICLE_INSURER_SUGGESTIONS, VEHICULE_CATEGORIES_AVEC_PLAQUE } from "@/constants/constant";
-import { applyDateMask } from "@/utils/helpers/dateHelpers.ts";
 import { filterNationalities } from "@/utils/helpers/ripolHelpers.ts";
 import { requiredLabel } from "@/utils/helpers/labelHelpers";
 import { formatLicensePlate } from "@/composables/useLicencePlate.ts";
@@ -354,10 +359,6 @@ const computedActivePrefixes = computed<readonly string[]>(() => {
   const selectedSub = cat?.subCategories?.find(sub => sub.value === sousCategorie.value);
   return selectedSub?.prefixes || cat?.prefixes || [];
 });
-
-const onDateAchatInput = (e: InputEvent) => {
-  applyDateMask(e, dateAchat);
-}
 
 const fetchFilteredNationalities = async (search?: string) => {
   const data = await RipolService.searchNationalities(search);

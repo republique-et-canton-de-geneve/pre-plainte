@@ -12,6 +12,11 @@ const ERROR_SELECTORS = [
   ".v-radio-group--error",
 ];
 
+const FIELD_CONTAINER_SELECTOR =
+  ".v-field, .v-input, .v-select, .v-textarea, .v-checkbox, .v-radio-group, fieldset[data-field]";
+
+const STICKY_SCROLL_MARGIN_TOP_PX = 160;
+
 const extractValidationErrors = (errors: any): Record<string, any> => {
   if (!errors || typeof errors !== "object") {
     return {};
@@ -33,11 +38,25 @@ const isConditionalField = (fieldName: string): boolean => {
   return CONDITIONAL_FIELD_PATTERNS.some(pattern => lowerFieldName.includes(pattern));
 };
 
+const isInsideFormErrorSummary = (element: Element): boolean =>
+  Boolean(element.closest('[data-cy="form-error-summary"]'));
+
+const resolveScrollTarget = (element: Element): Element => {
+  if (element.matches(FIELD_CONTAINER_SELECTOR)) {
+    return element;
+  }
+
+  return element.closest(FIELD_CONTAINER_SELECTOR) ?? element;
+};
+
 const findFirstVisibleError = (): Element | null => {
   for (const selector of ERROR_SELECTORS) {
     const elements = document.querySelectorAll(selector);
 
     for (const element of Array.from(elements)) {
+      if (isInsideFormErrorSummary(element)) {
+        continue;
+      }
       if (element.textContent?.trim()) {
         return element;
       }
@@ -47,40 +66,40 @@ const findFirstVisibleError = (): Element | null => {
   return null;
 };
 
-type FormInputElement = | HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;
+type FormInputElement = HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;
 
-const focusInput = (input: FormInputElement | null) => {
-  if (!input) {
+const focusInput = (target: Element) => {
+  const input = (
+    target instanceof HTMLInputElement ||
+    target instanceof HTMLTextAreaElement ||
+    target instanceof HTMLSelectElement
+      ? target
+      : target.querySelector("input, textarea, select, [tabindex]:not([tabindex='-1'])")
+  ) as FormInputElement | HTMLElement | null;
+
+  if (!input || !(input instanceof HTMLElement)) {
     return;
   }
 
   setTimeout(() => {
-    input.focus();
+    input.focus({ preventScroll: true });
   }, SCROLL_CONFIG.FOCUS_DELAY);
 };
 
 const scrollToError = (errorElement: Element) => {
-  const formElement = errorElement.closest(
-    ".v-field, .v-input, .v-select, .v-textarea, .v-checkbox, .v-radio-group, .v-form",
-  );
+  const target = resolveScrollTarget(errorElement);
 
-  if (!formElement) {
-    return;
+  if (target instanceof HTMLElement) {
+    target.style.scrollMarginTop = `${STICKY_SCROLL_MARGIN_TOP_PX}px`;
   }
 
-  const conditionalSection = formElement.closest(".inputs-container, .inputs-fields");
-
-  (conditionalSection ?? formElement).scrollIntoView({
+  target.scrollIntoView({
     behavior: "smooth",
-    block: conditionalSection ? "start" : "center",
+    block: "start",
     inline: "nearest",
   });
 
-  const input = formElement.querySelector(
-    "input, textarea, select",
-  ) as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement | null;
-
-  focusInput(input);
+  focusInput(target);
 };
 
 const scrollToFirstRequiredField = () => {
@@ -98,32 +117,41 @@ const scrollToFirstRequiredField = () => {
       continue;
     }
 
-    input.scrollIntoView({
-      behavior: "smooth",
-      block: "center",
-      inline: "nearest",
-    });
-
-    focusInput(input);
+    scrollToError(input);
     return;
   }
 };
 
+const escapeSelectorValue = (value: string): string => {
+  if (typeof CSS !== "undefined" && typeof CSS.escape === "function") {
+    return CSS.escape(value);
+  }
+  return value.replaceAll(/["\\]/g, "\\$&");
+};
+
 const findFieldElement = (field: string): Element | null => {
+  if (!field) {
+    return null;
+  }
+
+  const escaped = escapeSelectorValue(field);
   const selectors = [
-    `[name="${field}"]`,
-    `#${field}`,
-    `[data-field="${field}"]`,
-    `input[name="${field}"]`,
-    `select[name="${field}"]`,
-    `textarea[name="${field}"]`,
+    `[data-field="${escaped}"]`,
+    `[name="${escaped}"]`,
+    `#${escaped}`,
+    `input[name="${escaped}"]`,
+    `select[name="${escaped}"]`,
+    `textarea[name="${escaped}"]`,
   ];
 
   for (const selector of selectors) {
-    const element = document.querySelector(selector);
-
-    if (element) {
-      return element;
+    try {
+      const element = document.querySelector(selector);
+      if (element && !isInsideFormErrorSummary(element)) {
+        return element;
+      }
+    } catch {
+      // Sélecteur invalide pour certains chemins de champs
     }
   }
 
@@ -132,14 +160,15 @@ const findFieldElement = (field: string): Element | null => {
 
 const findElementFromErrorMessage = (message: string): Element | null => {
   const errorElements = document.querySelectorAll(
-    ".v-messages__message, .text-error, .v-field--error",
+    ".v-messages__message, .text-error, .v-field--error, .v-input--error, .v-radio-group--error",
   );
 
   for (const errorElement of Array.from(errorElements)) {
+    if (isInsideFormErrorSummary(errorElement)) {
+      continue;
+    }
     if (errorElement.textContent?.includes(message)) {
-      return errorElement.closest(
-        ".v-field, .v-input, .v-select, .v-textarea, .v-checkbox, .v-radio-group",
-      );
+      return resolveScrollTarget(errorElement);
     }
   }
 
@@ -147,6 +176,32 @@ const findElementFromErrorMessage = (message: string): Element | null => {
 };
 
 export function useFormErrorScroll() {
+  const FORM_ERROR_SUMMARY_SELECTOR = '[data-cy="form-error-summary"]';
+
+  const scrollToFormErrorSummary = async () => {
+    await nextTick();
+
+    const summary = document.querySelector(FORM_ERROR_SUMMARY_SELECTOR);
+    if (!summary) {
+      return;
+    }
+
+    if (summary instanceof HTMLElement) {
+      summary.style.scrollMarginTop = `${STICKY_SCROLL_MARGIN_TOP_PX}px`;
+    }
+
+    summary.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+      inline: "nearest",
+    });
+
+    if (summary instanceof HTMLElement) {
+      summary.setAttribute("tabindex", "-1");
+      summary.focus({ preventScroll: true });
+    }
+  };
+
   const scrollToFirstVisibleError = async () => {
     await nextTick();
 
@@ -161,32 +216,24 @@ export function useFormErrorScroll() {
   };
 
   const scrollToTopOnConditionalErrors = async (errors: any) => {
-    await nextTick();
+    await scrollToFormErrorSummary();
 
     const validationErrors = extractValidationErrors(errors);
-
     if (Object.keys(validationErrors).length === 0) {
       return;
     }
 
-    const conditionalErrorFields = Object.keys(validationErrors).filter(fieldName => isConditionalField(fieldName));
+    const hasConditionalError = Object.keys(validationErrors).some(fieldName =>
+      isConditionalField(fieldName),
+    );
 
-    if (conditionalErrorFields.length > 0) {
-      const form = document.querySelector("form, .v-form, .v-card");
-      if (form) {
-        form.scrollIntoView({
-          behavior: "smooth",
-          block: "start",
-          inline: "nearest",
-        });
-
-        setTimeout(async () => {
-          await scrollToFirstValidationError(errors);
-        }, SCROLL_CONFIG.CONDITIONAL_SCROLL_DELAY);
-      }
-    } else {
-      await scrollToFirstValidationError(errors);
+    if (!hasConditionalError) {
+      return;
     }
+
+    setTimeout(async () => {
+      await scrollToFirstValidationError(errors);
+    }, SCROLL_CONFIG.CONDITIONAL_SCROLL_DELAY);
   };
 
   const scrollToFirstValidationError = async (errors: any) => {
@@ -224,9 +271,33 @@ export function useFormErrorScroll() {
     scrollToError(element);
   };
 
+  const scrollToValidationError = async (path: string, message: string) => {
+    await nextTick();
+
+    const rootPath = path.split(".")[0] ?? path;
+    let element = rootPath ? findFieldElement(rootPath) : null;
+
+    if (!element && path && path !== rootPath) {
+      element = findFieldElement(path);
+    }
+
+    if (!element && message) {
+      element = findElementFromErrorMessage(message);
+    }
+
+    if (!element) {
+      await scrollToFirstVisibleError();
+      return;
+    }
+
+    scrollToError(element);
+  };
+
   return {
+    scrollToFormErrorSummary,
     scrollToFirstVisibleError,
     scrollToFirstValidationError,
     scrollToTopOnConditionalErrors,
+    scrollToValidationError,
   };
 }
