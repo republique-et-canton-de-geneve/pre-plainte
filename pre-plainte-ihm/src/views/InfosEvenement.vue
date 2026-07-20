@@ -2,7 +2,7 @@
   <v-form @submit.prevent="onSubmit">
     <h1 class="mb-4 text-h1 text-md-h2 d-none d-md-block">{{ t("titreApplication.prePlainte") }}</h1>
     <v-card class="pa-2 pa-md-6 mb-4">
-      <h2 class="pre-plainte-main-card-title mb-4 text-h2">{{ t("informationsEvenement.titre") }}</h2>
+      <h2 class="pre-plainte-main-card-title mb-4 text-h4 text-md-h2">{{ t("informationsEvenement.titre") }}</h2>
       <VolForm v-if="typeIncident === 'vol'" ref="volFormRef" />
       <DegatMaterielForm v-if="typeIncident === 'degat-delit'" ref="degatMaterielFormRef" />
 
