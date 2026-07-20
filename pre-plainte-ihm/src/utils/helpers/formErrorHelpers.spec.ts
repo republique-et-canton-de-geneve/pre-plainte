@@ -6,12 +6,15 @@ import {
   isVolObjetBrouillonErrorPath,
 } from "@/utils/helpers/formErrorHelpers";
 
+const MESSAGE_CHAMP_REQUIS = "Champ requis";
+const INVALID_NUMERIC_INPUT = Number.NaN;
+
 describe("formErrorHelpers", () => {
   it("retourne une liste vide pour des entrees non exploitables", () => {
     expect(collectValidationErrorItems(null)).toEqual([]);
     expect(collectValidationErrorItems(undefined)).toEqual([]);
     expect(collectValidationErrorItems("erreur")).toEqual([]);
-    expect(collectValidationErrorItems(42)).toEqual([]);
+    expect(collectValidationErrorItems(INVALID_NUMERIC_INPUT)).toEqual([]);
   });
 
   it("collecte les erreurs d'un enregistrement plat", () => {
@@ -57,9 +60,9 @@ describe("formErrorHelpers", () => {
   it("deduplique les paires path/message", () => {
     expect(
       collectValidationErrorItems({
-        email: ["Champ requis", "Champ requis"],
+        email: [MESSAGE_CHAMP_REQUIS, MESSAGE_CHAMP_REQUIS],
       }),
-    ).toEqual([{ path: "email", message: "Champ requis" }]);
+    ).toEqual([{ path: "email", message: MESSAGE_CHAMP_REQUIS }]);
   });
 
   it("identifie les chemins d'erreurs du brouillon objet vole", () => {
@@ -86,10 +89,10 @@ describe("formErrorHelpers", () => {
   it("aplatit les messages uniques", () => {
     expect(
       flattenValidationErrorMessages({
-        email: "Champ requis",
-        nom: "Champ requis",
+        email: MESSAGE_CHAMP_REQUIS,
+        nom: MESSAGE_CHAMP_REQUIS,
         prenom: "Le prenom est requis",
       }),
-    ).toEqual(["Champ requis", "Le prenom est requis"]);
+    ).toEqual([MESSAGE_CHAMP_REQUIS, "Le prenom est requis"]);
   });
 });

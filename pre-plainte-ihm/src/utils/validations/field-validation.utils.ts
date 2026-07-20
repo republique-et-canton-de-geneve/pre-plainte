@@ -261,14 +261,15 @@ export const hasPersistedDraft = (): boolean => {
       return true;
     }
     const data = loadFormData();
-    return Boolean(
-      data.typeIncident ||
-        data.email ||
-        data.nom ||
-        data.prenom ||
-        (data.objetsVolesValides?.length ?? 0) > 0 ||
-        (data.objetsDegradesValides?.length ?? 0) > 0,
-    );
+    const significantFields = [
+      data.typeIncident,
+      data.email,
+      data.nom,
+      data.prenom,
+      data.objetsVolesValides?.length,
+      data.objetsDegradesValides?.length,
+    ];
+    return significantFields.some(Boolean);
   } catch {
     return false;
   }
