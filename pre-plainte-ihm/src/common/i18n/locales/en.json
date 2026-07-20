@@ -122,7 +122,9 @@
     "telechargerPdf": "Download PDF",
     "ajouterAgenda": "Add to my calendar",
     "erreurTelechargementPdf": "Error while downloading the PDF.",
-    "descriptionCaptcha": "Friendly Captcha anti-bot security test"
+    "descriptionCaptcha": "Friendly Captcha anti-bot security test",
+    "erreursFormulaire": "{count} error to fix: | {count} errors to fix:",
+    "erreursFormulaireAutres": "… and {count} more | … and {count} more"
   },
   "apiErrors": {
     "erreurServeur": "A technical error occurred on the server. Please try again in a few moments. If the problem persists, you can try again later or contact the police for assistance.",
