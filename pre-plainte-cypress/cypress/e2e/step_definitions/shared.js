@@ -32,9 +32,17 @@ const EMAIL_CHALLENGE_KEY_CYPRESS = "challenge-cypress";
 const CONTINUER_RENDEZ_VOUS_SELECTOR = '[data-cy="continuer-rendez-vous"]';
 const CONTINUER_VERIFICATION_EMAIL_SELECTOR = '[data-cy="continuer-verification-email"]';
 const CONTINUER_INFORMATIONS_GENERALES_SELECTOR = '[data-cy="continuer-informations-generales"]';
+const CONTINUER_INFORMATIONS_PERSONNELLES_SELECTOR = '[data-cy="continuer-informations-personnelles"]';
 const CONTINUER_EVENEMENT_SELECTOR = '[data-cy="continuer-evenement"]';
 const CONFIRMER_DISCLAIMER_SELECTOR = '[data-cy="confirmer-disclaimer"]';
 const TYPE_PERSONNE_NATIVE_SELECTOR = '[data-cy="type-personne-native"]';
+const REPRISE_BROUILLON_DIALOG_SELECTOR = '[data-cy="reprise-brouillon-dialog"]';
+const REPRISE_BROUILLON_CONTINUER_SELECTOR = '[data-cy="reprise-brouillon-continuer"]';
+const REPRISE_BROUILLON_RECOMMENCER_SELECTOR = '[data-cy="reprise-brouillon-recommencer"]';
+const PP_STEP_STORAGE_KEY = "pp-step";
+const REPRISE_BROUILLON_TITRE = "Une pré-plainte est en cours";
+const NOT_EXIST = "not.exist";
+const LOCAL_STORAGE_GET_ITEM = "getItem";
 const ARIA_DISABLED_ATTRIBUTE = "aria-disabled";
 const DISABLED_ATTRIBUTE_VALUE = "true";
 const VUETIFY_DISABLED_BUTTON_CLASS = "v-btn--disabled";
@@ -414,7 +422,7 @@ Given("je reprends un brouillon depuis l'URL", () => {
   );
 });
 
-Given("qu'un brouillon local est présent", () => {
+Given("un brouillon local est présent", () => {
   stubRipol();
   cy.demarrerPrePlainteAEtape(
     STEP_INFORMATIONS_PERSONNELLES,
@@ -431,28 +439,28 @@ Given("qu'un brouillon local est présent", () => {
 });
 
 Then("le dialogue de reprise de brouillon local est affiché", () => {
-  cy.get('[data-cy="reprise-brouillon-dialog"]').should(bevisible);
-  cy.contains("Une pré-plainte est en cours").should(bevisible);
+  cy.get(REPRISE_BROUILLON_DIALOG_SELECTOR).should(bevisible);
+  cy.contains(REPRISE_BROUILLON_TITRE).should(bevisible);
 });
 
 When("je choisis de continuer le brouillon local", () => {
-  cy.get('[data-cy="reprise-brouillon-continuer"]').click();
+  cy.get(REPRISE_BROUILLON_CONTINUER_SELECTOR).click();
 });
 
 When("je choisis de recommencer le brouillon local", () => {
-  cy.get('[data-cy="reprise-brouillon-recommencer"]').click();
+  cy.get(REPRISE_BROUILLON_RECOMMENCER_SELECTOR).click();
 });
 
 Then("je reste sur l'étape des informations personnelles", () => {
-  cy.get('[data-cy="reprise-brouillon-dialog"]').should("not.exist");
-  cy.get('[data-cy="continuer-informations-personnelles"]').filter(":visible").first().should(bevisible);
-  cy.window().its("localStorage").invoke("getItem", "pp-step").should("eq", String(STEP_INFORMATIONS_PERSONNELLES));
+  cy.get(REPRISE_BROUILLON_DIALOG_SELECTOR).should(NOT_EXIST);
+  cy.get(CONTINUER_INFORMATIONS_PERSONNELLES_SELECTOR).filter(":visible").first().should(bevisible);
+  cy.window().its("localStorage").invoke(LOCAL_STORAGE_GET_ITEM, PP_STEP_STORAGE_KEY).should("eq", String(STEP_INFORMATIONS_PERSONNELLES));
 });
 
 Then("je repars depuis les informations générales", () => {
-  cy.get('[data-cy="reprise-brouillon-dialog"]').should("not.exist");
+  cy.get(REPRISE_BROUILLON_DIALOG_SELECTOR).should(NOT_EXIST);
   cy.get(CONTINUER_INFORMATIONS_GENERALES_SELECTOR).filter(":visible").first().should(bevisible);
-  cy.window().its("localStorage").invoke("getItem", "pp-step").should("eq", String(STEP_INFORMATIONS_GENERALES));
+  cy.window().its("localStorage").invoke(LOCAL_STORAGE_GET_ITEM, PP_STEP_STORAGE_KEY).should("eq", String(STEP_INFORMATIONS_GENERALES));
 });
 
 Given("que je sélectionne {string} dans le type de personne", (type) => {
@@ -617,7 +625,7 @@ When("je renseigne les informations personnelles nominales pour moi-même", () =
 });
 
 When("je continue après les informations personnelles", () => {
-  cy.get('[data-cy="continuer-informations-personnelles"]').filter(":visible").first().click();
+  cy.get(CONTINUER_INFORMATIONS_PERSONNELLES_SELECTOR).filter(":visible").first().click();
 });
 
 When("je continue après les informations sur l'événement", () => {
@@ -708,8 +716,8 @@ Then("je reste sur le récapitulatif", () => {
 
 Then("je reste sur l'étape informations personnelles", () => {
   cy.contains("Informations personnelles").should(bevisible);
-  cy.get('[data-cy="continuer-informations-personnelles"]').filter(":visible").first().should(bevisible);
-  cy.window().its("localStorage").invoke("getItem", "pp-step").should("eq", String(STEP_INFORMATIONS_PERSONNELLES));
+  cy.get(CONTINUER_INFORMATIONS_PERSONNELLES_SELECTOR).filter(":visible").first().should(bevisible);
+  cy.window().its("localStorage").invoke(LOCAL_STORAGE_GET_ITEM, PP_STEP_STORAGE_KEY).should("eq", String(STEP_INFORMATIONS_PERSONNELLES));
 });
 
 Then("je reste sur l'étape informations sur l'événement", () => {

@@ -83,25 +83,40 @@ export function flattenValidationErrorMessages(errors: unknown): string[] {
 }
 
 function collectItems(value: unknown, path: string, items: FormValidationErrorItem[]): void {
-  if (typeof value === "string" && value.trim()) {
-    items.push({ path, message: value.trim() });
+  if (typeof value === "string") {
+    collectStringItem(value, path, items);
     return;
   }
 
   if (Array.isArray(value)) {
-    for (const [index, item] of value.entries()) {
-      if (typeof item === "string" && item.trim()) {
-        items.push({ path, message: item.trim() });
-      } else {
-        collectItems(item, `${path}.${index}`, items);
-      }
-    }
+    collectArrayItems(value, path, items);
     return;
   }
 
   if (value && typeof value === "object") {
-    for (const [nestedKey, nested] of Object.entries(value as Record<string, unknown>)) {
-      collectItems(nested, path ? `${path}.${nestedKey}` : nestedKey, items);
+    collectObjectItems(value as Record<string, unknown>, path, items);
+  }
+}
+
+function collectStringItem(value: string, path: string, items: FormValidationErrorItem[]): void {
+  const message = value.trim();
+  if (message) {
+    items.push({ path, message });
+  }
+}
+
+function collectArrayItems(value: unknown[], path: string, items: FormValidationErrorItem[]): void {
+  for (const [index, item] of value.entries()) {
+    if (typeof item === "string") {
+      collectStringItem(item, path, items);
+    } else {
+      collectItems(item, `${path}.${index}`, items);
     }
+  }
+}
+
+function collectObjectItems(value: Record<string, unknown>, path: string, items: FormValidationErrorItem[]): void {
+  for (const [nestedKey, nested] of Object.entries(value)) {
+    collectItems(nested, path ? `${path}.${nestedKey}` : nestedKey, items);
   }
 }
