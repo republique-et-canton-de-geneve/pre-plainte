@@ -54,11 +54,12 @@ const ANNEE_MIN_ISO = "1900-01-01";
 const DATE_DIGIT_LIMIT = 8;
 const DATE_PART_PAD_LENGTH = 2;
 const DATE_PART_PAD_CHAR = "0";
-const DAY_DIGITS_END = 2;
+const DAY_DIGITS_END = DATE_PART_PAD_LENGTH;
 const MONTH_DIGITS_END = 4;
+const ISO_DATE_LENGTH = 10;
 const NON_DIGIT_PATTERN = /\D/g;
 const DATE_SEPARATOR = ".";
-
+const OPTIONAL_PROP_DEFAULT = null;
 
 const props = withDefaults(
   defineProps<{
@@ -73,12 +74,12 @@ const props = withDefaults(
   }>(),
   {
     modelValue: "",
-    errorMessages: null,
-    hint: null,
+    errorMessages: OPTIONAL_PROP_DEFAULT,
+    hint: OPTIONAL_PROP_DEFAULT,
     persistentHint: false,
     disabled: false,
-    name: null,
-    fieldClass: null,
+    name: OPTIONAL_PROP_DEFAULT,
+    fieldClass: OPTIONAL_PROP_DEFAULT,
   },
 );
 
@@ -117,7 +118,7 @@ const onPick = (value: unknown) => {
 
 function normalizePickerValue(value: unknown): string | undefined {
   if (typeof value === "string" && value) {
-    return value.slice(0, 10);
+    return value.slice(0, ISO_DATE_LENGTH);
   }
   if (value instanceof Date && !Number.isNaN(value.getTime())) {
     return `${value.getFullYear()}-${padDatePart(value.getMonth() + 1)}-${padDatePart(value.getDate())}`;
