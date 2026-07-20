@@ -8,7 +8,7 @@ import java.util.Arrays;
 public enum TypeIncident {
   VOL("V", "vol", "Vol"),
   DOMMAGE("D", "dommageMateriel", "Dommage"),
-  CYBER("C", "cybercrime", "Cybercrime");
+  CYBER("C", "cybercrime", "Cyber-escroquerie");
 
   private final String code;
   private final String jsonValue;
