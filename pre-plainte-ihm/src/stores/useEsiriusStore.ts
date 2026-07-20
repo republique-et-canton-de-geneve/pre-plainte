@@ -229,41 +229,47 @@ async function fetchServiceAvailabilities(
       await wait(AVAILABILITY_RETRY_DELAY_MS * attempt);
     }
 
-    try {
-      const availabilities = await EsiriusService.getAvailability(
-        PPEL_CODE,
-        service.key,
-        begin,
-        period,
-      );
-
-      if (isEsiriusErrorPayload(availabilities)) {
-        continue;
-      }
-
-      if (Array.isArray(availabilities) && availabilities.length > 0) {
-        return {
-          status: FETCH_STATUS_OK,
-          value: {
-            serviceName: service.name,
-            serviceId: service.key,
-            availabilities,
-          },
-        };
-      }
-
-      return { status: FETCH_STATUS_EMPTY };
-    } catch (error: unknown) {
-      if (attempt >= AVAILABILITY_FETCH_RETRIES) {
-        return { status: FETCH_STATUS_ERROR };
-      }
-      if (!(error instanceof Error)) {
-        continue;
-      }
+    const result = await attemptFetchServiceAvailabilities(service, begin, period);
+    if (result !== null) {
+      return result;
     }
   }
 
   return { status: FETCH_STATUS_ERROR };
+}
+
+async function attemptFetchServiceAvailabilities(
+  service: any,
+  begin: string,
+  period: string,
+): Promise<AvailabilityFetchResult | null> {
+  try {
+    const availabilities = await EsiriusService.getAvailability(
+      PPEL_CODE,
+      service.key,
+      begin,
+      period,
+    );
+
+    if (isEsiriusErrorPayload(availabilities)) {
+      return null;
+    }
+
+    if (Array.isArray(availabilities) && availabilities.length > 0) {
+      return {
+        status: FETCH_STATUS_OK,
+        value: {
+          serviceName: service.name,
+          serviceId: service.key,
+          availabilities,
+        },
+      };
+    }
+
+    return { status: FETCH_STATUS_EMPTY };
+  } catch {
+    return null;
+  }
 }
 
 async function recoverFailedAvailabilities(
