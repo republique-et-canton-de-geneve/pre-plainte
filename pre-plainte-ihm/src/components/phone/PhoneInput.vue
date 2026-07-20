@@ -13,7 +13,7 @@
     :guess-country="true"
     :invalid-message="invalidMessageFn"
     :enable-searching-country="true"
-    autocomplete="tel"
+    autocomplete="tel-national"
     @update:model-value="onUpdate"
   />
 </template>

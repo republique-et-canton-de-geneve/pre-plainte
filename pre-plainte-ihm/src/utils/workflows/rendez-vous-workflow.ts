@@ -247,7 +247,7 @@ function isAsciiDigit(char: string): boolean {
 }
 
 function isAsciiSpace(char: string): boolean {
-  return char === " " || char === "\t" || char === "\n" || char === "\r" || char === "\f";
+  return " \t\n\r\f".includes(char);
 }
 export function isInRollingAppointmentWindow(date: Date, now = new Date()): boolean {
   const start = new Date(now);
