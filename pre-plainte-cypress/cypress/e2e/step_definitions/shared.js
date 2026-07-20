@@ -62,6 +62,7 @@ const STEP_RENDEZ_VOUS = 5;
 const STEP_RECAPITULATIF = 6;
 const SERVICE_AVAILABILITY_START_OFFSET_DAYS = 2;
 const SERVICE_AVAILABILITY_HOUR = 10;
+const NOMBRE_OBJETS_VOLES_BROUILLON = 1;
 const MESSAGE_CHAMP_REQUIS = "Le champ est requis";
 const MESSAGE_FABRICANT_AUTRE_REQUIS = "Veuillez préciser le fabricant";
 const MESSAGE_MODELE_AUTRE_REQUIS = "Veuillez préciser le modèle";
@@ -599,6 +600,7 @@ When("je renseigne un vol simple nominal", () => {
   cy.wait("@getRipolObjectTypes");
   cy.contains(LIBELLE_ORDINATEUR_PORTABLE).should(bevisible);
   fillField("Numéro de série", "SN123456");
+  selectVisibleOption("Couleur principale", LIBELLE_COULEUR_NOIR);
   cy.get('[data-cy="objet-vole-valider"]').click();
   selectRadio("Avez-vous constaté des dégradations", "Non");
   fillField("Date de début de l'événement", DATE_EVENEMENT);
@@ -607,10 +609,12 @@ When("je renseigne un vol simple nominal", () => {
   fillField("Heure de fin de l'événement", HEURE_FIN_EVENEMENT);
   selectRadio("L'adresse correspond à", "L'adresse de la personne lesée (personne physique ou morale)");
   cy.contains(LIBELLE_ORDINATEUR_PORTABLE).should(bevisible);
-  cy.contains("button", /Continuer|Poursuivre/).last().click({ force: true });
+  cy.get(CONTINUER_EVENEMENT_SELECTOR).filter(":visible").first().click();
+  cy.get(CONTINUER_RENDEZ_VOUS_SELECTOR, { timeout: EMAIL_CHALLENGE_TIMEOUT_MS }).should(bevisible);
 });
 
 When("je sélectionne le premier créneau disponible", () => {
+  cy.get(CONTINUER_RENDEZ_VOUS_SELECTOR, { timeout: EMAIL_CHALLENGE_TIMEOUT_MS }).should(bevisible);
   cy.wait("@getEsiriusServices", { timeout: EMAIL_CHALLENGE_TIMEOUT_MS });
   cy.wait("@getEsiriusAvailabilities", { timeout: EMAIL_CHALLENGE_TIMEOUT_MS });
   cy.get('[data-cy="creneau-row-0"]')
