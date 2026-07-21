@@ -68,7 +68,8 @@ describe("formErrorHelpers", () => {
   it("identifie les chemins d'erreurs du brouillon objet vole", () => {
     expect(isVolObjetBrouillonErrorPath("categorieObjet")).toBe(true);
     expect(isVolObjetBrouillonErrorPath("plaqueNumero")).toBe(true);
-    expect(isVolObjetBrouillonErrorPath("objetsVolesValides.0.typeObjet")).toBe(true);
+    expect(isVolObjetBrouillonErrorPath("objetsVolesValides")).toBe(false);
+    expect(isVolObjetBrouillonErrorPath("objetsVolesValides.0.typeObjet")).toBe(false);
     expect(isVolObjetBrouillonErrorPath("dateDebutEvenement")).toBe(false);
     expect(isVolObjetBrouillonErrorPath("typeLieu")).toBe(false);
   });
@@ -77,10 +78,12 @@ describe("formErrorHelpers", () => {
     expect(
       excludeVolObjetBrouillonErrors([
         { path: "categorieObjet", message: "La categorie est requise" },
+        { path: "objetsVolesValides", message: "Veuillez ajouter au moins un objet" },
         { path: "dateDebutEvenement", message: "La date est requise" },
         { path: "volDansVehicule", message: "Indiquez si l'objet etait dans un vehicule" },
       ]),
     ).toEqual([
+      { path: "objetsVolesValides", message: "Veuillez ajouter au moins un objet" },
       { path: "dateDebutEvenement", message: "La date est requise" },
       { path: "volDansVehicule", message: "Indiquez si l'objet etait dans un vehicule" },
     ]);
