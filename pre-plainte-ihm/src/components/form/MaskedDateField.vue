@@ -85,7 +85,7 @@ const props = withDefaults(
 );
 
 const emit = defineEmits<{
-  [EMIT_UPDATE_MODEL_VALUE]: [value: string];
+  "update:modelValue": [value: string];
 }>();
 
 const { t } = useI18n();
