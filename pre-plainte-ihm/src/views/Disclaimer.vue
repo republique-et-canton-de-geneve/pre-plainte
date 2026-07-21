@@ -8,9 +8,6 @@
         <div class="text-body-2 text-md-body-1">
           {{ t("disclaimer.intro") }}
         </div>
-        <div class="text-body-2 text-md-body-1 mt-2 font-weight-medium">
-          {{ t("disclaimer.tempsEstime") }}
-        </div>
       </v-alert>
 
       <v-card
@@ -90,7 +87,7 @@
       </v-alert>
 
       <div v-if="disclaimerConfirmed" data-cy="contenu-informations-generales">
-        <h3>{{ t("informationsEvenement.typeIncident") }}</h3>
+        <h3 class="mt-6">{{ t("informationsEvenement.typeIncident") }}</h3>
         <AccessibleVSelect
           v-model="typeIncident"
           data-cy="type-incident"

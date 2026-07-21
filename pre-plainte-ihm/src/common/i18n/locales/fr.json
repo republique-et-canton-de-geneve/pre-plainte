@@ -1035,6 +1035,7 @@
     "modeContactRequis": "Le mode de contact est requis",
     "typeDocumentRequis": "Le type de document d'identité est requis",
     "numeroDocumentRequis": "Le numéro de document est requis",
+    "objetVoleRequis": "Veuillez ajouter au moins un objet",
     "selectionnerDocument": "Sélectionner un choix de document",
     "disclaimerRequis": "Vous devez confirmer cette déclaration",
     "constatRequis": "Veuillez indiquer si un constat a été rédigé",
