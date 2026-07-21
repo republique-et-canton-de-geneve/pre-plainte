@@ -1035,6 +1035,7 @@
     "modeContactRequis": "La modalità di contatto è obbligatoria",
     "typeDocumentRequis": "Il tipo di documento d'identità è obbligatorio",
     "numeroDocumentRequis": "Il numero del documento è obbligatorio",
+    "objetVoleRequis": "Aggiungete almeno un oggetto",
     "selectionnerDocument": "Selezionate un'opzione per il documento",
     "disclaimerRequis": "Dovete confermare questa dichiarazione",
     "constatRequis": "Indicate se è stato redatto un verbale",

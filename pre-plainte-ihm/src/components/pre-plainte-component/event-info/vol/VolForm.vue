@@ -750,6 +750,9 @@ const validerObjetVole = async (): Promise<boolean> => {
 };
 
 const validerBrouillonAvantNavigation = async (): Promise<boolean> => {
+  if ((objetsVolesValides.value?.length ?? 0) === 0 && !afficherFicheSaisieNouvelObjet.value) {
+    afficherFicheSaisieNouvelObjet.value = true;
+  }
   if (!afficherFicheSaisieNouvelObjet.value) {
     return true;
   }

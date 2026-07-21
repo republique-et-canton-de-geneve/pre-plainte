@@ -1035,6 +1035,7 @@
     "modeContactRequis": "O modo de contacto é obrigatório",
     "typeDocumentRequis": "O tipo de documento de identidade é obrigatório",
     "numeroDocumentRequis": "O número do documento é obrigatório",
+    "objetVoleRequis": "Adicione pelo menos um objeto",
     "selectionnerDocument": "Selecionar uma escolha de documento",
     "disclaimerRequis": "Tem de confirmar esta declaração",
     "constatRequis": "Indique se foi elaborado um auto",

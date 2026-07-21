@@ -1,5 +1,6 @@
 import { nextTick } from "vue";
 import { SCROLL_CONFIG, CONDITIONAL_FIELD_PATTERNS } from "@/constants/constant";
+import type { FormValidationErrorItem } from "@/utils/helpers/formErrorHelpers";
 
 const ERROR_SELECTORS = [
   ".v-messages__message",
@@ -174,6 +175,35 @@ const findElementFromErrorMessage = (message: string): Element | null => {
 
   return null;
 };
+
+const locateItemElement = (item: FormValidationErrorItem): Element | null => {
+  const rootPath = item.path?.split(".")[0] ?? item.path;
+  let element = rootPath ? findFieldElement(rootPath) : null;
+
+  if (!element && item.path && item.path !== rootPath) {
+    element = findFieldElement(item.path);
+  }
+
+  if (!element && item.message) {
+    element = findElementFromErrorMessage(item.message);
+  }
+
+  return element;
+};
+
+const documentTopOf = (element: Element | null): number => {
+  if (!element) {
+    return Number.POSITIVE_INFINITY;
+  }
+  return element.getBoundingClientRect().top + window.scrollY;
+};
+
+export function sortItemsByFieldOrder(items: FormValidationErrorItem[]): FormValidationErrorItem[] {
+  return items
+    .map((item, index) => ({ item, index, top: documentTopOf(locateItemElement(item)) }))
+    .sort((a, b) => (a.top === b.top ? a.index - b.index : a.top - b.top))
+    .map(entry => entry.item);
+}
 
 export function useFormErrorScroll() {
   const FORM_ERROR_SUMMARY_SELECTOR = '[data-cy="form-error-summary"]';

@@ -1035,6 +1035,7 @@
     "modeContactRequis": "The contact method is required",
     "typeDocumentRequis": "The type of identity document is required",
     "numeroDocumentRequis": "The document number is required",
+    "objetVoleRequis": "Please add at least one item",
     "selectionnerDocument": "Select a document choice",
     "disclaimerRequis": "You must confirm this statement",
     "constatRequis": "Please indicate whether a report was drawn up",

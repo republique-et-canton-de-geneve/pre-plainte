@@ -177,7 +177,7 @@
       :hint="t('cybercrime.hintSiteWebEntrepriseVendeur')"
       persistent-hint
     />
-    <h3 class="text-h6 mb-4">{{ t("cybercrime.telechargerAnnonceTitre") }}</h3>
+    <h3 class="text-h6 mb-4">{{ annonceDocumentIndisponible ? t("cybercrime.telechargerAnnonceTitre") : requiredLabel(t("cybercrime.telechargerAnnonceTitre")) }}</h3>
     <div class="mb-8">
       <PieceJointe
         v-model="annonceDocument"
@@ -186,6 +186,7 @@
         :show-title="false"
         :required="!annonceDocumentIndisponible"
         :error-messages="annonceDocumentError"
+        field-name="annonceDocument"
       />
       <v-checkbox
         v-model="annonceDocumentIndisponible"
@@ -362,7 +363,7 @@
       persistent-hint
       @input="onDateOperationInput"
     />
-    <h3 class="text-h6 mb-4">{{ t("cybercrime.telechargerPreuvePaiement") }}</h3>
+    <h3 class="text-h6 mb-4">{{ preuvePaiementIndisponible ? t("cybercrime.telechargerPreuvePaiement") : requiredLabel(t("cybercrime.telechargerPreuvePaiement")) }}</h3>
     <div class="mb-8">
       <PieceJointe
         v-model="preuvePaiementDocument"
@@ -373,6 +374,7 @@
         :max-file-size-bytes="maxPieceJointe5Mo"
         :required="!preuvePaiementIndisponible"
         :error-messages="preuvePaiementDocumentError"
+        field-name="preuvePaiementDocument"
       />
       <v-checkbox
         v-model="preuvePaiementIndisponible"
