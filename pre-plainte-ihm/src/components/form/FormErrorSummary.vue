@@ -16,15 +16,12 @@
         {{ t("common.erreursFormulaire", items.length, { count: items.length }) }}
       </div>
       <ul class="form-error-summary__list pl-4 mb-0">
-        <li v-for="(item, index) in visibleItems" :key="`${item.path}-${index}-${item.message}`" class="text-body-2">
+        <li v-for="(item, index) in orderedItems" :key="`${item.path}-${index}-${item.message}`" class="text-body-2">
           <button type="button" class="form-error-summary__link" @click="onSelectError(item)">
             {{ item.message }}
           </button>
         </li>
       </ul>
-      <p v-if="items.length > maxVisible" class="text-body-2 mt-2 mb-0">
-        {{ t("common.erreursFormulaireAutres", items.length - maxVisible, { count: items.length - maxVisible }) }}
-      </p>
     </template>
   </v-alert>
 </template>
@@ -33,19 +30,17 @@
 import { computed } from "vue";
 import { useI18n } from "vue-i18n";
 import type { FormValidationErrorItem } from "@/utils/helpers/formErrorHelpers";
-import { useFormErrorScroll } from "@/composables/useFormErrorScroll";
+import { useFormErrorScroll, sortItemsByFieldOrder } from "@/composables/useFormErrorScroll";
 
 const props = withDefaults(
   defineProps<{
     items?: FormValidationErrorItem[];
     messages?: string[];
-    maxVisible?: number;
     summaryMessage?: string | null;
   }>(),
   {
     items: () => [],
     messages: () => [],
-    maxVisible: 5,
     summaryMessage: null,
   },
 );
@@ -60,7 +55,7 @@ const items = computed<FormValidationErrorItem[]>(() => {
   return props.messages.map(message => ({ path: "", message }));
 });
 
-const visibleItems = computed(() => items.value.slice(0, props.maxVisible));
+const orderedItems = computed(() => sortItemsByFieldOrder(items.value));
 
 const isVisible = computed(() => Boolean(props.summaryMessage) || items.value.length > 0);
 

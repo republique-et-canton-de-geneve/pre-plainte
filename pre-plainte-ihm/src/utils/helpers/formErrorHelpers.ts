@@ -35,7 +35,6 @@ const VOL_OBJET_BROUILLON_ERROR_ROOTS = new Set([
   "numeroVignette",
   "numeroMaster",
   "assuranceAucune",
-  "objetsVolesValides",
 ]);
 
 export function isVolObjetBrouillonErrorPath(path: string): boolean {

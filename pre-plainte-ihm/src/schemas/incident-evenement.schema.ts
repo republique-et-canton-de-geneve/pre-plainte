@@ -284,6 +284,7 @@ const validateVolSpecificRules = (data: Record<string, any>, ctx: z.RefinementCt
     return;
   }
 
+  addCustomIssue(ctx, "objetsVolesValides", t("validation.objetVoleRequis"));
   validateNumeroSerie(data, ctx, t);
   validateNumeroIMEI(data, ctx, t);
   validateVehicleBrandAndModel(data, ctx, t);

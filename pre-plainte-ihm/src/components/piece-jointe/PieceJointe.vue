@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div :data-field="fieldName || undefined">
     <div v-if="showTitle" class="mb-3">
       <h3 class="text-h6 mb-1">{{ displayLabel }}</h3>
       <div v-if="subtitle" class="text-body-2 text-medium-emphasis">
@@ -188,6 +188,7 @@ const props = withDefaults(
     required?: boolean;
     subtitle?: string;
     errorMessages?: string | string[] | null;
+    fieldName?: string | null;
   }>(),
   {
     modelValue: () => [],
@@ -200,6 +201,7 @@ const props = withDefaults(
     required: false,
     subtitle: "",
     errorMessages: null,
+    fieldName: null,
   },
 );
 
