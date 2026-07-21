@@ -60,6 +60,7 @@ const ISO_DATE_LENGTH = 10;
 const NON_DIGIT_PATTERN = /\D/g;
 const DATE_SEPARATOR = ".";
 const OPTIONAL_PROP_DEFAULT = null;
+const EMIT_UPDATE_MODEL_VALUE = "update:modelValue" as const;
 
 const props = withDefaults(
   defineProps<{
@@ -84,7 +85,7 @@ const props = withDefaults(
 );
 
 const emit = defineEmits<{
-  "update:modelValue": [value: string];
+  [EMIT_UPDATE_MODEL_VALUE]: [value: string];
 }>();
 
 const { t } = useI18n();
@@ -104,7 +105,7 @@ const minIso = ANNEE_MIN_ISO;
 const pickerValue = computed(() => toIsoDate(props.modelValue ?? "") || undefined);
 
 const onTextInput = (value: unknown) => {
-  emit("update:modelValue", applyDateMaskFromString(String(value ?? "")));
+  emit(EMIT_UPDATE_MODEL_VALUE, applyDateMaskFromString(String(value ?? "")));
 };
 
 const onPick = (value: unknown) => {
@@ -112,7 +113,7 @@ const onPick = (value: unknown) => {
   if (!iso) {
     return;
   }
-  emit("update:modelValue", fromIsoDate(iso));
+  emit(EMIT_UPDATE_MODEL_VALUE, fromIsoDate(iso));
   menuOpen.value = false;
 };
 
