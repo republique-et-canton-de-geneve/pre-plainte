@@ -1,10 +1,10 @@
 <template>
   <v-form @submit.prevent="onSubmit">
     <h1 class="mb-4 text-h1 text-md-h2 d-none d-md-block">{{ t("titreApplication.prePlainte") }}</h1>
-    <v-card class="pa-2 pa-md-6 mb-4">
+    <v-card class="pa-2 pa-md-6 mb-4 informations-evenement-card">
       <FormErrorSummary
         :items="formErrorItemsAffiches"
-        :summary-message="objetVoleIncomplet ? t('incidentTypes.objetVoleInformationsManquantes') : undefined"
+        :summary-message="formErrorSummaryMessage"
       />
       <h2 class="pre-plainte-main-card-title mb-4 text-h4 text-md-h2">{{ t("informationsEvenement.titre") }}</h2>
       <VolForm v-if="typeIncident === 'vol'" ref="volFormRef" />
@@ -218,6 +218,20 @@ const formErrorItemsAffiches = computed(() => {
     return submitErrorItems.value;
   }
   return excludeVolObjetBrouillonErrors(submitErrorItems.value);
+});
+
+const hasErreurObjetVoleRequis = computed(() =>
+  formErrorItemsAffiches.value.some(item => item.path === "objetsVolesValides"),
+);
+
+const formErrorSummaryMessage = computed(() => {
+  if (hasErreurObjetVoleRequis.value) {
+    return undefined;
+  }
+  if (objetVoleIncomplet.value) {
+    return t("incidentTypes.objetVoleInformationsManquantes");
+  }
+  return undefined;
 });
 
 const DEGAT_DELIT = "degat-delit";
@@ -605,3 +619,15 @@ const handleSaveClick = () => {
   emit("save");
 };
 </script>
+
+<style scoped>
+@media (max-width: 959px) {
+  .informations-evenement-card {
+    width: calc(100% + 16px);
+    margin-left: -8px;
+    margin-right: -8px;
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+}
+</style>

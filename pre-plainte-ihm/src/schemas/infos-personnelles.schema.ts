@@ -144,7 +144,7 @@ export const createInfosPersonnellesSchema = (t: ComposerTranslation) => {
         .min(1, t(VALIDATION_SELECTION_DOCUMENT)),
 
       numeroDocumentIdentite: z.preprocess(
-        val => (typeof val === "string" ? val.trim() : val),
+        val => (typeof val === "string" ? val.trim() : ""),
         z
           .string()
           .max(TEXT_FIELD_MAX_LENGTH, t(VALIDATION_LONGUEUR_MAX, { max: TEXT_FIELD_MAX_LENGTH }))
@@ -154,7 +154,7 @@ export const createInfosPersonnellesSchema = (t: ComposerTranslation) => {
       tiersTypeDocumentIdentite: z.string().optional(),
 
       tiersNumeroDocumentIdentite: z.preprocess(
-        val => (typeof val === "string" ? val.trim() : val),
+        val => (typeof val === "string" ? val.trim() : ""),
         z
           .string()
           .max(TEXT_FIELD_MAX_LENGTH, t(VALIDATION_LONGUEUR_MAX, { max: TEXT_FIELD_MAX_LENGTH }))

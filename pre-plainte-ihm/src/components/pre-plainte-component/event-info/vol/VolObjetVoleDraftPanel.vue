@@ -3,7 +3,7 @@
     <h3 v-if="objetIndex === undefined" class="text-h5 text-md-h5 mb-4">
       {{ t("incidentTypes.titreBlocAjoutObjetVole") }}
     </h3>
-    <v-sheet class="pa-4 mb-4 objet-vole-brouillon">
+    <v-sheet class="pa-4 mb-4 objet-vole-brouillon" data-field="objetsVolesValides">
       <p class="text-subtitle-1 font-weight-medium mb-4">
         {{ t("incidentTypes.objetVoleNumero", { n: numeroObjet }) }}
       </p>
