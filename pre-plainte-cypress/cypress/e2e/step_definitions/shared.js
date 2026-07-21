@@ -600,7 +600,7 @@ When("je renseigne un vol simple nominal", () => {
   cy.wait("@getRipolObjectTypes");
   cy.contains(LIBELLE_ORDINATEUR_PORTABLE).should(bevisible);
   fillField("Numéro de série", "SN123456");
-  selectVisibleOption("Couleur principale", LIBELLE_COULEUR_NOIR);
+  selectVisibleOption("Couleur", LIBELLE_COULEUR_NOIR);
   cy.get('[data-cy="objet-vole-valider"]').click();
   selectRadio("Avez-vous constaté des dégradations", "Non");
   fillField("Date de début de l'événement", DATE_EVENEMENT);
