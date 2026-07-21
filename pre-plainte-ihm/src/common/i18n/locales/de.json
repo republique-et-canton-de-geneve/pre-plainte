@@ -1035,6 +1035,7 @@
     "modeContactRequis": "Die Kontaktart ist erforderlich",
     "typeDocumentRequis": "Die Art des Identitätsdokuments ist erforderlich",
     "numeroDocumentRequis": "Die Dokumentnummer ist erforderlich",
+    "objetVoleRequis": "Bitte fügen Sie mindestens einen Gegenstand hinzu",
     "selectionnerDocument": "Wählen Sie ein Dokument aus",
     "disclaimerRequis": "Sie müssen diese Erklärung bestätigen",
     "constatRequis": "Bitte geben Sie an, ob ein Rapport erstellt wurde",
