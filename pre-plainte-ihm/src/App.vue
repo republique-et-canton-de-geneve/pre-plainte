@@ -8,7 +8,7 @@
         </v-locale-provider>
       </v-container>
     </v-main>
-    <ge-footer maxWidth="false" />
+    <ge-footer id="main-footer" fullWidth="false"></ge-footer>
   </v-app>
 </template>
 
