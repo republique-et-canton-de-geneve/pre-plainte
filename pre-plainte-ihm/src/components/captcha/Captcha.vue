@@ -1,6 +1,9 @@
 <template>
   <div v-if="!hidden">
-    <p :id="descId" class="text-body-2 mb-1">
+    <h2 class="text-h3 mb-4">
+      {{ t("common.titreCaptcha") }}
+    </h2>
+    <p :id="descId" class="text-body-2 mb-3">
       {{ t("common.descriptionCaptcha") }}
     </p>
 

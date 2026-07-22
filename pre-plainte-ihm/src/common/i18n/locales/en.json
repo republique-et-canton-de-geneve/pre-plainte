@@ -122,7 +122,8 @@
     "telechargerPdf": "Download PDF",
     "ajouterAgenda": "Add to my calendar",
     "erreurTelechargementPdf": "Error while downloading the PDF.",
-    "descriptionCaptcha": "Friendly Captcha anti-bot security test",
+    "descriptionCaptcha": "An anti-robot check protects this service.",
+    "titreCaptcha": "Security verification",
     "erreursFormulaire": "{count} error to fix: | {count} errors to fix:",
     "erreursFormulaireAutres": "… and {count} more | … and {count} more",
     "ouvrirCalendrier": "Open calendar",
@@ -306,7 +307,8 @@
     "renvoyerCode": "Resend a code",
     "envoyerCodeSecurite": "Send a security code",
     "codeVerificationEnvoyeAdresse": "Verification code sent to the address:",
-    "etapeVerificationIntro": "To secure your request, enter your email address, then click “Send a security code”. Enter the 6-digit code received by email to continue. If a code has already been sent for this session, you can enter it below; you will be able to request a new one after the indicated delay by clicking the button again."
+    "etapeVerificationIntro": "To secure your request, enter your email address, then click “Send a security code”.",
+    "etapeVerificationIntroSuite": "Enter the 6-digit code received by email to continue."
   },
   "informationsEvenement": {
     "titre": "Event information",
