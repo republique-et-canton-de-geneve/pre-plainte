@@ -122,7 +122,8 @@
     "telechargerPdf": "PDF herunterladen",
     "ajouterAgenda": "Zu meinem Kalender hinzufügen",
     "erreurTelechargementPdf": "Fehler beim Herunterladen der PDF-Datei.",
-    "descriptionCaptcha": "Friendly-Captcha-Sicherheitsprüfung gegen Bots",
+    "descriptionCaptcha": "Eine Anti-Roboter-Prüfung schützt diesen Dienst.",
+    "titreCaptcha": "Sicherheitsüberprüfung",
     "erreursFormulaire": "{count} Fehler zu korrigieren: | {count} Fehler zu korrigieren:",
     "erreursFormulaireAutres": "… und {count} weitere | … und {count} weitere",
     "ouvrirCalendrier": "Kalender öffnen",
@@ -306,7 +307,8 @@
     "renvoyerCode": "Einen Code erneut senden",
     "envoyerCodeSecurite": "Sicherheitscode senden",
     "codeVerificationEnvoyeAdresse": "Bestätigungscode gesendet an:",
-    "etapeVerificationIntro": "Zur Absicherung Ihres Vorgangs geben Sie Ihre E-Mail-Adresse ein und klicken dann auf « Sicherheitscode senden ». Geben Sie den per E-Mail erhaltenen 6-stelligen Code ein, um fortzufahren. Wenn für diese Sitzung bereits ein Code gesendet wurde, können Sie ihn unten eingeben; nach Ablauf der angezeigten Frist können Sie durch erneutes Klicken auf die Schaltfläche einen neuen anfordern."
+    "etapeVerificationIntro": "Zur Absicherung Ihres Vorgangs geben Sie Ihre E-Mail-Adresse ein und klicken dann auf « Sicherheitscode senden ».",
+    "etapeVerificationIntroSuite": "Geben Sie den per E-Mail erhaltenen 6-stelligen Code ein, um fortzufahren."
   },
   "informationsEvenement": {
     "titre": "Informationen zum Ereignis",

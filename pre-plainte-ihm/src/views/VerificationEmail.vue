@@ -6,7 +6,8 @@
 
       <v-alert type="info" class="mb-6" density="comfortable">
         <div class="text-body-2 text-md-body-1">
-          {{ t("emailChallenge.etapeVerificationIntro") }}
+          <p class="mb-2">{{ t("emailChallenge.etapeVerificationIntro") }}</p>
+          <p class="mb-0">{{ t("emailChallenge.etapeVerificationIntroSuite") }}</p>
         </div>
       </v-alert>
 
