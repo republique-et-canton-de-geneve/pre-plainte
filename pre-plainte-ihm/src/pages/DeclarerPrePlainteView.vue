@@ -2,7 +2,7 @@
   <v-container fluid class="pre-plainte-page">
     <div class="top-bar mb-4 px-2">
       <div class="top-bar-left">
-        <h1 class="text-h4 text-md-h2 d-md-none mobile-title">
+        <h1 class="text-h3 text-md-h2 d-md-none mobile-title">
           {{ t("titreApplication.prePlainte") }}
         </h1>
 

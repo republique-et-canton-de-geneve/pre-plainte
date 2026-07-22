@@ -122,7 +122,8 @@
     "telechargerPdf": "Télécharger le pdf",
     "ajouterAgenda": "Ajouter à mon agenda",
     "erreurTelechargementPdf": "Erreur pendant le téléchargement du PDF.",
-    "descriptionCaptcha": "Test de sécurité anti-robots Friendly Captcha",
+    "descriptionCaptcha": "Un contrôle anti-robot protège ce service.",
+    "titreCaptcha": "Vérification de sécurité",
     "erreursFormulaire": "{count} erreur à corriger : | {count} erreurs à corriger :",
     "erreursFormulaireAutres": "… et {count} autre | … et {count} autres",
     "ouvrirCalendrier": "Ouvrir le calendrier",
@@ -306,7 +307,8 @@
     "renvoyerCode": "Renvoyer un code",
     "envoyerCodeSecurite": "Envoyer un code de sécurité",
     "codeVerificationEnvoyeAdresse": "Code de vérification envoyé à l'adresse :",
-    "etapeVerificationIntro": "Pour sécuriser votre démarche, saisissez votre adresse e-mail, puis cliquez sur « Envoyer un code de sécurité ». Saisissez le code à 6 chiffres reçu par e-mail pour continuer. Si un code a déjà été envoyé pour cette session, vous pouvez le saisir ci-dessous ; vous pourrez en demander un nouveau après le délai indiqué en cliquant à nouveau sur le bouton."
+    "etapeVerificationIntro": "Pour sécuriser votre démarche saisissez votre adresse e-mail, puis cliquez sur « Envoyer un code de sécurité ».",
+    "etapeVerificationIntroSuite": "Saisissez le code à 6 chiffres reçu par e-mail pour continuer."
   },
   "informationsEvenement": {
     "titre": "Informations sur l'événement",
