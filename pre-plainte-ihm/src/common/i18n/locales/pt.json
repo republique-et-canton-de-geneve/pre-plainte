@@ -122,7 +122,8 @@
     "telechargerPdf": "Descarregar o PDF",
     "ajouterAgenda": "Adicionar ao meu calendário",
     "erreurTelechargementPdf": "Erro ao descarregar o PDF.",
-    "descriptionCaptcha": "Teste de segurança anti-robôs Friendly Captcha",
+    "descriptionCaptcha": "Um controlo anti-robô protege este serviço.",
+    "titreCaptcha": "Verificação de segurança",
     "erreursFormulaire": "{count} erro a corrigir: | {count} erros a corrigir:",
     "erreursFormulaireAutres": "… e mais {count} | … e mais {count}",
     "ouvrirCalendrier": "Abrir o calendário",
@@ -306,7 +307,8 @@
     "renvoyerCode": "Reenviar um código",
     "envoyerCodeSecurite": "Enviar um código de segurança",
     "codeVerificationEnvoyeAdresse": "Código de verificação enviado para o endereço:",
-    "etapeVerificationIntro": "Para proteger o seu procedimento, introduza o seu endereço de email e clique em « Enviar um código de segurança ». Introduza o código de 6 algarismos recebido por email para continuar. Se já tiver sido enviado um código para esta sessão, pode introduzi-lo abaixo; poderá pedir um novo após o prazo indicado clicando novamente no botão."
+    "etapeVerificationIntro": "Para proteger o seu procedimento, introduza o seu endereço de email e clique em « Enviar um código de segurança ».",
+    "etapeVerificationIntroSuite": "Introduza o código de 6 algarismos recebido por email para continuar."
   },
   "informationsEvenement": {
     "titre": "Informações sobre o evento",
