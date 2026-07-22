@@ -8,11 +8,11 @@
     role="alert"
     data-cy="form-error-summary"
   >
-    <div v-if="summaryMessage" class="text-body-2 font-weight-medium" :class="{ 'mb-2': items.length > 0 }">
+    <div v-if="summaryMessage" class="text-body-1 font-weight-medium" :class="{ 'mb-2': items.length > 0 }">
       {{ summaryMessage }}
     </div>
     <template v-if="items.length > 0">
-      <div v-if="!summaryMessage" class="text-body-2 font-weight-medium mb-2">
+      <div v-if="!summaryMessage" class="text-body-1 font-weight-medium mb-2">
         {{ t("common.erreursFormulaire", items.length, { count: items.length }) }}
       </div>
       <ul class="form-error-summary__list pl-4 mb-0">
@@ -89,6 +89,10 @@ const onSelectError = async (item: FormValidationErrorItem) => {
 @media (max-width: 959px) {
   .form-error-summary :deep(.v-alert__content) {
     font-size: 0.875rem;
+  }
+
+  .form-error-summary :deep(.v-alert__content) > .text-body-1 {
+    font-size: 1rem;
   }
 }
 </style>
