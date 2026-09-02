@@ -13,6 +13,8 @@
         :label="t('rendezVous.dateSouhaitee')"
         :disabled="esiriusStore.loading || !datesDisponibles.length"
         clearable
+        data-field="dateSouhaitee"
+        name="dateSouhaitee"
       />
     </v-col>
 

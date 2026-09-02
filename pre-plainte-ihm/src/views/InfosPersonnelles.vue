@@ -21,6 +21,8 @@
           persistent-hint
           prepend-inner-icon="mdi-check-circle-outline"
           data-cy="type-personne"
+          data-field="lienAvecPersonne"
+          name="lienAvecPersonne"
         />
         <TiersRepresentationForm v-if="showTypeRepresentation" />
         <EntrepriseRepresentationForm v-if="showPosteOuFonction" />

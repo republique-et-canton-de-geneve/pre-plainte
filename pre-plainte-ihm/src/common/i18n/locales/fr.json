@@ -1072,7 +1072,13 @@
     "tailleMax": "Le fichier '{nom}' dépasse la taille maximale autorisée (10 Mo).",
     "tailleMaxCustom": "Le fichier '{nom}' dépasse la taille maximale autorisée ({max} Mo).",
     "tailleTotaleDepassee": "Le fichier '{nom}' dépasse le volume total autorisé (70 Mo).",
-    "pdfInvalide": "Le fichier '{nom}' n'est pas valide."
+    "pdfInvalide": "Le fichier '{nom}' n'est pas valide.",
+    "chargementEnCours": "Chargement… {progress} %",
+    "chargementGlobal": "Traitement des fichiers {current}/{total}",
+    "apercu": "Aperçu",
+    "supprimer": "Supprimer",
+    "supprimerTitre": "Supprimer ce document ?",
+    "supprimerMessage": "Voulez-vous vraiment supprimer « {nom} » ?"
   },
   "map": {
     "closePopup": "Fermer la fenêtre d'information",

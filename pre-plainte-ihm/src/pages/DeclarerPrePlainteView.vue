@@ -137,10 +137,28 @@ onMounted(async () => {
   await verifierCodeDanslUrl();
 });
 
-watch(step, () => {
-  nextTick(() => {
+watch(step, async () => {
+  const field = store.consumePendingFocusField();
+  await nextTick();
+  if (!field) {
     window.scrollTo({ top: 0, behavior: "smooth" });
-  });
+    return;
+  }
+  for (let attempt = 0; attempt < 12; attempt++) {
+    await nextTick();
+    const escaped = typeof CSS !== "undefined" && typeof CSS.escape === "function" ? CSS.escape(field) : field;
+    const element =
+      document.querySelector(`[data-field="${escaped}"]`) ??
+      document.querySelector(`[name="${escaped}"]`) ??
+      document.getElementById(field);
+    if (element instanceof HTMLElement) {
+      element.style.scrollMarginTop = "96px";
+      element.scrollIntoView({ behavior: "smooth", block: "start", inline: "nearest" });
+      return;
+    }
+    await new Promise(resolve => setTimeout(resolve, 50));
+  }
+  window.scrollTo({ top: 0, behavior: "smooth" });
 });
 </script>
 
