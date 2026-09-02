@@ -193,6 +193,10 @@ export const saveFormData = (data: PrePlainteFormFields): void => {
       copiesEcran,
       autresDocuments,
       fichiers,
+      annonceDocument,
+      preuvePaiementDocument,
+      copieIdentiteTransmiseAuteurDocument,
+      copieIdentiteAuteurDocument,
       ...rest
     } = data;
     localStorage.setItem(STORAGE_KEYS.FORM_DATA, JSON.stringify(rest));
@@ -221,6 +225,10 @@ export const loadFormData = (): Partial<PrePlainteFormFields> => {
       copiesEcran: [],
       autresDocuments: [],
       fichiers: [],
+      annonceDocument: [],
+      preuvePaiementDocument: [],
+      copieIdentiteTransmiseAuteurDocument: [],
+      copieIdentiteAuteurDocument: [],
     };
   } catch (error) {
     console.warn("Erreur lors du chargement des données:", error);

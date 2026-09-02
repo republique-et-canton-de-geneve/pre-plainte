@@ -1072,7 +1072,13 @@
     "tailleMax": "Die Datei '{nom}' überschreitet die maximal zulässige Grösse (10 MB).",
     "tailleMaxCustom": "Die Datei '{nom}' überschreitet die maximal zulässige Grösse ({max} MB).",
     "tailleTotaleDepassee": "Die Datei '{nom}' überschreitet das insgesamt zulässige Volumen (70 MB).",
-    "pdfInvalide": "Die Datei '{nom}' ist nicht gültig."
+    "pdfInvalide": "Die Datei '{nom}' ist nicht gültig.",
+    "chargementEnCours": "Wird geladen… {progress} %",
+    "chargementGlobal": "Dateien werden verarbeitet {current}/{total}",
+    "apercu": "Vorschau",
+    "supprimer": "Löschen",
+    "supprimerTitre": "Dieses Dokument löschen?",
+    "supprimerMessage": "Möchten Sie « {nom} » wirklich löschen?"
   },
   "map": {
     "closePopup": "Informationsfenster schliessen",

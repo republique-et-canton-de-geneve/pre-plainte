@@ -1,7 +1,8 @@
 package ch.ge.police.infrastructure.adapter.out;
 
 import ch.ge.police.core.domain.model.ripol.Ripol;
-import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -15,9 +16,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import org.springframework.core.io.FileSystemResource;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.ResourceLoader;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -461,10 +459,19 @@ class SqliteRipolAdapterTest {
   }
 
   @Test
-  void constructor_shouldFailWhenResourceDoesNotExist() {
-    ResourceLoader loader = new SingleResourceLoader("classpath:bdd/dbppel3", new FileSystemResource(new File("does-not-exist.db")));
+  void constructor_shouldFailWhenSourceIsUnavailable() {
+    RipolDatabaseSource source = sourceVers(Path.of("does-not-exist.db"));
 
-    assertThrows(IllegalStateException.class, () -> new SqliteRipolAdapter(loader, "bdd/dbppel3"));
+    assertThrows(IOException.class, () -> new SqliteRipolAdapter(source));
+  }
+
+  @Test
+  void constructor_shouldFailWhenSourceIsNotASqliteDatabase() throws Exception {
+    Path fichier = Files.createTempFile("ripol-invalide-", ".db");
+    fichier.toFile().deleteOnExit();
+    Files.writeString(fichier, "contenu qui n'est pas une base SQLite valide");
+
+    assertThrows(IllegalStateException.class, () -> new SqliteRipolAdapter(sourceVers(fichier)));
   }
 
   @Test
@@ -530,10 +537,7 @@ class SqliteRipolAdapterTest {
         """);
     }
 
-    SqliteRipolAdapter adapter = new SqliteRipolAdapter(
-      new SingleResourceLoader("classpath:bdd/dbppel3", new FileSystemResource(db.toFile())),
-      "bdd/dbppel3"
-    );
+    SqliteRipolAdapter adapter = new SqliteRipolAdapter(sourceVers(db));
 
     List<Ripol> sexes = adapter.getCodesByGroupType("geschlechtISO");
     assertEquals(1, sexes.size());
@@ -640,10 +644,7 @@ class SqliteRipolAdapterTest {
         """);
     }
 
-    String classpathLocation = "bdd/dbppel3";
-    ResourceLoader loader =
-      new SingleResourceLoader("classpath:" + classpathLocation, new FileSystemResource(db.toFile()));
-    SqliteRipolAdapter adapter = new SqliteRipolAdapter(loader, classpathLocation);
+    SqliteRipolAdapter adapter = new SqliteRipolAdapter(sourceVers(db));
 
     List<Ripol> brands = adapter.getCodesByGroupType("102");
 
@@ -693,10 +694,7 @@ class SqliteRipolAdapterTest {
         """);
     }
 
-    String classpathLocation = "bdd/dbppel3";
-    ResourceLoader loader =
-      new SingleResourceLoader("classpath:" + classpathLocation, new FileSystemResource(db.toFile()));
-    SqliteRipolAdapter adapter = new SqliteRipolAdapter(loader, classpathLocation);
+    SqliteRipolAdapter adapter = new SqliteRipolAdapter(sourceVers(db));
 
     List<Ripol> colours = adapter.getCodesByGroupType("235");
 
@@ -741,10 +739,7 @@ class SqliteRipolAdapterTest {
         """);
     }
 
-    String classpathLocation = "bdd/dbppel3";
-    ResourceLoader loader =
-      new SingleResourceLoader("classpath:" + classpathLocation, new FileSystemResource(db.toFile()));
-    SqliteRipolAdapter adapter = new SqliteRipolAdapter(loader, classpathLocation);
+    SqliteRipolAdapter adapter = new SqliteRipolAdapter(sourceVers(db));
 
     List<Ripol> models = adapter.getBrandsByTypeAndMasterType("4196", "102");
 
@@ -826,10 +821,7 @@ class SqliteRipolAdapterTest {
         """);
     }
 
-    String classpathLocation = "bdd/dbppel3";
-    ResourceLoader loader =
-      new SingleResourceLoader("classpath:" + classpathLocation, new FileSystemResource(db.toFile()));
-    SqliteRipolAdapter adapter = new SqliteRipolAdapter(loader, classpathLocation);
+    SqliteRipolAdapter adapter = new SqliteRipolAdapter(sourceVers(db));
 
     List<Ripol> codes = adapter.getCodesByGroupType("11");
 
@@ -881,44 +873,28 @@ class SqliteRipolAdapterTest {
         """.formatted(extraColumnNames, rejectedExtraValues));
     }
 
-    String classpathLocation = "bdd/dbppel3";
-    ResourceLoader loader =
-      new SingleResourceLoader("classpath:" + classpathLocation, new FileSystemResource(db.toFile()));
-    return new SqliteRipolAdapter(loader, classpathLocation);
+    return new SqliteRipolAdapter(sourceVers(db));
   }
 
   private static SqliteRipolAdapter newAdapterPointingToTempDb() throws Exception {
-    String classpathLocation = "bdd/dbppel3";
-    ResourceLoader loader = new SingleResourceLoader("classpath:" + classpathLocation, new FileSystemResource(sqliteFile.toFile()));
-    return new SqliteRipolAdapter(loader, classpathLocation);
+    return new SqliteRipolAdapter(sourceVers(sqliteFile));
   }
 
   private static SqliteRipolAdapter newBrokenAdapterPointingToTempDb() throws Exception {
-    String classpathLocation = "bdd/dbppel3";
-    ResourceLoader loader = new SingleResourceLoader("classpath:" + classpathLocation, new FileSystemResource(brokenSqliteFile.toFile()));
-    return new SqliteRipolAdapter(loader, classpathLocation);
+    return new SqliteRipolAdapter(sourceVers(brokenSqliteFile));
   }
 
-  private static final class SingleResourceLoader implements ResourceLoader {
-    private final String expectedLocation;
-    private final Resource resource;
-
-    private SingleResourceLoader(String expectedLocation, Resource resource) {
-      this.expectedLocation = expectedLocation;
-      this.resource = resource;
-    }
-
-    @Override
-    public Resource getResource(String location) {
-      if (expectedLocation.equals(location)) {
-        return resource;
+  private static RipolDatabaseSource sourceVers(Path fichier) {
+    return new RipolDatabaseSource() {
+      @Override
+      public InputStream ouvrirFlux() throws IOException {
+        return Files.newInputStream(fichier);
       }
-      return new FileSystemResource(new File("does-not-exist-" + location));
-    }
 
-    @Override
-    public ClassLoader getClassLoader() {
-      return SqliteRipolAdapterTest.class.getClassLoader();
-    }
+      @Override
+      public String description() {
+        return "test:" + fichier;
+      }
+    };
   }
 }

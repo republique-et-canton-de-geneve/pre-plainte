@@ -21,11 +21,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.ResourceLoader;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.ConnectionCallback;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -236,28 +233,21 @@ public class SqliteRipolAdapter implements RipolPort {
       rs.getString(COL_GROUPTYPE)
     );
 
-  public SqliteRipolAdapter(
-    ResourceLoader resourceLoader,
-    @Value("${sqlite.db.classpath-location:bdd/dbppel3}") String dbClasspathLocation
-  ) throws IOException {
-    Resource resource = resourceLoader.getResource("classpath:" + dbClasspathLocation);
-
-    if (!resource.exists()) {
-      throw new IllegalStateException("Fichier SQLite introuvable dans les ressources : " + dbClasspathLocation);
-    }
+  public SqliteRipolAdapter(RipolDatabaseSource databaseSource) throws IOException {
+    String source = databaseSource.description();
 
     Path tempFile = Files.createTempFile("sqlite-db-", ".db");
-    try (InputStream in = resource.getInputStream()) {
+    try (InputStream in = databaseSource.ouvrirFlux()) {
       Files.copy(in, tempFile, StandardCopyOption.REPLACE_EXISTING);
     }
-    validateSqliteResource(tempFile, dbClasspathLocation);
+    validateSqliteResource(tempFile, source);
 
     String jdbcUrl = "jdbc:sqlite:" + tempFile.toAbsolutePath();
 
     log.info(
-      "event=ripol_sqlite_initialized traceId={} classpathLocation={} tempFile={}",
+      "event=ripol_sqlite_initialized traceId={} source={} tempFile={}",
       MDC.get(TRACE_ID),
-      dbClasspathLocation,
+      source,
       tempFile
     );
 
@@ -282,31 +272,25 @@ public class SqliteRipolAdapter implements RipolPort {
     createSearchIndexes(incidentCodeFilter);
   }
 
-  private static void validateSqliteResource(Path sqliteFile, String classpathLocation) throws IOException {
+  private static void validateSqliteResource(Path sqliteFile, String source) throws IOException {
     byte[] header;
     try (InputStream in = Files.newInputStream(sqliteFile)) {
       header = in.readNBytes(SQLITE_HEADER_PROBE_BYTES);
     }
     if (header.length < SQLITE_MAGIC.length()) {
       throw new IllegalStateException(
-        "Fichier RIPOL invalide ou vide dans les ressources : "
-          + classpathLocation
-          + " ("
-          + header.length
-          + " octets). Vérifier que Git LFS a bien été récupéré (git lfs pull) avant le build."
+        "Base RIPOL invalide ou vide : " + source + " (" + header.length + " octets)."
       );
     }
     String probe = new String(header, 0, Math.min(header.length, SQLITE_HEADER_PROBE_BYTES), StandardCharsets.US_ASCII);
     if (probe.startsWith(GIT_LFS_POINTER_PREFIX)) {
       throw new IllegalStateException(
-        "Le fichier "
-          + classpathLocation
-          + " est un pointeur Git LFS, pas la base SQLite. Exécuter « git lfs pull » avant le build Maven."
+        "La source " + source + " renvoie un pointeur Git LFS, pas la base SQLite."
       );
     }
     if (!probe.startsWith(SQLITE_MAGIC)) {
       throw new IllegalStateException(
-        "Le fichier " + classpathLocation + " n'est pas une base SQLite valide (en-tête inattendu)."
+        "La source " + source + " n'est pas une base SQLite valide (en-tête inattendu)."
       );
     }
   }
