@@ -35,11 +35,11 @@ class S3RipolDatabaseSourceTest {
 
   @BeforeEach
   void setUp() {
-    source = new S3RipolDatabaseSource(s3Client, "mon-bucket", "dbppel3");
+    source = new S3RipolDatabaseSource(s3Client, "mon-bucket", "preplaintes/ripol/dbppel3.sqlite");
   }
 
   @Test
-  void ouvrirFlux_recupereObjetALaRacineDuBucket() throws Exception {
+  void ouvrirFlux_recupereObjetSousPreplaintesRipol() throws Exception {
     byte[] contenu = "SQLite format 3".getBytes(StandardCharsets.US_ASCII);
     when(s3Client.getObject(any(GetObjectRequest.class))).thenReturn(reponse(contenu));
 
@@ -50,7 +50,7 @@ class S3RipolDatabaseSourceTest {
     ArgumentCaptor<GetObjectRequest> reqCaptor = ArgumentCaptor.forClass(GetObjectRequest.class);
     verify(s3Client).getObject(reqCaptor.capture());
     assertEquals("mon-bucket", reqCaptor.getValue().bucket());
-    assertEquals("dbppel3", reqCaptor.getValue().key());
+    assertEquals("preplaintes/ripol/dbppel3.sqlite", reqCaptor.getValue().key());
   }
 
   @Test
@@ -79,7 +79,7 @@ class S3RipolDatabaseSourceTest {
 
   @Test
   void description_exposeBucketEtCle() {
-    assertEquals("s3://mon-bucket/dbppel3", source.description());
+    assertEquals("s3://mon-bucket/preplaintes/ripol/dbppel3.sqlite", source.description());
   }
 
   private static ResponseInputStream<GetObjectResponse> reponse(byte[] contenu) {
