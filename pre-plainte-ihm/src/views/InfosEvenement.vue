@@ -1,7 +1,7 @@
 <template>
   <v-form @submit.prevent="onSubmit">
     <h1 class="mb-4 text-h1 text-md-h2 d-none d-md-block">{{ t("titreApplication.prePlainte") }}</h1>
-    <v-card class="pa-2 pa-md-6 mb-4 informations-evenement-card">
+    <v-card class="pa-2 pa-md-6 mb-4 informations-evenement-card" data-field="informationsEvenement">
       <FormErrorSummary
         :items="formErrorItemsAffiches"
         :summary-message="formErrorSummaryMessage"
@@ -26,13 +26,13 @@
         <CybercrimeAchatNonRecuForm v-if="typeCybercrime === TYPE_CYBERCRIME_ACHAT_NON_RECU" />
         <CybercrimeFausseAnnonceForm v-if="typeCybercrime === TYPE_CYBERCRIME_FAUSSE_ANNONCE" />
         <div v-if="showCybercrimeUrlDescriptionAndPieces" class="mb-8">
-          <PieceJointe v-model="justificatifsPaiement" :label="t('cybercrime.justificatifsPaiement')" />
+          <PieceJointe v-model="justificatifsPaiement" :label="t('cybercrime.justificatifsPaiement')" field-name="justificatifsPaiement" />
         </div>
         <div v-if="showCybercrimeUrlDescriptionAndPieces" class="mb-8">
-          <PieceJointe v-model="copiesEcran" :label="t('cybercrime.copiesEcran')" />
+          <PieceJointe v-model="copiesEcran" :label="t('cybercrime.copiesEcran')" field-name="copiesEcran" />
         </div>
         <div v-if="showAutresDocumentsCybercrime" class="mb-8">
-          <PieceJointe v-model="autresDocuments" :label="t('cybercrime.autresDocuments')" />
+          <PieceJointe v-model="autresDocuments" :label="t('cybercrime.autresDocuments')" field-name="autresDocuments" />
         </div>
       </div>
 
@@ -136,6 +136,7 @@
           v-model="fichiers"
           :label="eventFilesUploadLabel"
           :subtitle="typeIncident === 'degat-delit' ? t('dommages.photosRecommandees') : ''"
+          field-name="fichiers"
         />
       </div>
       <AdresseEvent v-if="typeIncident !== 'cybercrime'" />

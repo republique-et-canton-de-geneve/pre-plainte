@@ -139,6 +139,18 @@ export const useCreatePrePlainteStore = defineStore("createPrePlainte", () => {
     demandeId.value = id;
   };
 
+  const pendingFocusField = ref<string | null>(null);
+
+  const setPendingFocusField = (field: string | null) => {
+    pendingFocusField.value = field;
+  };
+
+  const consumePendingFocusField = (): string | null => {
+    const field = pendingFocusField.value;
+    pendingFocusField.value = null;
+    return field;
+  };
+
   watch(step, currentStep => {
     if (isStoragePersistenceEnabled.value) {
       saveCurrentStep(currentStep);
@@ -182,5 +194,8 @@ export const useCreatePrePlainteStore = defineStore("createPrePlainte", () => {
     demandeId,
     setDemandeId,
     isRendezVousOnly,
+    pendingFocusField,
+    setPendingFocusField,
+    consumePendingFocusField,
   };
 });

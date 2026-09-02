@@ -90,8 +90,8 @@ public final class Ech051Constants {
   public static final String OBJECT_ROLE_SEARCHED_LABEL = "recherché";
   public static final String OBJECT_ROLE_SOURCE_TABLE = "CODE_SACHE";
   
-  public static final String VEHICLE_ROLE_SEARCHED_CODE = "11";
-  public static final String VEHICLE_ROLE_SEARCHED_LABEL = "véhicule/plaque recherché";
+  public static final String VEHICLE_ROLE_SEARCHED_CODE = "2";
+  public static final String VEHICLE_ROLE_SEARCHED_LABEL = "véhicule/plaque relatif à la victime";
   public static final String VEHICLE_ROLE_SOURCE_TABLE = "CODE_SACHE";
   
   public static final String TYPE_OF_CRIME_VOL_CODE = "1000139080";

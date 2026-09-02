@@ -1072,7 +1072,13 @@
     "tailleMax": "The file '{nom}' exceeds the maximum allowed size (10 MB).",
     "tailleMaxCustom": "The file '{nom}' exceeds the maximum allowed size ({max} MB).",
     "tailleTotaleDepassee": "The file '{nom}' exceeds the total allowed volume (70 MB).",
-    "pdfInvalide": "The file '{nom}' is not valid."
+    "pdfInvalide": "The file '{nom}' is not valid.",
+    "chargementEnCours": "Loading… {progress} %",
+    "chargementGlobal": "Processing files {current}/{total}",
+    "apercu": "Preview",
+    "supprimer": "Delete",
+    "supprimerTitre": "Delete this document?",
+    "supprimerMessage": "Do you really want to delete “{nom}”?"
   },
   "map": {
     "closePopup": "Close the information window",

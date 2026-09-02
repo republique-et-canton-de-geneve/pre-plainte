@@ -1072,7 +1072,13 @@
     "tailleMax": "Il file '{nom}' supera la dimensione massima consentita (10 Mo).",
     "tailleMaxCustom": "Il file '{nom}' supera la dimensione massima consentita ({max} Mo).",
     "tailleTotaleDepassee": "Il file '{nom}' supera il volume totale consentito (70 Mo).",
-    "pdfInvalide": "Il file '{nom}' non è valido."
+    "pdfInvalide": "Il file '{nom}' non è valido.",
+    "chargementEnCours": "Caricamento… {progress} %",
+    "chargementGlobal": "Elaborazione file {current}/{total}",
+    "apercu": "Anteprima",
+    "supprimer": "Elimina",
+    "supprimerTitre": "Eliminare questo documento?",
+    "supprimerMessage": "Volete davvero eliminare « {nom} »?"
   },
   "map": {
     "closePopup": "Chiudi la finestra informativa",

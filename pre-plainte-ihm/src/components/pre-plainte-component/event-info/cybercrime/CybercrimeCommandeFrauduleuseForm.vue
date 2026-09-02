@@ -193,6 +193,7 @@
         :multiple="false"
         :required="!copieIdentiteTransmiseAuteurDocumentIndisponible"
         :error-messages="copieIdentiteTransmiseAuteurDocumentError"
+        field-name="copieIdentiteTransmiseAuteurDocument"
       />
       <v-checkbox
         v-model="copieIdentiteTransmiseAuteurDocumentIndisponible"
@@ -229,6 +230,7 @@
         :multiple="false"
         :required="!copieIdentiteAuteurDocumentIndisponible"
         :error-messages="copieIdentiteAuteurDocumentError"
+        field-name="copieIdentiteAuteurDocument"
       />
       <v-checkbox
         v-model="copieIdentiteAuteurDocumentIndisponible"

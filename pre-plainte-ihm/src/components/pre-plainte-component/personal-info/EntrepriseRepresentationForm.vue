@@ -18,6 +18,7 @@
         :max-files="2"
         :max-file-size="MAX_FILE_SIZE"
         :max-total-size="MAX_TOTAL_SIZE_20_MO"
+        field-name="justificatifPersonneMorale"
       />
     </div>
   </div>
