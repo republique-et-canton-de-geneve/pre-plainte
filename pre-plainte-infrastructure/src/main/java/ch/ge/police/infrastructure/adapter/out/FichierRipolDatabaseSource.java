@@ -25,7 +25,7 @@ public class FichierRipolDatabaseSource implements RipolDatabaseSource {
 
   @Override
   public InputStream ouvrirFlux() throws IOException {
-    if (chemin.isBlank()) {
+    if (chemin == null || chemin.isBlank()) {
       throw new IllegalStateException(
         "La propriété ripol.db.file.path doit être renseignée lorsque ripol.db.source=fichier."
       );
