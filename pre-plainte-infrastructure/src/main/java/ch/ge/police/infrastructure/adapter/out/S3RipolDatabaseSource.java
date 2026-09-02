@@ -28,7 +28,7 @@ public class S3RipolDatabaseSource implements RipolDatabaseSource {
   public S3RipolDatabaseSource(
     S3Client s3Client,
     @Value("${s3.bucket.name}") String bucketName,
-    @Value("${ripol.db.s3.key:preplaintes/ripol/dbppel3}") String key
+    @Value("${ripol.db.s3.key:preplaintes/ripol/dbppel3.sqlite}") String key
   ) {
     this.s3Client = s3Client;
     this.bucketName = bucketName;
