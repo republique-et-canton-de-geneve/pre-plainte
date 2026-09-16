@@ -67,6 +67,9 @@
               <goal>start</goal>
             </goals>
             <phase>pre-integration-test</phase>
+            <configuration>
+              <skip>${skipCypress}</skip>
+            </configuration>
           </execution>
         </executions>
       </plugin>
