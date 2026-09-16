@@ -29,6 +29,7 @@
     <netty.version>4.2.16.Final</netty.version>
     <jackson-bom.version>2.21.4</jackson-bom.version>
     <logback.version>1.5.37</logback.version>
+    <skipCypress>true</skipCypress>
   </properties>
   <dependencies>
     <dependency>

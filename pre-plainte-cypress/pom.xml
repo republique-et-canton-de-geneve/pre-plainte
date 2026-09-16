@@ -79,6 +79,9 @@
             <goals>
               <goal>stop</goal>
             </goals>
+            <configuration>
+              <skip>${skipCypress}</skip>
+            </configuration>
           </execution>
         </executions>
       </plugin>
