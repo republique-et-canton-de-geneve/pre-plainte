@@ -459,19 +459,21 @@ class SqliteRipolAdapterTest {
   }
 
   @Test
-  void constructor_shouldFailWhenSourceIsUnavailable() {
-    RipolDatabaseSource source = sourceVers(Path.of("does-not-exist.db"));
+  void initialization_shouldFailWhenSourceIsUnavailable() {
+    SqliteRipolAdapter adapter = new SqliteRipolAdapter(sourceVers(Path.of("does-not-exist.db")));
 
-    assertThrows(IOException.class, () -> new SqliteRipolAdapter(source));
+    assertThrows(SqliteRipolAdapter.RipolAccessException.class, adapter::listTables);
   }
 
   @Test
-  void constructor_shouldFailWhenSourceIsNotASqliteDatabase() throws Exception {
+  void initialization_shouldFailWhenSourceIsNotASqliteDatabase() throws Exception {
     Path fichier = Files.createTempFile("ripol-invalide-", ".db");
     fichier.toFile().deleteOnExit();
     Files.writeString(fichier, "contenu qui n'est pas une base SQLite valide");
 
-    assertThrows(IllegalStateException.class, () -> new SqliteRipolAdapter(sourceVers(fichier)));
+    SqliteRipolAdapter adapter = new SqliteRipolAdapter(sourceVers(fichier));
+
+    assertThrows(IllegalStateException.class, adapter::listTables);
   }
 
   @Test
