@@ -51,12 +51,12 @@
     <dependency>
       <groupId>software.amazon.awssdk</groupId>
       <artifactId>s3</artifactId>
-      <version>2.41.17</version>
+      <version>${aws.sdk.version}</version>
     </dependency>
     <dependency>
       <groupId>software.amazon.awssdk</groupId>
       <artifactId>apache-client</artifactId>
-      <version>2.41.17</version>
+      <version>${aws.sdk.version}</version>
     </dependency>
     <dependency>
       <groupId>com.github.librepdf</groupId>
