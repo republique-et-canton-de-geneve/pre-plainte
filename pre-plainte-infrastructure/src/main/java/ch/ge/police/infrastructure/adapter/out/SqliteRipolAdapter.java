@@ -220,7 +220,8 @@ public class SqliteRipolAdapter implements RipolPort {
     }
   }
 
-  private final JdbcTemplate jdbcTemplate;
+  private final RipolDatabaseSource databaseSource;
+  private volatile JdbcTemplate jdbcTemplate;
   private final Map<String, List<Ripol>> codesByGroupTypeCache = new ConcurrentHashMap<>();
   private final Map<String, List<Ripol>> brandsByKeyCache = new ConcurrentHashMap<>();
   private final Map<String, List<Ripol>> modelsByBrandCache = new ConcurrentHashMap<>();
@@ -233,7 +234,30 @@ public class SqliteRipolAdapter implements RipolPort {
       rs.getString(COL_GROUPTYPE)
     );
 
-  public SqliteRipolAdapter(RipolDatabaseSource databaseSource) throws IOException {
+  public SqliteRipolAdapter(RipolDatabaseSource databaseSource) {
+    this.databaseSource = databaseSource;
+  }
+
+  private void ensureInitialized() {
+    if (jdbcTemplate != null) {
+      return;
+    }
+    synchronized (this) {
+      if (jdbcTemplate != null) {
+        return;
+      }
+      try {
+        initializeFromSource();
+      } catch (IOException e) {
+        throw new RipolAccessException(
+          "Erreur lors de l'initialisation de la base RIPOL depuis " + databaseSource.description(),
+          e
+        );
+      }
+    }
+  }
+
+  private void initializeFromSource() throws IOException {
     String source = databaseSource.description();
 
     Path tempFile = Files.createTempFile("sqlite-db-", ".db");
@@ -363,6 +387,19 @@ public class SqliteRipolAdapter implements RipolPort {
   }
 
   private void warmUpCache() {
+    try {
+      ensureInitialized();
+    } catch (Exception e) {
+      log.warn(
+        "event=ripol_init_deferred_failure traceId={} source={} error={}",
+        MDC.get(TRACE_ID),
+        databaseSource.description(),
+        e.getMessage(),
+        e
+      );
+      return;
+    }
+
     long start = System.currentTimeMillis();
 
     log.info(
@@ -397,6 +434,7 @@ public class SqliteRipolAdapter implements RipolPort {
 
   @Override
   public List<String> listTables() {
+    ensureInitialized();
     try {
       return jdbcTemplate.execute((Connection conn) -> {
         List<String> tables = new ArrayList<>();
@@ -417,6 +455,7 @@ public class SqliteRipolAdapter implements RipolPort {
   @Override
   public List<String> listColumns(String tableName) {
     AllowedTable table = AllowedTable.parse(tableName);
+    ensureInitialized();
 
     try {
       List<String> columns = jdbcTemplate.execute(
@@ -437,6 +476,7 @@ public class SqliteRipolAdapter implements RipolPort {
   @Override
   public List<Map<String, Object>> listTableContent(String tableName, int limit) {
     AllowedTable table = AllowedTable.parse(tableName);
+    ensureInitialized();
 
     try {
       return switch (table) {
@@ -467,6 +507,7 @@ public class SqliteRipolAdapter implements RipolPort {
   @Override
   public List<String> listDistinctGroupTypes(String tableName) {
     AllowedTable table = AllowedTable.parse(tableName);
+    ensureInitialized();
 
     try {
       return switch (table) {
@@ -497,6 +538,7 @@ public class SqliteRipolAdapter implements RipolPort {
     if (groupType == null || groupType.isBlank()) {
       throw new IllegalArgumentException("Le GROUPTYPE ne peut pas être vide");
     }
+    ensureInitialized();
 
     try {
       return switch (table) {
@@ -529,6 +571,7 @@ public class SqliteRipolAdapter implements RipolPort {
 
   @Override
   public List<Ripol> getCodesByGroupType(String groupType) {
+    ensureInitialized();
     return codesByGroupTypeCache.computeIfAbsent(groupType, this::queryCodesByGroupType);
   }
 
@@ -577,6 +620,7 @@ public class SqliteRipolAdapter implements RipolPort {
 
   @Override
   public List<Ripol> getBrandsByTypeAndMasterType(String masterValue, String masterType) {
+    ensureInitialized();
     String cacheKey = masterType + CACHE_KEY_SEPARATOR + masterValue;
     return brandsByKeyCache.computeIfAbsent(cacheKey, k -> queryBrandsByTypeAndMasterType(masterValue, masterType));
   }
@@ -645,6 +689,7 @@ public class SqliteRipolAdapter implements RipolPort {
 
   @Override
   public List<Ripol> getModelsByBrand(String brandCode) {
+    ensureInitialized();
     return modelsByBrandCache.computeIfAbsent(brandCode, this::queryModelsByBrand);
   }
 
@@ -672,6 +717,7 @@ public class SqliteRipolAdapter implements RipolPort {
     if (search == null || search.isBlank()) {
       return List.of();
     }
+    ensureInitialized();
     try {
       return searchWithPrefixThenContains(
         toPrefixLikePattern(search),
@@ -695,6 +741,7 @@ public class SqliteRipolAdapter implements RipolPort {
     if (search == null || search.isBlank()) {
       return List.of();
     }
+    ensureInitialized();
     try {
       return searchWithPrefixThenContains(
         toPrefixLikePattern(search),
@@ -719,6 +766,7 @@ public class SqliteRipolAdapter implements RipolPort {
     if (search == null || search.isBlank()) {
       return List.of();
     }
+    ensureInitialized();
     try {
       return searchWithPrefixThenContains(
         toPrefixLikePattern(search),
