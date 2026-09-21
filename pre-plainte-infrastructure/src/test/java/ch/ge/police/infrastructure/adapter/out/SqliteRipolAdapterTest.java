@@ -878,11 +878,11 @@ class SqliteRipolAdapterTest {
     return new SqliteRipolAdapter(sourceVers(db));
   }
 
-  private static SqliteRipolAdapter newAdapterPointingToTempDb() throws Exception {
+  private static SqliteRipolAdapter newAdapterPointingToTempDb() {
     return new SqliteRipolAdapter(sourceVers(sqliteFile));
   }
 
-  private static SqliteRipolAdapter newBrokenAdapterPointingToTempDb() throws Exception {
+  private static SqliteRipolAdapter newBrokenAdapterPointingToTempDb() {
     return new SqliteRipolAdapter(sourceVers(brokenSqliteFile));
   }
 
