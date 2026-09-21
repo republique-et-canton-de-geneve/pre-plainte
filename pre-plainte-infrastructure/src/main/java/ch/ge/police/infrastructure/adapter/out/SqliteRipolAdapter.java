@@ -19,6 +19,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicReference;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
@@ -221,7 +222,7 @@ public class SqliteRipolAdapter implements RipolPort {
   }
 
   private final RipolDatabaseSource databaseSource;
-  private volatile JdbcTemplate jdbcTemplate;
+  private final AtomicReference<JdbcTemplate> jdbcTemplateRef = new AtomicReference<>();
   private final Map<String, List<Ripol>> codesByGroupTypeCache = new ConcurrentHashMap<>();
   private final Map<String, List<Ripol>> brandsByKeyCache = new ConcurrentHashMap<>();
   private final Map<String, List<Ripol>> modelsByBrandCache = new ConcurrentHashMap<>();
@@ -238,12 +239,17 @@ public class SqliteRipolAdapter implements RipolPort {
     this.databaseSource = databaseSource;
   }
 
+  private JdbcTemplate jdbcTemplate() {
+    ensureInitialized();
+    return jdbcTemplateRef.get();
+  }
+
   private void ensureInitialized() {
-    if (jdbcTemplate != null) {
+    if (jdbcTemplateRef.get() != null) {
       return;
     }
     synchronized (this) {
-      if (jdbcTemplate != null) {
+      if (jdbcTemplateRef.get() != null) {
         return;
       }
       try {
@@ -279,7 +285,7 @@ public class SqliteRipolAdapter implements RipolPort {
     dataSource.setDriverClassName("org.sqlite.JDBC");
     dataSource.setUrl(jdbcUrl);
 
-    this.jdbcTemplate = new JdbcTemplate(dataSource);
+    jdbcTemplateRef.set(new JdbcTemplate(dataSource));
     boolean incidentCodeHasActiveColumn = incidentCodeHasColumn("ACTIVE");
     boolean incidentCodeHasSelectableColumn = incidentCodeHasColumn("SELECTABLE");
     IncidentCodeUsabilityFilter incidentCodeFilter = IncidentCodeUsabilityFilter.from(
@@ -322,7 +328,7 @@ public class SqliteRipolAdapter implements RipolPort {
   private boolean incidentCodeHasColumn(String columnName) {
     try {
       return Boolean.TRUE.equals(
-        jdbcTemplate.execute(
+        jdbcTemplate().execute(
           (Connection conn) -> {
             DatabaseMetaData meta = conn.getMetaData();
             try (ResultSet rs = meta.getColumns(null, null, TABLE_INCIDENT_CODE, columnName)) {
@@ -345,31 +351,31 @@ public class SqliteRipolAdapter implements RipolPort {
 
   private void createIncidentCodeView(IncidentCodeUsabilityFilter incidentCodeFilter) {
     switch (incidentCodeFilter) {
-      case NONE -> jdbcTemplate.execute(SQL_CREATE_INCIDENT_CODE_VIEW);
-      case ACTIVE_ONLY -> jdbcTemplate.execute(SQL_CREATE_ACTIVE_INCIDENT_CODE_VIEW);
-      case SELECTABLE_ONLY -> jdbcTemplate.execute(SQL_CREATE_SELECTABLE_INCIDENT_CODE_VIEW);
-      case ACTIVE_AND_SELECTABLE -> jdbcTemplate.execute(SQL_CREATE_ACTIVE_SELECTABLE_INCIDENT_CODE_VIEW);
+      case NONE -> jdbcTemplate().execute(SQL_CREATE_INCIDENT_CODE_VIEW);
+      case ACTIVE_ONLY -> jdbcTemplate().execute(SQL_CREATE_ACTIVE_INCIDENT_CODE_VIEW);
+      case SELECTABLE_ONLY -> jdbcTemplate().execute(SQL_CREATE_SELECTABLE_INCIDENT_CODE_VIEW);
+      case ACTIVE_AND_SELECTABLE -> jdbcTemplate().execute(SQL_CREATE_ACTIVE_SELECTABLE_INCIDENT_CODE_VIEW);
     }
   }
 
   private void createSearchIndexes(IncidentCodeUsabilityFilter incidentCodeFilter) {
     try {
-      jdbcTemplate.execute(
+      jdbcTemplate().execute(
         "CREATE INDEX IF NOT EXISTS idx_tbin_grouptype ON TBINCIDENTCODE(GROUPTYPE)");
-      jdbcTemplate.execute(
+      jdbcTemplate().execute(
         "CREATE INDEX IF NOT EXISTS idx_tbin_master ON TBINCIDENTCODE(MASTERTYPE, MASTERVALUE)");
-      jdbcTemplate.execute(
+      jdbcTemplate().execute(
         "CREATE INDEX IF NOT EXISTS idx_tbin_grouptype_text ON TBINCIDENTCODE(GROUPTYPE, TEXT)");
       switch (incidentCodeFilter) {
-        case ACTIVE_ONLY -> jdbcTemplate.execute(
+        case ACTIVE_ONLY -> jdbcTemplate().execute(
             "CREATE INDEX IF NOT EXISTS idx_tbin_grouptype_usable ON TBINCIDENTCODE(GROUPTYPE) WHERE CAST(ACTIVE AS INTEGER) = 1");
-        case SELECTABLE_ONLY -> jdbcTemplate.execute(
+        case SELECTABLE_ONLY -> jdbcTemplate().execute(
             "CREATE INDEX IF NOT EXISTS idx_tbin_grouptype_usable ON TBINCIDENTCODE(GROUPTYPE) WHERE CAST(SELECTABLE AS INTEGER) = 1");
-        case ACTIVE_AND_SELECTABLE -> jdbcTemplate.execute(
+        case ACTIVE_AND_SELECTABLE -> jdbcTemplate().execute(
             "CREATE INDEX IF NOT EXISTS idx_tbin_grouptype_usable ON TBINCIDENTCODE(GROUPTYPE) WHERE CAST(ACTIVE AS INTEGER) = 1 AND CAST(SELECTABLE AS INTEGER) = 1");
         case NONE -> { /* no partial index */ }
       }
-      jdbcTemplate.execute(
+      jdbcTemplate().execute(
         "CREATE INDEX IF NOT EXISTS idx_loc_locale_pk ON TBLOCALIZATION(LOCALE_ID, PK)");
     } catch (DataAccessException e) {
       log.warn(
@@ -436,7 +442,7 @@ public class SqliteRipolAdapter implements RipolPort {
   public List<String> listTables() {
     ensureInitialized();
     try {
-      return jdbcTemplate.execute((Connection conn) -> {
+      return jdbcTemplate().execute((Connection conn) -> {
         List<String> tables = new ArrayList<>();
         DatabaseMetaData metaData = conn.getMetaData();
         try (ResultSet rs = metaData.getTables(null, null, "%", new String[]{"TABLE"})) {
@@ -458,7 +464,7 @@ public class SqliteRipolAdapter implements RipolPort {
     ensureInitialized();
 
     try {
-      List<String> columns = jdbcTemplate.execute(
+      List<String> columns = jdbcTemplate().execute(
           (ConnectionCallback<List<String>>) conn -> extractColumns(conn, table.tableName));
       return columns != null ? columns : List.of();
     } catch (DataAccessException e) {
@@ -480,12 +486,12 @@ public class SqliteRipolAdapter implements RipolPort {
 
     try {
       return switch (table) {
-        case INCIDENT_CODE -> jdbcTemplate.query(
+        case INCIDENT_CODE -> jdbcTemplate().query(
             SQL_SELECT_INCIDENT_CODE_WITH_LIMIT,
             (rs, rowNum) -> mapRow(rs),
             limit
         );
-        case LOCALIZATION -> jdbcTemplate.query(
+        case LOCALIZATION -> jdbcTemplate().query(
             SQL_SELECT_LOCALIZATION_WITH_LIMIT,
             (rs, rowNum) -> mapRow(rs),
             limit
@@ -511,11 +517,11 @@ public class SqliteRipolAdapter implements RipolPort {
 
     try {
       return switch (table) {
-        case INCIDENT_CODE -> jdbcTemplate.query(
+        case INCIDENT_CODE -> jdbcTemplate().query(
             SQL_SELECT_INCIDENT_CODE_GROUP_TYPES,
             (rs, rowNum) -> rs.getString(COL_GROUPTYPE)
         );
-        case LOCALIZATION -> jdbcTemplate.query(
+        case LOCALIZATION -> jdbcTemplate().query(
             SQL_SELECT_LOCALIZATION_GROUP_TYPES,
             (rs, rowNum) -> rs.getString(COL_GROUPTYPE)
         );
@@ -542,13 +548,13 @@ public class SqliteRipolAdapter implements RipolPort {
 
     try {
       return switch (table) {
-        case INCIDENT_CODE -> jdbcTemplate.query(
+        case INCIDENT_CODE -> jdbcTemplate().query(
             SQL_SELECT_INCIDENT_CODE_BY_GROUP_TYPE,
             (rs, rowNum) -> mapRow(rs),
             groupType,
             limit
         );
-        case LOCALIZATION -> jdbcTemplate.query(
+        case LOCALIZATION -> jdbcTemplate().query(
             SQL_SELECT_LOCALIZATION_BY_GROUP_TYPE,
             (rs, rowNum) -> mapRow(rs),
             groupType,
@@ -577,7 +583,7 @@ public class SqliteRipolAdapter implements RipolPort {
 
   private List<Ripol> queryCodesByGroupType(String groupType) {
     try {
-      List<Ripol> rows = jdbcTemplate.query(
+      List<Ripol> rows = jdbcTemplate().query(
           SQL_CODES_BY_GROUP_TYPE,
           RIPOL_ROW_MAPPER,
           groupType
@@ -599,7 +605,7 @@ public class SqliteRipolAdapter implements RipolPort {
   }
 
   private List<Ripol> queryCodesByGroupTypeWithSearch(String groupType, String likePattern) {
-    List<Ripol> rows = jdbcTemplate.query(
+    List<Ripol> rows = jdbcTemplate().query(
       SQL_CODES_BY_GROUP_TYPE_SEARCH,
       RIPOL_ROW_MAPPER,
       groupType,
@@ -627,7 +633,7 @@ public class SqliteRipolAdapter implements RipolPort {
 
   private List<Ripol> queryBrandsByTypeAndMasterType(String masterValue, String masterType) {
     try {
-      List<Ripol> rows = jdbcTemplate.query(
+      List<Ripol> rows = jdbcTemplate().query(
           SQL_BRANDS_BY_TYPE,
           RIPOL_ROW_MAPPER,
           masterType,
@@ -653,7 +659,7 @@ public class SqliteRipolAdapter implements RipolPort {
 
   private List<Ripol> queryBrandsByTypeAndMasterTypeWithSearch(
       String masterValue, String masterType, String likePattern) {
-    List<Ripol> rows = jdbcTemplate.query(
+    List<Ripol> rows = jdbcTemplate().query(
       SQL_BRANDS_BY_TYPE_SEARCH,
       RIPOL_ROW_MAPPER,
       masterType,
@@ -669,7 +675,7 @@ public class SqliteRipolAdapter implements RipolPort {
   }
 
   private List<Ripol> queryModelsByBrandWithSearch(String brandCode, String likePattern) {
-    return jdbcTemplate.query(
+    return jdbcTemplate().query(
       SQL_MODELS_BY_BRAND_SEARCH,
       RIPOL_ROW_MAPPER,
       brandCode,
@@ -695,7 +701,7 @@ public class SqliteRipolAdapter implements RipolPort {
 
   private List<Ripol> queryModelsByBrand(String brandCode) {
     try {
-      return jdbcTemplate.query(
+      return jdbcTemplate().query(
           SQL_MODELS_BY_BRAND,
           RIPOL_ROW_MAPPER,
           brandCode

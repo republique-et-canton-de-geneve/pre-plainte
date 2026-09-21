@@ -2,7 +2,7 @@ package ch.ge.police.infrastructure.storage;
 
 import org.junit.jupiter.api.Test;
 import software.amazon.awssdk.http.SdkHttpClient;
-import software.amazon.awssdk.http.apache.ApacheHttpClient;
+import software.amazon.awssdk.http.apache5.Apache5HttpClient;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 
@@ -22,7 +22,7 @@ class S3ConfigTest {
     SdkHttpClient httpClient = config.s3HttpClient();
 
     assertNotNull(httpClient);
-    assertInstanceOf(ApacheHttpClient.class, httpClient, "Expected ApacheHttpClient but got " + httpClient.getClass());
+    assertInstanceOf(Apache5HttpClient.class, httpClient, "Expected Apache5HttpClient but got " + httpClient.getClass());
   }
 
   @Test
