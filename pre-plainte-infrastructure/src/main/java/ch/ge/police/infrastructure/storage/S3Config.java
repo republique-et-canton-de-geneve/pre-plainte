@@ -11,8 +11,8 @@ import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.core.checksums.RequestChecksumCalculation;
 import software.amazon.awssdk.core.checksums.ResponseChecksumValidation;
 import software.amazon.awssdk.http.SdkHttpClient;
-import software.amazon.awssdk.http.apache.ApacheHttpClient;
-import software.amazon.awssdk.http.apache.ProxyConfiguration;
+import software.amazon.awssdk.http.apache5.Apache5HttpClient;
+import software.amazon.awssdk.http.apache5.ProxyConfiguration;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.S3Configuration;
@@ -33,7 +33,7 @@ public class S3Config {
   @Bean
   public SdkHttpClient s3HttpClient() {
     ProxyConfiguration proxyConfig = ProxyConfiguration.builder().useSystemPropertyValues(Boolean.FALSE).useEnvironmentVariableValues(Boolean.FALSE).build();
-    return ApacheHttpClient.builder().proxyConfiguration(proxyConfig).build();
+    return Apache5HttpClient.builder().proxyConfiguration(proxyConfig).build();
   }
 
   @Bean
