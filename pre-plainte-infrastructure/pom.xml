@@ -27,14 +27,10 @@
       <artifactId>sqlite-jdbc</artifactId>
       <version>3.46.0.0</version>
     </dependency>
-    <dependency>
-      <groupId>com.fasterxml.jackson.dataformat</groupId>
-      <artifactId>jackson-dataformat-xml</artifactId>
-    </dependency>
 
     <dependency>
       <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-webflux</artifactId>
+      <artifactId>spring-boot-starter-webclient</artifactId>
     </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
