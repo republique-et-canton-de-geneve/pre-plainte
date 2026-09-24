@@ -2,7 +2,8 @@ package ch.ge.police.rest.controller;
 
 import ch.ge.police.core.port.in.EsiriusUseCase;
 import ch.ge.police.ui.controller.EsiriusController;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -21,7 +22,7 @@ class EsiriusControllerTest {
 
   private MockMvc mockMvc;
   private EsiriusUseCase esiriusUseCase;
-  private final ObjectMapper mapper = new ObjectMapper();
+  private final ObjectMapper mapper = JsonMapper.builder().build();
 
   @BeforeEach
   void setup() {
@@ -30,7 +31,7 @@ class EsiriusControllerTest {
 
     mockMvc = MockMvcBuilders
       .standaloneSetup(controller)
-      .setMessageConverters(new org.springframework.http.converter.json.MappingJackson2HttpMessageConverter())
+      .setMessageConverters(new org.springframework.http.converter.json.JacksonJsonHttpMessageConverter())
       .build();
   }
 

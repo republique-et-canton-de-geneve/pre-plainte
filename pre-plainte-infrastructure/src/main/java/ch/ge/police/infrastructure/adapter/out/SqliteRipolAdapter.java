@@ -285,21 +285,22 @@ public class SqliteRipolAdapter implements RipolPort {
     dataSource.setDriverClassName("org.sqlite.JDBC");
     dataSource.setUrl(jdbcUrl);
 
-    jdbcTemplateRef.set(new JdbcTemplate(dataSource));
-    boolean incidentCodeHasActiveColumn = incidentCodeHasColumn("ACTIVE");
-    boolean incidentCodeHasSelectableColumn = incidentCodeHasColumn("SELECTABLE");
+    JdbcTemplate template = new JdbcTemplate(dataSource);
+    boolean incidentCodeHasActiveColumn = incidentCodeHasColumn(template, "ACTIVE");
+    boolean incidentCodeHasSelectableColumn = incidentCodeHasColumn(template, "SELECTABLE");
     IncidentCodeUsabilityFilter incidentCodeFilter = IncidentCodeUsabilityFilter.from(
         incidentCodeHasActiveColumn,
         incidentCodeHasSelectableColumn
     );
-    createIncidentCodeView(incidentCodeFilter);
+    createIncidentCodeView(template, incidentCodeFilter);
     log.info(
       "event=ripol_incident_code_filters traceId={} active={} selectable={}",
       MDC.get(TRACE_ID),
       incidentCodeHasActiveColumn,
       incidentCodeHasSelectableColumn
     );
-    createSearchIndexes(incidentCodeFilter);
+    createSearchIndexes(template, incidentCodeFilter);
+    jdbcTemplateRef.set(template);
   }
 
   private static void validateSqliteResource(Path sqliteFile, String source) throws IOException {
@@ -325,10 +326,10 @@ public class SqliteRipolAdapter implements RipolPort {
     }
   }
 
-  private boolean incidentCodeHasColumn(String columnName) {
+  private boolean incidentCodeHasColumn(JdbcTemplate template, String columnName) {
     try {
       return Boolean.TRUE.equals(
-        jdbcTemplate().execute(
+        template.execute(
           (Connection conn) -> {
             DatabaseMetaData meta = conn.getMetaData();
             try (ResultSet rs = meta.getColumns(null, null, TABLE_INCIDENT_CODE, columnName)) {
@@ -349,33 +350,33 @@ public class SqliteRipolAdapter implements RipolPort {
     }
   }
 
-  private void createIncidentCodeView(IncidentCodeUsabilityFilter incidentCodeFilter) {
+  private void createIncidentCodeView(JdbcTemplate template, IncidentCodeUsabilityFilter incidentCodeFilter) {
     switch (incidentCodeFilter) {
-      case NONE -> jdbcTemplate().execute(SQL_CREATE_INCIDENT_CODE_VIEW);
-      case ACTIVE_ONLY -> jdbcTemplate().execute(SQL_CREATE_ACTIVE_INCIDENT_CODE_VIEW);
-      case SELECTABLE_ONLY -> jdbcTemplate().execute(SQL_CREATE_SELECTABLE_INCIDENT_CODE_VIEW);
-      case ACTIVE_AND_SELECTABLE -> jdbcTemplate().execute(SQL_CREATE_ACTIVE_SELECTABLE_INCIDENT_CODE_VIEW);
+      case NONE -> template.execute(SQL_CREATE_INCIDENT_CODE_VIEW);
+      case ACTIVE_ONLY -> template.execute(SQL_CREATE_ACTIVE_INCIDENT_CODE_VIEW);
+      case SELECTABLE_ONLY -> template.execute(SQL_CREATE_SELECTABLE_INCIDENT_CODE_VIEW);
+      case ACTIVE_AND_SELECTABLE -> template.execute(SQL_CREATE_ACTIVE_SELECTABLE_INCIDENT_CODE_VIEW);
     }
   }
 
-  private void createSearchIndexes(IncidentCodeUsabilityFilter incidentCodeFilter) {
+  private void createSearchIndexes(JdbcTemplate template, IncidentCodeUsabilityFilter incidentCodeFilter) {
     try {
-      jdbcTemplate().execute(
+      template.execute(
         "CREATE INDEX IF NOT EXISTS idx_tbin_grouptype ON TBINCIDENTCODE(GROUPTYPE)");
-      jdbcTemplate().execute(
+      template.execute(
         "CREATE INDEX IF NOT EXISTS idx_tbin_master ON TBINCIDENTCODE(MASTERTYPE, MASTERVALUE)");
-      jdbcTemplate().execute(
+      template.execute(
         "CREATE INDEX IF NOT EXISTS idx_tbin_grouptype_text ON TBINCIDENTCODE(GROUPTYPE, TEXT)");
       switch (incidentCodeFilter) {
-        case ACTIVE_ONLY -> jdbcTemplate().execute(
+        case ACTIVE_ONLY -> template.execute(
             "CREATE INDEX IF NOT EXISTS idx_tbin_grouptype_usable ON TBINCIDENTCODE(GROUPTYPE) WHERE CAST(ACTIVE AS INTEGER) = 1");
-        case SELECTABLE_ONLY -> jdbcTemplate().execute(
+        case SELECTABLE_ONLY -> template.execute(
             "CREATE INDEX IF NOT EXISTS idx_tbin_grouptype_usable ON TBINCIDENTCODE(GROUPTYPE) WHERE CAST(SELECTABLE AS INTEGER) = 1");
-        case ACTIVE_AND_SELECTABLE -> jdbcTemplate().execute(
+        case ACTIVE_AND_SELECTABLE -> template.execute(
             "CREATE INDEX IF NOT EXISTS idx_tbin_grouptype_usable ON TBINCIDENTCODE(GROUPTYPE) WHERE CAST(ACTIVE AS INTEGER) = 1 AND CAST(SELECTABLE AS INTEGER) = 1");
         case NONE -> { /* no partial index */ }
       }
-      jdbcTemplate().execute(
+      template.execute(
         "CREATE INDEX IF NOT EXISTS idx_loc_locale_pk ON TBLOCALIZATION(LOCALE_ID, PK)");
     } catch (DataAccessException e) {
       log.warn(

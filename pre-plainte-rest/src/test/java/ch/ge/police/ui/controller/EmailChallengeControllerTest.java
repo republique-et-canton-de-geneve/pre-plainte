@@ -7,7 +7,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import ch.ge.police.core.application.service.EmailChallengeService;
 import ch.ge.police.core.domain.model.notification.EmailLanguage;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
@@ -17,7 +18,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 class EmailChallengeControllerTest {
 
   private MockMvc mockMvc;
-  private final ObjectMapper objectMapper = new ObjectMapper();
+  private final ObjectMapper objectMapper = JsonMapper.builder().build();
 
   private EmailChallengeService service;
   private EmailChallengeController controller;

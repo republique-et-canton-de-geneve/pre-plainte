@@ -8,6 +8,10 @@ import software.amazon.awssdk.services.s3.S3Client;
 
 import java.lang.reflect.Method;
 import java.net.URI;
+import java.net.InetSocketAddress;
+import java.nio.charset.StandardCharsets;
+import com.sun.net.httpserver.HttpServer;
+import org.junit.jupiter.api.Timeout;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
@@ -64,6 +68,31 @@ class S3ConfigTest {
     }
     client.close();
     httpClient.close();
+  }
+
+  @Test
+  @Timeout(15)
+  void s3Client_shouldReadObjectThroughApacheHttpClient() throws Exception {
+    HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
+    byte[] payload = "{\"demandeId\":\"draft-123\"}".getBytes(StandardCharsets.UTF_8);
+    server.createContext("/test-bucket/preplainte/draft/draft-123.json", exchange -> {
+      try (exchange) {
+        exchange.getResponseHeaders().add("Content-Type", "application/json");
+        exchange.sendResponseHeaders(200, payload.length);
+        exchange.getResponseBody().write(payload);
+      }
+    });
+    server.start();
+    try {
+      S3Config config = new S3Config("http://127.0.0.1:" + server.getAddress().getPort(), "ak", "sk");
+      try (SdkHttpClient httpClient = config.s3HttpClient(); S3Client client = config.s3Client(httpClient)) {
+        String result = client.getObjectAsBytes(request -> request.bucket("test-bucket")
+          .key("preplainte/draft/draft-123.json")).asUtf8String();
+        assertEquals(new String(payload, StandardCharsets.UTF_8), result);
+      }
+    } finally {
+      server.stop(0);
+    }
   }
 
   private static Object invokeIfExists(Object target, String methodName, Object... args) {
