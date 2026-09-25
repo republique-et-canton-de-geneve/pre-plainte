@@ -6,7 +6,7 @@ import ch.ge.police.core.domain.model.common.EmailChallenge;
 import ch.ge.police.core.domain.model.notification.EmailLanguage;
 import ch.ge.police.core.domain.model.notification.TemplateEmail;
 import ch.ge.police.core.port.out.EmailChallengeStoragePort;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

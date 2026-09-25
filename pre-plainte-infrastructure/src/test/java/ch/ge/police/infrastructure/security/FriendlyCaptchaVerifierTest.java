@@ -79,7 +79,7 @@ class FriendlyCaptchaVerifierTest {
       any(HttpEntity.class),
       any(ParameterizedTypeReference.class)
     ))
-      .thenReturn(new ResponseEntity<>(null, HttpStatus.OK));
+      .thenReturn(ResponseEntity.ok().build());
     var result = verifier.verify("token");
     assertThat(result.success()).isFalse();
     assertThat(result.errors()).containsExactly("no_response");

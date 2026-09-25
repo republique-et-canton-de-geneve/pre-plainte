@@ -260,7 +260,7 @@ class EmailChallengeServiceTest {
     reset(storage);
     when(storage.charger("key")).thenReturn(Optional.of(stored));
     ArgumentCaptor<EmailChallenge> savedOnVerifyCaptor = ArgumentCaptor.forClass(EmailChallenge.class);
-    VerifyResult res = service.verify("user@test.ch", "key", "9999");
+    VerifyResult res = service.verify("user@test.ch", "key", "0000");
 
     assertFalse(res.isSuccess());
     assertEquals("INVALID", res.getStatus());
@@ -270,6 +270,38 @@ class EmailChallengeServiceTest {
     EmailChallenge saved = savedOnVerifyCaptor.getValue();
     assertFalse(saved.isVerified());
     assertEquals(1, saved.getAttempts());
+  }
+
+  @Test
+  void verify_whenLegacyBcryptCode_returnsExpiredWithoutConsumingAttempt() {
+    EmailChallenge challenge = EmailChallenge.builder().email("user@test.ch")
+      .codeHash("$2a$10$legacy").expiresAt(Instant.now().plus(1, ChronoUnit.DAYS))
+      .attempts(0).verified(false).build();
+    when(storage.charger("key")).thenReturn(Optional.of(challenge));
+
+    VerifyResult result = service.verify("user@test.ch", "key", "1234");
+
+    assertFalse(result.isSuccess());
+    assertEquals("EXPIRED", result.getStatus());
+    assertEquals(0, challenge.getAttempts());
+    verify(storage).charger("key");
+    verifyNoMoreInteractions(storage);
+  }
+
+  @Test
+  void request_whenLegacyCodeAfterCooldown_replacesHashWithVerifiableCode() {
+    EmailChallenge challenge = EmailChallenge.builder().email("user@test.ch")
+      .codeHash("$2a$10$legacy").createdAt(Instant.now().minus(5, ChronoUnit.MINUTES))
+      .expiresAt(Instant.now().plus(1, ChronoUnit.DAYS)).attempts(2).verified(false).build();
+    when(storage.charger("key")).thenReturn(Optional.of(challenge));
+    ArgumentCaptor<String> sent = ArgumentCaptor.forClass(String.class);
+
+    service.request("user@test.ch", "key", EmailLanguage.FR);
+
+    verify(storage).envoyerCode(eq("user@test.ch"), sent.capture(), eq(EmailLanguage.FR));
+    assertTrue(challenge.getCodeHash().startsWith("sha256$"));
+    assertEquals(0, challenge.getAttempts());
+    assertEquals("SUCCESS", service.verify("user@test.ch", "key", sent.getValue()).getStatus());
   }
 
   private static void setPrivateField(Object target, String fieldName, Object value) {
