@@ -11,7 +11,6 @@ import java.time.temporal.ChronoUnit;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -19,7 +18,7 @@ import org.springframework.stereotype.Service;
 public class EmailChallengeService {
   private final EmailChallengeStoragePort storage;
 
-  private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+  private final Sha256CodeEncoder encoder = new Sha256CodeEncoder();
   private final SecureRandom random = new SecureRandom();
   private static final int NUMERIC_BASE = 10;
 
@@ -103,6 +102,9 @@ public class EmailChallengeService {
       return VerifyResult.alreadyVerified();
     }
     if (now.isAfter(challenge.getExpiresAt())) {
+      return VerifyResult.expired();
+    }
+    if (challenge.getCodeHash() != null && challenge.getCodeHash().startsWith("$2")) {
       return VerifyResult.expired();
     }
     if (challenge.getAttempts() >= maxAttempts) {
