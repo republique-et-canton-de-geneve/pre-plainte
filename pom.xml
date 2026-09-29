@@ -31,7 +31,7 @@
     <jackson-bom.version>3.1.7</jackson-bom.version>
     <httpclient5.version>5.6.4</httpclient5.version>
     <httpcore5.version>5.4.4</httpcore5.version>
-    <aws.sdk.version>2.55.1</aws.sdk.version>
+    <aws.sdk.version>2.55.4</aws.sdk.version>
     <skipCypress>true</skipCypress>
   </properties>
   <dependencyManagement>
