@@ -8,7 +8,10 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.runner.ApplicationContextRunner;
+import org.springframework.core.env.SystemEnvironmentPropertySource;
 
 class FichierRipolDatabaseSourceTest {
 
@@ -24,6 +27,7 @@ class FichierRipolDatabaseSourceTest {
     try (InputStream flux = source.ouvrirFlux()) {
       assertArrayEquals(contenu, flux.readAllBytes());
     }
+    assertEquals(fichier, source.cheminLocal().orElseThrow());
   }
 
   @Test
@@ -45,5 +49,21 @@ class FichierRipolDatabaseSourceTest {
     FichierRipolDatabaseSource source = new FichierRipolDatabaseSource("/tmp/dbppel3");
 
     assertEquals("fichier:/tmp/dbppel3", source.description());
+  }
+
+  @Test
+  void configurationSpring_utiliseLesVariablesDuDeploiement() {
+    new ApplicationContextRunner()
+      .withInitializer(context -> context.getEnvironment().getPropertySources().addFirst(
+        new SystemEnvironmentPropertySource("deploiement", Map.of(
+          "RIPOL_DB_SOURCE", "fichier",
+          "RIPOL_DB_FILE_PATH", "/ripol/dbppel3"
+        ))
+      ))
+      .withUserConfiguration(FichierRipolDatabaseSource.class)
+      .run(context -> assertEquals(
+        "fichier:/ripol/dbppel3",
+        context.getBean(FichierRipolDatabaseSource.class).description()
+      ));
   }
 }
