@@ -12,6 +12,13 @@ import java.sql.Statement;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.ArrayList;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import org.springframework.dao.DataAccessException;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -876,6 +883,67 @@ class SqliteRipolAdapterTest {
     }
 
     return new SqliteRipolAdapter(sourceVers(db));
+  }
+
+  @Test
+  void initialization_shouldRetryAfterViewCreationFailure() throws Exception {
+    Path invalidSchema = Files.createTempFile("ripol-view-conflict-", ".db");
+    invalidSchema.toFile().deleteOnExit();
+    Files.copy(sqliteFile, invalidSchema, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+    try (Connection connection = DriverManager.getConnection("jdbc:sqlite:" + invalidSchema);
+         Statement statement = connection.createStatement()) {
+      statement.execute("CREATE VIEW RIPOL_INCIDENT_CODE AS SELECT * FROM TBINCIDENTCODE");
+    }
+    AtomicInteger attempts = new AtomicInteger();
+    RipolDatabaseSource source = new RipolDatabaseSource() {
+      @Override
+      public InputStream ouvrirFlux() throws IOException {
+        return Files.newInputStream(attempts.getAndIncrement() == 0 ? invalidSchema : sqliteFile);
+      }
+
+      @Override
+      public String description() {
+        return "test:retry";
+      }
+    };
+    SqliteRipolAdapter adapter = new SqliteRipolAdapter(source);
+
+    assertThrows(DataAccessException.class, () -> adapter.getCodesByGroupType("11"));
+    assertFalse(adapter.getCodesByGroupType("11").isEmpty());
+    assertEquals(2, attempts.get());
+  }
+
+  @Test
+  void initialization_shouldServeConcurrentRequestsFromOneDatabase() throws Exception {
+    AtomicInteger openings = new AtomicInteger();
+    RipolDatabaseSource source = new RipolDatabaseSource() {
+      @Override
+      public InputStream ouvrirFlux() throws IOException {
+        openings.incrementAndGet();
+        return Files.newInputStream(sqliteFile);
+      }
+
+      @Override
+      public String description() {
+        return "test:concurrent";
+      }
+    };
+    SqliteRipolAdapter adapter = new SqliteRipolAdapter(source);
+    CountDownLatch start = new CountDownLatch(1);
+    try (var executor = Executors.newFixedThreadPool(12)) {
+      List<Future<List<Ripol>>> requests = new ArrayList<>();
+      for (int i = 0; i < 12; i++) {
+        requests.add(executor.submit(() -> {
+          assertTrue(start.await(10, TimeUnit.SECONDS));
+          return adapter.getCodesByGroupType("11");
+        }));
+      }
+      start.countDown();
+      for (Future<List<Ripol>> request : requests) {
+        assertFalse(request.get(10, TimeUnit.SECONDS).isEmpty());
+      }
+    }
+    assertEquals(1, openings.get());
   }
 
   private static SqliteRipolAdapter newAdapterPointingToTempDb() {

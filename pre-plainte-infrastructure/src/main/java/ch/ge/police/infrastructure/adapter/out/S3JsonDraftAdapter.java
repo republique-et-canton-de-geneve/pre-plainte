@@ -4,7 +4,7 @@ import ch.ge.police.core.domain.exception.S3AccessException;
 import ch.ge.police.core.domain.exception.S3NotFoundException;
 import ch.ge.police.core.domain.model.PrePlainte;
 import ch.ge.police.core.port.out.PrePlainteBrouillontPort;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;

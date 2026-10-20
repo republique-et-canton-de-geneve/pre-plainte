@@ -7,9 +7,9 @@ import static org.mockito.Mockito.*;
 import ch.ge.police.core.domain.exception.S3AccessException;
 import ch.ge.police.core.domain.exception.S3NotFoundException;
 import ch.ge.police.core.domain.model.PrePlainte;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectWriter;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectWriter;
 import java.io.ByteArrayInputStream;
 import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
@@ -99,7 +99,7 @@ class S3JsonDraftAdapterTest {
 
     ObjectWriter writer = mock(ObjectWriter.class);
     when(mapper.writerWithDefaultPrettyPrinter()).thenReturn(writer);
-    when(writer.writeValueAsBytes(prePlainte)).thenThrow(new JsonProcessingException("bad json") {});
+    when(writer.writeValueAsBytes(prePlainte)).thenThrow(new JacksonException("bad json") {});
 
     S3AccessException ex = assertThrows(
       S3AccessException.class,

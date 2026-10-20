@@ -1,8 +1,9 @@
 package ch.ge.police.infrastructure.adapter.out;
 
 import ch.ge.police.core.port.out.EsiriusPort;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
@@ -43,7 +44,7 @@ public class EsiriusWebClientAdapter implements EsiriusPort {
   private static final String TRACE_ID = "traceId";
 
   private final WebClient webClient;
-  private final ObjectMapper objectMapper = new ObjectMapper();
+  private final ObjectMapper objectMapper = JsonMapper.builder().build();
 
   @Value("${esirius.base_url}")
   private String baseUrl;
