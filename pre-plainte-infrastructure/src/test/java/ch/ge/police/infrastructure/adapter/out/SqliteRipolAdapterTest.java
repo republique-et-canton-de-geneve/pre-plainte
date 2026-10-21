@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.Statement;
@@ -36,6 +37,22 @@ class SqliteRipolAdapterTest {
 
   private static Path sqliteFile;
   private static Path brokenSqliteFile;
+
+  @Test
+  void createPrivateTempDirectory_shouldRestrictPosixPermissions() throws Exception {
+    Path directory = SqliteRipolAdapter.createPrivateTempDirectory();
+    try {
+      assertTrue(Files.isDirectory(directory));
+      if (Files.getFileStore(directory).supportsFileAttributeView("posix")) {
+        assertEquals(
+          PosixFilePermissions.fromString("rwx------"),
+          Files.getPosixFilePermissions(directory)
+        );
+      }
+    } finally {
+      Files.deleteIfExists(directory);
+    }
+  }
 
   @BeforeAll
   static void createSqliteDb() throws Exception {
@@ -899,6 +916,31 @@ class SqliteRipolAdapterTest {
     }
 
     return new SqliteRipolAdapter(sourceVers(db));
+  }
+
+  @Test
+  void initialization_shouldWaitForRipolRequestWhenStartupIsDisabled() {
+    AtomicInteger openings = new AtomicInteger();
+    RipolDatabaseSource source = new RipolDatabaseSource() {
+      @Override
+      public InputStream ouvrirFlux() throws IOException {
+        openings.incrementAndGet();
+        throw new IOException("Base RIPOL indisponible");
+      }
+
+      @Override
+      public String description() {
+        return "test:indisponible";
+      }
+    };
+    SqliteRipolAdapter adapter = new SqliteRipolAdapter(source, false);
+
+    adapter.initialiserAuDemarrage();
+    adapter.warmUpCacheAsync();
+
+    assertEquals(0, openings.get());
+    assertThrows(SqliteRipolAdapter.RipolAccessException.class, adapter::listTables);
+    assertEquals(1, openings.get());
   }
 
   @Test

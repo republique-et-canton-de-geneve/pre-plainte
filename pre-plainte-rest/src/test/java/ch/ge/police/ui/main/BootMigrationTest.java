@@ -4,7 +4,6 @@ import ch.ge.police.core.domain.model.PrePlainte;
 import ch.ge.police.core.domain.model.common.EmailChallenge;
 import ch.ge.police.core.domain.model.event.common.TypeIncident;
 import ch.ge.police.core.domain.model.event.vol.Vol;
-import ch.ge.police.infrastructure.adapter.out.SqliteRipolAdapter;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -25,7 +24,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @SpringBootTest(
   classes = PpelFormulaireApiApplication.class,
   webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-  properties = {"esirius.base_url=http://localhost", "captcha.enabled=false"}
+  properties = {
+    "esirius.base_url=http://localhost",
+    "captcha.enabled=false",
+    "ripol.db.startup.enabled=false"
+  }
 )
 class BootMigrationTest {
 
@@ -37,9 +40,6 @@ class BootMigrationTest {
 
   @MockitoBean
   private S3Client s3Client;
-
-  @MockitoBean
-  private SqliteRipolAdapter ripolAdapter;
 
   @Test
   void applicationShouldServeJsonConfiguration() throws Exception {

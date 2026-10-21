@@ -9,6 +9,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
@@ -23,6 +24,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.dao.DataAccessException;
@@ -223,6 +226,7 @@ public class SqliteRipolAdapter implements RipolPort {
   }
 
   private final RipolDatabaseSource databaseSource;
+  private final boolean initializeOnStartup;
   private final AtomicReference<JdbcTemplate> jdbcTemplateRef = new AtomicReference<>();
   private final Map<String, List<Ripol>> codesByGroupTypeCache = new ConcurrentHashMap<>();
   private final Map<String, List<Ripol>> brandsByKeyCache = new ConcurrentHashMap<>();
@@ -237,7 +241,16 @@ public class SqliteRipolAdapter implements RipolPort {
     );
 
   public SqliteRipolAdapter(RipolDatabaseSource databaseSource) {
+    this(databaseSource, true);
+  }
+
+  @Autowired
+  public SqliteRipolAdapter(
+    RipolDatabaseSource databaseSource,
+    @Value("${ripol.db.startup.enabled:true}") boolean initializeOnStartup
+  ) {
     this.databaseSource = databaseSource;
+    this.initializeOnStartup = initializeOnStartup;
   }
 
   private JdbcTemplate jdbcTemplate() {
@@ -266,7 +279,9 @@ public class SqliteRipolAdapter implements RipolPort {
 
   @PostConstruct
   void initialiserAuDemarrage() {
-    ensureInitialized();
+    if (initializeOnStartup) {
+      ensureInitialized();
+    }
   }
 
   private void initializeFromSource() throws IOException {
@@ -277,7 +292,8 @@ public class SqliteRipolAdapter implements RipolPort {
     if (cheminLocal.isPresent()) {
       sqliteFile = cheminLocal.get();
     } else {
-      sqliteFile = Files.createTempFile("sqlite-db-", ".db");
+      Path tempDirectory = createPrivateTempDirectory();
+      sqliteFile = Files.createTempFile(tempDirectory, "sqlite-db-", ".db");
       try (InputStream in = databaseSource.ouvrirFlux()) {
         Files.copy(in, sqliteFile, StandardCopyOption.REPLACE_EXISTING);
       }
@@ -314,6 +330,18 @@ public class SqliteRipolAdapter implements RipolPort {
     );
     createSearchIndexes(template, incidentCodeFilter);
     jdbcTemplateRef.set(template);
+  }
+
+  static Path createPrivateTempDirectory() throws IOException {
+    Path tempRoot = Path.of(System.getProperty("java.io.tmpdir"));
+    if (Files.getFileStore(tempRoot).supportsFileAttributeView("posix")) {
+      return Files.createTempDirectory(
+        tempRoot,
+        "sqlite-db-",
+        PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwx------"))
+      );
+    }
+    return Files.createTempDirectory(tempRoot, "sqlite-db-");
   }
 
   private void validateRipolSchema(JdbcTemplate template) {
@@ -419,7 +447,9 @@ public class SqliteRipolAdapter implements RipolPort {
 
   @EventListener(ApplicationReadyEvent.class)
   void warmUpCacheAsync() {
-    CompletableFuture.runAsync(this::warmUpCache);
+    if (initializeOnStartup) {
+      CompletableFuture.runAsync(this::warmUpCache);
+    }
   }
 
   private void warmUpCache() {

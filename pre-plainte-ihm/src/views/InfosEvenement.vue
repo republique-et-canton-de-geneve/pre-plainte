@@ -181,7 +181,7 @@
 <script setup lang="ts">
 import { useCreatePrePlainteStore } from "@/stores/createPrePlainteStore";
 import type { PrePlainteFormFields } from "@/types/pre-plainte.interface";
-import { toTypedSchema } from "@vee-validate/zod";
+import { toTypedSchema } from "@/utils/validations/zodTypedSchema";
 import { useField, useForm } from "vee-validate";
 import { computed, nextTick, onBeforeUnmount, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";

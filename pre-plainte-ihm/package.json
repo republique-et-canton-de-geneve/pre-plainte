@@ -19,7 +19,6 @@
     "@mdi/font": "^7.4.47",
     "@mdi/js": "^7.4.47",
     "@tanstack/vue-query": "5.83.1",
-    "@vee-validate/zod": "^4.15.1",
     "escape-html": "^1.0.3",
     "flag-icons": "^7.5.0",
     "leaflet": "^1.9.4",
@@ -29,11 +28,11 @@
     "v-phone-input": "^5.1.4",
     "vee-validate": "^4.15.1",
     "vite-plugin-vuetify": "^2.1.1",
-    "vue": "^3.5.17",
-    "vue-i18n": "11.2.8",
+    "vue": "3.5.44",
+    "vue-i18n": "11.4.16",
     "vue-router": "^4.5.1",
     "vuetify": "^3.9.0",
-    "zod": "^3.25.76"
+    "zod": "4.6.7"
   },
   "devDependencies": {
     "@intlify/unplugin-vue-i18n": "^6.0.8",
@@ -60,7 +59,7 @@
     "prettier": "3.5.3",
     "release-it": "^19.0.3",
     "typescript": "~5.8.0",
-    "vite": "7.3.5",
+    "vite": "7.3.7",
     "vite-plugin-vue-devtools": "8.0.5",
     "vitest": "^3.2.4",
     "vue-tsc": "^2.2.10"
@@ -69,9 +68,17 @@
     "@rollup/rollup-linux-x64-gnu": "4.60.4"
   },
   "overrides": {
-    "@vue/devtools-core": "8.0.5",
+    "@vue/devtools-core": {
+      ".": "8.0.5",
+      "nanoid": "5.1.16"
+    },
     "@vue/devtools-kit": "8.0.5",
     "@vue/devtools-shared": "8.0.5",
+    "source-map-js": "1.2.2",
+    "immutable": "5.1.9",
+    "postcss": {
+      "nanoid": "3.3.20"
+    },
     "quansync": "1.0.0",
     "rollup": "4.60.4",
     "@typescript-eslint/eslint-plugin": "8.64.0",

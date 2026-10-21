@@ -146,7 +146,7 @@
 import { computed, onMounted, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { useField, useForm } from "vee-validate";
-import { toTypedSchema } from "@vee-validate/zod";
+import { toTypedSchema } from "@/utils/validations/zodTypedSchema";
 import type { PrePlainteFormFields } from "@/types/pre-plainte.interface.ts";
 import { useCreatePrePlainteStore } from "@/stores/createPrePlainteStore.ts";
 import { storeToRefs } from "pinia";
