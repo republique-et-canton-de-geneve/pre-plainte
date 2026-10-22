@@ -90,7 +90,7 @@ import AppointmentFilters from "@/components/appointment/AppointmentFilters.vue"
 import AppointmentTable from "@/components/appointment/AppointmentTable.vue";
 import { toIsoDate } from "@/utils/helpers/dateHelpers.ts";
 import { rendezvousInfoSchema } from "@/schemas/rdv-schema.ts";
-import { toTypedSchema } from "@vee-validate/zod";
+import { toTypedSchema } from "@/utils/validations/zodTypedSchema";
 import { useFormErrorScroll } from "@/composables/useFormErrorScroll.ts";
 import { collectValidationErrorItems, type FormValidationErrorItem } from "@/utils/helpers/formErrorHelpers";
 import FormErrorSummary from "@/components/form/FormErrorSummary.vue";

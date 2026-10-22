@@ -125,7 +125,7 @@
 
 <script lang="ts" setup>
 import { computed, nextTick, onMounted, ref, watch } from "vue";
-import { toTypedSchema } from "@vee-validate/zod";
+import { toTypedSchema } from "@/utils/validations/zodTypedSchema";
 import { useField, useForm } from "vee-validate";
 import { z } from "zod";
 import { storeToRefs } from "pinia";

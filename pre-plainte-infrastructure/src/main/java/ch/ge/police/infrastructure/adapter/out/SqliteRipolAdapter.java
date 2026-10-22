@@ -2,12 +2,14 @@ package ch.ge.police.infrastructure.adapter.out;
 
 import ch.ge.police.core.domain.model.ripol.Ripol;
 import ch.ge.police.core.port.out.RipolPort;
+import jakarta.annotation.PostConstruct;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
@@ -22,6 +24,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.dao.DataAccessException;
@@ -95,15 +99,15 @@ public class SqliteRipolAdapter implements RipolPort {
           + " AND trim(code.TEXT) NOT GLOB '*[^0-9]*'"
           + " )";
   private static final String SQL_CREATE_INCIDENT_CODE_VIEW =
-    "CREATE VIEW RIPOL_INCIDENT_CODE AS SELECT * FROM TBINCIDENTCODE";
+    "CREATE VIEW IF NOT EXISTS RIPOL_INCIDENT_CODE AS SELECT * FROM TBINCIDENTCODE";
   private static final String SQL_CREATE_ACTIVE_INCIDENT_CODE_VIEW =
-    "CREATE VIEW RIPOL_INCIDENT_CODE AS SELECT * FROM TBINCIDENTCODE "
+    "CREATE VIEW IF NOT EXISTS RIPOL_INCIDENT_CODE AS SELECT * FROM TBINCIDENTCODE "
       + "WHERE CAST(ACTIVE AS INTEGER) = 1";
   private static final String SQL_CREATE_SELECTABLE_INCIDENT_CODE_VIEW =
-    "CREATE VIEW RIPOL_INCIDENT_CODE AS SELECT * FROM TBINCIDENTCODE "
+    "CREATE VIEW IF NOT EXISTS RIPOL_INCIDENT_CODE AS SELECT * FROM TBINCIDENTCODE "
       + "WHERE CAST(SELECTABLE AS INTEGER) = 1";
   private static final String SQL_CREATE_ACTIVE_SELECTABLE_INCIDENT_CODE_VIEW =
-    "CREATE VIEW RIPOL_INCIDENT_CODE AS SELECT * FROM TBINCIDENTCODE "
+    "CREATE VIEW IF NOT EXISTS RIPOL_INCIDENT_CODE AS SELECT * FROM TBINCIDENTCODE "
       + "WHERE CAST(ACTIVE AS INTEGER) = 1 AND CAST(SELECTABLE AS INTEGER) = 1";
   private static final String FROM_INCIDENT_CODE_VIEW = "FROM RIPOL_INCIDENT_CODE code\n";
   private static final String SQL_SELECT_INCIDENT_CODE_WITH_LIMIT =
@@ -222,6 +226,7 @@ public class SqliteRipolAdapter implements RipolPort {
   }
 
   private final RipolDatabaseSource databaseSource;
+  private final boolean initializeOnStartup;
   private final AtomicReference<JdbcTemplate> jdbcTemplateRef = new AtomicReference<>();
   private final Map<String, List<Ripol>> codesByGroupTypeCache = new ConcurrentHashMap<>();
   private final Map<String, List<Ripol>> brandsByKeyCache = new ConcurrentHashMap<>();
@@ -236,7 +241,16 @@ public class SqliteRipolAdapter implements RipolPort {
     );
 
   public SqliteRipolAdapter(RipolDatabaseSource databaseSource) {
+    this(databaseSource, true);
+  }
+
+  @Autowired
+  public SqliteRipolAdapter(
+    RipolDatabaseSource databaseSource,
+    @Value("${ripol.db.startup.enabled:true}") boolean initializeOnStartup
+  ) {
     this.databaseSource = databaseSource;
+    this.initializeOnStartup = initializeOnStartup;
   }
 
   private JdbcTemplate jdbcTemplate() {
@@ -263,22 +277,36 @@ public class SqliteRipolAdapter implements RipolPort {
     }
   }
 
+  @PostConstruct
+  void initialiserAuDemarrage() {
+    if (initializeOnStartup) {
+      ensureInitialized();
+    }
+  }
+
   private void initializeFromSource() throws IOException {
     String source = databaseSource.description();
 
-    Path tempFile = Files.createTempFile("sqlite-db-", ".db");
-    try (InputStream in = databaseSource.ouvrirFlux()) {
-      Files.copy(in, tempFile, StandardCopyOption.REPLACE_EXISTING);
+    Path sqliteFile;
+    var cheminLocal = databaseSource.cheminLocal();
+    if (cheminLocal.isPresent()) {
+      sqliteFile = cheminLocal.get();
+    } else {
+      Path tempDirectory = createPrivateTempDirectory();
+      sqliteFile = Files.createTempFile(tempDirectory, "sqlite-db-", ".db");
+      try (InputStream in = databaseSource.ouvrirFlux()) {
+        Files.copy(in, sqliteFile, StandardCopyOption.REPLACE_EXISTING);
+      }
     }
-    validateSqliteResource(tempFile, source);
+    validateSqliteResource(sqliteFile, source);
 
-    String jdbcUrl = "jdbc:sqlite:" + tempFile.toAbsolutePath();
+    String jdbcUrl = "jdbc:sqlite:" + sqliteFile.toAbsolutePath();
 
     log.info(
-      "event=ripol_sqlite_initialized traceId={} source={} tempFile={}",
+      "event=ripol_sqlite_initialized traceId={} source={} file={}",
       MDC.get(TRACE_ID),
       source,
-      tempFile
+      sqliteFile
     );
 
     DriverManagerDataSource dataSource = new DriverManagerDataSource();
@@ -293,6 +321,7 @@ public class SqliteRipolAdapter implements RipolPort {
         incidentCodeHasSelectableColumn
     );
     createIncidentCodeView(template, incidentCodeFilter);
+    validateRipolSchema(template);
     log.info(
       "event=ripol_incident_code_filters traceId={} active={} selectable={}",
       MDC.get(TRACE_ID),
@@ -301,6 +330,34 @@ public class SqliteRipolAdapter implements RipolPort {
     );
     createSearchIndexes(template, incidentCodeFilter);
     jdbcTemplateRef.set(template);
+  }
+
+  static Path createPrivateTempDirectory() throws IOException {
+    Path tempRoot = Path.of(System.getProperty("java.io.tmpdir"));
+    if (Files.getFileStore(tempRoot).supportsFileAttributeView("posix")) {
+      return Files.createTempDirectory(
+        tempRoot,
+        "sqlite-db-",
+        PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwx------"))
+      );
+    }
+    return Files.createTempDirectory(tempRoot, "sqlite-db-");
+  }
+
+  private void validateRipolSchema(JdbcTemplate template) {
+    try {
+      if (template.queryForList("""
+        SELECT code.ID, code.GROUPTYPE, code.CODEVALUE, code.TEXT,
+               loc.LOCALE_ID, loc.TRANSLATION
+        FROM RIPOL_INCIDENT_CODE code
+        LEFT JOIN TBLOCALIZATION loc ON loc.PK = code.ID
+        LIMIT 1
+        """).isEmpty()) {
+        throw new IllegalStateException("Base RIPOL vide");
+      }
+    } catch (DataAccessException e) {
+      throw new RipolAccessException("Schéma de la base RIPOL invalide", e);
+    }
   }
 
   private static void validateSqliteResource(Path sqliteFile, String source) throws IOException {
@@ -390,7 +447,9 @@ public class SqliteRipolAdapter implements RipolPort {
 
   @EventListener(ApplicationReadyEvent.class)
   void warmUpCacheAsync() {
-    CompletableFuture.runAsync(this::warmUpCache);
+    if (initializeOnStartup) {
+      CompletableFuture.runAsync(this::warmUpCache);
+    }
   }
 
   private void warmUpCache() {

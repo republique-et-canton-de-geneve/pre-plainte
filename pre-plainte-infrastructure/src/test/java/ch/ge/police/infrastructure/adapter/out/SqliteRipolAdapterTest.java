@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.Statement;
@@ -36,6 +37,22 @@ class SqliteRipolAdapterTest {
 
   private static Path sqliteFile;
   private static Path brokenSqliteFile;
+
+  @Test
+  void createPrivateTempDirectory_shouldRestrictPosixPermissions() throws Exception {
+    Path directory = SqliteRipolAdapter.createPrivateTempDirectory();
+    try {
+      assertTrue(Files.isDirectory(directory));
+      if (Files.getFileStore(directory).supportsFileAttributeView("posix")) {
+        assertEquals(
+          PosixFilePermissions.fromString("rwx------"),
+          Files.getPosixFilePermissions(directory)
+        );
+      }
+    } finally {
+      Files.deleteIfExists(directory);
+    }
+  }
 
   @BeforeAll
   static void createSqliteDb() throws Exception {
@@ -470,6 +487,7 @@ class SqliteRipolAdapterTest {
     SqliteRipolAdapter adapter = new SqliteRipolAdapter(sourceVers(Path.of("does-not-exist.db")));
 
     assertThrows(SqliteRipolAdapter.RipolAccessException.class, adapter::listTables);
+    assertThrows(SqliteRipolAdapter.RipolAccessException.class, adapter::initialiserAuDemarrage);
   }
 
   @Test
@@ -481,6 +499,21 @@ class SqliteRipolAdapterTest {
     SqliteRipolAdapter adapter = new SqliteRipolAdapter(sourceVers(fichier));
 
     assertThrows(IllegalStateException.class, adapter::listTables);
+  }
+
+  @Test
+  void initialization_shouldFailWhenDatabaseIsEmpty() throws Exception {
+    Path fichier = Files.createTempFile("ripol-vide-", ".db");
+    fichier.toFile().deleteOnExit();
+    Files.copy(sqliteFile, fichier, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+    try (Connection connection = DriverManager.getConnection("jdbc:sqlite:" + fichier);
+         Statement statement = connection.createStatement()) {
+      statement.execute("DELETE FROM TBINCIDENTCODE");
+    }
+
+    SqliteRipolAdapter adapter = new SqliteRipolAdapter(new FichierRipolDatabaseSource(fichier.toString()));
+
+    assertThrows(IllegalStateException.class, adapter::initialiserAuDemarrage);
   }
 
   @Test
@@ -886,31 +919,50 @@ class SqliteRipolAdapterTest {
   }
 
   @Test
-  void initialization_shouldRetryAfterViewCreationFailure() throws Exception {
-    Path invalidSchema = Files.createTempFile("ripol-view-conflict-", ".db");
-    invalidSchema.toFile().deleteOnExit();
-    Files.copy(sqliteFile, invalidSchema, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-    try (Connection connection = DriverManager.getConnection("jdbc:sqlite:" + invalidSchema);
-         Statement statement = connection.createStatement()) {
-      statement.execute("CREATE VIEW RIPOL_INCIDENT_CODE AS SELECT * FROM TBINCIDENTCODE");
-    }
-    AtomicInteger attempts = new AtomicInteger();
+  void initialization_shouldWaitForRipolRequestWhenStartupIsDisabled() {
+    AtomicInteger openings = new AtomicInteger();
     RipolDatabaseSource source = new RipolDatabaseSource() {
       @Override
       public InputStream ouvrirFlux() throws IOException {
-        return Files.newInputStream(attempts.getAndIncrement() == 0 ? invalidSchema : sqliteFile);
+        openings.incrementAndGet();
+        throw new IOException("Base RIPOL indisponible");
       }
 
       @Override
       public String description() {
-        return "test:retry";
+        return "test:indisponible";
       }
     };
-    SqliteRipolAdapter adapter = new SqliteRipolAdapter(source);
+    SqliteRipolAdapter adapter = new SqliteRipolAdapter(source, false);
 
-    assertThrows(DataAccessException.class, () -> adapter.getCodesByGroupType("11"));
-    assertFalse(adapter.getCodesByGroupType("11").isEmpty());
-    assertEquals(2, attempts.get());
+    adapter.initialiserAuDemarrage();
+    adapter.warmUpCacheAsync();
+
+    assertEquals(0, openings.get());
+    assertThrows(SqliteRipolAdapter.RipolAccessException.class, adapter::listTables);
+    assertEquals(1, openings.get());
+  }
+
+  @Test
+  void initialization_shouldReuseLocalDatabaseAfterRestart() throws Exception {
+    Path fichier = Files.createTempFile("ripol-local-", ".db");
+    fichier.toFile().deleteOnExit();
+    Files.copy(sqliteFile, fichier, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+    FichierRipolDatabaseSource source = new FichierRipolDatabaseSource(fichier.toString());
+
+    SqliteRipolAdapter premierDemarrage = new SqliteRipolAdapter(source);
+    premierDemarrage.initialiserAuDemarrage();
+    SqliteRipolAdapter secondDemarrage = new SqliteRipolAdapter(source);
+    secondDemarrage.initialiserAuDemarrage();
+
+    assertFalse(secondDemarrage.getCodesByGroupType("11").isEmpty());
+    try (Connection connection = DriverManager.getConnection("jdbc:sqlite:" + fichier);
+         Statement statement = connection.createStatement();
+         var result = statement.executeQuery(
+             "SELECT COUNT(*) FROM sqlite_master WHERE type = 'view' AND name = 'RIPOL_INCIDENT_CODE'")) {
+      assertTrue(result.next());
+      assertEquals(1, result.getInt(1));
+    }
   }
 
   @Test

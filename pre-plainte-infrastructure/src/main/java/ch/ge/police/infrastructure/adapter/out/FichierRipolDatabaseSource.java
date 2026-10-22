@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Value;
@@ -25,6 +26,15 @@ public class FichierRipolDatabaseSource implements RipolDatabaseSource {
 
   @Override
   public InputStream ouvrirFlux() throws IOException {
+    return Files.newInputStream(cheminValide());
+  }
+
+  @Override
+  public Optional<Path> cheminLocal() {
+    return Optional.of(cheminValide());
+  }
+
+  private Path cheminValide() {
     if (chemin == null || chemin.isBlank()) {
       throw new IllegalStateException(
         "La propriété ripol.db.file.path doit être renseignée lorsque ripol.db.source=fichier."
@@ -44,7 +54,7 @@ public class FichierRipolDatabaseSource implements RipolDatabaseSource {
       fichier.toAbsolutePath()
     );
 
-    return Files.newInputStream(fichier);
+    return fichier;
   }
 
   @Override
