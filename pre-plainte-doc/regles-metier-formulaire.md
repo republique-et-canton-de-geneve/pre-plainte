@@ -42,6 +42,7 @@ Ce document est genere depuis les tests unitaires frontend.
 
 | Champ demande | Type de regle | Obligatoire | Precision | Exemples testes |
 | --- | --- | --- | --- | --- |
+| Objet vole enregistre | Validation des champs | Oui | Un vol doit contenir au moins un objet vole enregistre. | aucun objet vole enregistre est refuse |
 | Informations de base de l'objet vole | Validation des champs | Oui | Un vol doit indiquer si l'objet etait dans un vehicule, la categorie de l'objet et l'existence de degradations. | indication vol dans vehicule absente est refusee<br><br>categorie d'objet absente est refusee<br><br>information sur les degradations absente est refusee |
 | Numero de serie | Validation des champs | Selon le cas | Obligatoire pour certains objets comme telephone, informatique ou photo/video sauf si le numero est inconnu. | telephone sans numero de serie est refuse<br><br>telephone avec numero de serie est accepte |
 | Numero IMEI | Validation des champs | Selon le cas | Obligatoire et compose de 15 chiffres pour un telephone mobile sauf si le numero est inconnu, auquel cas une justification est requise. | telephone mobile sans IMEI est refuse<br><br>IMEI avec moins de 15 chiffres est refuse<br><br>IMEI de 15 chiffres est accepte<br><br>IMEI inconnu sans justification est refuse<br><br>IMEI inconnu avec justification est accepte |

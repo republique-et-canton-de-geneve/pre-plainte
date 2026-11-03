@@ -5,7 +5,7 @@ export interface BusinessRuleExample<TData extends Record<string, unknown> = Rec
   label: string;
   data: Partial<TData>;
   valid: boolean;
-  errorPath?: string[];
+  errorPath?: (string | number)[];
   errorMessage?: string;
 }
 
@@ -17,6 +17,6 @@ export interface BusinessRule<TData extends Record<string, unknown> = Record<str
   precision: string;
   examples?: BusinessRuleExample<TData>[];
   invalidData?: Partial<TData>;
-  errorPath?: string[];
+  errorPath?: (string | number)[];
   errorMessage?: string;
 }
