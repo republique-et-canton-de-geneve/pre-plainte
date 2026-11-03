@@ -141,7 +141,6 @@ const rendezVousMessage = computed(() => {
     return t("modification.messageConfirmation", {
       date: nouvelleDateChoisi,
       heureDebut: creneau.heureDebut,
-      heureFin: creneau.heureFin,
       lieu: creneau.lieu,
       code: codeRdv,
     });

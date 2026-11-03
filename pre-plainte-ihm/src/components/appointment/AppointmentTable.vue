@@ -23,27 +23,26 @@
           </th>
           <th scope="col">{{ t("rendezVous.tableDate") }}</th>
           <th scope="col">{{ t("rendezVous.tableDebut") }}</th>
-          <th scope="col">{{ t("rendezVous.tableFin") }}</th>
           <th scope="col">{{ t("rendezVous.tableLieu") }}</th>
         </tr>
       </thead>
 
       <tbody>
         <tr v-if="esiriusStore.loading">
-          <td colspan="5" class="text-center py-6">
+          <td colspan="4" class="text-center py-6">
             <v-progress-circular indeterminate color="primary" size="32" />
             <div class="mt-2 text-body-2">{{ t("common.donneeEnCoursDeChargement") }}</div>
           </td>
         </tr>
         <tr v-else-if="esiriusStore.errorMessage">
-          <td colspan="5" class="text-center py-6">
+          <td colspan="4" class="text-center py-6">
             <v-alert type="error" variant="text" density="compact">
               {{ t("common.error.serverDown") }}
             </v-alert>
           </td>
         </tr>
         <tr v-else-if="!creneauxPagines.length">
-          <td colspan="5" class="text-center py-6">
+          <td colspan="4" class="text-center py-6">
             <v-alert type="info" variant="text" density="compact">
               {{ t("common.error.creneauIndisponible") }}
             </v-alert>
@@ -53,7 +52,6 @@
           <td><v-radio :value="index" hide-details :aria-label="getCreneauRadioAriaLabel(creneau)" :data-cy="`creneau-radio-${index}`" /></td>
           <td>{{ formatDate(creneau.beginDateTime) }}</td>
           <td>{{ formatHeure(creneau.beginDateTime) }}</td>
-          <td>{{ formatHeure(creneau.endDateTime) }}</td>
           <td>{{ formatLieu(creneau) }}</td>
         </tr>
       </tbody>
@@ -96,7 +94,7 @@
                 />
                 <div class="flex-grow-1">
                   <div class="text-body-1 font-weight-medium mb-1 text-primary">
-                    {{ formatHeure(creneau.beginDateTime) }} - {{ formatHeure(creneau.endDateTime) }}
+                    {{ formatHeure(creneau.beginDateTime) }}
                   </div>
                   <div class="text-body-2 text-medium-emphasis mb-1">
                     {{ formatDate(creneau.beginDateTime) }}
@@ -198,13 +196,11 @@ const formatLieu = (creneau: any) => formatCreneauLieu(creneau?.resource?.name, 
 const getCreneauRadioAriaLabel = (creneau: any) => {
   const date = formatDate(creneau?.beginDateTime);
   const debut = formatHeure(creneau?.beginDateTime);
-  const fin = formatHeure(creneau?.endDateTime);
   const lieu = formatLieu(creneau);
 
   return t("rendezVous.ariaSelectionCreneau", {
     date,
     debut,
-    fin,
     lieu,
   });
 };

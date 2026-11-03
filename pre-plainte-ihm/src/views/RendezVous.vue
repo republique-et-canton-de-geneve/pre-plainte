@@ -331,7 +331,7 @@ const onSubmit = handleSubmit(
       store.setUserFormData({
         ...store.userFormData,
         dateSouhaitee: rawDate,
-        creneauPrefere: `${dateAffichee} ${heureDebut} - ${heureFin} @ ${selectedCreneau.lieu}`,
+        creneauPrefere: `${dateAffichee} ${heureDebut} @ ${selectedCreneau.lieu}`,
         selectedCreneau,
       });
 

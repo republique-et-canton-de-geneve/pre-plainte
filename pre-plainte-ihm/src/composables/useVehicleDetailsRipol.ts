@@ -10,6 +10,7 @@ import {
 } from "@/constants/constant";
 import { RipolService } from "@/services/ripolService";
 import { sortRipolByLabelFr } from "@/utils/helpers/ripolHelpers.ts";
+import { isUnplatedElectricVehicleType } from "@/utils/helpers/vehicleTypeDisplay";
 import type { RipolSelection, Ripol } from "@/types/ripol.interface";
 
 type UseVehicleDetailsRipolArgs = {
@@ -221,7 +222,10 @@ export function useVehicleDetailsRipol({ sousCategorie, activePrefixes }: UseVeh
     if (!prefixes?.length) {
       return items;
     }
-    return items.filter(obj => prefixes.some(prefix => obj.code.startsWith(prefix)));
+    return items.filter(obj =>
+      prefixes.some(prefix => obj.code.startsWith(prefix)) ||
+      (sousCategorie.value === "velos" && isUnplatedElectricVehicleType(obj))
+    );
   };
 
   const loadVehicleTypes = async (): Promise<Ripol[]> => {

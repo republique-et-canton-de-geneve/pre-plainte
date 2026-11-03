@@ -104,6 +104,9 @@
           :auto-select-when-single-result="true"
           class="my-4"
         />
+        <v-alert type="info" variant="tonal" density="comfortable" class="my-4">
+          {{ t("incidentTypes.objetIdentifieInfo") }}
+        </v-alert>
         <RipolAutocomplete
           v-if="brouillon.typeObjet && brouillon.hasBrands"
           v-model="brouillon.fabricant"

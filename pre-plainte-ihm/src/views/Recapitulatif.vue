@@ -667,7 +667,7 @@
                             <v-label class="ge-field-label">{{ t("incidentTypes.typeObjet") }}</v-label>
                           </dt>
                           <dd class="ge-field-value text-body-1" :aria-labelledby="`lbl-vo-type-${vIdx}`">
-                            {{ formatRipol(obj.typeObjet) }}
+                            {{ obj.categorieObjet === 'vehicule' ? publicVehicleTypeLabel(obj.typeObjet, t) : formatRipol(obj.typeObjet) }}
                           </dd>
                         </v-col>
                         <v-col v-if="obj.fabricant && obj.fabricant.code !== 'AUTRE'" cols="12" md="6">
@@ -893,7 +893,7 @@
                             <v-label class="ge-field-label">{{ t("incidentTypes.typeObjet") }}</v-label>
                           </dt>
                           <dd class="ge-field-value text-body-1" :aria-labelledby="`lbl-dv-type-${dIdx}`">
-                            {{ formatRipol(obj.typeObjet) }}
+                            {{ publicVehicleTypeLabel(obj.typeObjet, t) }}
                           </dd>
                         </v-col>
                         <v-col v-if="obj.fabricant && obj.fabricant.code !== 'AUTRE'" cols="12" md="6">
@@ -1091,7 +1091,7 @@
                     <v-label class="ge-field-label">{{ t("incidentTypes.typeObjet") }}</v-label>
                   </dt>
                   <dd class="ge-field-value text-body-1" aria-labelledby="lbl-typeObjet">
-                    {{ formatRipol(data.typeObjet) }}
+                    {{ data.categorieObjet === 'vehicule' ? publicVehicleTypeLabel(data.typeObjet, t) : formatRipol(data.typeObjet) }}
                   </dd>
                 </v-col>
 
@@ -1638,6 +1638,7 @@ import { useCreatePrePlainteStore } from "@/stores/createPrePlainteStore";
 import { onMounted, type Ref } from "vue";
 import type { PrePlainteFormFields } from "@/types/pre-plainte.interface";
 import type { RipolSelection } from "@/types/ripol.interface";
+import { publicVehicleTypeLabel } from "@/utils/helpers/vehicleTypeDisplay";
 import { ref, computed } from "vue";
 import RecapitulatifAchatNonRecu from "@/components/pre-plainte-component/event-info/cybercrime/RecapitulatifAchatNonRecu.vue";
 import RecapitulatifCommandeFrauduleuse from "@/components/pre-plainte-component/event-info/cybercrime/RecapitulatifCommandeFrauduleuse.vue";
@@ -2050,7 +2051,7 @@ const formatNatureDommage = (vals?: string[]) => {
 const formatCreneau = () => {
   if (data.value.selectedCreneau) {
     const c = data.value.selectedCreneau;
-    return `${c.heureDebut} - ${c.heureFin}`;
+    return c.heureDebut;
   }
   return data.value.creneauPrefere || "";
 };
