@@ -69,6 +69,10 @@
   },
   "overrides": {
     "@babel/core": "7.29.7",
+    "@babel/generator": "7.29.7",
+    "@babel/template": "7.29.7",
+    "@babel/traverse": "7.29.7",
+    "@babel/types": "7.29.8",
     "@vue/devtools-core": {
       ".": "8.0.5",
       "nanoid": "5.1.16"
