@@ -7,7 +7,11 @@ const normalize = (value: string): string =>
     .toLocaleLowerCase("fr")
     .trim();
 
-export const filterRipolSelections = (items: RipolSelection[], search?: string): RipolSelection[] => {
+export const filterRipolSelections = (
+  items: RipolSelection[],
+  search?: string,
+  displayLabel?: (item: RipolSelection) => string,
+): RipolSelection[] => {
   const query = normalize(search ?? "");
   if (!query) {
     return items;
@@ -15,6 +19,7 @@ export const filterRipolSelections = (items: RipolSelection[], search?: string):
   return items.filter(item => {
     const label = normalize(item.label ?? "");
     const code = normalize(item.code ?? "");
-    return label.includes(query) || code.includes(query);
+    const displayed = normalize(displayLabel?.(item) ?? "");
+    return label.includes(query) || code.includes(query) || displayed.includes(query);
   });
 };

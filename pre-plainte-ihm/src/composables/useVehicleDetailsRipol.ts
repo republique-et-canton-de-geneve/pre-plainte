@@ -10,7 +10,7 @@ import {
 } from "@/constants/constant";
 import { RipolService } from "@/services/ripolService";
 import { sortRipolByLabelFr } from "@/utils/helpers/ripolHelpers.ts";
-import { isUnplatedElectricVehicleType } from "@/utils/helpers/vehicleTypeDisplay";
+import { isUnplatedElectricVehicleType, withUnplatedVehicleTypes } from "@/utils/helpers/vehicleTypeDisplay";
 import type { RipolSelection, Ripol } from "@/types/ripol.interface";
 
 type UseVehicleDetailsRipolArgs = {
@@ -233,7 +233,8 @@ export function useVehicleDetailsRipol({ sousCategorie, activePrefixes }: UseVeh
       return vehicleTypesCache.value;
     }
     const allObjects = await RipolService.searchVehicleTypes();
-    vehicleTypesCache.value = sortRipolByLabelFr(filterByActivePrefixes(allObjects));
+    const filtered = sortRipolByLabelFr(filterByActivePrefixes(allObjects));
+    vehicleTypesCache.value = isVeloCategory.value ? withUnplatedVehicleTypes(filtered) : filtered;
     return vehicleTypesCache.value;
   };
 
