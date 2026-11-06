@@ -2,21 +2,25 @@ import type { Ripol, RipolSelection } from "@/types/ripol.interface";
 
 type VehicleType = Pick<Ripol, "code" | "labelFr"> | RipolSelection;
 
-const UNPLATED_VEHICLE_TYPES: Ripol[] = [
-  { code: "062", labelFr: "Cyclomoteur avec place assise", labelDe: "", groupeType: "101" },
-  { code: "064", labelFr: "Cyclomoteur sans place assise", labelDe: "", groupeType: "101" },
-];
+const SEATED_CYCLOMOTEUR: Ripol = { code: "062", labelFr: "Cyclomoteur avec place assise", labelDe: "", groupeType: "101" };
+const STANDING_CYCLOMOTEUR: Ripol = { code: "064", labelFr: "Cyclomoteur sans place assise", labelDe: "", groupeType: "101" };
 
-export function vehicleTypeDisplayKey(label: string, code?: string): string | null {
-  const normalized = label
+const UNPLATED_VEHICLE_TYPES: Ripol[] = [SEATED_CYCLOMOTEUR, STANDING_CYCLOMOTEUR];
+
+function normalizeVehicleTypeLabel(label: string): string {
+  return label
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
     .trim();
-  if (code === "062" || normalized === "cyclomoteur avec place assise") {
+}
+
+export function vehicleTypeDisplayKey(label: string, code?: string): string | null {
+  const normalized = normalizeVehicleTypeLabel(label);
+  if (code === SEATED_CYCLOMOTEUR.code || normalized === normalizeVehicleTypeLabel(SEATED_CYCLOMOTEUR.labelFr)) {
     return "sousCategories.veloElectriqueSansPlaque";
   }
-  if (code === "064" || normalized === "cyclomoteur sans place assise") {
+  if (code === STANDING_CYCLOMOTEUR.code || normalized === normalizeVehicleTypeLabel(STANDING_CYCLOMOTEUR.labelFr)) {
     return "sousCategories.trottinette";
   }
   return null;
