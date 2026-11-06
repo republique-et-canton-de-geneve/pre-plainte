@@ -2,6 +2,9 @@
   <v-form @submit.prevent="onSubmit">
     <h1 class="mb-5 text-h1 text-md-h2 d-none d-md-block">{{ t("titreApplication.prePlainte") }}</h1>
     <v-card class="pa-2 pa-md-8" elevation="1">
+      <v-alert type="warning" class="mb-6" density="comfortable" :icon="mobile ? false : undefined">
+        {{ t("disclaimer.plainteFormelleWarning") }}
+      </v-alert>
       <h2 class="pre-plainte-main-card-title text-h4 text-md-h2 mb-4">{{ t("steps.informationsGenerales") }}</h2>
 
       <v-alert type="info" class="mb-6" density="comfortable" :icon="mobile ? false : undefined">

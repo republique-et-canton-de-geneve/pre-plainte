@@ -2,6 +2,10 @@
   <div class="inputs-fields">
     <h3 class="pre-plainte-main-card-title mb-4 text-h5 text-md-h4">{{ t("informationsEvenement.adresseEvenement") }}</h3>
 
+    <v-alert type="info" variant="tonal" density="comfortable" class="mb-4">
+      {{ t("adresseEvent.lieuDelitInfo") }}
+    </v-alert>
+
     <BaseRadioGroup
       v-model="adresseLesee"
       name="adresseLesee"

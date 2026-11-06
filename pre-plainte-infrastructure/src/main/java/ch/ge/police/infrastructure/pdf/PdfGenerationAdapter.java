@@ -524,7 +524,7 @@ public class PdfGenerationAdapter implements PdfGenerationUseCase {
     }
     List<String> parts = new ArrayList<>();
     if (o.getTypeLabel() != null && !o.getTypeLabel().isBlank()) {
-      parts.add(o.getTypeLabel().trim());
+      parts.add(formatPublicVehicleTypeLabel(o));
     }
     String marque = RIPOL_AUTRE.equals(o.getFabricantCode()) ? o.getFabricantAutre() : o.getFabricantLabel();
     if (marque != null && !marque.isBlank()) {
@@ -537,6 +537,17 @@ public class PdfGenerationAdapter implements PdfGenerationUseCase {
       }
     }
     return parts.isEmpty() ? null : String.join(" ", parts);
+  }
+
+  private static String formatPublicVehicleTypeLabel(ObjetIncident objet) {
+    String label = objet.getTypeLabel().trim();
+    if (objet.isVehicleType() && label.equalsIgnoreCase("cyclomoteur avec place assise")) {
+      return "Vélo électrique sans plaque";
+    }
+    if (objet.isVehicleType() && label.equalsIgnoreCase("cyclomoteur sans place assise")) {
+      return "Trottinette";
+    }
+    return label;
   }
 
   private void addObjetVehicleInsurance(List<String[]> rows, ObjetIncident o) {

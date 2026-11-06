@@ -796,6 +796,21 @@ class PdfGenerationAdapterTest {
   }
 
   @Test
+  void formatObjetDescriptifLigne_shouldUsePublicLabelsForUnplatedVehicles() {
+    ObjetIncident velo = ObjetIncident.builder()
+        .isVehicle(true)
+        .type(new RipolCode("062", "Cyclomoteur avec place assise"))
+        .build();
+    ObjetIncident trottinette = ObjetIncident.builder()
+        .isVehicle(true)
+        .type(new RipolCode("064", "Cyclomoteur sans place assise"))
+        .build();
+
+    assertEquals("Vélo électrique sans plaque", PdfGenerationAdapter.formatObjetDescriptifLigne(velo));
+    assertEquals("Trottinette", PdfGenerationAdapter.formatObjetDescriptifLigne(trottinette));
+  }
+
+  @Test
   void shouldReturnFalseWhenAllFieldsAreNull() {
     Adresse a = adresse(null, null, null, null, null);
     assertFalse(PdfGenerationAdapter.adresseHasAnyField(a));

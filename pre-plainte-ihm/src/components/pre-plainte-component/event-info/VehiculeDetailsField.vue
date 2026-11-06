@@ -34,6 +34,7 @@
     :label="t('incidentTypes.typeObjet')"
     required
     :fetch-fn="fetchFilteredObjectTypes"
+    :display-label="displayVehicleTypeLabel"
     :error-messages="typeObjetError"
     :hint="t('incidentTypes.hintTypeObjet')"
     :preload="true"
@@ -279,6 +280,8 @@ import type { PropType } from "vue";
 import { computed } from "vue";
 import { useI18n } from "vue-i18n";
 import RipolAutocomplete from "@/components/ripol/RipolAutocomplete.vue";
+import { publicVehicleTypeLabel } from "@/utils/helpers/vehicleTypeDisplay";
+import type { RipolSelection } from "@/types/ripol.interface";
 import { useVehicleDetailsRipol } from "@/composables/useVehicleDetailsRipol";
 import AccessibleVSelect from "@/components/accessibility/AccessibleVSelect.vue";
 import MaskedDateField from "@/components/form/MaskedDateField.vue";
@@ -321,6 +324,7 @@ const sousCategorie = computed({
 });
 
 const categorieObjetOptions = [{ value: "vehicule", label: t("categoriesObjets.vehicule") }];
+const displayVehicleTypeLabel = (item: RipolSelection) => publicVehicleTypeLabel(item, t);
 
 const selectedCategorie = computed(() => CATEGORIES_OBJETS.find(cat => cat.value === props.categorieObjet));
 

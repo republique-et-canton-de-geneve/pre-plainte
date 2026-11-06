@@ -532,7 +532,6 @@ const handleUpdateAppointment = async (): Promise<void> => {
     const message = t("modification.messageConfirmation", {
       date: dateLisible,
       heureDebut: creneau.heureDebut,
-      heureFin: creneau.heureFin,
       lieu: creneau.lieu,
       code: codeRdv,
     });

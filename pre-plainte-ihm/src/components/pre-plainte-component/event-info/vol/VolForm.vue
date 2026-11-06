@@ -99,6 +99,7 @@ import AppSnackbar from "@/components/feedback/AppSnackbar.vue";
 import type { VolObjetVoleDraftBrouillon } from "@/types/volObjetVoleBrouillon.types";
 import { RipolService } from "@/services/ripolService";
 import { filterNationalities, sortRipolByLabelFr } from "@/utils/helpers/ripolHelpers.ts";
+import { isUnplatedElectricVehicleType } from "@/utils/helpers/vehicleTypeDisplay";
 import type { RipolSelection, Ripol } from "@/types/ripol.interface";
 import type { PrePlainteFormFields, VolObjetFormSnapshot } from "@/types/pre-plainte.interface";
 import BaseRadioGroup from "@/components/radio/BaseRadioGroup.vue";
@@ -253,7 +254,10 @@ const fetchFilteredObjectTypes = async (): Promise<Ripol[]> => {
   if (!prefixes?.length) {
     return allObjects;
   }
-  return allObjects.filter(obj => prefixes.some(prefix => obj.code.startsWith(prefix)));
+  return allObjects.filter(obj =>
+    prefixes.some(prefix => obj.code.startsWith(prefix)) ||
+    (cat?.useVehicleTypes && sousCategorie.value === "velos" && isUnplatedElectricVehicleType(obj))
+  );
 };
 
 const fetchBrands = async () => {

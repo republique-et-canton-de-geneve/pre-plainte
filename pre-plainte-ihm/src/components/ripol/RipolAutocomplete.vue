@@ -164,7 +164,7 @@ const withSelectedValue = (visible: RipolSelection[]): RipolSelection[] => {
 };
 
 const applyLocalFilter = (search?: string) => {
-  const filtered = filterRipolSelections(allItems.value, search);
+  const filtered = filterRipolSelections(allItems.value, search, getDisplayLabel);
   items.value = withSelectedValue(filtered.slice(0, MAX_VISIBLE_ITEMS));
 };
 

@@ -27,7 +27,7 @@
         </v-col>
         <v-col v-if="obj.typeObjet" cols="6">
           <div class="text-caption text-medium-emphasis">{{ t("incidentTypes.typeObjet") }}</div>
-          <div class="text-body-2">{{ obj.typeObjet.label }}</div>
+          <div class="text-body-2">{{ publicVehicleTypeLabel(obj.typeObjet, t) }}</div>
         </v-col>
         <v-col v-if="obj.fabricant" cols="6">
           <div class="text-caption text-medium-emphasis">{{ t("incidentTypes.fabricant") }}</div>
@@ -106,6 +106,7 @@
 <script setup lang="ts">
 import { useI18n } from "vue-i18n";
 import type { VolObjetFormSnapshot } from "@/types/pre-plainte.interface";
+import { publicVehicleTypeLabel } from "@/utils/helpers/vehicleTypeDisplay";
 import {
   RIPOL,
   VOL_OBJET_CATEGORIE,
