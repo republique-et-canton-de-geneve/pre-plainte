@@ -361,7 +361,7 @@
     "volDansVehicule": "Were any of the items you are going to declare stolen in or on a vehicle?",
     "volDansVehiculeWarning": "Please note that you will need to have the vehicle information available (in particular the registration number) on the day you file your complaint.",
     "typeObjet": "Type of object",
-    "objetIdentifieInfo": "An identifiable item has a unique number. This includes:\n• electronic devices, such as mobile phones and some tablets, with an IMEI number;\n• watches and some jewellery with their own serial number;\n• identity cards, passports and work permits with a document number.\nFor other items, leave the serial number blank. If a serial number is required and you do not know it, select “I do not know the serial number”.",
+    "objetIdentifieInfo": "An identifiable item has a unique number.\nThe only items in this category are:\n• electronic devices, such as mobile phones or tablets, with an IMEI number;\n• watches and some jewellery with their own serial number;\n• the following identity documents: identity card, passport and work permit.\nIf your item is not on this list, leave the “Serial number” field blank. If you do not know the serial number of an item on this list, select “I do not know the serial number”.",
     "fabricant": "Brand",
     "modele": "Model",
     "couleur": "Colour",

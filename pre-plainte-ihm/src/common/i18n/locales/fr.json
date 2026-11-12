@@ -361,7 +361,7 @@
     "volDansVehicule": "Certains objets que vous allez déclarer ont-ils été volés dans ou sur un véhicule ?",
     "volDansVehiculeWarning": "Attention, vous devrez disposer des informations du véhicule (notamment l'immatriculation) le jour de votre dépôt de plainte.",
     "typeObjet": "Type de l'objet",
-    "objetIdentifieInfo": "Un objet identifié possède un numéro unique. Sont concernés :\n• les appareils électroniques, comme les téléphones mobiles et certaines tablettes, avec un numéro IMEI ;\n• les montres et certains bijoux avec leur propre numéro de série ;\n• les cartes d'identité, passeports et permis de travail avec un numéro de document.\nPour les autres objets, ne renseignez pas de numéro de série. Si ce numéro est demandé et que vous ne le connaissez pas, cochez « Je ne connais pas le numéro de série ».",
+    "objetIdentifieInfo": "Un objet identifié possède un numéro unique.\nLes seuls objets qui entrent dans cette catégorie sont :\n• les appareils électroniques, comme les téléphones mobiles ou les tablettes, avec un numéro IMEI ;\n• les montres et certains bijoux qui possèdent leur propre numéro de série ;\n• les documents d’identité suivants : carte d’identité, passeport et permis de travail.\nSi votre objet ne figure pas dans cette liste, laissez le champ « Numéro de série » vide. Si le numéro de série d’un objet concerné est inconnu, cochez « Je ne connais pas le numéro de série ».",
     "fabricant": "Marque",
     "modele": "Modèle",
     "couleur": "Couleur",
