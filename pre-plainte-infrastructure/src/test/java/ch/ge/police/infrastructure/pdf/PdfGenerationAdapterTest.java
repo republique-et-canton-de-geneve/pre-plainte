@@ -783,6 +783,41 @@ class PdfGenerationAdapterTest {
   }
 
   @Test
+  void shouldListNonIdentifiableDocumentsOnlyInPdfSummary() throws Exception {
+    ObjetIncident carteIdentite = document("200100", "Carte d'identité");
+    ObjetIncident passeport = document("200300", "Passeport");
+    ObjetIncident permisTravail = document("200501", "Permis de travail");
+    ObjetIncident carteBancaire = document("265100", "Carte bancaire");
+    carteBancaire.setNumeroSerie("NUM-CARTE");
+    ObjetIncident carteAssurance = document("250100", "Carte d'assurance maladie");
+    ObjetIncident permisConduire = document("200500", "Permis de conduire");
+    Vol vol = new Vol();
+    vol.setObjetsVoles(List.of(
+        carteIdentite, passeport, permisTravail, carteBancaire, carteAssurance, permisConduire));
+
+    List<String[]> rows = new ArrayList<>();
+    var handleVol = PdfGenerationAdapter.class.getDeclaredMethod("handleVol", List.class, Vol.class);
+    handleVol.setAccessible(true);
+    handleVol.invoke(adapter, rows, vol);
+
+    assertEquals(List.of("Carte d'identité", "Passeport", "Permis de travail"),
+        rows.stream()
+            .filter(row -> "Type de l'objet (identifié)".equals(row[0]))
+            .map(row -> row[1])
+            .toList());
+    assertTrue(rows.stream().anyMatch(row ->
+        "Types d'objets (non identifiés)".equals(row[0])
+            && "- Carte bancaire\n- Carte d'assurance maladie\n- Permis de conduire".equals(row[1])));
+  }
+
+  private static ObjetIncident document(String code, String label) {
+    return ObjetIncident.builder()
+        .categorieObjet("documents")
+        .type(new RipolCode(code, label))
+        .build();
+  }
+
+  @Test
   void formatObjetDescriptifLigne_shouldJoinTypeBrandAndModelOnOneLine() throws Exception {
     var method = PdfGenerationAdapter.class.getDeclaredMethod("formatObjetDescriptifLigne", ObjetIncident.class);
     method.setAccessible(true);
