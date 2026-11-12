@@ -361,7 +361,7 @@
     "volDansVehicule": "Alguns dos objetos que vai declarar foram roubados dentro ou sobre um veículo?",
     "volDansVehiculeWarning": "Atenção: deverá dispor das informações do veículo (nomeadamente a matrícula) no dia em que apresentar a queixa.",
     "typeObjet": "Tipo de objeto",
-    "objetIdentifieInfo": "Um objeto identificável tem um número próprio, por exemplo um aparelho eletrónico ou relógio com número de série, ou um documento de identidade com número de documento. O número de artigo de uma peça de roupa não a identifica individualmente.",
+    "objetIdentifieInfo": "Um objeto identificável tem um número único. Estão incluídos:\n• os aparelhos eletrónicos, como telemóveis e alguns tablets, com número IMEI;\n• os relógios e algumas joias com um número de série próprio;\n• os cartões de identidade, passaportes e autorizações de trabalho com um número de documento.\nPara os restantes objetos, deixe o número de série em branco. Se esse número for obrigatório e não o conhecer, selecione «Não conheço o número de série».",
     "fabricant": "Marca",
     "modele": "Modelo",
     "couleur": "Cor",

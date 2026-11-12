@@ -361,7 +361,7 @@
     "volDansVehicule": "Alcuni degli oggetti che state per dichiarare sono stati rubati all'interno o sopra un veicolo?",
     "volDansVehiculeWarning": "Attenzione: il giorno della presentazione della denuncia dovrete disporre dei dati del veicolo, in particolare della targa.",
     "typeObjet": "Tipo di oggetto",
-    "objetIdentifieInfo": "Un oggetto identificabile ha un numero proprio, per esempio un dispositivo elettronico o un orologio con numero di serie, oppure un documento d'identità con numero del documento. Il numero di articolo di un indumento non lo identifica singolarmente.",
+    "objetIdentifieInfo": "Un oggetto identificabile ha un numero univoco. Rientrano in questa categoria:\n• i dispositivi elettronici, come i telefoni cellulari e alcuni tablet, con numero IMEI;\n• gli orologi e alcuni gioielli con un proprio numero di serie;\n• le carte d'identità, i passaporti e i permessi di lavoro con un numero di documento.\nPer gli altri oggetti, lasciate vuoto il numero di serie. Se è richiesto e non lo conoscete, selezionate «Non conosco il numero di serie».",
     "fabricant": "Marca",
     "modele": "Modello",
     "couleur": "Colore",
