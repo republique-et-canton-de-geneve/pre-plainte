@@ -11,6 +11,7 @@ import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.regex.Pattern;
 
 import static ch.ge.police.core.domain.util.validation.ChampValidator.verifierLongueurMax;
@@ -171,6 +172,17 @@ public class ObjetIncident {
       return false;
     }
     return isVehicle || CATEGORIE_VEHICULE.equals(categorieObjet);
+  }
+
+  public boolean isIdentifiableDocument() {
+    if (!CATEGORIE_DOCUMENTS.equals(categorieObjet) || getTypeLabel() == null) {
+      return false;
+    }
+    String typeLabel = getTypeLabel().strip().toLowerCase(Locale.ROOT).replace('’', '\'');
+    return typeLabel.startsWith("carte d'identité")
+        || typeLabel.startsWith("carte d'identite")
+        || typeLabel.startsWith("passeport")
+        || typeLabel.startsWith("permis de travail");
   }
 
   public void champsObligatoire() {
