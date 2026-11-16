@@ -361,7 +361,7 @@
     "volDansVehicule": "Wurden einige der Gegenstände, die Sie melden werden, in oder auf einem Fahrzeug gestohlen?",
     "volDansVehiculeWarning": "Achtung: Am Tag Ihrer Anzeigeerstattung müssen Sie über die Informationen zum Fahrzeug verfügen (insbesondere die Kontrollschildnummer).",
     "typeObjet": "Art des Gegenstands",
-    "objetIdentifieInfo": "Ein identifizierbarer Gegenstand hat eine eigene Nummer, zum Beispiel ein elektronisches Gerät oder eine Uhr mit Seriennummer oder ein Ausweisdokument mit Dokumentennummer. Die Artikelnummer eines Kleidungsstücks identifiziert dieses nicht einzeln.",
+    "objetIdentifieInfo": "Ein identifizierbarer Gegenstand hat eine eindeutige Nummer.\nNur folgende Gegenstände gehören zu dieser Kategorie:\n• elektronische Geräte wie Mobiltelefone oder Tablets mit einer IMEI-Nummer;\n• Uhren und bestimmte Schmuckstücke mit einer eigenen Seriennummer;\n• folgende Ausweisdokumente: Identitätskarte, Reisepass und Arbeitsbewilligung.\nWenn Ihr Gegenstand nicht auf dieser Liste steht, lassen Sie das Feld «Seriennummer» leer. Wenn Sie die Seriennummer eines solchen Gegenstands nicht kennen, wählen Sie «Ich kenne die Seriennummer nicht».",
     "fabricant": "Marke",
     "modele": "Modell",
     "couleur": "Farbe",
