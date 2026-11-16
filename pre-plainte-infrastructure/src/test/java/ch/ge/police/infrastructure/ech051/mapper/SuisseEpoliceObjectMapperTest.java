@@ -224,6 +224,32 @@ class SuisseEpoliceObjectMapperTest {
   }
 
   @Test
+  void shouldOnlyMapIdentifiableDocumentsToMyAbi() {
+    ObjetIncident carteIdentite = document("200100", "Carte d'identité");
+    ObjetIncident passeport = document("200300", "Passeport");
+    ObjetIncident permisTravail = document("200501", "Permis de travail");
+    ObjetIncident carteBancaire = document("265100", "Carte bancaire");
+    carteBancaire.setNumeroSerie("NUM-CARTE");
+    ObjetIncident carteAssurance = document("250100", "Carte d'assurance maladie");
+    ObjetIncident permisConduire = document("200500", "Permis de conduire");
+    Vol vol = mock(Vol.class);
+    when(vol.getObjetsVoles()).thenReturn(List.of(
+        carteIdentite, passeport, permisTravail, carteBancaire, carteAssurance, permisConduire));
+
+    List<ObjectItem> objects = mapper.buildObjectsFromIncident(vol);
+
+    assertEquals(List.of("200100", "200300", "200501"),
+        objects.stream().map(item -> item.getTypeOfObject().getCode()).toList());
+  }
+
+  private static ObjetIncident document(String code, String label) {
+    return ObjetIncident.builder()
+        .categorieObjet("documents")
+        .type(new RipolCode(code, label))
+        .build();
+  }
+
+  @Test
   void shouldBuildObjectsFromDommageWhenNonVehicleObjectsExist() {
     DommageMateriel dommage = mock(DommageMateriel.class);
     ObjetIncident object = mockObjet(false);
@@ -382,15 +408,14 @@ class SuisseEpoliceObjectMapperTest {
 
   @Test
   void shouldOmitIdentificationFieldsFromMyAbiWhenAbsent() {
-    ObjetIncident nonVehicle = mock(ObjetIncident.class);
-    when(nonVehicle.isVehicleType()).thenReturn(false);
-    when(nonVehicle.getCategorieObjet()).thenReturn("documents");
-    when(nonVehicle.isNumeroIMEIInconnu()).thenReturn(true);
-    when(nonVehicle.isNumeroSerieInconnu()).thenReturn(true);
-    when(nonVehicle.getNumeroSerie()).thenReturn("SER123");
-    when(nonVehicle.getGravure()).thenReturn("  ");
-    when(nonVehicle.getTypeCode()).thenReturn("TYPE1");
-    when(nonVehicle.getTypeLabel()).thenReturn("Type");
+    ObjetIncident nonVehicle = ObjetIncident.builder()
+        .categorieObjet("documents")
+        .type(new RipolCode("TYPE1", "Passeport"))
+        .numeroIMEIInconnu(true)
+        .numeroSerieInconnu(true)
+        .numeroSerie("SER123")
+        .gravure("  ")
+        .build();
 
     ObjetIncident vehicle = mock(ObjetIncident.class);
     when(vehicle.isVehicleType()).thenReturn(true);

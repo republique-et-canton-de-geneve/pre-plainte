@@ -470,7 +470,10 @@ public class PdfGenerationAdapter implements PdfGenerationUseCase {
 
   private boolean isNonVehicleStructuredObjectForPdf(ObjetIncident objet) {
     String categorie = objet.getCategorieObjet();
-    if (CATEGORIE_DOCUMENTS.equals(categorie) || CATEGORIE_PLAQUE.equals(categorie)) {
+    if (CATEGORIE_DOCUMENTS.equals(categorie)) {
+      return objet.isIdentifiableDocument();
+    }
+    if (CATEGORIE_PLAQUE.equals(categorie)) {
       return true;
     }
     return hasObjectIdentificationForPdf(objet);
