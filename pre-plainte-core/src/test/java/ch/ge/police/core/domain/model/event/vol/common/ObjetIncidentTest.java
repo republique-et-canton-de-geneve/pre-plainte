@@ -3,6 +3,9 @@ package ch.ge.police.core.domain.model.event.vol.common;
 import ch.ge.police.core.domain.model.common.RipolCode;
 import ch.ge.police.core.domain.model.common.error.ValidationMetierException;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -37,6 +40,53 @@ class ObjetIncidentTest {
       .build();
 
     assertFalse(objet.isVehicleType());
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {
+    "  CARTE D’IDENTITÉ suisse  ",
+    "Carte d'identite étrangère",
+    "Passeport suisse",
+    "Permis de travail frontalier"
+  })
+  void shouldRecognizeIdentifiableDocumentByLabel(String libelle) {
+    ObjetIncident objet = ObjetIncident.builder()
+      .categorieObjet("documents")
+      .type(new RipolCode("200300", libelle))
+      .build();
+
+    assertTrue(objet.isIdentifiableDocument());
+  }
+
+  @ParameterizedTest
+  @NullAndEmptySource
+  @ValueSource(strings = {"Permis de conduire", "Copie de passeport"})
+  void shouldRejectNonIdentifiableDocumentLabel(String libelle) {
+    ObjetIncident objet = ObjetIncident.builder()
+      .categorieObjet("documents")
+      .type(new RipolCode("200300", libelle))
+      .build();
+
+    assertFalse(objet.isIdentifiableDocument());
+  }
+
+  @Test
+  void shouldNotRecognizeIdentifiableDocumentWithoutType() {
+    ObjetIncident objet = ObjetIncident.builder()
+      .categorieObjet("documents")
+      .build();
+
+    assertFalse(objet.isIdentifiableDocument());
+  }
+
+  @Test
+  void shouldNotRecognizePassportOutsideDocumentCategory() {
+    ObjetIncident objet = ObjetIncident.builder()
+      .categorieObjet("vehicule")
+      .type(new RipolCode("200300", "Passeport"))
+      .build();
+
+    assertFalse(objet.isIdentifiableDocument());
   }
 
   @Test

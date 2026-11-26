@@ -28,8 +28,8 @@
     "v-phone-input": "^5.1.4",
     "vee-validate": "^4.15.1",
     "vite-plugin-vuetify": "^2.1.1",
-    "vue": "3.5.44",
-    "vue-i18n": "11.4.18",
+    "vue": "3.5.46",
+    "vue-i18n": "11.4.23",
     "vue-router": "^4.5.1",
     "vuetify": "^3.9.0",
     "zod": "4.6.7"
